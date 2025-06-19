@@ -18,8 +18,8 @@ Thumbs.db
 demo-app/
 scripts/setup-demo-app.sh
 
-# Ignore teslalogger ingress manifests
-k8s-setup/nginx-ingress/teslalogger-ingress.yaml
+# Ignore private ingress manifests
+private-ingress
 
 # Ignore Python cache
 __pycache__/
