@@ -19,6 +19,7 @@ A complete, production-ready Kubernetes homelab setup with GitOps, automatic SSL
 | **NGINX Ingress** | HTTP/HTTPS traffic routing | Latest |
 | **ArgoCD** | GitOps continuous delivery | v3.0.6 |
 | **Cert-Manager** | Automated SSL certificate management | v1.18.1 |
+| **Portainer** | Container management web UI | v2.31.1 |
 
 ## 🔧 Prerequisites
 
@@ -44,6 +45,7 @@ Required variables in `.env`:
 # Your domain managed by Cloudflare
 CF_DOMAIN=example.com
 CF_ARGOCD_DOMAIN=argocd.example.com
+CF_PORTAINER_DOMAIN=portainer.example.com  # Optional: defaults to portainer.${CF_DOMAIN}
 
 # Cloudflare API credentials  
 CF_ZONE_ID=your_cloudflare_zone_id
@@ -73,6 +75,7 @@ CF_CERT_EMAIL=admin@example.com
 
 After installation:
 - **ArgoCD UI**: `https://argocd.yourdomain.com`
+- **Portainer UI**: `https://portainer.yourdomain.com`
 - **Get ArgoCD password**: `kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d`
 
 ## 🔑 Cloudflare Setup
@@ -259,6 +262,7 @@ kubectl get clusterissuer
 ## Accessing Services
 
 - **ArgoCD UI**: `https://${CF_ARGOCD_DOMAIN}` (DNS record created automatically with Cloudflare integration)
+- **Portainer UI**: `https://${CF_PORTAINER_DOMAIN}` (DNS record created automatically with Cloudflare integration)
 - **NGINX Ingress LoadBalancer IP**: `192.168.2.254`
 
 ## DNS Management
@@ -271,6 +275,7 @@ The homelab includes automatic DNS record management for Cloudflare:
 
 # Examples:
 ./scripts/create-dns-record.sh argocd                    # ${CF_ARGOCD_DOMAIN} -> ${CF_DEFAULT_TARGET}
+./scripts/create-dns-record.sh portainer                 # ${CF_PORTAINER_DOMAIN} -> ${CF_DEFAULT_TARGET}
 ./scripts/create-dns-record.sh grafana                   # grafana.${CF_DOMAIN} -> ${CF_DEFAULT_TARGET}  
 ./scripts/create-dns-record.sh test custom.example.com   # test.${CF_DOMAIN} -> custom.example.com
 ```

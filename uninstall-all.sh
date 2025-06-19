@@ -98,6 +98,34 @@ uninstall_cert_manager() {
     echo ""
 }
 
+# Function to uninstall Portainer
+uninstall_portainer() {
+    print_status "Uninstalling Portainer..."
+    
+    if check_component_installed "portainer" "portainer"; then
+        # Delete Portainer Ingress
+        print_status "Removing Portainer Ingress..."
+        kubectl delete ingress portainer-ingress -n portainer --ignore-not-found=true
+        
+        # Uninstall Helm release
+        print_status "Uninstalling Portainer Helm release..."
+        helm uninstall portainer -n portainer
+        
+        # Wait for pods to terminate
+        print_status "Waiting for Portainer pods to terminate..."
+        kubectl wait --for=delete pod --all -n portainer --timeout=120s || true
+        
+        # Delete namespace (this will also remove PVCs)
+        print_status "Removing portainer namespace..."
+        kubectl delete namespace portainer --ignore-not-found=true
+        
+        print_success "Portainer uninstalled successfully"
+    else
+        print_warning "Portainer is not installed, skipping..."
+    fi
+    echo ""
+}
+
 # Function to uninstall ArgoCD
 uninstall_argocd() {
     print_status "Uninstalling ArgoCD..."
@@ -297,6 +325,13 @@ show_uninstall_status() {
         echo "  ✅ Cert-Manager: Removed"
     fi
     
+    # Check Portainer
+    if check_component_installed "portainer" "portainer"; then
+        echo "  ⚠️  Portainer: Still installed"
+    else
+        echo "  ✅ Portainer: Removed"
+    fi
+    
     echo ""
 }
 
@@ -327,6 +362,7 @@ main() {
     
     # Uninstall in reverse order (last installed first)
     uninstall_cert_manager
+    uninstall_portainer
     uninstall_argocd
     uninstall_nginx_ingress
     uninstall_metallb

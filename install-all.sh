@@ -49,6 +49,11 @@ if [ -z "$CF_ARGOCD_DOMAIN" ] || [ -z "$CF_DOMAIN" ]; then
     exit 1
 fi
 
+# Set default Portainer domain if not specified
+if [ -z "$CF_PORTAINER_DOMAIN" ]; then
+    CF_PORTAINER_DOMAIN="portainer.${CF_DOMAIN}"
+fi
+
 # Function to check if kubectl is available and cluster is reachable
 check_prerequisites() {
     print_status "Checking prerequisites..."
@@ -157,6 +162,24 @@ install_cert_manager() {
     echo ""
 }
 
+# Function to install Portainer
+install_portainer() {
+    if ! $FORCE_INSTALL && check_portainer; then
+        print_warning "Portainer is already installed, skipping... (use --force to reinstall)"
+        return 0
+    fi
+    
+    print_status "Installing Portainer..."
+    cd /Users/speters/workspace/homelab
+    if $FORCE_INSTALL; then
+        FORCE_INSTALL=true ./k8s-setup/portainer/install.sh
+    else
+        ./k8s-setup/portainer/install.sh
+    fi
+    print_success "Portainer installation completed"
+    echo ""
+}
+
 # Function to check if MetalLB is already installed
 check_metallb() {
     if helm list -n metallb-system | grep -q "metallb"; then
@@ -187,6 +210,15 @@ check_argocd() {
 # Function to check if Cert-Manager is already installed
 check_cert_manager() {
     if helm list -n cert-manager | grep -q "cert-manager"; then
+        return 0  # Already installed
+    else
+        return 1  # Not installed
+    fi
+}
+
+# Function to check if Portainer is already installed
+check_portainer() {
+    if helm list -n portainer | grep -q "portainer"; then
         return 0  # Already installed
     else
         return 1  # Not installed
@@ -228,6 +260,13 @@ show_installation_status() {
         echo "  ❌ Cert-Manager: Not installed"
     fi
     
+    # Check Portainer
+    if check_portainer; then
+        echo "  ✅ Portainer: Installed"
+    else
+        echo "  ❌ Portainer: Not installed"
+    fi
+    
     echo ""
 }
 
@@ -250,6 +289,7 @@ main() {
     echo "  2. NGINX Ingress Controller"
     echo "  3. ArgoCD (GitOps)"
     echo "  4. Cert-Manager (Certificate Management)"
+    echo "  5. Portainer (Container Management)"
     echo ""
     print_warning "The installation will use IP 192.168.2.254 for the load balancer."
     print_warning "Continue with installation? (y/N)"
@@ -265,6 +305,7 @@ main() {
     install_nginx_ingress
     install_argocd
     install_cert_manager
+    install_portainer
     
     # Final status
     print_success "🎉 All components installed successfully!"
@@ -273,6 +314,7 @@ main() {
     echo "  1. Update DNS records to point your domains to 192.168.2.254"
     echo "  2. Update domain names in ArgoCD and Cert-Manager configuration files if needed"
     echo "  3. Access ArgoCD at https://$CF_ARGOCD_DOMAIN"
+    echo "  4. Access Portainer at https://$CF_PORTAINER_DOMAIN"
     echo ""
     echo "📝 ArgoCD Admin Password:"
     kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d
