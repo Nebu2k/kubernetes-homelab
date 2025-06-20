@@ -53,6 +53,14 @@ configs:
 controller:
   replicas: 1
   
+  # Persistent storage for ArgoCD application controller
+  persistence:
+    enabled: true
+    size: 5Gi
+    storageClassName: ""  # Use default storage class
+    accessModes:
+      - ReadWriteOnce
+  
   resources:
     limits:
       cpu: 500m
@@ -69,6 +77,14 @@ controller:
 # Server configuration
 server:
   replicas: 2
+  
+  # Persistent storage for ArgoCD server
+  persistence:
+    enabled: true
+    size: 5Gi
+    storageClassName: ""  # Use default storage class
+    accessModes:
+      - ReadWriteOnce
   
   resources:
     limits:
@@ -92,7 +108,7 @@ server:
   metrics:
     enabled: true
     serviceMonitor:
-      enabled: false
+      enabled: false  # Set to true if you have Prometheus Operator
 
 # Repository server configuration
 repoServer:
@@ -143,6 +159,14 @@ dex:
 # Redis for caching
 redis:
   enabled: true
+  
+  # Persistent storage for Redis
+  persistence:
+    enabled: true
+    size: 2Gi
+    storageClassName: ""  # Use default storage class
+    accessModes:
+      - ReadWriteOnce
   
   resources:
     limits:
