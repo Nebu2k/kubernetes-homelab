@@ -13,6 +13,20 @@ if [ -f "$ROOT_DIR/.env" ]; then
     set +a
 fi
 
+# Set default ArgoCD domain if not specified
+if [ -z "$CF_ARGOCD_DOMAIN" ]; then
+    if [ -z "$CF_DOMAIN" ]; then
+        echo "❌ Error: CF_DOMAIN must be set in .env file"
+        exit 1
+    fi
+    CF_ARGOCD_DOMAIN="argocd.${CF_DOMAIN}"
+    echo "ℹ️  Using default ArgoCD domain: ${CF_ARGOCD_DOMAIN}"
+fi
+
+# Export variables for envsubst
+export CF_ARGOCD_DOMAIN
+export CF_DOMAIN
+
 echo "🚀 Installing ArgoCD..."
 
 # Add ArgoCD Helm repository

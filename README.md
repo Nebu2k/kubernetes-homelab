@@ -44,8 +44,11 @@ Required variables in `.env`:
 ```env
 # Your domain managed by Cloudflare
 CF_DOMAIN=example.com
-CF_ARGOCD_DOMAIN=argocd.example.com
-CF_PORTAINER_DOMAIN=portainer.example.com  # Optional: defaults to portainer.${CF_DOMAIN}
+
+# Optional: Override default subdomains (defaults to service.${CF_DOMAIN})
+# CF_ARGOCD_DOMAIN=argocd.example.com
+# CF_PORTAINER_DOMAIN=portainer.example.com
+# CF_PIHOLE_DOMAIN=pihole.example.com
 
 # Cloudflare API credentials  
 CF_ZONE_ID=your_cloudflare_zone_id
@@ -261,8 +264,9 @@ kubectl get clusterissuer
 
 ## Accessing Services
 
-- **ArgoCD UI**: `https://${CF_ARGOCD_DOMAIN}` (DNS record created automatically with Cloudflare integration)
-- **Portainer UI**: `https://${CF_PORTAINER_DOMAIN}` (DNS record created automatically with Cloudflare integration)
+- **ArgoCD UI**: `https://argocd.yourdomain.com` (DNS record created automatically with Cloudflare integration)
+- **Portainer UI**: `https://portainer.yourdomain.com` (DNS record created automatically with Cloudflare integration)
+- **PiHole UI**: `https://pihole.yourdomain.com` (DNS record created automatically with Cloudflare integration)
 - **NGINX Ingress LoadBalancer IP**: `192.168.2.254`
 
 ## DNS Management
@@ -274,15 +278,16 @@ The homelab includes automatic DNS record management for Cloudflare:
 ./scripts/create-dns-record.sh subdomain [target]
 
 # Examples:
-./scripts/create-dns-record.sh argocd                    # ${CF_ARGOCD_DOMAIN} -> ${CF_DEFAULT_TARGET}
-./scripts/create-dns-record.sh portainer                 # ${CF_PORTAINER_DOMAIN} -> ${CF_DEFAULT_TARGET}
-./scripts/create-dns-record.sh grafana                   # grafana.${CF_DOMAIN} -> ${CF_DEFAULT_TARGET}  
+./scripts/create-dns-record.sh argocd                    # argocd.${CF_DOMAIN} -> ${CF_DEFAULT_TARGET}
+./scripts/create-dns-record.sh portainer                 # portainer.${CF_DOMAIN} -> ${CF_DEFAULT_TARGET}
+./scripts/create-dns-record.sh pihole                    # pihole.${CF_DOMAIN} -> ${CF_DEFAULT_TARGET}
+./scripts/create-dns-record.sh grafana                   # grafana.${CF_DOMAIN} -> ${CF_DEFAULT_TARGET}
 ./scripts/create-dns-record.sh test custom.example.com   # test.${CF_DOMAIN} -> custom.example.com
 ```
 
 ## Using Environment Variables in YAML (envsubst)
 
-If you use variables like `${CF_ARGOCD_DOMAIN}` in your YAML files, you must substitute them before applying to Kubernetes. Kubernetes does not understand shell variables in YAML.
+If you use variables like `${CF_DOMAIN}` in your YAML files, you must substitute them before applying to Kubernetes. Kubernetes does not understand shell variables in YAML.
 
 **How to use:**
 
@@ -321,8 +326,10 @@ CF_ZONE_ID=cf_zone_id_abcdef
 # Main domain for the homelab
 CF_DOMAIN=example.com
 
-# ArgoCD subdomain
-CF_ARGOCD_DOMAIN=argocd.example.com
+# Optional: Override default subdomains (defaults to service.${CF_DOMAIN})
+# CF_ARGOCD_DOMAIN=argocd.example.com
+# CF_PORTAINER_DOMAIN=portainer.example.com
+# CF_PIHOLE_DOMAIN=pihole.example.com
 
 # Default target for DNS records (e.g., dynamic DNS)
 CF_DEFAULT_TARGET=dynamic-dns.example.net
