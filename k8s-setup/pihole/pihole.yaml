@@ -58,6 +58,29 @@ spec:
       storage: 1Gi
 ---
 apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: pihole-dnsmasq-config
+  namespace: pihole
+data:
+  02-custom-vlans.conf: |
+    # Custom VLAN configuration for conditional forwarding
+    # Main LAN 192.168.2.0/24
+    server=/elmstreet79.de/192.168.2.1
+    rev-server=192.168.2.0/24,192.168.2.1
+    
+    # VLAN 192.168.4.0/24
+    rev-server=192.168.4.0/24,192.168.2.1
+    
+    # VLAN 192.168.5.0/24
+    rev-server=192.168.5.0/24,192.168.2.1
+    
+    # Enable local domain resolution for all VLANs
+    local=/elmstreet79.de/
+    domain=elmstreet79.de
+    expand-hosts
+---
+apiVersion: v1
 kind: Secret
 metadata:
   name: pihole-secret
@@ -117,6 +140,15 @@ spec:
           value: "elmstreet79.de"
         - name: CONDITIONAL_FORWARDING_REVERSE
           value: "192.168.2.0/24"
+        # Additional VLANs for conditional forwarding
+        - name: REV_SERVER
+          value: "true"
+        - name: REV_SERVER_DOMAIN
+          value: "elmstreet79.de"
+        - name: REV_SERVER_TARGET
+          value: "192.168.2.1"
+        - name: REV_SERVER_CIDR
+          value: "192.168.2.0/24,192.168.4.0/24,192.168.5.0/24"
         - name: WEBPASSWORD_FILE
           value: "/etc/pihole/WEBPASSWORD"
         volumeMounts:
@@ -127,6 +159,9 @@ spec:
         - name: pihole-secret-volume
           mountPath: /tmp/WEBPASSWORD
           subPath: WEBPASSWORD
+        - name: pihole-dnsmasq-custom-config
+          mountPath: /etc/dnsmasq.d/02-custom-vlans.conf
+          subPath: 02-custom-vlans.conf
         resources:
           limits:
             cpu: 500m
@@ -171,6 +206,9 @@ spec:
       - name: pihole-secret-volume
         secret:
           secretName: pihole-secret
+      - name: pihole-dnsmasq-custom-config
+        configMap:
+          name: pihole-dnsmasq-config
       restartPolicy: Always
 ---
 apiVersion: v1

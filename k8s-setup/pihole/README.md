@@ -1,6 +1,14 @@
 # PiHole Kubernetes Setup
 
-Dieses Verzeichnis enthält die Kubernetes-Konfiguration für PiHole DNS-Server.
+Dieses Verzeichnis enthält die Kubernetes-Konfiguration für PiHole DNS-Server mit Multi-VLAN-Unterstützung.
+
+## Features
+
+- DNS-Server für mehrere VLANs (192.168.2.0/24, 192.168.4.0/24, 192.168.5.0/24)
+- Conditional Forwarding für lokale Namensauflösung
+- HTTPS Web-Interface mit automatischen TLS-Zertifikaten
+- Persistent Storage für Konfiguration und Logs
+- LoadBalancer-Integration mit MetalLB
 
 ## Dateien
 

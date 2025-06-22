@@ -2,6 +2,31 @@
 
 Diese Anleitung hilft dir dabei, deine bestehende PiHole-Konfiguration von Docker zu Kubernetes zu migrieren.
 
+## VLAN-Konfiguration
+
+Diese PiHole-Installation ist für mehrere VLANs konfiguriert:
+
+- **192.168.2.0/24** - Haupt-LAN
+- **192.168.4.0/24** - VLAN 4
+- **192.168.5.0/24** - VLAN 5
+
+Alle VLANs verwenden den Router `192.168.2.1` für die Reverse-DNS-Auflösung und können Client-Namen aus der Domain `elmstreet79.de` auflösen.
+
+### VLAN-Router-Konfiguration
+
+Stelle sicher, dass deine VLAN-Router so konfiguriert sind:
+
+**Unifi Dream Machine:**
+1. Network Settings → VLANs
+2. Für VLAN 4 und VLAN 5:
+   - DHCP aktivieren
+   - DNS Server: `192.168.2.250` (PiHole)
+   - Domain Name: `elmstreet79.de`
+
+**Alternative Router:**
+- DNS Server: `192.168.2.250`
+- Domain-Suffix: `elmstreet79.de`
+
 ## Voraussetzungen
 
 - Kubernetes-Cluster läuft
@@ -103,6 +128,14 @@ nslookup google.com 192.168.2.250
 
 # Blockierte Domain testen (sollte 0.0.0.0 zurückgeben)
 nslookup doubleclick.net 192.168.2.250
+
+# VLAN-Reverse-DNS testen (ersetze IP mit echter Client-IP)
+nslookup 192.168.2.10 192.168.2.250  # Haupt-LAN
+nslookup 192.168.4.10 192.168.2.250  # VLAN 4
+nslookup 192.168.5.10 192.168.2.250  # VLAN 5
+
+# Client-Namen von verschiedenen VLANs auflösen
+nslookup client-name.elmstreet79.de 192.168.2.250
 ```
 
 ## 7. Router/Client konfigurieren

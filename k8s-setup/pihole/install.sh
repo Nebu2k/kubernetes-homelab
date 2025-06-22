@@ -19,8 +19,13 @@ if [ -z "$CF_PIHOLE_DOMAIN" ]; then
         echo "❌ Error: CF_DOMAIN must be set in .env file"
         exit 1
     fi
-    export CF_PIHOLE_DOMAIN="pihole.$CF_DOMAIN"
+    CF_PIHOLE_DOMAIN="pihole.${CF_DOMAIN}"
+    echo "ℹ️  Using default PiHole domain: ${CF_PIHOLE_DOMAIN}"
 fi
+
+# Export variables for envsubst
+export CF_PIHOLE_DOMAIN
+export CF_DOMAIN
 
 echo "🔧 Installing PiHole..."
 echo "📦 Domain: $CF_PIHOLE_DOMAIN"
@@ -40,14 +45,23 @@ fi
 # Apply manifests with environment variable substitution
 echo "📋 Applying PiHole manifests..."
 
-# Replace environment variables in ingress.yaml and apply
-envsubst < k8s-setup/pihole/ingress.yaml | kubectl apply -f -
-
 # Apply the main PiHole manifest
 kubectl apply -f k8s-setup/pihole/pihole.yaml
 
 echo "⏳ Waiting for PiHole to be ready..."
 kubectl wait --for=condition=available --timeout=300s deployment/pihole -n pihole
+
+# Apply Ingress for PiHole
+echo "🌐 Creating PiHole Ingress..."
+
+# Validate that CF_PIHOLE_DOMAIN is set
+if [ -z "$CF_PIHOLE_DOMAIN" ]; then
+    echo "❌ Error: CF_PIHOLE_DOMAIN is not set. Please check your .env file."
+    exit 1
+fi
+
+echo "ℹ️  Creating ingress for domain: ${CF_PIHOLE_DOMAIN}"
+envsubst < k8s-setup/pihole/ingress.yaml | kubectl apply -f -
 
 # Get LoadBalancer IP
 echo "🌐 Getting LoadBalancer IP..."
@@ -58,26 +72,45 @@ while [ -z $EXTERNAL_IP ]; do
     [ -z "$EXTERNAL_IP" ] && sleep 10
 done
 
+# Create DNS record for PiHole
+echo "🌐 Creating DNS record for PiHole..."
+if [ -f "scripts/create-dns-record.sh" ]; then
+    ./scripts/create-dns-record.sh pihole "$CF_DEFAULT_TARGET"
+else
+    echo "⚠️  DNS record script not found. Please create DNS record manually:"
+    echo "   $CF_PIHOLE_DOMAIN -> $CF_DEFAULT_TARGET"
+fi
+
+# Verify installation
+echo "✅ Verifying PiHole installation..."
+kubectl get pods -n pihole
+kubectl get ingress -n pihole
+
 echo ""
-echo "✅ PiHole has been successfully installed!"
+echo "🎉 PiHole installation completed successfully!"
 echo ""
-echo "📊 Service Information:"
-echo "  🌐 Web Interface: https://$CF_PIHOLE_DOMAIN"
-echo "  🔌 DNS Server IP: $EXTERNAL_IP"
-echo "  🔑 Default Password: admin123 (change this!)"
+echo "� Access Information:"
+echo "   Web Interface: https://$CF_PIHOLE_DOMAIN"
+echo "   DNS Server IP: $EXTERNAL_IP"
+echo "   Default Password: admin123 (change this!)"
 echo ""
 echo "📋 DNS Configuration:"
-echo "  Configure your router or devices to use $EXTERNAL_IP as DNS server"
+echo "   Configure your router or devices to use $EXTERNAL_IP as DNS server"
 echo ""
 echo "🔧 Post-Installation Steps:"
-echo "  1. Visit https://$CF_PIHOLE_DOMAIN/admin"
-echo "  2. Login with password: admin123"
-echo "  3. Change the admin password immediately!"
-echo "  4. Import your existing configuration (see migration guide)"
+echo "   1. Visit https://$CF_PIHOLE_DOMAIN/admin"
+echo "   2. Login with password: admin123"
+echo "   3. Change the admin password immediately!"
+echo "   4. Import your existing configuration (see migration guide)"
 echo ""
-echo "📝 Migration Commands (run these before starting PiHole):"
-echo "  kubectl exec -n pihole deployment/pihole -- mkdir -p /etc/pihole /etc/dnsmasq.d"
-echo "  kubectl cp /data/pihole/etc-pihole/ pihole/\$(kubectl get pod -n pihole -l app=pihole -o jsonpath='{.items[0].metadata.name}'):/etc/pihole/ || true"
-echo "  kubectl cp /data/pihole/etc-dnsmasq.d/ pihole/\$(kubectl get pod -n pihole -l app=pihole -o jsonpath='{.items[0].metadata.name}'):/etc/dnsmasq.d/ || true"
-echo "  kubectl rollout restart deployment/pihole -n pihole"
+echo "📝 VLAN Configuration:"
+echo "   All VLANs (192.168.2.0/24, 192.168.4.0/24, 192.168.5.0/24) can use:"
+echo "   - DNS Server: $EXTERNAL_IP"
+echo "   - Domain: elmstreet79.de"
+echo ""
+echo "📝 Migration Commands (run after installation):"
+echo "   POD_NAME=\$(kubectl get pod -n pihole -l app=pihole -o jsonpath='{.items[0].metadata.name}')"
+echo "   kubectl cp /data/pihole/etc-pihole/ pihole/\$POD_NAME:/etc/pihole/"
+echo "   kubectl cp /data/pihole/etc-dnsmasq.d/ pihole/\$POD_NAME:/etc/dnsmasq.d/"
+echo "   kubectl rollout restart deployment/pihole -n pihole"
 echo ""
