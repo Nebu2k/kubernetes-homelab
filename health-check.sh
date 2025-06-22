@@ -5,6 +5,13 @@
 
 set -e
 
+# Load .env file if present
+if [ -f ".env" ]; then
+    set -a
+    source .env
+    set +a
+fi
+
 echo "🏥 Homelab K3s Stack Health Check"
 echo "=================================="
 
@@ -30,14 +37,6 @@ print_warning() {
 print_error() {
     echo -e "${RED}[❌ ERROR]${NC} $1"
 }
-
-# Load .env file from root if present
-ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-if [ -f "$ROOT_DIR/.env" ]; then
-    set -a
-    source "$ROOT_DIR/.env"
-    set +a
-fi
 
 # Check kubectl connectivity
 print_info "Checking cluster connectivity..."
@@ -172,11 +171,24 @@ fi
 
 # Check ArgoCD HTTPS accessibility
 print_info "Checking ArgoCD HTTPS accessibility..."
-if curl -s -o /dev/null -w "%{http_code}" https://$CF_ARGOCD_DOMAIN | grep -q "200"; then
-    RESPONSE_TIME=$(curl -s -o /dev/null -w "%{time_total}" https://$CF_ARGOCD_DOMAIN)
-    print_success "ArgoCD HTTPS: Accessible (${RESPONSE_TIME}s response time)"
-else
-    print_error "ArgoCD HTTPS: Not accessible"
+
+# Set default ArgoCD domain if not specified
+if [ -z "$CF_ARGOCD_DOMAIN" ]; then
+    if [ -n "$CF_DOMAIN" ]; then
+        CF_ARGOCD_DOMAIN="argocd.${CF_DOMAIN}"
+    else
+        print_warning "ArgoCD HTTPS: CF_DOMAIN not set, skipping HTTPS check"
+        CF_ARGOCD_DOMAIN=""
+    fi
+fi
+
+if [ -n "$CF_ARGOCD_DOMAIN" ]; then
+    if curl -s -o /dev/null -w "%{http_code}" https://$CF_ARGOCD_DOMAIN | grep -q "200"; then
+        RESPONSE_TIME=$(curl -s -o /dev/null -w "%{time_total}" https://$CF_ARGOCD_DOMAIN)
+        print_success "ArgoCD HTTPS: Accessible at $CF_ARGOCD_DOMAIN (${RESPONSE_TIME}s response time)"
+    else
+        print_error "ArgoCD HTTPS: Not accessible at $CF_ARGOCD_DOMAIN"
+    fi
 fi
 
 echo ""
@@ -200,8 +212,19 @@ echo "• Longhorn Volumes: $LONGHORN_VOLUMES"
 
 echo ""
 print_info "🔗 Quick Links:"
-echo "• ArgoCD UI: https://$CF_ARGOCD_DOMAIN"
-echo "• Portainer UI: https://$CF_PORTAINER_DOMAIN"
-echo "• Longhorn UI: https://$CF_LONGHORN_DOMAIN"
-echo "• PiHole UI: https://$CF_PIHOLE_DOMAIN"
-echo "• ArgoCD CLI Login: argocd login $CF_ARGOCD_DOMAIN --username admin"
+
+# Set default domains if not specified
+if [ -z "$CF_ARGOCD_DOMAIN" ] && [ -n "$CF_DOMAIN" ]; then
+    CF_ARGOCD_DOMAIN="argocd.${CF_DOMAIN}"
+fi
+if [ -z "$CF_PORTAINER_DOMAIN" ] && [ -n "$CF_DOMAIN" ]; then
+    CF_PORTAINER_DOMAIN="portainer.${CF_DOMAIN}"
+fi
+
+echo "• ArgoCD UI: https://${CF_ARGOCD_DOMAIN:-'<domain-not-set>'}"
+echo "• Portainer UI: https://${CF_PORTAINER_DOMAIN:-'<domain-not-set>'}"
+echo "• Longhorn UI: http://<node-ip>:30080 (NodePort - internal access only)"
+echo "• PiHole UI: http://<node-ip>:30081/admin (NodePort - internal access only)"
+if [ -n "$CF_ARGOCD_DOMAIN" ]; then
+    echo "• ArgoCD CLI Login: argocd login $CF_ARGOCD_DOMAIN --username admin"
+fi
