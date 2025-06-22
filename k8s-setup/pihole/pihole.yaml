@@ -89,7 +89,7 @@ metadata:
   namespace: pihole
 type: Opaque
 stringData:
-  WEBPASSWORD: "admin123"  # Change this password!
+  WEBPASSWORD: ""  # Empty password - must be set manually after deployment
 ---
 apiVersion: apps/v1
 kind: Deployment

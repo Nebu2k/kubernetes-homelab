@@ -9,6 +9,33 @@ Dieses Verzeichnis enthält die Kubernetes-Konfiguration für PiHole DNS-Server 
 - HTTPS Web-Interface mit automatischen TLS-Zertifikaten
 - Persistent Storage für Konfiguration und Logs
 - LoadBalancer-Integration mit MetalLB
+- **Sicheres Passwort-Management**: Kein Standardpasswort - manuelles Setup erforderlich
+
+## ⚠️ Wichtig: Passwort-Setup nach Installation
+
+**Nach der ersten Installation MUSS das Pi-hole Admin-Passwort manuell gesetzt werden:**
+
+1. **Pi-hole Pod finden:**
+   ```bash
+   kubectl get pods -n pihole
+   ```
+
+2. **Passwort interaktiv setzen:**
+   ```bash
+   kubectl exec -n pihole <POD_NAME> -it -- pihole setpassword
+   ```
+   
+3. **Oder Passwort ohne Interaktion setzen:**
+   ```bash
+   kubectl exec -n pihole <POD_NAME> -- pihole setpassword 'IhrSicheresPasswort'
+   ```
+
+4. **Passwort deaktivieren (nicht empfohlen):**
+   ```bash
+   kubectl exec -n pihole <POD_NAME> -- pihole setpassword ''
+   ```
+
+**Hinweis:** Das Passwort wird persistent gespeichert und überlebt Pod-Neustarts.
 
 ## Dateien
 
