@@ -57,7 +57,7 @@ controller:
   persistence:
     enabled: true
     size: 5Gi
-    storageClassName: ""  # Use default storage class
+    storageClassName: "longhorn"  # Use Longhorn for HA storage
     accessModes:
       - ReadWriteOnce
   
@@ -82,7 +82,7 @@ server:
   persistence:
     enabled: true
     size: 5Gi
-    storageClassName: ""  # Use default storage class
+    storageClassName: "longhorn"  # Use Longhorn for HA storage
     accessModes:
       - ReadWriteOnce
   
@@ -164,7 +164,7 @@ redis:
   persistence:
     enabled: true
     size: 2Gi
-    storageClassName: ""  # Use default storage class
+    storageClassName: "longhorn"  # Use Longhorn for HA storage
     accessModes:
       - ReadWriteOnce
   

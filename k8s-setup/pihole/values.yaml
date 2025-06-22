@@ -34,13 +34,13 @@ pihole:
     config:
       enabled: true
       size: 5Gi
-      storageClass: ""  # Use default storage class
+      storageClass: "longhorn"  # Use Longhorn for HA storage
       accessMode: ReadWriteOnce
       mountPath: /etc/pihole
     dnsmasq:
       enabled: true
       size: 1Gi
-      storageClass: ""  # Use default storage class
+      storageClass: "longhorn"  # Use Longhorn for HA storage
       accessMode: ReadWriteOnce
       mountPath: /etc/dnsmasq.d
   

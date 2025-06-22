@@ -11,7 +11,7 @@ portainer:
   persistence:
     enabled: true
     size: 10Gi
-    storageClass: ""  # Use default storage class
+    storageClass: "longhorn"  # Use Longhorn for HA storage
     accessMode: ReadWriteOnce
   
   # Service configuration

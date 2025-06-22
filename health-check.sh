@@ -117,6 +117,48 @@ else
     echo "  Applications: $ARGOCD_APPS"
 fi
 
+# Check Portainer
+print_info "Checking Portainer..."
+PORTAINER_VERSION=$(kubectl get deployment portainer -n portainer -o jsonpath='{.spec.template.spec.containers[0].image}' 2>/dev/null | cut -d':' -f2 || echo "NOT_FOUND")
+PORTAINER_READY=$(kubectl get pods -n portainer --field-selector=status.phase=Running --no-headers 2>/dev/null | wc -l)
+
+if [[ "$PORTAINER_VERSION" != "NOT_FOUND" && "$PORTAINER_READY" -ge 1 ]]; then
+    print_success "Portainer: $PORTAINER_VERSION ($PORTAINER_READY pods)"
+else
+    print_error "Portainer: Issues detected"
+    echo "  Version: $PORTAINER_VERSION"
+    echo "  Ready Pods: $PORTAINER_READY"
+fi
+
+# Check Longhorn
+print_info "Checking Longhorn..."
+LONGHORN_VERSION=$(kubectl get deployment longhorn-manager -n longhorn-system -o jsonpath='{.spec.template.spec.containers[0].image}' 2>/dev/null | cut -d':' -f2 || echo "NOT_FOUND")
+LONGHORN_READY=$(kubectl get pods -n longhorn-system --field-selector=status.phase=Running --no-headers 2>/dev/null | wc -l)
+LONGHORN_NODES=$(kubectl get nodes -n longhorn-system --no-headers 2>/dev/null | wc -l)
+LONGHORN_VOLUMES=$(kubectl get volumes -n longhorn-system --no-headers 2>/dev/null | wc -l)
+
+if [[ "$LONGHORN_VERSION" != "NOT_FOUND" && "$LONGHORN_READY" -ge 3 ]]; then
+    print_success "Longhorn: $LONGHORN_VERSION ($LONGHORN_READY pods, $LONGHORN_VOLUMES volumes)"
+else
+    print_error "Longhorn: Issues detected"
+    echo "  Version: $LONGHORN_VERSION"
+    echo "  Ready Pods: $LONGHORN_READY"
+    echo "  Volumes: $LONGHORN_VOLUMES"
+fi
+
+# Check PiHole
+print_info "Checking PiHole..."
+PIHOLE_VERSION=$(kubectl get deployment pihole -n pihole -o jsonpath='{.spec.template.spec.containers[0].image}' 2>/dev/null | cut -d':' -f2 || echo "NOT_FOUND")
+PIHOLE_READY=$(kubectl get pods -n pihole --field-selector=status.phase=Running --no-headers 2>/dev/null | wc -l)
+
+if [[ "$PIHOLE_VERSION" != "NOT_FOUND" && "$PIHOLE_READY" -ge 1 ]]; then
+    print_success "PiHole: $PIHOLE_VERSION ($PIHOLE_READY pods)"
+else
+    print_error "PiHole: Issues detected"
+    echo "  Version: $PIHOLE_VERSION"
+    echo "  Ready Pods: $PIHOLE_READY"
+fi
+
 # Check SSL certificates
 print_info "Checking SSL certificates..."
 CERT_COUNT=$(kubectl get certificates -A --no-headers 2>/dev/null | wc -l | tr -d ' \n')
@@ -148,11 +190,18 @@ echo "• MetalLB: $METALLB_VERSION"
 echo "• nginx ingress controller: $NGINX_VERSION"
 echo "• cert-manager: $CERT_VERSION"  
 echo "• ArgoCD: $ARGOCD_VERSION"
+echo "• Portainer: $PORTAINER_VERSION"
+echo "• Longhorn: $LONGHORN_VERSION"
+echo "• PiHole: $PIHOLE_VERSION"
 echo "• Load Balancer IP: $NGINX_IP"
 echo "• SSL Certificates: $CERT_READY/$CERT_COUNT"
 echo "• ArgoCD Applications: $ARGOCD_APPS"
+echo "• Longhorn Volumes: $LONGHORN_VOLUMES"
 
 echo ""
 print_info "🔗 Quick Links:"
 echo "• ArgoCD UI: https://$CF_ARGOCD_DOMAIN"
+echo "• Portainer UI: https://$CF_PORTAINER_DOMAIN"
+echo "• Longhorn UI: https://$CF_LONGHORN_DOMAIN"
+echo "• PiHole UI: https://$CF_PIHOLE_DOMAIN"
 echo "• ArgoCD CLI Login: argocd login $CF_ARGOCD_DOMAIN --username admin"

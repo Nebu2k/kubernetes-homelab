@@ -24,6 +24,25 @@ This setup uses the following versions (as of June 2025):
 - **Helm Chart**: jetstack/cert-manager
 - **Repository**: <https://charts.jetstack.io>
 
+## Portainer
+
+- **Version**: v2.22.0
+- **Helm Chart**: portainer/portainer
+- **Repository**: <https://portainer.github.io/k8s/>
+
+## Longhorn
+
+- **Version**: v1.9.0 (with hotfix v1.9.0-hotfix-1 for manager)
+- **Helm Chart**: longhorn/longhorn
+- **Repository**: <https://charts.longhorn.io>
+- **Note**: Uses hotfix for longhorn-manager to address stability issues
+
+## PiHole
+
+- **Version**: v2025.1.0
+- **Helm Chart**: mojo2600/pihole
+- **Repository**: <https://mojo2600.github.io/pihole-kubernetes/>
+
 ## How to Check for Updates
 
 ### MetalLB
@@ -48,6 +67,24 @@ helm search repo argo/argo-cd --versions | head -5
 ```bash
 helm repo update
 helm search repo jetstack/cert-manager --versions | head -5
+```
+
+### Portainer
+```bash
+helm repo update
+helm search repo portainer/portainer --versions | head -5
+```
+
+### Longhorn
+```bash
+helm repo update
+helm search repo longhorn/longhorn --versions | head -5
+```
+
+### PiHole
+```bash
+helm repo update
+helm search repo mojo2600/pihole --versions | head -5
 ```
 
 ## Upgrading Components
@@ -82,4 +119,27 @@ kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/
 helm upgrade cert-manager jetstack/cert-manager \
   --namespace cert-manager \
   --values k8s-setup/cert-manager/values.yaml
+```
+
+### Portainer
+```bash
+helm upgrade portainer portainer/portainer \
+  --namespace portainer \
+  --values k8s-setup/portainer/values.yaml
+```
+
+### Longhorn
+```bash
+# Note: Longhorn upgrades require careful planning
+# See: https://longhorn.io/docs/v1.9.0/deploy/upgrade/
+helm upgrade longhorn longhorn/longhorn \
+  --namespace longhorn-system \
+  --values k8s-setup/longhorn/values.yaml
+```
+
+### PiHole
+```bash
+helm upgrade pihole mojo2600/pihole \
+  --namespace pihole \
+  --values k8s-setup/pihole/values.yaml
 ```

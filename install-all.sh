@@ -44,14 +44,26 @@ else
 fi
 
 # Check required variables
-if [ -z "$CF_ARGOCD_DOMAIN" ] || [ -z "$CF_DOMAIN" ]; then
-    print_error "Required variables CF_ARGOCD_DOMAIN and CF_DOMAIN must be set in .env file"
+if [ -z "$CF_DOMAIN" ]; then
+    print_error "Required variable CF_DOMAIN must be set in .env file"
     exit 1
 fi
 
-# Set default Portainer domain if not specified
+# Auto-generate domain names if not specified
+if [ -z "$CF_ARGOCD_DOMAIN" ]; then
+    CF_ARGOCD_DOMAIN="argocd.${CF_DOMAIN}"
+fi
+
 if [ -z "$CF_PORTAINER_DOMAIN" ]; then
     CF_PORTAINER_DOMAIN="portainer.${CF_DOMAIN}"
+fi
+
+if [ -z "$CF_PIHOLE_DOMAIN" ]; then
+    CF_PIHOLE_DOMAIN="pihole.${CF_DOMAIN}"
+fi
+
+if [ -z "$CF_LONGHORN_DOMAIN" ]; then
+    CF_LONGHORN_DOMAIN="longhorn.${CF_DOMAIN}"
 fi
 
 # Function to check if kubectl is available and cluster is reachable
@@ -180,6 +192,42 @@ install_portainer() {
     echo ""
 }
 
+# Function to install Longhorn
+install_longhorn() {
+    if ! $FORCE_INSTALL && check_longhorn; then
+        print_warning "Longhorn is already installed, skipping... (use --force to reinstall)"
+        return 0
+    fi
+    
+    print_status "Installing Longhorn..."
+    cd /Users/speters/workspace/homelab
+    if $FORCE_INSTALL; then
+        FORCE_INSTALL=true ./k8s-setup/longhorn/install.sh
+    else
+        ./k8s-setup/longhorn/install.sh
+    fi
+    print_success "Longhorn installation completed"
+    echo ""
+}
+
+# Function to install PiHole
+install_pihole() {
+    if ! $FORCE_INSTALL && check_pihole; then
+        print_warning "PiHole is already installed, skipping... (use --force to reinstall)"
+        return 0
+    fi
+    
+    print_status "Installing PiHole..."
+    cd /Users/speters/workspace/homelab
+    if $FORCE_INSTALL; then
+        FORCE_INSTALL=true ./k8s-setup/pihole/install.sh
+    else
+        ./k8s-setup/pihole/install.sh
+    fi
+    print_success "PiHole installation completed"
+    echo ""
+}
+
 # Function to check if MetalLB is already installed
 check_metallb() {
     if helm list -n metallb-system | grep -q "metallb"; then
@@ -219,6 +267,24 @@ check_cert_manager() {
 # Function to check if Portainer is already installed
 check_portainer() {
     if helm list -n portainer | grep -q "portainer"; then
+        return 0  # Already installed
+    else
+        return 1  # Not installed
+    fi
+}
+
+# Function to check if Longhorn is already installed
+check_longhorn() {
+    if helm list -n longhorn-system | grep -q "longhorn"; then
+        return 0  # Already installed
+    else
+        return 1  # Not installed
+    fi
+}
+
+# Function to check if PiHole is already installed
+check_pihole() {
+    if helm list -n pihole | grep -q "pihole"; then
         return 0  # Already installed
     else
         return 1  # Not installed
@@ -267,6 +333,20 @@ show_installation_status() {
         echo "  ❌ Portainer: Not installed"
     fi
     
+    # Check Longhorn
+    if check_longhorn; then
+        echo "  ✅ Longhorn: Installed"
+    else
+        echo "  ❌ Longhorn: Not installed"
+    fi
+    
+    # Check PiHole
+    if check_pihole; then
+        echo "  ✅ PiHole: Installed"
+    else
+        echo "  ❌ PiHole: Not installed"
+    fi
+    
     echo ""
 }
 
@@ -287,9 +367,11 @@ main() {
     print_warning "This will install the following components:"
     echo "  1. MetalLB (Load Balancer)"
     echo "  2. NGINX Ingress Controller"
-    echo "  3. ArgoCD (GitOps)"
+    echo "  3. Longhorn (Distributed Storage)"
     echo "  4. Cert-Manager (Certificate Management)"
-    echo "  5. Portainer (Container Management)"
+    echo "  5. ArgoCD (GitOps)"
+    echo "  6. Portainer (Container Management)"
+    echo "  7. PiHole (Network-wide Ad Blocking)"
     echo ""
     print_warning "The installation will use IP 192.168.2.254 for the load balancer."
     print_warning "Continue with installation? (y/N)"
@@ -303,18 +385,23 @@ main() {
     # Install components in order
     install_metallb
     install_nginx_ingress
-    install_argocd
+    install_longhorn      # Install storage first
     install_cert_manager
+    install_argocd
     install_portainer
+    install_pihole
     
     # Final status
     print_success "🎉 All components installed successfully!"
     echo ""
     echo "📋 Next Steps:"
     echo "  1. Update DNS records to point your domains to 192.168.2.254"
-    echo "  2. Update domain names in ArgoCD and Cert-Manager configuration files if needed"
-    echo "  3. Access ArgoCD at https://$CF_ARGOCD_DOMAIN"
-    echo "  4. Access Portainer at https://$CF_PORTAINER_DOMAIN"
+    echo "  2. Access your services:"
+    echo "     • ArgoCD: https://$CF_ARGOCD_DOMAIN"
+    echo "     • Portainer: https://$CF_PORTAINER_DOMAIN"
+    echo "     • Longhorn: https://$CF_LONGHORN_DOMAIN"
+    echo "     • PiHole: https://$CF_PIHOLE_DOMAIN"
+    echo "  3. Review storage migration guide: k8s-setup/longhorn/MIGRATION.md"
     echo ""
     echo "📝 ArgoCD Admin Password:"
     kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d
