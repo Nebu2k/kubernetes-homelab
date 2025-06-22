@@ -11,6 +11,7 @@ spec:
     namespaces:
       - ingress-nginx
       - default
+      - pihole
 ---
 apiVersion: metallb.io/v1beta1
 kind: L2Advertisement

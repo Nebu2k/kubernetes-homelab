@@ -68,7 +68,7 @@ echo "🌐 Getting LoadBalancer IP..."
 EXTERNAL_IP=""
 while [ -z $EXTERNAL_IP ]; do
     echo "⏳ Waiting for external IP..."
-    EXTERNAL_IP=$(kubectl get svc pihole-dns-udp -n pihole --template="{{range .status.loadBalancer.ingress}}{{.ip}}{{end}}")
+    EXTERNAL_IP=$(kubectl get svc pihole-dns -n pihole --template="{{range .status.loadBalancer.ingress}}{{.ip}}{{end}}")
     [ -z "$EXTERNAL_IP" ] && sleep 10
 done
 
