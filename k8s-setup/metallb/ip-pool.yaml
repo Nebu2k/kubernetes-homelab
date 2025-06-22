@@ -5,7 +5,7 @@ metadata:
   namespace: metallb-system
 spec:
   addresses:
-  - 192.168.2.254/32
+  - 192.168.2.250-192.168.2.254
   serviceAllocation:
     priority: 100
     namespaces:
