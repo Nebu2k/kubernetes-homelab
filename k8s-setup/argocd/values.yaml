@@ -53,13 +53,9 @@ configs:
 controller:
   replicas: 1
   
-  # Persistent storage for ArgoCD application controller
-  persistence:
-    enabled: true
-    size: 5Gi
-    storageClassName: "longhorn"  # Use Longhorn for HA storage
-    accessModes:
-      - ReadWriteOnce
+  # No persistence needed - ArgoCD loads state from Git repositories
+  # persistence:
+  #   enabled: false
   
   resources:
     limits:
@@ -78,13 +74,9 @@ controller:
 server:
   replicas: 2
   
-  # Persistent storage for ArgoCD server
-  persistence:
-    enabled: true
-    size: 5Gi
-    storageClassName: "longhorn"  # Use Longhorn for HA storage
-    accessModes:
-      - ReadWriteOnce
+  # No persistence needed - ArgoCD server is stateless
+  # persistence:
+  #   enabled: false
   
   resources:
     limits:
