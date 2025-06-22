@@ -1,7 +1,16 @@
 #!/bin/bash
 
 # PiHole Installation Script
-# This script installs PiHole using kubectl
+# This script installs PiHole uskubectl get svc -n pihole
+
+echo ""
+echo "🎉 PiHole installation completed successfully!"
+echo ""
+echo "📝 Access Information:"
+echo "   Web Interface: http://<node-ip>:30081 (z.B. http://192.168.2.7:30081)"
+echo "   DNS Server IP: $EXTERNAL_IP"
+echo "   Default Password: admin123 (change this!)"
+echo "   Internal Access Only: No external domain required"tl
 
 set -e
 
@@ -51,19 +60,7 @@ kubectl apply -f k8s-setup/pihole/pihole.yaml
 echo "⏳ Waiting for PiHole to be ready..."
 kubectl wait --for=condition=available --timeout=300s deployment/pihole -n pihole
 
-# Apply Ingress for PiHole
-echo "🌐 Creating PiHole Ingress..."
-
-# Validate that CF_PIHOLE_DOMAIN is set
-if [ -z "$CF_PIHOLE_DOMAIN" ]; then
-    echo "❌ Error: CF_PIHOLE_DOMAIN is not set. Please check your .env file."
-    exit 1
-fi
-
-echo "ℹ️  Creating ingress for domain: ${CF_PIHOLE_DOMAIN}"
-envsubst < k8s-setup/pihole/ingress.yaml | kubectl apply -f -
-
-# Get LoadBalancer IP
+# Get LoadBalancer IP for DNS service
 echo "🌐 Getting LoadBalancer IP..."
 EXTERNAL_IP=""
 while [ -z $EXTERNAL_IP ]; do
@@ -72,14 +69,8 @@ while [ -z $EXTERNAL_IP ]; do
     [ -z "$EXTERNAL_IP" ] && sleep 10
 done
 
-# Create DNS record for PiHole
-echo "🌐 Creating DNS record for PiHole..."
-if [ -f "scripts/create-dns-record.sh" ]; then
-    ./scripts/create-dns-record.sh pihole "$CF_DEFAULT_TARGET"
-else
-    echo "⚠️  DNS record script not found. Please create DNS record manually:"
-    echo "   $CF_PIHOLE_DOMAIN -> $CF_DEFAULT_TARGET"
-fi
+echo "ℹ️  PiHole DNS service available at: $EXTERNAL_IP"
+echo "ℹ️  Web interface configured for internal access only (NodePort)"
 
 # Verify installation
 echo "✅ Verifying PiHole installation..."
@@ -98,7 +89,7 @@ echo "📋 DNS Configuration:"
 echo "   Configure your router or devices to use $EXTERNAL_IP as DNS server"
 echo ""
 echo "🔧 Post-Installation Steps:"
-echo "   1. Visit https://$CF_PIHOLE_DOMAIN/admin"
+echo "   1. Visit http://<any-node-ip>:30081/admin"
 echo "   2. Login with password: admin123"
 echo "   3. Change the admin password immediately!"
 echo "   4. Import your existing configuration (see migration guide)"
