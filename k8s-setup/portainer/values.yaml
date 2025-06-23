@@ -51,7 +51,7 @@ rbac:
 # Image configuration
 image:
   repository: portainer/portainer-ce
-  tag: "2.31.1"
+  tag: "2.27.7"
   pullPolicy: IfNotPresent
 
 # Ingress configuration (disabled, we'll use a separate ingress file)
