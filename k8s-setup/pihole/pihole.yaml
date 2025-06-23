@@ -72,10 +72,10 @@ data:
     rev-server=192.168.2.0/24,192.168.2.1
     
     # VLAN 192.168.4.0/24
-    rev-server=192.168.4.0/24,192.168.2.1
+    rev-server=192.168.4.0/24,192.168.4.1
     
     # VLAN 192.168.5.0/24
-    rev-server=192.168.5.0/24,192.168.2.1
+    rev-server=192.168.5.0/24,192.168.5.1
     
     # Enable local domain resolution for all VLANs
     local=/elmstreet79.de/
