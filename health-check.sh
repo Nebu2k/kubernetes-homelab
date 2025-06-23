@@ -224,7 +224,7 @@ fi
 echo "• ArgoCD UI: https://${CF_ARGOCD_DOMAIN:-'<domain-not-set>'}"
 echo "• Portainer UI: https://${CF_PORTAINER_DOMAIN:-'<domain-not-set>'}"
 echo "• Longhorn UI: http://<node-ip>:30080 (NodePort - internal access only)"
-echo "• PiHole UI: http://<node-ip>:30081/admin (NodePort - internal access only)"
+echo "• PiHole UI: http://192.168.2.250/admin (LoadBalancer)"
 if [ -n "$CF_ARGOCD_DOMAIN" ]; then
     echo "• ArgoCD CLI Login: argocd login $CF_ARGOCD_DOMAIN --username admin"
 fi

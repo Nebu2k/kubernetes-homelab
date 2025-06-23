@@ -400,7 +400,7 @@ main() {
     echo "     • ArgoCD: https://$CF_ARGOCD_DOMAIN"
     echo "     • Portainer: https://$CF_PORTAINER_DOMAIN"
     echo "     • Longhorn: https://$CF_LONGHORN_DOMAIN"
-    echo "     • PiHole: https://$CF_PIHOLE_DOMAIN"
+    echo "     • PiHole: http://192.168.2.250/admin (LoadBalancer)"
     echo "  3. Review storage migration guide: k8s-setup/longhorn/MIGRATION.md"
     echo ""
     echo "📝 ArgoCD Admin Password:"

@@ -1,0 +1,169 @@
+# PiHole with Unbound Helm Values
+# This configuration sets up PiHole with Unbound as the upstream DNS resolver
+
+# Image configuration
+image:
+  repository: pihole/pihole
+  tag: "2024.12.0"
+  pullPolicy: IfNotPresent
+
+# PiHole configuration
+pihole:
+  # Use existing secret for admin password
+  existingSecret: "pihole-admin-password"
+  secretKey: "password"
+  
+  # DNS configuration - using port 5353 for testing (avoid conflicts with existing PiHole)
+  dnsmasq:
+    port: 5353
+    customSettings: |
+      # Custom dnsmasq settings
+      log-queries
+      log-dhcp
+      
+  # Environment variables
+  env:
+    TZ: "Europe/Berlin"
+    WEBPASSWORD_FILE: "/etc/pihole/WEBPASSWORD"
+    PIHOLE_DNS_: "127.0.0.1#5335"  # Point to Unbound
+    DNSSEC: "true"
+    DNS_FQDN_REQUIRED: "true"
+    DNS_BOGUS_PRIV: "true"
+    DNSMASQ_LISTENING: "all"
+    WEB_PORT: "8080"
+    VIRTUAL_HOST: "pihole.local"
+    REV_SERVER: "false"
+    
+# Service configuration
+service:
+  type: ClusterIP
+  annotations: {}
+  
+  # DNS service configuration
+  dns:
+    enabled: true
+    type: ClusterIP
+    port: 5353  # Using port 5353 for testing (avoid conflicts)
+    targetPort: 5353
+    
+  # Web interface service
+  web:
+    enabled: true
+    type: ClusterIP
+    port: 8080
+    targetPort: 8080
+
+# Persistence for PiHole data
+persistence:
+  enabled: true
+  storageClass: "longhorn"
+  accessMode: ReadWriteOnce
+  size: 1Gi
+  
+# Resources
+resources:
+  limits:
+    cpu: 500m
+    memory: 512Mi
+  requests:
+    cpu: 100m
+    memory: 256Mi
+
+# Unbound sidecar configuration
+unbound:
+  enabled: true
+  
+  # Unbound image
+  image:
+    repository: mvance/unbound
+    tag: "1.21.1"
+    pullPolicy: IfNotPresent
+    
+  # Unbound configuration
+  config: |
+    server:
+        # Basic configuration
+        verbosity: 1
+        interface: 127.0.0.1
+        port: 5335
+        do-ip4: yes
+        do-ip6: no
+        do-udp: yes
+        do-tcp: yes
+        
+        # Security
+        hide-identity: yes
+        hide-version: yes
+        harden-glue: yes
+        harden-dnssec-stripped: yes
+        harden-below-nxdomain: yes
+        harden-referral-path: yes
+        unwanted-reply-threshold: 10000000
+        
+        # Performance
+        num-threads: 2
+        msg-cache-slabs: 4
+        rrset-cache-slabs: 4
+        infra-cache-slabs: 4
+        key-cache-slabs: 4
+        rrset-cache-size: 256m
+        msg-cache-size: 128m
+        so-rcvbuf: 1m
+        
+        # Privacy
+        prefetch: yes
+        prefetch-key: yes
+        qname-minimisation: yes
+        aggressive-nsec: yes
+        
+        # Root hints
+        root-hints: "/opt/unbound/etc/unbound/root.hints"
+        
+        # Trust anchor for DNSSEC
+        auto-trust-anchor-file: "/opt/unbound/etc/unbound/root.key"
+        
+        # Access control
+        access-control: 127.0.0.0/8 allow
+        access-control: 0.0.0.0/0 refuse
+        
+    # Forward zones (optional - comment out to use root servers directly)
+    # forward-zone:
+    #     name: "."
+    #     forward-addr: 1.1.1.1
+    #     forward-addr: 1.0.0.1
+    #     forward-addr: 2606:4700:4700::1111
+    #     forward-addr: 2606:4700:4700::1001
+        
+  # Resources for Unbound
+  resources:
+    limits:
+      cpu: 200m
+      memory: 256Mi
+    requests:
+      cpu: 50m
+      memory: 128Mi
+
+# Security context
+securityContext:
+  runAsUser: 999
+  runAsGroup: 999
+  fsGroup: 999
+
+# Pod security context
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 999
+  runAsGroup: 999
+  fsGroup: 999
+
+# Node selector and tolerations
+nodeSelector: {}
+tolerations: []
+affinity: {}
+
+# Pod annotations
+podAnnotations: {}
+
+# Service monitor for Prometheus (if available)
+serviceMonitor:
+  enabled: false
