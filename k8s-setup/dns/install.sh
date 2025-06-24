@@ -7,37 +7,13 @@ set -e
 
 echo "🚀 Installing Blocky and Unbound..."
 
-# Add Blocky Helm repository
-echo "📦 Adding Blocky Helm repository..."
-if ! helm repo list | grep -q "^blocky"; then
-    helm repo add blocky https://0xerr0r.github.io/blocky
-    echo "✅ Blocky repository added"
-else
-    echo "ℹ️ Blocky repository already exists"
-fi
-helm repo update
-
 # Create namespace first
 echo "📁 Creating dns namespace..."
 kubectl create namespace dns --dry-run=client -o yaml | kubectl apply -f -
 
-# Install Blocky
-echo "⚙️  Installing Blocky..."
-if [ "$FORCE_INSTALL" = "true" ]; then
-    helm upgrade --install blocky blocky/blocky \
-      --namespace dns \
-      --values k8s-setup/dns/blocky.yaml \
-      --wait
-else
-    helm install blocky blocky/blocky \
-      --namespace dns \
-      --values k8s-setup/dns/blocky.yaml \
-      --wait
-fi
-
-# Install Unbound
-echo "⚙️  Installing Unbound..."
-kubectl apply -f k8s-setup/dns/unbound.yaml
+# Install Blocky and Unbound
+echo "⚙️  Installing Blocky and Unbound DNS services..."
+kubectl apply -f k8s-setup/dns/values.yaml
 
 echo "⏳ Waiting for Blocky to be ready..."
 kubectl wait --for=condition=ready pod -l app.kubernetes.io/name=blocky -n dns --timeout=300s
