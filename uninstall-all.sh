@@ -309,33 +309,7 @@ uninstall_longhorn() {
     echo ""
 }
 
-# Function to uninstall PiHole
-uninstall_pihole() {
-    print_status "Uninstalling PiHole..."
-    
-    if check_component_installed "pihole" "pihole"; then
-        # Remove PiHole ingress
-        print_status "Removing PiHole ingress..."
-        kubectl delete ingress pihole-ingress -n pihole --ignore-not-found=true
-        
-        # Uninstall Helm release
-        print_status "Uninstalling PiHole Helm release..."
-        helm uninstall pihole -n pihole
-        
-        # Wait for pods to terminate
-        print_status "Waiting for PiHole pods to terminate..."
-        kubectl wait --for=delete pod --all -n pihole --timeout=120s || true
-        
-        # Delete namespace
-        print_status "Removing pihole namespace..."
-        kubectl delete namespace pihole --ignore-not-found=true
-        
-        print_success "PiHole uninstalled successfully"
-    else
-        print_warning "PiHole is not installed, skipping..."
-    fi
-    echo ""
-}
+
 
 # Function to clean up any remaining resources
 cleanup_remaining_resources() {
@@ -349,7 +323,6 @@ cleanup_remaining_resources() {
     kubectl delete pvc --all -n cert-manager --ignore-not-found=true
     kubectl delete pvc --all -n portainer --ignore-not-found=true
     kubectl delete pvc --all -n longhorn-system --ignore-not-found=true
-    kubectl delete pvc --all -n pihole --ignore-not-found=true
     
     # Remove any remaining secrets
     print_status "Removing TLS secrets..."
@@ -363,7 +336,6 @@ cleanup_remaining_resources() {
     kubectl delete clusterrole -l app.kubernetes.io/name=cert-manager --ignore-not-found=true
     kubectl delete clusterrole -l app.kubernetes.io/name=portainer --ignore-not-found=true
     kubectl delete clusterrole -l app.kubernetes.io/name=longhorn --ignore-not-found=true
-    kubectl delete clusterrole -l app.kubernetes.io/name=pihole --ignore-not-found=true
     
     kubectl delete clusterrolebinding -l app.kubernetes.io/name=metallb --ignore-not-found=true
     kubectl delete clusterrolebinding -l app.kubernetes.io/name=ingress-nginx --ignore-not-found=true
@@ -371,7 +343,6 @@ cleanup_remaining_resources() {
     kubectl delete clusterrolebinding -l app.kubernetes.io/name=cert-manager --ignore-not-found=true
     kubectl delete clusterrolebinding -l app.kubernetes.io/name=portainer --ignore-not-found=true
     kubectl delete clusterrolebinding -l app.kubernetes.io/name=longhorn --ignore-not-found=true
-    kubectl delete clusterrolebinding -l app.kubernetes.io/name=pihole --ignore-not-found=true
     
     # Clean up any orphaned finalizers (force cleanup if needed)
     print_status "Checking for resources with stuck finalizers..."
@@ -435,13 +406,6 @@ show_uninstall_status() {
         echo "  ✅ Longhorn: Removed"
     fi
     
-    # Check PiHole
-    if check_component_installed "pihole" "pihole"; then
-        echo "  ⚠️  PiHole: Still installed"
-    else
-        echo "  ✅ PiHole: Removed"
-    fi
-    
     echo ""
 }
 
@@ -460,7 +424,6 @@ main() {
     echo "  3. NGINX Ingress Controller (including all ingresses)"
     echo "  4. MetalLB (including load balancer configuration)"
     echo "  5. Longhorn (including storage volumes and backups)"
-    echo "  6. PiHole (including DNS records)"
     echo ""
     print_warning "This action cannot be undone!"
     echo ""
@@ -473,7 +436,6 @@ main() {
     echo ""
     
     # Uninstall in reverse order (last installed first)
-    uninstall_pihole
     uninstall_portainer
     uninstall_argocd
     uninstall_cert_manager

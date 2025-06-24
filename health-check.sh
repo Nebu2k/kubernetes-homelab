@@ -145,18 +145,7 @@ else
     echo "  Volumes: $LONGHORN_VOLUMES"
 fi
 
-# Check PiHole
-print_info "Checking PiHole..."
-PIHOLE_VERSION=$(kubectl get deployment pihole -n pihole -o jsonpath='{.spec.template.spec.containers[0].image}' 2>/dev/null | cut -d':' -f2 || echo "NOT_FOUND")
-PIHOLE_READY=$(kubectl get pods -n pihole --field-selector=status.phase=Running --no-headers 2>/dev/null | wc -l)
 
-if [[ "$PIHOLE_VERSION" != "NOT_FOUND" && "$PIHOLE_READY" -ge 1 ]]; then
-    print_success "PiHole: $PIHOLE_VERSION ($PIHOLE_READY pods)"
-else
-    print_error "PiHole: Issues detected"
-    echo "  Version: $PIHOLE_VERSION"
-    echo "  Ready Pods: $PIHOLE_READY"
-fi
 
 # Check SSL certificates
 print_info "Checking SSL certificates..."
@@ -204,7 +193,6 @@ echo "• cert-manager: $CERT_VERSION"
 echo "• ArgoCD: $ARGOCD_VERSION"
 echo "• Portainer: $PORTAINER_VERSION"
 echo "• Longhorn: $LONGHORN_VERSION"
-echo "• PiHole: $PIHOLE_VERSION"
 echo "• Load Balancer IP: $NGINX_IP"
 echo "• SSL Certificates: $CERT_READY/$CERT_COUNT"
 echo "• ArgoCD Applications: $ARGOCD_APPS"
@@ -224,7 +212,6 @@ fi
 echo "• ArgoCD UI: https://${CF_ARGOCD_DOMAIN:-'<domain-not-set>'}"
 echo "• Portainer UI: https://${CF_PORTAINER_DOMAIN:-'<domain-not-set>'}"
 echo "• Longhorn UI: http://<node-ip>:30080 (NodePort - internal access only)"
-echo "• PiHole UI: http://192.168.2.250/admin (LoadBalancer)"
 if [ -n "$CF_ARGOCD_DOMAIN" ]; then
     echo "• ArgoCD CLI Login: argocd login $CF_ARGOCD_DOMAIN --username admin"
 fi

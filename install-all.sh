@@ -58,10 +58,6 @@ if [ -z "$CF_PORTAINER_DOMAIN" ]; then
     CF_PORTAINER_DOMAIN="portainer.${CF_DOMAIN}"
 fi
 
-if [ -z "$CF_PIHOLE_DOMAIN" ]; then
-    CF_PIHOLE_DOMAIN="pihole.${CF_DOMAIN}"
-fi
-
 if [ -z "$CF_LONGHORN_DOMAIN" ]; then
     CF_LONGHORN_DOMAIN="longhorn.${CF_DOMAIN}"
 fi
@@ -210,23 +206,7 @@ install_longhorn() {
     echo ""
 }
 
-# Function to install PiHole
-install_pihole() {
-    if ! $FORCE_INSTALL && check_pihole; then
-        print_warning "PiHole is already installed, skipping... (use --force to reinstall)"
-        return 0
-    fi
-    
-    print_status "Installing PiHole..."
-    cd /Users/speters/workspace/homelab
-    if $FORCE_INSTALL; then
-        FORCE_INSTALL=true ./k8s-setup/pihole/install.sh
-    else
-        ./k8s-setup/pihole/install.sh
-    fi
-    print_success "PiHole installation completed"
-    echo ""
-}
+
 
 # Function to check if MetalLB is already installed
 check_metallb() {
@@ -282,14 +262,7 @@ check_longhorn() {
     fi
 }
 
-# Function to check if PiHole is already installed
-check_pihole() {
-    if helm list -n pihole | grep -q "pihole"; then
-        return 0  # Already installed
-    else
-        return 1  # Not installed
-    fi
-}
+
 
 # Function to show installation status
 show_installation_status() {
@@ -340,13 +313,6 @@ show_installation_status() {
         echo "  ❌ Longhorn: Not installed"
     fi
     
-    # Check PiHole
-    if check_pihole; then
-        echo "  ✅ PiHole: Installed"
-    else
-        echo "  ❌ PiHole: Not installed"
-    fi
-    
     echo ""
 }
 
@@ -371,7 +337,6 @@ main() {
     echo "  4. Cert-Manager (Certificate Management)"
     echo "  5. ArgoCD (GitOps)"
     echo "  6. Portainer (Container Management)"
-    echo "  7. PiHole (Network-wide Ad Blocking)"
     echo ""
     print_warning "The installation will use IP 192.168.2.254 for the load balancer."
     print_warning "Continue with installation? (y/N)"
@@ -389,7 +354,6 @@ main() {
     install_cert_manager
     install_argocd
     install_portainer
-    install_pihole
     
     # Final status
     print_success "🎉 All components installed successfully!"
@@ -400,7 +364,6 @@ main() {
     echo "     • ArgoCD: https://$CF_ARGOCD_DOMAIN"
     echo "     • Portainer: https://$CF_PORTAINER_DOMAIN"
     echo "     • Longhorn: https://$CF_LONGHORN_DOMAIN"
-    echo "     • PiHole: http://192.168.2.250/admin (LoadBalancer)"
     echo "  3. Review storage migration guide: k8s-setup/longhorn/MIGRATION.md"
     echo ""
     echo "📝 ArgoCD Admin Password:"

@@ -39,13 +39,6 @@ This setup uses the following versions (as of June 2025):
 - **Repository**: <https://charts.longhorn.io>
 - **Note**: Uses hotfix for longhorn-manager to address stability issues
 
-## PiHole
-
-- **Version**: 2024.12.0 (Docker Image)
-- **Container Image**: pihole/pihole:2024.12.0
-- **Deployment**: Native Kubernetes manifests (not Helm)
-- **Note**: Currently using direct YAML manifests instead of Helm chart
-
 ## How to Check for Updates
 
 ### MetalLB
@@ -88,13 +81,6 @@ helm search repo portainer/portainer --versions | head -5
 ```bash
 helm repo update
 helm search repo longhorn/longhorn --versions | head -5
-```
-
-### PiHole
-
-```bash
-# Check for new Docker image versions
-curl -s https://registry.hub.docker.com/v2/repositories/pihole/pihole/tags | jq -r '.results[].name' | head -10
 ```
 
 ## Upgrading Components
@@ -151,13 +137,6 @@ helm upgrade portainer portainer/portainer \
 helm upgrade longhorn longhorn/longhorn \
   --namespace longhorn-system \
   --values k8s-setup/longhorn/values.yaml
-```
-
-### Upgrade PiHole
-
-```bash
-# Update the image tag in pihole.yaml, then apply
-kubectl apply -f k8s-setup/pihole/pihole.yaml
 ```
 
 ## Last Updated

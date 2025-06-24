@@ -21,6 +21,8 @@ scripts/setup-demo-app.sh
 # Ignore private ingress manifests
 private-ingress
 
+K3S_HA_SETUP.md
+
 # Ignore Python cache
 __pycache__/
 # Ignore node_modules (if any)
