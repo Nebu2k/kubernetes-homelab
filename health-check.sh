@@ -131,7 +131,19 @@ fi
 
 # Check Longhorn
 print_info "Checking Longhorn..."
-LONGHORN_VERSION=$(kubectl get deployment longhorn-manager -n longhorn-system -o jsonpath='{.spec.template.spec.containers[0].image}' 2>/dev/null | cut -d':' -f2 || echo "NOT_FOUND")
+LONGHORN_VERSION=$(kubectl get deployment longhorn-manager -n longhorn-system -o jsonpath='{.spec.template.spec.containers[0].image}' 2>/dev/null | cut -d':' -f2 || echo "")
+# Try alternative method if first fails
+if [[ -z "$LONGHORN_VERSION" ]]; then
+    LONGHORN_VERSION=$(kubectl get daemonset longhorn-manager -n longhorn-system -o jsonpath='{.spec.template.spec.containers[0].image}' 2>/dev/null | cut -d':' -f2 || echo "")
+fi
+# If still empty, try getting from any longhorn pod
+if [[ -z "$LONGHORN_VERSION" ]]; then
+    LONGHORN_VERSION=$(kubectl get pods -n longhorn-system -l app=longhorn-manager -o jsonpath='{.items[0].spec.containers[0].image}' 2>/dev/null | cut -d':' -f2 || echo "NOT_FOUND")
+fi
+# Default to NOT_FOUND if still empty
+if [[ -z "$LONGHORN_VERSION" ]]; then
+    LONGHORN_VERSION="NOT_FOUND"
+fi
 LONGHORN_READY=$(kubectl get pods -n longhorn-system --field-selector=status.phase=Running --no-headers 2>/dev/null | wc -l)
 LONGHORN_NODES=$(kubectl get nodes -n longhorn-system --no-headers 2>/dev/null | wc -l)
 LONGHORN_VOLUMES=$(kubectl get volumes -n longhorn-system --no-headers 2>/dev/null | wc -l)
