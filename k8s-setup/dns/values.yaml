@@ -25,7 +25,7 @@ data:
     logLevel: info
     logFormat: json
     prometheus:
-      enable: true
+      enable: false
       path: /metrics
 
 ---
@@ -175,41 +175,3 @@ spec:
   selector:
     app.kubernetes.io/name: blocky
     app.kubernetes.io/instance: blocky
-
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: blocky-metrics
-  namespace: dns
-  labels:
-    app.kubernetes.io/name: blocky
-    app.kubernetes.io/component: metrics
-spec:
-  type: ClusterIP
-  ports:
-  - port: 4000
-    targetPort: 4000
-    protocol: TCP
-    name: metrics
-  selector:
-    app.kubernetes.io/name: blocky
-    app.kubernetes.io/instance: blocky
-
----
-apiVersion: monitoring.coreos.com/v1
-kind: ServiceMonitor
-metadata:
-  name: blocky-metrics
-  namespace: dns
-  labels:
-    app.kubernetes.io/name: blocky
-spec:
-  selector:
-    matchLabels:
-      app.kubernetes.io/name: blocky
-      app.kubernetes.io/component: metrics
-  endpoints:
-  - port: metrics
-    path: /metrics
-    interval: 30s
