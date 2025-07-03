@@ -75,6 +75,13 @@ spec:
             - containerPort: 4000
               name: metrics
               protocol: TCP
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
           volumeMounts:
             - name: config
               mountPath: /app/config.yml
