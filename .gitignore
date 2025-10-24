@@ -1,0 +1,33 @@
+# Ignore secrets and sensitive config
+.env
+*.secret.yaml
+*.secrets.yaml
+*.bak
+*.swp
+*.swo
+*.tmp
+*.log
+# Ignore OS and editor files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.code-workspace
+
+# Ignore private ingress manifests
+private-ingress
+
+# Ignore Python cache
+__pycache__/
+# Ignore node_modules (if any)
+node_modules/
+# Ignore backup and dump files
+*.dump
+*.backup
+*.old
+# Ignore test output
+coverage/
+# Ignore local kube configs
+.kube/
+# Ignore Helm release cache
+.helm/
