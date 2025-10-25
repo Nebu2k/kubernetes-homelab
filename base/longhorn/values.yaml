@@ -4,8 +4,8 @@ persistence:
   defaultClassReplicaCount: 2
   
 defaultSettings:
-  backupTarget: ""  # S3 target in production overlay
-  backupTargetCredentialSecret: ""  # Secret in production overlay
+  backupTarget: "s3://longhorn@us-east-1/https://192.168.2.9:9300"
+  backupTargetCredentialSecret: "longhorn-s3-secret"
   defaultReplicaCount: "2"
 
 # Disable preUpgrade hook (causes issues with ArgoCD)
