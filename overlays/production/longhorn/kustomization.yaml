@@ -4,3 +4,10 @@ namespace: longhorn-system
 resources:
   # Uncomment after sealing the secret:
   - s3-secret-sealed.yaml
+
+patches:
+  # Remove default annotation from local-path StorageClass (make longhorn the only default)
+  - path: disable-local-path-default.yaml
+    target:
+      kind: StorageClass
+      name: local-path
