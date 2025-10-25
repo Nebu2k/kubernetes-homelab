@@ -7,6 +7,7 @@ defaultSettings:
   backupTarget: "s3://longhorn@local/"
   backupTargetCredentialSecret: "longhorn-s3-secret"
   defaultReplicaCount: "2"
+  recurringJobSelector: '[{"name":"backup-daily","isGroup":false},{"name":"backup-weekly","isGroup":false},{"name":"snapshot-cleanup-daily","isGroup":false}]'
 
 # Disable preUpgrade hook (causes issues with ArgoCD)
 preUpgradeChecker:
