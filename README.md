@@ -237,8 +237,13 @@ The repository is pre-configured for `elmstreet79.de`. If using your own domain,
 
 3. **Cloudflare API Token** (required):
    ```bash
-   vim overlays/production/cert-manager/cloudflare-token-unsealed.yaml
+   # Create from example
+   cp overlays/production/cert-manager/cloudflare-token-unsealed.yaml.example \
+      overlays/production/cert-manager/cloudflare-token-unsealed.yaml
+   
    # Add your Cloudflare API token
+   vim overlays/production/cert-manager/cloudflare-token-unsealed.yaml
+   # Change: api-token: "your-cloudflare-api-token-here"
    
    # Seal the secret
    kubeseal --format=yaml --controller-namespace=kube-system \
@@ -264,8 +269,13 @@ The repository is pre-configured for `elmstreet79.de`. If using your own domain,
 
 6. **Longhorn S3 Backup** (optional):
    ```bash
-   vim overlays/production/longhorn/s3-secret-unsealed.yaml
+   # Create from example
+   cp overlays/production/longhorn/s3-secret-unsealed.yaml.example \
+      overlays/production/longhorn/s3-secret-unsealed.yaml
+   
    # Update MinIO/S3 credentials
+   vim overlays/production/longhorn/s3-secret-unsealed.yaml
+   # Change: AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_ENDPOINTS
    
    # Seal the secret
    kubeseal --format=yaml --controller-namespace=kube-system \
@@ -276,6 +286,8 @@ The repository is pre-configured for `elmstreet79.de`. If using your own domain,
    vim overlays/production/longhorn/kustomization.yaml
    # Uncomment: - s3-secret-sealed.yaml
    ```
+   
+   ⚠️ **Note:** `*-unsealed.yaml` files are gitignored for security. Only `.example` templates are committed.
 
 7. **Create DNS Records** (required for HTTPS):
    
