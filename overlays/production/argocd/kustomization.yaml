@@ -3,8 +3,4 @@ kind: Kustomization
 namespace: argocd
 resources:
   - ingress.yaml
-patches:
-  - path: argocd-server-patch.yaml
-    target:
-      kind: Deployment
-      name: argocd-server
+  - argocd-server-patch.yaml
