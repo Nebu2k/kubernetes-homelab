@@ -6,7 +6,7 @@ persistence:
 defaultSettings:
   backupTarget: ""  # S3 target in production overlay
   backupTargetCredentialSecret: ""  # Secret in production overlay
-  defaultReplicaCount: 2
+  defaultReplicaCount: "2"
   
 # NodePort for UI access
 service:
