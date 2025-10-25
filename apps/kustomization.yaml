@@ -8,9 +8,8 @@ resources:
   - cert-manager-config.yaml
   - nginx-ingress.yaml
   - nginx-ingress-config.yaml
-  # Temporarily disabled for redeployment
-  # - longhorn.yaml
-  # - longhorn-config.yaml
+  - longhorn.yaml
+  - longhorn-config.yaml
   - portainer.yaml
   - portainer-config.yaml
   - argocd-config.yaml
