@@ -87,7 +87,7 @@ homelab/
 **First control plane node:**
 
 ```bash
-curl -sfL https://get.k3s.io | INSTALL_K3S_CHANNEL=latest sh -s - server \
+curl -sfL https://get.k3s.io | INSTALL_K3S_CHANNEL=stable sh -s - server \
   --cluster-init \
   --tls-san 192.168.2.249 \
   --tls-san raspi4 \
@@ -171,7 +171,7 @@ kubectl get nodes
 
 ```bash
 # Join via VIP (not node IP!)
-curl -sfL https://get.k3s.io | INSTALL_K3S_CHANNEL=latest sh -s - server \
+curl -sfL https://get.k3s.io | INSTALL_K3S_CHANNEL=stable sh -s - server \
   --server https://192.168.2.249:6443 \
   --token <token-from-step-1> \
   --tls-san 192.168.2.249 \
