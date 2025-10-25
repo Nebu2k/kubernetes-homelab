@@ -3,7 +3,7 @@ kind: Kustomization
 namespace: longhorn-system
 resources:
   # Uncomment after sealing the secret:
-  - s3-secret-sealed.yaml
+  # - s3-secret-sealed.yaml
   # Override local-path StorageClass to remove default annotation
   - disable-local-path-default.yaml
   # Automatic backup jobs
