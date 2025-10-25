@@ -82,7 +82,7 @@ homelab/
 - Cloudflare API Token (Zone.DNS Edit permission)
 - S3-compatible storage for Longhorn backups (optional)
 
-### Step 1: Install K3s Cluster
+### Step 1: Install K3s Cluster (**on raspi4**)
 
 **First control plane node:**
 
@@ -99,7 +99,7 @@ curl -sfL https://get.k3s.io | INSTALL_K3S_CHANNEL=latest sh -s - server \
 sudo cat /var/lib/rancher/k3s/server/node-token
 ```
 
-### Step 2: Install Kube-VIP (Control Plane HA)
+### Step 2: Install Kube-VIP (**on raspi4** - Control Plane HA)
 
 ```bash
 kubectl apply -f https://kube-vip.io/manifests/rbac.yaml
@@ -156,7 +156,7 @@ EOF
 ping -c 3 192.168.2.249
 ```
 
-### Step 3: Configure kubectl with VIP
+### Step 3: Configure kubectl with VIP (**on your laptop**)
 
 ```bash
 scp raspi4:/etc/rancher/k3s/k3s.yaml ~/.kube/config
@@ -164,7 +164,7 @@ sed -i '' 's/127.0.0.1/192.168.2.249/g' ~/.kube/config
 kubectl get nodes
 ```
 
-### Step 4: Join Additional Control Plane Nodes
+### Step 4: Join Additional Control Plane Nodes (**on raspi5**)
 
 ```bash
 # Join via VIP (not node IP!)
@@ -178,7 +178,7 @@ curl -sfL https://get.k3s.io | INSTALL_K3S_CHANNEL=latest sh -s - server \
   --write-kubeconfig-mode 644
 ```
 
-### Step 5: Install ArgoCD via Helm
+### Step 5: Install ArgoCD via Helm (**on your laptop**)
 
 ⚠️ **ArgoCD is NOT managed via GitOps** (prevents self-management conflicts)
 
@@ -211,7 +211,7 @@ kubectl -n argocd get secret argocd-initial-admin-secret \
 
 **Note:** If you changed the domain in Step 6, update the Helm values accordingly.
 
-### Step 6: Fork & Configure Repository
+### Step 6: Fork & Configure Repository (**on your laptop**)
 
 ```bash
 # Fork https://github.com/Nebu2k/kubernetes-homelab
@@ -317,7 +317,7 @@ git commit -m "Configure for my environment"
 git push
 ```
 
-### Step 7: Bootstrap GitOps
+### Step 7: Bootstrap GitOps (**on your laptop**)
 
 ```bash
 # Deploy App-of-Apps
@@ -327,7 +327,7 @@ kubectl apply -f bootstrap/root-app.yaml
 kubectl get applications -n argocd -w
 ```
 
-### Step 8: Verify Deployment
+### Step 8: Verify Deployment (**on your laptop**)
 
 ```bash
 # All apps should be Synced + Healthy
@@ -345,7 +345,7 @@ kubectl get certificate -A
 kubectl get ingress -A
 ```
 
-### Step 9: Access UIs
+### Step 9: Access UIs (**from your laptop browser**)
 
 **ArgoCD:**
 ```
