@@ -152,7 +152,10 @@ spec:
         operator: Exists
 EOF
 
-# Test VIP (wait ~10 seconds)
+# Wait for Kube-VIP to be ready
+sleep 10
+
+# Test VIP
 ping -c 3 192.168.2.249
 ```
 
