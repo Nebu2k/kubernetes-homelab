@@ -322,13 +322,7 @@ git push
 # Deploy App-of-Apps
 kubectl apply -f bootstrap/root-app.yaml
 
-# Wait for the root App to be created by the apply
-until kubectl get application homelab -n argocd >/dev/null 2>&1; do
-  echo "waiting for 'homelab' ArgoCD Application to be created..."
-  sleep 2
-done
-
-# Now watch ArgoCD deploy everything (~5-10 minutes)
+# Watch ArgoCD deploy everything (~5-10 minutes)
 kubectl get applications -n argocd -w
 ```
 
