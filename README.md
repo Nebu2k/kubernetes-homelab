@@ -26,6 +26,8 @@ Production-ready K3s cluster managed via GitOps using ArgoCD App-of-Apps pattern
 | 4 | Longhorn | Persistent storage |
 | 5 | Portainer | Management UI |
 | 10+ | Configs | Component-specific configs (ClusterIssuers, Ingresses, etc.) |
+| 15 | Private Services | External service ingresses (TeslaLogger, Dreambox) |
+| 20 | Demo App | Sample application |
 
 ## 📁 Repository Structure
 
@@ -60,10 +62,15 @@ homelab/
     │   └── cloudflare-token-*.yaml
     ├── nginx-ingress/
     │   └── custom-headers.yaml    # Security headers ConfigMap
+    ├── argocd/
+    │   └── ingress.yaml           # ArgoCD HTTPS ingress
     ├── portainer/
     │   └── ingress.yaml           # Portainer HTTPS ingress
-    └── longhorn/
-        └── s3-secret-*.yaml       # S3 backup credentials
+    ├── longhorn/
+    │   └── s3-secret-*.yaml       # S3 backup credentials
+    └── private-services/
+        ├── teslalogger-ingress.yaml  # TeslaLogger external service
+        └── dreambox-ingress.yaml     # Dreambox external service
 ```
 
 ## 🚀 Fresh Installation
@@ -331,6 +338,13 @@ If timeout: kubectl delete pod -n portainer -l app.kubernetes.io/name=portainer
 ```
 URL: http://<node-ip>:30080
 (Internal only, no ingress for security)
+```
+
+**Private Services:**
+```
+TeslaLogger: https://teslalogger.elmstreet79.de (→ 192.168.2.9:3000)
+Dreambox: https://dreambox.elmstreet79.de (→ 192.168.2.11:80)
+(External services routed via NGINX Ingress with TLS)
 ```
 
 ## 🔧 Management
