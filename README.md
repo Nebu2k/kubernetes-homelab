@@ -189,13 +189,13 @@ curl -sfL https://get.k3s.io | INSTALL_K3S_CHANNEL=latest sh -s - server \
 helm repo add argo https://argoproj.github.io/argo-helm
 helm repo update
 
-# Install with your domain (or use argo.elmstreet79.de if keeping defaults)
+# Install with your domain (or use argocd.elmstreet79.de if keeping defaults)
 helm install argocd argo/argo-cd \
   --version 8.1.2 \
   --namespace argocd \
   --create-namespace \
-  --set global.domain=argo.elmstreet79.de \
-  --set configs.cm.url=https://argo.elmstreet79.de \
+  --set global.domain=argocd.elmstreet79.de \
+  --set configs.cm.url=https://argocd.elmstreet79.de \
   --set 'configs.params.server\.insecure'=true
 
 # Wait for ArgoCD to be ready
@@ -260,7 +260,7 @@ The repository is pre-configured for `elmstreet79.de`. If using your own domain,
 
    ```bash
    vim overlays/production/argocd/ingress.yaml
-   # Change: argo.elmstreet79.de
+   # Change: argocd.elmstreet79.de
    ```
 
 5. **Portainer Ingress Domain**:
@@ -393,7 +393,7 @@ kubectl get ingress -A
 **ArgoCD:**
 
 ```text
-URL: https://argo.elmstreet79.de
+URL: https://argocd.elmstreet79.de
 User: admin
 Pass: <from-step-5>
 ```
