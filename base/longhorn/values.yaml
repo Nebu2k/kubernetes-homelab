@@ -7,6 +7,10 @@ defaultSettings:
   backupTarget: ""  # S3 target in production overlay
   backupTargetCredentialSecret: ""  # Secret in production overlay
   defaultReplicaCount: "2"
+
+# Disable preUpgrade hook (causes issues with ArgoCD)
+preUpgradeChecker:
+  jobEnabled: false
   
 # NodePort for UI access
 service:
