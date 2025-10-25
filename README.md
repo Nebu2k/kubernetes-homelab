@@ -277,6 +277,27 @@ The repository is pre-configured for `elmstreet79.de`. If using your own domain,
    # Uncomment: - s3-secret-sealed.yaml
    ```
 
+7. **Create DNS Records** (required for HTTPS):
+   
+   All domains need CNAME records pointing to your DynDNS/external IP. Use the helper script:
+   
+   ```bash
+   # Set your Cloudflare credentials
+   ZONE_ID="your-zone-id"
+   API_TOKEN="your-api-token"
+   TARGET="your-dyndns-hostname.dyndns.org"  # or external IP
+   
+   # Create DNS records for all services
+   ./scripts/create-dns-record.sh argo elmstreet79.de $TARGET $ZONE_ID $API_TOKEN
+   ./scripts/create-dns-record.sh portainer elmstreet79.de $TARGET $ZONE_ID $API_TOKEN
+   ./scripts/create-dns-record.sh teslalogger elmstreet79.de $TARGET $ZONE_ID $API_TOKEN
+   ./scripts/create-dns-record.sh dreambox elmstreet79.de $TARGET $ZONE_ID $API_TOKEN
+   ```
+   
+   **Get Cloudflare credentials:**
+   - Zone ID: Cloudflare Dashboard → Your Domain → Overview (right sidebar)
+   - API Token: Dashboard → My Profile → API Tokens → Create Token (Zone.DNS Edit permission)
+
 **Commit and push:**
 ```bash
 git add -A
