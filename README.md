@@ -245,14 +245,8 @@ The repository is pre-configured for `elmstreet79.de`. If using your own domain,
    vim overlays/production/cert-manager/cloudflare-token-unsealed.yaml
    # Change: api-token: "your-cloudflare-api-token-here"
    
-   # Seal the secret
-   kubeseal --format=yaml --controller-namespace=kube-system \
-     < overlays/production/cert-manager/cloudflare-token-unsealed.yaml \
-     > overlays/production/cert-manager/cloudflare-token-sealed.yaml
-   
-   # Enable in kustomization
-   vim overlays/production/cert-manager/kustomization.yaml
-   # Uncomment: - cloudflare-token-sealed.yaml
+   # Note: Sealing happens AFTER cluster bootstrap (Step 7+)
+   # For now, keep it unsealed locally (gitignored)
    ```
 
 4. **ArgoCD Ingress Domain**:
@@ -277,14 +271,8 @@ The repository is pre-configured for `elmstreet79.de`. If using your own domain,
    vim overlays/production/longhorn/s3-secret-unsealed.yaml
    # Change: AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_ENDPOINTS
    
-   # Seal the secret
-   kubeseal --format=yaml --controller-namespace=kube-system \
-     < overlays/production/longhorn/s3-secret-unsealed.yaml \
-     > overlays/production/longhorn/s3-secret-sealed.yaml
-   
-   # Enable in kustomization
-   vim overlays/production/longhorn/kustomization.yaml
-   # Uncomment: - s3-secret-sealed.yaml
+   # Note: Sealing happens AFTER cluster bootstrap (Step 7+)
+   # For now, keep it unsealed locally (gitignored)
    ```
    
    ⚠️ **Note:** `*-unsealed.yaml` files are gitignored for security. Only `.example` templates are committed.
@@ -324,6 +312,47 @@ git push
 kubectl apply -f bootstrap/root-app.yaml
 
 # Watch ArgoCD deploy everything (~5-10 minutes)
+kubectl get applications -n argocd -w
+```
+
+**What happens:**
+- Sealed Secrets Controller installs first (Sync-Wave 0)
+- MetalLB, Cert-Manager, NGINX, etc. follow in order
+- Some apps will stay "Progressing" until secrets are sealed (next step)
+
+### Step 7.5: Seal Secrets (**on your laptop** - AFTER Step 7)
+
+⚠️ **Wait until Sealed Secrets Controller is ready:**
+
+```bash
+# Check if controller is running
+kubectl wait --for=condition=available --timeout=300s \
+  deployment/sealed-secrets-controller -n kube-system
+
+# Now seal your secrets
+kubeseal --format=yaml --controller-namespace=kube-system \
+  < overlays/production/cert-manager/cloudflare-token-unsealed.yaml \
+  > overlays/production/cert-manager/cloudflare-token-sealed.yaml
+
+# If using Longhorn S3 backup:
+kubeseal --format=yaml --controller-namespace=kube-system \
+  < overlays/production/longhorn/s3-secret-unsealed.yaml \
+  > overlays/production/longhorn/s3-secret-sealed.yaml
+
+# Enable sealed secrets in kustomization
+vim overlays/production/cert-manager/kustomization.yaml
+# Uncomment: - cloudflare-token-sealed.yaml
+
+vim overlays/production/longhorn/kustomization.yaml
+# Uncomment: - s3-secret-sealed.yaml (if using S3)
+
+# Commit and push
+git add overlays/production/*/kustomization.yaml
+git add overlays/production/*/*-sealed.yaml
+git commit -m "🔐 Add sealed secrets"
+git push
+
+# ArgoCD will auto-sync and apply the secrets
 kubectl get applications -n argocd -w
 ```
 
