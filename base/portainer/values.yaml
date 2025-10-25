@@ -8,5 +8,6 @@ replicaCount: 1
 # Persistent storage
 persistence:
   enabled: true
-  size: 1Gi
+  existingClaim: portainer-restored  # Use restored backup volume
+  size: 10Gi  # Match restored volume size
   storageClass: longhorn  # Use Longhorn for replicated storage
