@@ -4,7 +4,7 @@ persistence:
   defaultClassReplicaCount: 2
   
 defaultSettings:
-  backupTarget: "s3://longhorn@us-east-1/http://192.168.2.9:9300"
+  backupTarget: "s3://longhorn@local/"
   backupTargetCredentialSecret: "longhorn-s3-secret"
   defaultReplicaCount: "2"
 
