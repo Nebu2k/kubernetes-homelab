@@ -190,8 +190,8 @@ helm repo add argo https://argoproj.github.io/argo-helm
 helm repo update
 
 # Install with your domain (or use argocd.elmstreet79.de if keeping defaults)
+# Note: Installs latest version (no --version flag)
 helm install argocd argo/argo-cd \
-  --version 8.1.2 \
   --namespace argocd \
   --create-namespace \
   --set global.domain=argocd.elmstreet79.de \
@@ -548,7 +548,7 @@ argocd app sync <app-name> --force
 |-----------|---------|---------|
 | K3s | v1.34.1 | Lightweight Kubernetes |
 | Kube-VIP | v1.0.1 | Control plane HA |
-| ArgoCD | v3.0.6 | GitOps CD |
+| ArgoCD | v3.1.9 | GitOps CD |
 | Sealed Secrets | v0.27.2 | Encrypted secrets |
 | MetalLB | v0.15.2 | LoadBalancer |
 | NGINX Ingress | v1.13.3 | Ingress controller |

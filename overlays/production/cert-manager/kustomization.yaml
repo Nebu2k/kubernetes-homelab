@@ -4,4 +4,4 @@ namespace: cert-manager
 resources:
   - cluster-issuer.yaml
   # Uncomment after sealing the secret:
-  - cloudflare-token-sealed.yaml
+  # - cloudflare-token-sealed.yaml
