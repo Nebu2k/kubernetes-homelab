@@ -1,0 +1,39 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: dreambox-external
+  namespace: private-services
+spec:
+  type: ExternalName
+  externalName: 192.168.2.11
+  ports:
+    - port: 80
+      targetPort: 80
+      protocol: TCP
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: dreambox
+  namespace: private-services
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    nginx.ingress.kubernetes.io/backend-protocol: "HTTP"
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts:
+        - dreambox.elmstreet79.de
+      secretName: dreambox-tls
+  rules:
+    - host: dreambox.elmstreet79.de
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: dreambox-external
+                port:
+                  number: 80

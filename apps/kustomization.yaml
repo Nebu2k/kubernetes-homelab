@@ -13,4 +13,5 @@ resources:
   - portainer.yaml
   - portainer-config.yaml
   - argocd-config.yaml
+  - private-services.yaml
   - demo-app.yaml
