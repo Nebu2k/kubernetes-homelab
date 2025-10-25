@@ -143,3 +143,272 @@ spec:
         operator: Exists
       - effect: NoExecute
         operator: Exists
+EOF
+
+# Test VIP (wait ~10 seconds)
+ping -c 3 192.168.2.249
+```
+
+### Step 3: Configure kubectl with VIP
+
+```bash
+scp raspi4:/etc/rancher/k3s/k3s.yaml ~/.kube/config
+sed -i '' 's/127.0.0.1/192.168.2.249/g' ~/.kube/config
+kubectl get nodes
+```
+
+### Step 4: Join Additional Control Plane Nodes
+
+```bash
+# Join via VIP (not node IP!)
+curl -sfL https://get.k3s.io | INSTALL_K3S_CHANNEL=latest sh -s - server \
+  --server https://192.168.2.249:6443 \
+  --token <token-from-step-1> \
+  --tls-san 192.168.2.249 \
+  --tls-san raspi5 \
+  --tls-san 192.168.2.9 \
+  --disable traefik \
+  --write-kubeconfig-mode 644
+```
+
+### Step 5: Install ArgoCD via Helm
+
+⚠️ **ArgoCD is NOT managed via GitOps** (prevents self-management conflicts)
+
+```bash
+helm repo add argo https://argoproj.github.io/argo-helm
+helm repo update
+
+helm install argocd argo/argo-cd \
+  --version 8.1.2 \
+  --namespace argocd \
+  --create-namespace \
+  --set global.domain=argo.elmstreet79.de \
+  --set configs.cm.url=https://argo.elmstreet79.de \
+  --set 'configs.params.server\.insecure'=true
+
+# Wait for ArgoCD to be ready
+kubectl wait --for=condition=available --timeout=300s \
+  deployment/argocd-server -n argocd
+
+# Get admin password
+kubectl -n argocd get secret argocd-initial-admin-secret \
+  -o jsonpath="{.data.password}" | base64 -d && echo
+```
+
+**Why `server.insecure=true`?**
+- ArgoCD runs on HTTP internally
+- NGINX Ingress terminates TLS
+- Prevents redirect loops
+
+### Step 6: Fork & Configure Repository
+
+```bash
+# Fork https://github.com/Nebu2k/kubernetes-homelab
+git clone https://github.com/YOUR_USERNAME/kubernetes-homelab
+cd kubernetes-homelab
+
+# Edit production configs (if needed)
+vim overlays/production/metallb/metallb-ip-pool.yaml         # IP range
+vim overlays/production/cert-manager/cluster-issuer.yaml     # Email
+vim overlays/production/portainer/ingress.yaml               # Domain
+
+# Update Cloudflare API token
+vim overlays/production/cert-manager/cloudflare-token-unsealed.yaml
+
+# Seal secret
+kubeseal --format=yaml --controller-namespace=kube-system \
+  < overlays/production/cert-manager/cloudflare-token-unsealed.yaml \
+  > overlays/production/cert-manager/cloudflare-token-sealed.yaml
+
+# Enable sealed secret in kustomization
+vim overlays/production/cert-manager/kustomization.yaml
+# Uncomment: - cloudflare-token-sealed.yaml
+
+# Commit and push
+git add -A
+git commit -m "Configure for my environment"
+git push
+```
+
+### Step 7: Bootstrap GitOps
+
+```bash
+# Deploy App-of-Apps
+kubectl apply -f bootstrap/root-app.yaml
+
+# Watch ArgoCD deploy everything (~5-10 minutes)
+kubectl get applications -n argocd -w
+```
+
+### Step 8: Verify Deployment
+
+```bash
+# All apps should be Synced + Healthy
+kubectl get applications -n argocd
+
+# MetalLB assigned LoadBalancer IP
+kubectl get svc -n ingress-nginx
+# EXTERNAL-IP should show 192.168.2.250-254 range
+
+# Certificates issued (takes 2-5 min for DNS-01)
+kubectl get certificate -A
+# All should show READY=True
+
+# Ingresses configured
+kubectl get ingress -A
+```
+
+### Step 9: Access UIs
+
+**ArgoCD:**
+```
+URL: https://argo.elmstreet79.de
+User: admin
+Pass: <from-step-5>
+
+⚠️ Change password immediately!
+User Info → Update Password
+Then delete initial secret:
+kubectl -n argocd delete secret argocd-initial-admin-secret
+```
+
+**Portainer:**
+```
+URL: https://portainer.elmstreet79.de
+⚠️ Create admin account within 5 minutes!
+
+If timeout: kubectl delete pod -n portainer -l app.kubernetes.io/name=portainer
+```
+
+**Longhorn:**
+```
+URL: http://<node-ip>:30080
+(Internal only, no ingress for security)
+```
+
+## 🔧 Management
+
+### View Application Status
+
+```bash
+kubectl get applications -n argocd
+kubectl describe application <app-name> -n argocd
+```
+
+### Update Component
+
+```bash
+# Edit Helm values
+vim base/nginx-ingress/values.yaml
+
+# Commit and push - ArgoCD auto-syncs
+git add base/nginx-ingress/values.yaml
+git commit -m "Update NGINX to 2 replicas"
+git push
+
+# Watch sync
+kubectl get application nginx-ingress -n argocd -w
+```
+
+### Update Secrets
+
+```bash
+# 1. Edit unsealed secret
+vim overlays/production/cert-manager/cloudflare-token-unsealed.yaml
+
+# 2. Re-seal
+kubeseal --format=yaml --controller-namespace=kube-system \
+  < overlays/production/cert-manager/cloudflare-token-unsealed.yaml \
+  > overlays/production/cert-manager/cloudflare-token-sealed.yaml
+
+# 3. Commit and push
+git add overlays/production/cert-manager/cloudflare-token-sealed.yaml
+git commit -m "Rotate Cloudflare token"
+git push
+```
+
+### Force Sync Application
+
+```bash
+# Via kubectl
+kubectl patch application <app-name> -n argocd --type merge \
+  -p '{"operation":{"initiatedBy":{"username":"manual"}}}'
+
+# Via ArgoCD CLI
+argocd app sync <app-name>
+```
+
+## 🐛 Troubleshooting
+
+### MetalLB Not Assigning IPs
+
+**Check:**
+```bash
+kubectl logs -n metallb-system -l app.kubernetes.io/component=speaker
+```
+
+**Should NOT show:**
+```
+"error":"assigned IP not allowed by config"
+```
+
+**Fix:** Ensure L2Advertisement exists in `overlays/production/metallb/metallb-ip-pool.yaml`
+
+### Certificates Not Ready
+
+**Check status:**
+```bash
+kubectl describe certificate <name> -n <namespace>
+kubectl get challenge -A
+```
+
+**Common issues:**
+1. Cloudflare secret not sealed correctly
+2. DNS-01 challenge takes 2-5 minutes (normal)
+3. Cert-Manager webhook TLS error (delete webhook pod to restart)
+
+**Fix webhook:**
+```bash
+kubectl delete pod -n cert-manager -l app.kubernetes.io/name=webhook
+```
+
+### ArgoCD App OutOfSync
+
+**Check:**
+```bash
+kubectl describe application <app-name> -n argocd
+kubectl logs -n argocd deployment/argocd-application-controller
+```
+
+**Force refresh:**
+```bash
+argocd app sync <app-name> --force
+```
+
+## 📚 Components
+
+| Component | Version | Purpose |
+|-----------|---------|---------|
+| K3s | v1.34.1 | Lightweight Kubernetes |
+| Kube-VIP | v1.0.1 | Control plane HA |
+| ArgoCD | v3.0.6 | GitOps CD |
+| Sealed Secrets | v0.27.2 | Encrypted secrets |
+| MetalLB | v0.15.2 | LoadBalancer |
+| NGINX Ingress | v1.13.3 | Ingress controller |
+| Cert-Manager | v1.16.2 | TLS certificates |
+| Longhorn | v1.10.0 | Distributed storage |
+| Portainer | v2.35.0 | Management UI |
+
+## 📖 Documentation
+
+- [ArgoCD Docs](https://argo-cd.readthedocs.io/)
+- [Sealed Secrets](https://github.com/bitnami-labs/sealed-secrets)
+- [K3s Documentation](https://docs.k3s.io/)
+- [MetalLB](https://metallb.universe.tf/)
+- [Cert-Manager](https://cert-manager.io/)
+- [Longhorn](https://longhorn.io/)
+
+## 📝 License
+
+MIT
