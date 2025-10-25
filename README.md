@@ -8,7 +8,7 @@ Production-ready K3s cluster managed via GitOps using ArgoCD App-of-Apps pattern
 
 ### Deployment Flow
 
-```
+```text
 1. Manual: K3s + Kube-VIP → HA Control Plane
 2. Manual: ArgoCD via Helm → GitOps Engine
 3. GitOps: bootstrap/root-app.yaml → App-of-Apps
@@ -31,7 +31,7 @@ Production-ready K3s cluster managed via GitOps using ArgoCD App-of-Apps pattern
 
 ## 📁 Repository Structure
 
-```
+```text
 homelab/
 ├── bootstrap/
 │   └── root-app.yaml              # App-of-Apps (deploys everything)
@@ -208,6 +208,7 @@ kubectl -n argocd get secret argocd-initial-admin-secret \
 ```
 
 **Why `server.insecure=true`?**
+
 - ArgoCD runs on HTTP internally
 - NGINX Ingress terminates TLS
 - Prevents redirect loops
@@ -227,18 +228,21 @@ cd kubernetes-homelab
 The repository is pre-configured for `elmstreet79.de`. If using your own domain, update:
 
 1. **MetalLB IP Pool** (adjust to your network):
+
    ```bash
    vim overlays/production/metallb/metallb-ip-pool.yaml
    # Change: 192.168.2.250-192.168.2.254
    ```
 
 2. **Cert-Manager Email**:
+
    ```bash
    vim overlays/production/cert-manager/cluster-issuer.yaml
    # Change: certs@elmstreet79.de
    ```
 
 3. **Cloudflare API Token** (required):
+
    ```bash
    # Create from example
    cp overlays/production/cert-manager/cloudflare-token-unsealed.yaml.example \
@@ -253,18 +257,21 @@ The repository is pre-configured for `elmstreet79.de`. If using your own domain,
    ```
 
 4. **ArgoCD Ingress Domain**:
+
    ```bash
    vim overlays/production/argocd/ingress.yaml
    # Change: argo.elmstreet79.de
    ```
 
 5. **Portainer Ingress Domain**:
+
    ```bash
    vim overlays/production/portainer/ingress.yaml
    # Change: portainer.elmstreet79.de
    ```
 
 6. **Longhorn S3 Backup** (optional):
+
    ```bash
    # Create from example
    cp overlays/production/longhorn/s3-secret-unsealed.yaml.example \
@@ -277,13 +284,13 @@ The repository is pre-configured for `elmstreet79.de`. If using your own domain,
    # Note: Sealing happens AFTER cluster bootstrap (Step 7+)
    # For now, keep it unsealed locally (gitignored)
    ```
-   
+
    ⚠️ **Note:** `*-unsealed.yaml` files are gitignored for security. Only `.example` templates are committed.
 
 7. **Create DNS Records** (required for HTTPS):
-   
+
    All domains need CNAME records pointing to your DynDNS/external IP. Use the helper script:
-   
+
    ```bash
    # Set your Cloudflare credentials
    ZONE_ID="your-zone-id"
@@ -296,12 +303,13 @@ The repository is pre-configured for `elmstreet79.de`. If using your own domain,
    ./scripts/create-dns-record.sh teslalogger elmstreet79.de $TARGET $ZONE_ID $API_TOKEN
    ./scripts/create-dns-record.sh dreambox elmstreet79.de $TARGET $ZONE_ID $API_TOKEN
    ```
-   
+
    **Get Cloudflare credentials:**
    - Zone ID: Cloudflare Dashboard → Your Domain → Overview (right sidebar)
    - API Token: Dashboard → My Profile → API Tokens → Create Token (Zone.DNS Edit permission)
 
 **Commit and push:**
+
 ```bash
 git add -A
 git commit -m "Configure for my environment"
@@ -314,11 +322,18 @@ git push
 # Deploy App-of-Apps
 kubectl apply -f bootstrap/root-app.yaml
 
-# Watch ArgoCD deploy everything (~5-10 minutes)
+# Wait for the root App to be created by the apply
+until kubectl get application homelab -n argocd >/dev/null 2>&1; do
+  echo "waiting for 'homelab' ArgoCD Application to be created..."
+  sleep 2
+done
+
+# Now watch ArgoCD deploy everything (~5-10 minutes)
 kubectl get applications -n argocd -w
 ```
 
 **What happens:**
+
 - Sealed Secrets Controller installs first (Sync-Wave 0)
 - MetalLB, Cert-Manager, NGINX, etc. follow in order
 - Some apps will stay "Progressing" until secrets are sealed (next step)
@@ -380,7 +395,8 @@ kubectl get ingress -A
 ### Step 9: Access UIs (**from your laptop browser**)
 
 **ArgoCD:**
-```
+
+```text
 URL: https://argo.elmstreet79.de
 User: admin
 Pass: <from-step-5>
@@ -392,7 +408,8 @@ kubectl -n argocd delete secret argocd-initial-admin-secret
 ```
 
 **Portainer:**
-```
+
+```text
 URL: https://portainer.elmstreet79.de
 ⚠️ Create admin account within 5 minutes!
 
@@ -400,13 +417,15 @@ If timeout: kubectl delete pod -n portainer -l app.kubernetes.io/name=portainer
 ```
 
 **Longhorn:**
-```
+
+```text
 URL: http://<node-ip>:30080
 (Internal only, no ingress for security)
 ```
 
 **Private Services:**
-```
+
+```text
 TeslaLogger: https://teslalogger.elmstreet79.de (→ 192.168.2.9:3000)
 Dreambox: https://dreambox.elmstreet79.de (→ 192.168.2.11:80)
 (External services routed via NGINX Ingress with TLS)
@@ -469,12 +488,14 @@ argocd app sync <app-name>
 ### MetalLB Not Assigning IPs
 
 **Check:**
+
 ```bash
 kubectl logs -n metallb-system -l app.kubernetes.io/component=speaker
 ```
 
 **Should NOT show:**
-```
+
+```text
 "error":"assigned IP not allowed by config"
 ```
 
@@ -483,17 +504,20 @@ kubectl logs -n metallb-system -l app.kubernetes.io/component=speaker
 ### Certificates Not Ready
 
 **Check status:**
+
 ```bash
 kubectl describe certificate <name> -n <namespace>
 kubectl get challenge -A
 ```
 
 **Common issues:**
+
 1. Cloudflare secret not sealed correctly
 2. DNS-01 challenge takes 2-5 minutes (normal)
 3. Cert-Manager webhook TLS error (delete webhook pod to restart)
 
 **Fix webhook:**
+
 ```bash
 kubectl delete pod -n cert-manager -l app.kubernetes.io/name=webhook
 ```
@@ -501,12 +525,14 @@ kubectl delete pod -n cert-manager -l app.kubernetes.io/name=webhook
 ### ArgoCD App OutOfSync
 
 **Check:**
+
 ```bash
 kubectl describe application <app-name> -n argocd
 kubectl logs -n argocd deployment/argocd-application-controller
 ```
 
 **Force refresh:**
+
 ```bash
 argocd app sync <app-name> --force
 ```
