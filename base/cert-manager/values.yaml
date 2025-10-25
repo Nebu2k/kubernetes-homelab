@@ -1,0 +1,7 @@
+# Cert-Manager values
+installCRDs: true
+
+# Minimal configuration
+global:
+  leaderElection:
+    namespace: cert-manager

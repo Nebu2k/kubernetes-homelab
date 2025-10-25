@@ -1,0 +1,28 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: portainer
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "5"
+spec:
+  project: default
+  sources:
+    - repoURL: https://portainer.github.io/k8s
+      chart: portainer
+      targetRevision: 1.0.57
+      helm:
+        valueFiles:
+          - $values/base/portainer/values.yaml
+    - repoURL: https://github.com/Nebu2k/kubernetes-homelab
+      targetRevision: main
+      ref: values
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: portainer
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

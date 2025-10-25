@@ -1,0 +1,23 @@
+# NGINX Ingress Controller values
+controller:
+  replicaCount: 2
+  
+  service:
+    type: LoadBalancer
+    # MetalLB will assign IP from pool
+    
+  # Allow snippets for advanced configurations
+  allowSnippetAnnotations: true
+  
+  # Resource limits
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 256Mi
+      
+  # Enable metrics for monitoring
+  metrics:
+    enabled: true

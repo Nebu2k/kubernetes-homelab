@@ -1,0 +1,22 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: nginx-ingress-config
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "11"
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/Nebu2k/kubernetes-homelab
+    targetRevision: main
+    path: overlays/production/nginx-ingress
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: ingress-nginx
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

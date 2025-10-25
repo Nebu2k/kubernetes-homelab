@@ -1,0 +1,11 @@
+# Portainer management UI values
+service:
+  type: ClusterIP  # Access via Ingress
+  
+# Single replica for homelab
+replicaCount: 1
+
+# Persistent storage
+persistence:
+  enabled: true
+  size: 1Gi

@@ -1,0 +1,15 @@
+# Longhorn distributed storage values
+persistence:
+  defaultClass: true
+  defaultClassReplicaCount: 2
+  
+defaultSettings:
+  backupTarget: ""  # S3 target in production overlay
+  backupTargetCredentialSecret: ""  # Secret in production overlay
+  defaultReplicaCount: 2
+  
+# NodePort for UI access
+service:
+  ui:
+    type: NodePort
+    nodePort: 30080

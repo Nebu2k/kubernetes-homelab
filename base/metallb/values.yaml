@@ -1,0 +1,8 @@
+# MetalLB values - LoadBalancer for bare-metal
+controller:
+  enabled: true
+
+speaker:
+  enabled: true
+  
+# Minimal configuration - IP pool defined in overlays/production

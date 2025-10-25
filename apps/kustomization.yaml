@@ -1,0 +1,16 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - sealed-secrets.yaml
+  - metallb.yaml
+  - metallb-config.yaml
+  - cert-manager.yaml
+  - cert-manager-config.yaml
+  - nginx-ingress.yaml
+  - nginx-ingress-config.yaml
+  - longhorn.yaml
+  - longhorn-config.yaml
+  - portainer.yaml
+  - portainer-config.yaml
+  - argocd-config.yaml
+  - demo-app.yaml
