@@ -179,6 +179,7 @@ curl -sfL https://get.k3s.io | INSTALL_K3S_CHANNEL=latest sh -s - server \
 helm repo add argo https://argoproj.github.io/argo-helm
 helm repo update
 
+# Install with your domain (or use argo.elmstreet79.de if keeping defaults)
 helm install argocd argo/argo-cd \
   --version 8.1.2 \
   --namespace argocd \
@@ -201,31 +202,76 @@ kubectl -n argocd get secret argocd-initial-admin-secret \
 - NGINX Ingress terminates TLS
 - Prevents redirect loops
 
+**Note:** If you changed the domain in Step 6, update the Helm values accordingly.
+
 ### Step 6: Fork & Configure Repository
 
 ```bash
 # Fork https://github.com/Nebu2k/kubernetes-homelab
 git clone https://github.com/YOUR_USERNAME/kubernetes-homelab
 cd kubernetes-homelab
+```
 
-# Edit production configs (if needed)
-vim overlays/production/metallb/metallb-ip-pool.yaml         # IP range
-vim overlays/production/cert-manager/cluster-issuer.yaml     # Email
-vim overlays/production/portainer/ingress.yaml               # Domain
+**⚙️ Configure for your environment:**
 
-# Update Cloudflare API token
-vim overlays/production/cert-manager/cloudflare-token-unsealed.yaml
+The repository is pre-configured for `elmstreet79.de`. If using your own domain, update:
 
-# Seal secret
-kubeseal --format=yaml --controller-namespace=kube-system \
-  < overlays/production/cert-manager/cloudflare-token-unsealed.yaml \
-  > overlays/production/cert-manager/cloudflare-token-sealed.yaml
+1. **MetalLB IP Pool** (adjust to your network):
+   ```bash
+   vim overlays/production/metallb/metallb-ip-pool.yaml
+   # Change: 192.168.2.250-192.168.2.254
+   ```
 
-# Enable sealed secret in kustomization
-vim overlays/production/cert-manager/kustomization.yaml
-# Uncomment: - cloudflare-token-sealed.yaml
+2. **Cert-Manager Email**:
+   ```bash
+   vim overlays/production/cert-manager/cluster-issuer.yaml
+   # Change: certs@elmstreet79.de
+   ```
 
-# Commit and push
+3. **Cloudflare API Token** (required):
+   ```bash
+   vim overlays/production/cert-manager/cloudflare-token-unsealed.yaml
+   # Add your Cloudflare API token
+   
+   # Seal the secret
+   kubeseal --format=yaml --controller-namespace=kube-system \
+     < overlays/production/cert-manager/cloudflare-token-unsealed.yaml \
+     > overlays/production/cert-manager/cloudflare-token-sealed.yaml
+   
+   # Enable in kustomization
+   vim overlays/production/cert-manager/kustomization.yaml
+   # Uncomment: - cloudflare-token-sealed.yaml
+   ```
+
+4. **ArgoCD Ingress Domain**:
+   ```bash
+   vim overlays/production/argocd/ingress.yaml
+   # Change: argo.elmstreet79.de
+   ```
+
+5. **Portainer Ingress Domain**:
+   ```bash
+   vim overlays/production/portainer/ingress.yaml
+   # Change: portainer.elmstreet79.de
+   ```
+
+6. **Longhorn S3 Backup** (optional):
+   ```bash
+   vim overlays/production/longhorn/s3-secret-unsealed.yaml
+   # Update MinIO/S3 credentials
+   
+   # Seal the secret
+   kubeseal --format=yaml --controller-namespace=kube-system \
+     < overlays/production/longhorn/s3-secret-unsealed.yaml \
+     > overlays/production/longhorn/s3-secret-sealed.yaml
+   
+   # Enable in kustomization
+   vim overlays/production/longhorn/kustomization.yaml
+   # Uncomment: - s3-secret-sealed.yaml
+   ```
+
+**Commit and push:**
+```bash
 git add -A
 git commit -m "Configure for my environment"
 git push
