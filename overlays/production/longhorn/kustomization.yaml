@@ -6,3 +6,5 @@ resources:
   - s3-secret-sealed.yaml
   # Override local-path StorageClass to remove default annotation
   - disable-local-path-default.yaml
+  # S3 Backup configuration
+  - backup-settings.yaml
