@@ -400,10 +400,14 @@ kubectl get ingress -A
 URL: https://argo.elmstreet79.de
 User: admin
 Pass: <from-step-5>
+```
 
-⚠️ Change password immediately!
-User Info → Update Password
-Then delete initial secret:
+⚠️ **Change password immediately!**
+
+1. User Info → Update Password
+2. Then delete initial secret:
+
+```bash
 kubectl -n argocd delete secret argocd-initial-admin-secret
 ```
 
@@ -411,9 +415,14 @@ kubectl -n argocd delete secret argocd-initial-admin-secret
 
 ```text
 URL: https://portainer.elmstreet79.de
-⚠️ Create admin account within 5 minutes!
+```
 
-If timeout: kubectl delete pod -n portainer -l app.kubernetes.io/name=portainer
+⚠️ **Create admin account within 5 minutes!**
+
+If timeout, restart the pod:
+
+```bash
+kubectl delete pod -n portainer -l app.kubernetes.io/name=portainer
 ```
 
 **Longhorn:**
