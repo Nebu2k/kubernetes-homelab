@@ -353,11 +353,11 @@ kubeseal --format=yaml --controller-namespace=kube-system \
 
 # Enable sealed secrets in kustomization (automated)
 # macOS (BSD sed): uncomment the sealed secret entries
-sed -i '' -E 's/^# *- cloudflare-token-sealed.yaml/- cloudflare-token-sealed.yaml/' \
+sed -i '' 's/^  # - cloudflare-token-sealed.yaml/  - cloudflare-token-sealed.yaml/' \
   overlays/production/cert-manager/kustomization.yaml
 
 # If using Longhorn S3 backup, also enable:
-sed -i '' -E 's/^# *- s3-secret-sealed.yaml/- s3-secret-sealed.yaml/' \
+sed -i '' 's/^  # - s3-secret-sealed.yaml/  - s3-secret-sealed.yaml/' \
   overlays/production/longhorn/kustomization.yaml
 
 # Commit and push

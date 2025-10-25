@@ -3,4 +3,4 @@ kind: Kustomization
 namespace: longhorn-system
 resources: []
   # Uncomment after sealing the S3 secret:
-  # - s3-secret-sealed.yaml
+  - s3-secret-sealed.yaml
