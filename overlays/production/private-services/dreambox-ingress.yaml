@@ -5,6 +5,7 @@ metadata:
   name: dreambox-external
   namespace: private-services
 spec:
+  clusterIP: None
   ports:
     - port: 80
       targetPort: 80

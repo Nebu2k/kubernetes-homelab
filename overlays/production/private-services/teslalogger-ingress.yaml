@@ -5,6 +5,7 @@ metadata:
   name: teslalogger-external
   namespace: private-services
 spec:
+  clusterIP: None
   ports:
     - port: 3000
       targetPort: 3000
