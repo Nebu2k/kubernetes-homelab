@@ -4,3 +4,4 @@ namespace: argocd
 resources:
   - ingress.yaml
   - argocd-server-patch.yaml
+  - argocd-cm-patch.yaml
