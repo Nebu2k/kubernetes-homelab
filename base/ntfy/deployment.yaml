@@ -4,6 +4,8 @@ metadata:
   name: ntfy
   labels:
     app: ntfy
+  annotations:
+    reloader.stakater.com/auto: "true"
 spec:
   replicas: 1
   selector:

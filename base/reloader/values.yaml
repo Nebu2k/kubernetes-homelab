@@ -1,0 +1,18 @@
+# Reloader Helm values
+# See: https://github.com/stakater/Reloader
+
+# Minimal resource configuration
+reloader:
+  resources:
+    limits:
+      cpu: 100m
+      memory: 256Mi
+    requests:
+      cpu: 10m
+      memory: 64Mi
+
+# Reload strategy (annotations is better for GitOps/ArgoCD)
+reloadStrategy: annotations
+
+# Optional: Enable JSON logging
+logFormat: json

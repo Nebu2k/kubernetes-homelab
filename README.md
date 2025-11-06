@@ -20,12 +20,17 @@ Production-ready K3s cluster managed via GitOps using ArgoCD App-of-Apps pattern
 | Wave | Component | Purpose |
 |------|-----------|---------|
 | 0 | Sealed Secrets | Decrypt secrets |
-| 1 | MetalLB | LoadBalancer IPs |
+| 1 | MetalLB, Reloader | LoadBalancer IPs + Auto-reload on config changes |
 | 2 | Cert-Manager | TLS certificates |
 | 3 | NGINX Ingress | HTTP(S) routing |
 | 4 | Longhorn | Persistent storage |
 | 5 | Portainer | Management UI |
-| 10+ | Configs | Component-specific configs (ClusterIssuers, Ingresses, etc.) |
+| 6 | ntfy | Notification service |
+| 10 | MetalLB Config, Cert-Manager Config | IPAddressPool, ClusterIssuers |
+| 11 | NGINX Ingress Config | Custom headers |
+| 12 | ArgoCD Config, Portainer Config | Management UI ingresses |
+| 13 | Longhorn Config | Backup jobs, S3 config |
+| 14 | ntfy Config | ntfy ingress |
 | 15 | Private Services | External service ingresses (TeslaLogger, Dreambox) |
 | 20 | Demo App | Sample application |
 
@@ -38,6 +43,7 @@ homelab/
 ├── apps/
 │   ├── kustomization.yaml         # List of all apps
 │   ├── sealed-secrets.yaml        # Wave 0
+│   ├── reloader.yaml              # Wave 1
 │   ├── metallb.yaml               # Wave 1
 │   ├── metallb-config.yaml        # Wave 10
 │   ├── cert-manager.yaml          # Wave 2
@@ -47,13 +53,24 @@ homelab/
 │   ├── longhorn.yaml              # Wave 4
 │   ├── longhorn-config.yaml       # Wave 13
 │   ├── portainer.yaml             # Wave 5
-│   └── portainer-config.yaml      # Wave 12
+│   ├── portainer-config.yaml      # Wave 12
+│   ├── ntfy.yaml                  # Wave 6
+│   ├── ntfy-config.yaml           # Wave 14
+│   ├── argocd-config.yaml         # Wave 12
+│   ├── private-services.yaml      # Wave 15
+│   └── demo-app.yaml              # Wave 20
 ├── base/
+│   ├── reloader/values.yaml       # Auto-reload config
 │   ├── metallb/values.yaml        # Generic Helm values
 │   ├── cert-manager/values.yaml
 │   ├── nginx-ingress/values.yaml
 │   ├── longhorn/values.yaml
-│   └── portainer/values.yaml
+│   ├── portainer/values.yaml
+│   └── ntfy/                      # Notification service
+│       ├── deployment.yaml
+│       ├── service.yaml
+│       ├── pvc.yaml
+│       └── kustomization.yaml
 └── overlays/production/
     ├── metallb/
     │   └── metallb-ip-pool.yaml   # IPAddressPool + L2Advertisement
@@ -68,6 +85,10 @@ homelab/
     │   └── ingress.yaml           # Portainer HTTPS ingress
     ├── longhorn/
     │   └── s3-secret-*.yaml       # S3 backup credentials
+    ├── ntfy/
+    │   ├── configmap.yaml         # ntfy server config
+    │   ├── ingress.yaml           # ntfy HTTPS ingress
+    │   └── kustomization.yaml
     └── private-services/
         ├── teslalogger-ingress.yaml  # TeslaLogger external service
         └── dreambox-ingress.yaml     # Dreambox external service

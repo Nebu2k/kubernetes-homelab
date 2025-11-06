@@ -9,6 +9,10 @@ controller:
   # Allow snippets for advanced configurations
   allowSnippetAnnotations: true
   
+  # Reloader auto-reload on ConfigMap changes
+  podAnnotations:
+    reloader.stakater.com/auto: "true"
+  
   # Resource limits
   resources:
     requests:

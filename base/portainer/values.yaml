@@ -3,7 +3,11 @@ service:
   type: ClusterIP  # Access via Ingress
   
 # Single replica for homelab
-replicaCount: 1
+replicaCount: 2
+
+# Reloader auto-reload on ConfigMap/Secret changes
+annotations:
+  reloader.stakater.com/auto: "true"
 
 # Persistent storage
 persistence:
