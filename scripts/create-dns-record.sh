@@ -5,23 +5,42 @@
 
 set -e
 
+# Load .env file
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ENV_FILE="$SCRIPT_DIR/.env"
+
+if [ -f "$ENV_FILE" ]; then
+    echo "📄 Loading configuration from .env file..."
+    # Export variables from .env
+    export $(grep -v '^#' "$ENV_FILE" | xargs)
+else
+    echo "❌ Error: .env file not found at $ENV_FILE"
+    echo "Please create a .env file from .env.example"
+    exit 1
+fi
+
 # Function to display usage
 usage() {
     cat << 'USAGE'
-Usage: ./create-dns-record.sh <subdomain> <domain> <target> <zone-id> <api-token>
+Usage: ./create-dns-record.sh <subdomain>
 
-Creates a CNAME record for <subdomain>.<domain> pointing to <target>
+Creates a CNAME record for <subdomain>.<DOMAIN> pointing to <TARGET>
+Uses configuration from .env file in the homelab directory.
 
 Parameters:
-  subdomain    The subdomain to create (e.g., 'argocd', 'portainer')
-  domain       Your Cloudflare domain (e.g., 'example.com')
-  target       CNAME target (e.g., 'myserver.dyndns.org')
-  zone-id      Your Cloudflare Zone ID
-  api-token    Your Cloudflare API token
+  subdomain    The subdomain to create (e.g., 'argocd', 'portainer', 'ntfy')
 
 Examples:
-  ./create-dns-record.sh argocd example.com myserver.dyndns.org <zone-id> <api-token>
-  ./create-dns-record.sh portainer example.com 192.168.1.10 <zone-id> <api-token>
+  ./create-dns-record.sh argocd
+  ./create-dns-record.sh portainer
+  ./create-dns-record.sh ntfy
+
+Configuration:
+  Edit the .env file in the homelab directory to set:
+  - DOMAIN          Your Cloudflare domain (e.g., 'example.com')
+  - TARGET          CNAME target (e.g., 'myserver.dyndns.org' or IP)
+  - ZONE_ID         Your Cloudflare Zone ID
+  - API_TOKEN       Your Cloudflare API token
 
 Note:
   Get your Zone ID and API token from Cloudflare dashboard:
@@ -32,17 +51,20 @@ USAGE
 }
 
 # Check parameters
-if [ $# -ne 5 ]; then
-    echo "❌ Error: Exactly 5 parameters required"
+if [ $# -ne 1 ]; then
+    echo "❌ Error: Exactly 1 parameter required"
     echo ""
     usage
 fi
 
 SUBDOMAIN="$1"
-DOMAIN="$2"
-TARGET="$3"
-ZONE_ID="$4"
-API_TOKEN="$5"
+
+# Validate required environment variables
+if [ -z "$DOMAIN" ] || [ -z "$TARGET" ] || [ -z "$ZONE_ID" ] || [ -z "$API_TOKEN" ]; then
+    echo "❌ Error: Missing required environment variables in .env file"
+    echo "Required: DOMAIN, TARGET, ZONE_ID, API_TOKEN"
+    exit 1
+fi
 
 RECORD_NAME="${SUBDOMAIN}.${DOMAIN}"
 
