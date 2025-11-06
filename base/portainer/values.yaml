@@ -2,8 +2,8 @@
 service:
   type: ClusterIP  # Access via Ingress
   
-# Single replica for homelab
-replicaCount: 2
+# Single replica for homelab (HA not supported due to BoltDB)
+replicaCount: 1
 
 # Reloader auto-reload on ConfigMap/Secret changes
 annotations:
