@@ -15,8 +15,8 @@ resources:
   - portainer-config.yaml
   - ntfy.yaml
   - ntfy-config.yaml
-  - kube-prometheus-stack.yaml
-  - kube-prometheus-stack-config.yaml
+  #- kube-prometheus-stack.yaml
+  #- kube-prometheus-stack-config.yaml
   - argocd-config.yaml
   - private-services.yaml
   - demo-app.yaml
