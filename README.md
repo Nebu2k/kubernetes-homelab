@@ -551,6 +551,22 @@ kubectl patch application <app-name> -n argocd --type merge \
 argocd app sync <app-name>
 ```
 
+### Hard Refresh Application
+
+Sometimes ArgoCD needs a complete reset (e.g., stuck state, CRD issues):
+
+```bash
+# Delete and re-create the ArgoCD Application (doesn't delete K8s resources)
+kubectl delete application <app-name> -n argocd && sleep 2 && \
+  kubectl apply -f apps/<app-name>.yaml
+
+# Example: Hard refresh Longhorn
+kubectl delete application longhorn -n argocd && sleep 2 && \
+  kubectl apply -f apps/longhorn.yaml
+```
+
+**Note:** This only resets the ArgoCD Application object, not the actual Kubernetes resources. Useful for clearing stuck sync states or comparison errors.
+
 ## 🐛 Troubleshooting
 
 ### MetalLB Not Assigning IPs
