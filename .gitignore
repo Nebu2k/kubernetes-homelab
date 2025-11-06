@@ -12,6 +12,8 @@
 # Ignore backup scripts with credentials
 scripts/backup-docker-volumes.sh
 scripts/restore-docker-volumes.sh
+scripts/sync-to-aws-s3.sh
+scripts/cleanup-teslalogger-backups.sh
 
 # Ignore OS and editor files
 .DS_Store
