@@ -12,7 +12,7 @@ spec:
   source:
     repoURL: https://github.com/Nebu2k/kubernetes-homelab.git
     targetRevision: main
-    path: homelab/overlays/production/ntfy
+    path: overlays/production/ntfy
   destination:
     server: https://kubernetes.default.svc
     namespace: ntfy
