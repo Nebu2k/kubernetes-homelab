@@ -612,15 +612,15 @@ argocd app sync <app-name> --force
 | K3s | v1.33.5 | Lightweight Kubernetes |
 | Kube-VIP | v1.0.1 | Control plane HA |
 | ArgoCD | v3.1.9 | GitOps CD |
-| Sealed Secrets | v0.27.2 | Encrypted secrets |
-| Reloader | v1.2.0 | Auto-reload on ConfigMap/Secret changes |
+| Sealed Secrets | v0.32.2 | Encrypted secrets |
+| Reloader | v1.4.10 | Auto-reload on ConfigMap/Secret changes |
 | MetalLB | v0.15.2 | LoadBalancer |
-| NGINX Ingress | v1.13.3 | Ingress controller |
-| Cert-Manager | v1.16.2 | TLS certificates |
+| NGINX Ingress | v1.14.0 | Ingress controller |
+| Cert-Manager | v1.19.1 | TLS certificates |
 | Longhorn | v1.10.0 | Distributed storage |
-| Portainer | v2.35.0 | Management UI |
+| Portainer | ce-2.33.3 | Management UI |
 | ntfy | v2.14.0 | Notification service |
-| kube-prometheus-stack | v79.2.1 | Prometheus, Grafana, Alertmanager monitoring |
+| kube-prometheus-stack | v0.86.1 | Prometheus, Grafana, Alertmanager monitoring |
 
 ## 📖 Documentation
 
