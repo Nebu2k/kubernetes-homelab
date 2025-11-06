@@ -1,0 +1,32 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ntfy-config
+  namespace: ntfy
+data:
+  server.yml: |
+    # ntfy server configuration
+    # See: https://github.com/binwiederhier/ntfy/blob/main/server/server.yml
+    
+    # Public facing base URL
+    base-url: https://ntfy.elmstreet79.de
+    
+    # Listen address
+    listen-http: :80
+    
+    # Cache settings
+    cache-file: /var/cache/ntfy/cache.db
+    cache-duration: 12h
+    
+    # Attachment cache
+    attachment-cache-dir: /var/cache/ntfy/attachments
+    attachment-total-size-limit: 5G
+    attachment-file-size-limit: 15M
+    attachment-expiry-duration: 3h
+    
+    # Visitor limits
+    visitor-subscription-limit: 30
+    
+    # Logging
+    log-level: info
+    log-format: text

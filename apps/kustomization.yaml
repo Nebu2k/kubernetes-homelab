@@ -12,6 +12,8 @@ resources:
   - longhorn-config.yaml
   - portainer.yaml
   - portainer-config.yaml
+  - ntfy.yaml
+  - ntfy-config.yaml
   - argocd-config.yaml
   - private-services.yaml
   - demo-app.yaml
