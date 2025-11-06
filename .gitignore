@@ -8,6 +8,11 @@
 *.swo
 *.tmp
 *.log
+
+# Ignore backup scripts with credentials
+scripts/backup-docker-volumes.sh
+scripts/restore-docker-volumes.sh
+
 # Ignore OS and editor files
 .DS_Store
 Thumbs.db
