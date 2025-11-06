@@ -27,13 +27,14 @@ Production-ready K3s cluster managed via GitOps using ArgoCD App-of-Apps pattern
 | 5 | Portainer | Management UI |
 | 6 | ntfy | Notification service |
 | 7 | kube-prometheus-stack | Prometheus, Grafana, Alertmanager monitoring |
+| 8 | Uptime Kuma | Uptime monitoring & status page |
 | 10 | MetalLB Config, Cert-Manager Config | IPAddressPool, ClusterIssuers |
 | 11 | NGINX Ingress Config | Custom headers |
 | 12 | ArgoCD Config, Portainer Config | Management UI ingresses |
 | 13 | Longhorn Config | Backup jobs, S3 config |
 | 14 | ntfy Config | ntfy ingress |
 | 15 | kube-prometheus-stack Config | Grafana, Prometheus, Alertmanager ingresses |
-| 16 | Private Services | External service ingresses (TeslaLogger, Dreambox) |
+| 16 | Uptime Kuma Config, Private Services | Uptime Kuma ingress, External service ingresses |
 | 20 | Demo App | Sample application |
 
 ## 📁 Repository Structure
@@ -58,6 +59,8 @@ homelab/
 │   ├── portainer-config.yaml      # Wave 12
 │   ├── ntfy.yaml                  # Wave 6
 │   ├── ntfy-config.yaml           # Wave 14
+│   ├── uptime-kuma.yaml           # Wave 8
+│   ├── uptime-kuma-config.yaml    # Wave 16
 │   ├── kube-prometheus-stack.yaml       # Wave 7
 │   ├── kube-prometheus-stack-config.yaml # Wave 15
 │   ├── argocd-config.yaml         # Wave 12
@@ -70,6 +73,7 @@ homelab/
 │   ├── nginx-ingress/values.yaml
 │   ├── longhorn/values.yaml
 │   ├── portainer/values.yaml
+│   ├── uptime-kuma/values.yaml    # Uptime monitoring
 │   ├── kube-prometheus-stack/values.yaml  # Prometheus, Grafana, Alertmanager
 │   └── ntfy/                      # Notification service
 │       ├── deployment.yaml
@@ -99,6 +103,9 @@ homelab/
     │   ├── ingress-grafana.yaml         # Grafana HTTPS ingress
     │   ├── ingress-prometheus.yaml      # Prometheus HTTPS ingress
     │   ├── ingress-alertmanager.yaml    # Alertmanager HTTPS ingress
+    │   └── kustomization.yaml
+    ├── uptime-kuma/
+    │   ├── ingress.yaml           # Uptime Kuma HTTPS ingress
     │   └── kustomization.yaml
     └── private-services/
         ├── teslalogger-ingress.yaml  # TeslaLogger external service
@@ -333,9 +340,8 @@ The repository is pre-configured for `elmstreet79.de`. If using your own domain,
    ./scripts/create-dns-record.sh argo elmstreet79.de $TARGET $ZONE_ID $API_TOKEN
    ./scripts/create-dns-record.sh portainer elmstreet79.de $TARGET $ZONE_ID $API_TOKEN
    ./scripts/create-dns-record.sh grafana elmstreet79.de $TARGET $ZONE_ID $API_TOKEN
-   ./scripts/create-dns-record.sh prometheus elmstreet79.de $TARGET $ZONE_ID $API_TOKEN
-   ./scripts/create-dns-record.sh alertmanager elmstreet79.de $TARGET $ZONE_ID $API_TOKEN
    ./scripts/create-dns-record.sh ntfy elmstreet79.de $TARGET $ZONE_ID $API_TOKEN
+   ./scripts/create-dns-record.sh uptime elmstreet79.de $TARGET $ZONE_ID $API_TOKEN
    ./scripts/create-dns-record.sh teslalogger elmstreet79.de $TARGET $ZONE_ID $API_TOKEN
    ./scripts/create-dns-record.sh dreambox elmstreet79.de $TARGET $ZONE_ID $API_TOKEN
    ```
@@ -476,12 +482,17 @@ URL: http://<node-ip>:30080
 
 ```text
 Grafana:      https://grafana.elmstreet79.de
-Prometheus:   https://prometheus.elmstreet79.de
-Alertmanager: https://alertmanager.elmstreet79.de
+Prometheus:   http://<node-ip>:9090 (Internal only - port-forward or use Grafana)
+Alertmanager: http://<node-ip>:9093 (Internal only - port-forward or use Grafana)
 Credentials:  admin / <from sealed-secret>
 ```
 
 📊 **Pre-installed dashboards:** Kubernetes cluster metrics, node metrics, pod resources, persistent volumes
+
+🔒 **Security note:** Prometheus and Alertmanager are not exposed publicly (no ingress). Access via:
+
+- Grafana datasource (recommended)
+- Port-forward: `kubectl port-forward -n monitoring svc/kube-prometheus-stack-prometheus 9090:9090`
 
 **ntfy (Notifications):**
 
@@ -490,6 +501,14 @@ URL: https://ntfy.elmstreet79.de
 ```
 
 📱 **Mobile apps:** [iOS](https://apps.apple.com/app/ntfy/id1625396347) | [Android](https://play.google.com/store/apps/details?id=io.heckel.ntfy)
+
+**Uptime Kuma (Uptime Monitoring):**
+
+```text
+URL: https://uptime.elmstreet79.de
+```
+
+⚠️ **First visit:** Create admin account on initial access. Then add monitors for your services.
 
 **Private Services:**
 
@@ -636,6 +655,7 @@ argocd app sync <app-name> --force
 | Longhorn | v1.10.0 | Distributed storage |
 | Portainer | ce-2.33.3 | Management UI |
 | ntfy | v2.14.0 | Notification service |
+| Uptime Kuma | v1.23.16 | Uptime monitoring & status page |
 | kube-prometheus-stack | v0.86.1 | Prometheus, Grafana, Alertmanager monitoring |
 
 ## 📖 Documentation
@@ -648,6 +668,7 @@ argocd app sync <app-name> --force
 - [Cert-Manager](https://cert-manager.io/)
 - [Longhorn](https://longhorn.io/)
 - [ntfy](https://ntfy.sh/)
+- [Uptime Kuma](https://github.com/louislam/uptime-kuma)
 - [kube-prometheus-stack](https://github.com/prometheus-community/helm-charts/tree/main/charts/kube-prometheus-stack)
 
 ## 📝 License
