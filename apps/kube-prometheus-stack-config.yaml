@@ -1,22 +1,20 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: private-services
+  name: kube-prometheus-stack-config
   namespace: argocd
   annotations:
-    argocd.argoproj.io/sync-wave: "16"
+    argocd.argoproj.io/sync-wave: "15"
 spec:
   project: default
   source:
-    repoURL: https://github.com/Nebu2k/kubernetes-homelab
+    repoURL: https://github.com/Nebu2k/kubernetes-homelab.git
     targetRevision: main
-    path: overlays/production/private-services
+    path: overlays/production/kube-prometheus-stack
   destination:
     server: https://kubernetes.default.svc
-    namespace: private-services
+    namespace: monitoring
   syncPolicy:
     automated:
       prune: true
       selfHeal: true
-    syncOptions:
-      - CreateNamespace=true

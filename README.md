@@ -26,12 +26,14 @@ Production-ready K3s cluster managed via GitOps using ArgoCD App-of-Apps pattern
 | 4 | Longhorn | Persistent storage |
 | 5 | Portainer | Management UI |
 | 6 | ntfy | Notification service |
+| 7 | kube-prometheus-stack | Prometheus, Grafana, Alertmanager monitoring |
 | 10 | MetalLB Config, Cert-Manager Config | IPAddressPool, ClusterIssuers |
 | 11 | NGINX Ingress Config | Custom headers |
 | 12 | ArgoCD Config, Portainer Config | Management UI ingresses |
 | 13 | Longhorn Config | Backup jobs, S3 config |
 | 14 | ntfy Config | ntfy ingress |
-| 15 | Private Services | External service ingresses (TeslaLogger, Dreambox) |
+| 15 | kube-prometheus-stack Config | Grafana, Prometheus, Alertmanager ingresses |
+| 16 | Private Services | External service ingresses (TeslaLogger, Dreambox) |
 | 20 | Demo App | Sample application |
 
 ## 📁 Repository Structure
@@ -56,8 +58,10 @@ homelab/
 │   ├── portainer-config.yaml      # Wave 12
 │   ├── ntfy.yaml                  # Wave 6
 │   ├── ntfy-config.yaml           # Wave 14
+│   ├── kube-prometheus-stack.yaml       # Wave 7
+│   ├── kube-prometheus-stack-config.yaml # Wave 15
 │   ├── argocd-config.yaml         # Wave 12
-│   ├── private-services.yaml      # Wave 15
+│   ├── private-services.yaml      # Wave 16
 │   └── demo-app.yaml              # Wave 20
 ├── base/
 │   ├── reloader/values.yaml       # Auto-reload config
@@ -66,6 +70,7 @@ homelab/
 │   ├── nginx-ingress/values.yaml
 │   ├── longhorn/values.yaml
 │   ├── portainer/values.yaml
+│   ├── kube-prometheus-stack/values.yaml  # Prometheus, Grafana, Alertmanager
 │   └── ntfy/                      # Notification service
 │       ├── deployment.yaml
 │       ├── service.yaml
@@ -88,6 +93,12 @@ homelab/
     ├── ntfy/
     │   ├── configmap.yaml         # ntfy server config
     │   ├── ingress.yaml           # ntfy HTTPS ingress
+    │   └── kustomization.yaml
+    ├── kube-prometheus-stack/
+    │   ├── grafana-admin-sealed.yaml    # Grafana admin credentials
+    │   ├── ingress-grafana.yaml         # Grafana HTTPS ingress
+    │   ├── ingress-prometheus.yaml      # Prometheus HTTPS ingress
+    │   ├── ingress-alertmanager.yaml    # Alertmanager HTTPS ingress
     │   └── kustomization.yaml
     └── private-services/
         ├── teslalogger-ingress.yaml  # TeslaLogger external service
@@ -321,6 +332,10 @@ The repository is pre-configured for `elmstreet79.de`. If using your own domain,
    # Create DNS records for all services
    ./scripts/create-dns-record.sh argo elmstreet79.de $TARGET $ZONE_ID $API_TOKEN
    ./scripts/create-dns-record.sh portainer elmstreet79.de $TARGET $ZONE_ID $API_TOKEN
+   ./scripts/create-dns-record.sh grafana elmstreet79.de $TARGET $ZONE_ID $API_TOKEN
+   ./scripts/create-dns-record.sh prometheus elmstreet79.de $TARGET $ZONE_ID $API_TOKEN
+   ./scripts/create-dns-record.sh alertmanager elmstreet79.de $TARGET $ZONE_ID $API_TOKEN
+   ./scripts/create-dns-record.sh ntfy elmstreet79.de $TARGET $ZONE_ID $API_TOKEN
    ./scripts/create-dns-record.sh teslalogger elmstreet79.de $TARGET $ZONE_ID $API_TOKEN
    ./scripts/create-dns-record.sh dreambox elmstreet79.de $TARGET $ZONE_ID $API_TOKEN
    ```
@@ -367,6 +382,11 @@ kubeseal --format=yaml --controller-namespace=kube-system \
   < overlays/production/cert-manager/cloudflare-token-unsealed.yaml \
   > overlays/production/cert-manager/cloudflare-token-sealed.yaml
 
+# Seal Grafana admin secret:
+kubeseal --format=yaml --controller-namespace=sealed-secrets \
+  < overlays/production/kube-prometheus-stack/grafana-admin-unsealed.yaml \
+  > overlays/production/kube-prometheus-stack/grafana-admin-sealed.yaml
+
 # If using Longhorn S3 backup:
 kubeseal --format=yaml --controller-namespace=kube-system \
   < overlays/production/longhorn/s3-secret-unsealed.yaml \
@@ -376,6 +396,9 @@ kubeseal --format=yaml --controller-namespace=kube-system \
 # macOS (BSD sed): uncomment the sealed secret entries
 sed -i '' 's/^  # - cloudflare-token-sealed.yaml/  - cloudflare-token-sealed.yaml/' \
   overlays/production/cert-manager/kustomization.yaml
+
+sed -i '' 's/^  # - grafana-admin-sealed.yaml/  - grafana-admin-sealed.yaml/' \
+  overlays/production/kube-prometheus-stack/kustomization.yaml
 
 # If using Longhorn S3 backup, also enable:
 sed -i '' 's/^  # - s3-secret-sealed.yaml/  - s3-secret-sealed.yaml/' \
@@ -448,6 +471,25 @@ kubectl delete pod -n portainer -l app.kubernetes.io/name=portainer
 URL: http://<node-ip>:30080
 (Internal only, no ingress for security)
 ```
+
+**Monitoring Stack:**
+
+```text
+Grafana:      https://grafana.elmstreet79.de
+Prometheus:   https://prometheus.elmstreet79.de
+Alertmanager: https://alertmanager.elmstreet79.de
+Credentials:  admin / <from sealed-secret>
+```
+
+📊 **Pre-installed dashboards:** Kubernetes cluster metrics, node metrics, pod resources, persistent volumes
+
+**ntfy (Notifications):**
+
+```text
+URL: https://ntfy.elmstreet79.de
+```
+
+📱 **Mobile apps:** [iOS](https://apps.apple.com/app/ntfy/id1625396347) | [Android](https://play.google.com/store/apps/details?id=io.heckel.ntfy)
 
 **Private Services:**
 
@@ -567,24 +609,30 @@ argocd app sync <app-name> --force
 
 | Component | Version | Purpose |
 |-----------|---------|---------|
-| K3s | v1.34.1 | Lightweight Kubernetes |
+| K3s | v1.33.5 | Lightweight Kubernetes |
 | Kube-VIP | v1.0.1 | Control plane HA |
 | ArgoCD | v3.1.9 | GitOps CD |
 | Sealed Secrets | v0.27.2 | Encrypted secrets |
+| Reloader | v1.2.0 | Auto-reload on ConfigMap/Secret changes |
 | MetalLB | v0.15.2 | LoadBalancer |
 | NGINX Ingress | v1.13.3 | Ingress controller |
 | Cert-Manager | v1.16.2 | TLS certificates |
 | Longhorn | v1.10.0 | Distributed storage |
 | Portainer | v2.35.0 | Management UI |
+| ntfy | v2.14.0 | Notification service |
+| kube-prometheus-stack | v79.2.1 | Prometheus, Grafana, Alertmanager monitoring |
 
 ## 📖 Documentation
 
 - [ArgoCD Docs](https://argo-cd.readthedocs.io/)
 - [Sealed Secrets](https://github.com/bitnami-labs/sealed-secrets)
+- [Stakater Reloader](https://github.com/stakater/Reloader)
 - [K3s Documentation](https://docs.k3s.io/)
 - [MetalLB](https://metallb.universe.tf/)
 - [Cert-Manager](https://cert-manager.io/)
 - [Longhorn](https://longhorn.io/)
+- [ntfy](https://ntfy.sh/)
+- [kube-prometheus-stack](https://github.com/prometheus-community/helm-charts/tree/main/charts/kube-prometheus-stack)
 
 ## 📝 License
 
