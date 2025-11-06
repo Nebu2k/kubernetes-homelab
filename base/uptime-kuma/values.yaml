@@ -29,11 +29,8 @@ resources:
 ingress:
   enabled: false
 
-# Security context
-securityContext:
-  runAsNonRoot: true
-  runAsUser: 1000
-  fsGroup: 1000
+# Security context - empty to allow container to run as root (required for PVC access)
+securityContext: {}
 
 # Probes
 livenessProbe:
