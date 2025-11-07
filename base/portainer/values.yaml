@@ -14,3 +14,24 @@ persistence:
   enabled: true
   size: 1Gi
   storageClass: longhorn  # Use Longhorn for replicated storage
+
+# Health check probes - relaxed timeouts for Raspberry Pi
+livenessProbe:
+  httpGet:
+    path: /
+    port: 9443
+    scheme: HTTPS
+  initialDelaySeconds: 60  # Give Portainer time to start
+  periodSeconds: 30        # Check every 30s
+  timeoutSeconds: 5        # Allow 5s for response (was 1s - too aggressive)
+  failureThreshold: 5      # 5 failures before restart (5 * 30s = 2.5min)
+
+readinessProbe:
+  httpGet:
+    path: /
+    port: 9443
+    scheme: HTTPS
+  initialDelaySeconds: 60  # Give Portainer time to start
+  periodSeconds: 30        # Check every 30s
+  timeoutSeconds: 5        # Allow 5s for response (was 1s - too aggressive)
+  failureThreshold: 3      # 3 failures before marking unready (3 * 30s = 1.5min)
