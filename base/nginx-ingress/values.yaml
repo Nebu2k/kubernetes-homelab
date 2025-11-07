@@ -5,6 +5,9 @@ controller:
   service:
     type: LoadBalancer
     # MetalLB will assign IP from pool
+    ipFamilyPolicy: SingleStack
+    ipFamilies:
+      - IPv4
     
   # Allow snippets for advanced configurations
   allowSnippetAnnotations: true
