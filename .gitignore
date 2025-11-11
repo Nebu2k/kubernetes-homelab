@@ -10,10 +10,7 @@
 *.log
 
 # Ignore backup scripts with credentials
-scripts/backup-docker-volumes.sh
-scripts/restore-docker-volumes.sh
-scripts/sync-to-aws-s3.sh
-scripts/cleanup-teslalogger-backups.sh
+scripts-docker/*
 
 # Ignore OS and editor files
 .DS_Store
@@ -21,9 +18,6 @@ Thumbs.db
 .vscode/
 .idea/
 *.code-workspace
-
-# Ignore private ingress manifests
-private-ingress
 
 # Ignore Python cache
 __pycache__/
