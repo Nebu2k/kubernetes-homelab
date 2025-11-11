@@ -10,7 +10,7 @@
 *.log
 
 # Ignore backup scripts with credentials
-scripts-docker/*
+scripts-docker*/*
 
 # Ignore OS and editor files
 .DS_Store
