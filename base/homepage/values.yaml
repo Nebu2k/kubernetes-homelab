@@ -36,10 +36,13 @@ resources:
   limits:
     memory: 256Mi
 
-# ServiceAccount - we manage it manually in overlay
+# ServiceAccount with RBAC
 serviceAccount:
-  create: false
+  create: true
   name: homepage
+
+# Enable RBAC for Kubernetes integration
+enableRbac: true
 
 # Config will be provided via ConfigMaps in overlay
 config:

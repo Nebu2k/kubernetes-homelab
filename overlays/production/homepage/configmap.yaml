@@ -10,16 +10,6 @@ data:
     theme: dark
     color: slate
     headerStyle: boxed
-    layout:
-      ArgoCD:
-        style: row
-        columns: 3
-      Services:
-        style: row
-        columns: 3
-      Monitoring:
-        style: row
-        columns: 3
 
   services.yaml: |
     - ArgoCD:
@@ -54,26 +44,6 @@ data:
             href: https://uptime.elmstreet79.de
             description: Uptime Monitoring
             icon: uptime-kuma.svg
-
-  widgets.yaml: |
-    - kubernetes:
-        cluster:
-          show: true
-          cpu: true
-          memory: true
-          showLabel: true
-          label: "K3s Cluster"
-        nodes:
-          show: true
-          cpu: true
-          memory: true
-          showLabel: true
-
-    - resources:
-        backend: kubernetes
-        expanded: true
-        cpu: true
-        memory: true
 
   bookmarks.yaml: |
     - Developer:
