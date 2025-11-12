@@ -136,7 +136,9 @@ data:
           container: /
           widget:
             type: docker
-            server: macmini  bookmarks.yaml: |
+            server: macmini
+
+  bookmarks.yaml: |
     - Developer:
       - GitHub:
           - icon: github-light.png
