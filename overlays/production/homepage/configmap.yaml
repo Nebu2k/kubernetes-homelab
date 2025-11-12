@@ -1,0 +1,91 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: homepage-config
+  namespace: homepage
+data:
+  settings.yaml: |
+    title: Homelab Dashboard
+    favicon: https://gethomepage.dev/img/favicon.ico
+    theme: dark
+    color: slate
+    headerStyle: boxed
+    layout:
+      ArgoCD:
+        style: row
+        columns: 3
+      Services:
+        style: row
+        columns: 3
+      Monitoring:
+        style: row
+        columns: 3
+  
+  services.yaml: |
+    - ArgoCD:
+        - ArgoCD:
+            href: https://argocd.elmstreet79.de
+            description: GitOps Continuous Delivery
+            icon: argocd.svg
+            widget:
+              type: argocd
+              url: https://argocd.elmstreet79.de
+    
+    - Services:
+        - Portainer:
+            href: https://portainer.elmstreet79.de
+            description: Container Management
+            icon: portainer.svg
+        
+        - Longhorn:
+            href: http://192.168.2.2:30080
+            description: Distributed Storage
+            icon: longhorn.svg
+        
+        - ntfy:
+            href: https://ntfy.elmstreet79.de
+            description: Push Notifications
+            icon: ntfy.svg
+    
+    - Monitoring:
+        - Grafana:
+            href: https://grafana.elmstreet79.de
+            description: Metrics Visualization
+            icon: grafana.svg
+        
+        - Uptime Kuma:
+            href: https://uptime.elmstreet79.de
+            description: Uptime Monitoring
+            icon: uptime-kuma.svg
+  
+  widgets.yaml: |
+    - kubernetes:
+        cluster:
+          show: true
+          cpu: true
+          memory: true
+          showLabel: true
+          label: "K3s Cluster"
+        nodes:
+          show: true
+          cpu: true
+          memory: true
+          showLabel: true
+    
+    - resources:
+        backend: kubernetes
+        expanded: true
+        cpu: true
+        memory: true
+  
+  kubernetes.yaml: |
+    mode: cluster
+  
+  bookmarks.yaml: |
+    - Developer:
+        - GitHub:
+            - icon: github.svg
+              href: https://github.com/Nebu2k/kubernetes-homelab
+        - Helm Charts:
+            - icon: helm.svg
+              href: https://artifacthub.io

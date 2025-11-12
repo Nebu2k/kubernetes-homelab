@@ -17,6 +17,8 @@ resources:
   - ntfy-config.yaml
   - uptime-kuma.yaml
   - uptime-kuma-config.yaml
+  - homepage.yaml
+  - homepage-config.yaml
   - kube-prometheus-stack.yaml
   - kube-prometheus-stack-config.yaml
   - argocd-config.yaml
