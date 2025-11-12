@@ -74,7 +74,7 @@ data:
           href: https://teslalogger.elmstreet79.de
           description: Tesla Logging & Analytics
           icon: mdi-car-electric
-    
+
     - Infrastructure:
       - Raspberry Pi 4:
           href: http://192.168.2.2
@@ -105,7 +105,7 @@ data:
           widget:
             type: proxmox
             url: http://192.168.2.7:8006
-    
+
     - Docker:
       - 🍓 Raspberry Pi 4:
           href: http://192.168.2.2
@@ -182,7 +182,7 @@ data:
       host: 192.168.2.9
       username: Peters
       key: /app/config/ssh/id_rsa
-    
+
     macmini:
       host: 192.168.2.4
       username: Peters
