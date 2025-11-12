@@ -178,17 +178,17 @@ data:
   docker.yaml: |
     raspi4:
       host: 192.168.2.2
-      username: Peters
+      username: pi
       key: /app/config/ssh/id_rsa
 
     raspi5:
       host: 192.168.2.9
-      username: Peters
+      username: pi
       key: /app/config/ssh/id_rsa
 
     macmini:
       host: 192.168.2.4
-      username: Peters
+      username: speters
       key: /app/config/ssh/id_rsa
 
   proxmox.yaml: |
