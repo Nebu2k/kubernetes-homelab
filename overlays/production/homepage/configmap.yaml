@@ -161,3 +161,6 @@ data:
 
   kubernetes.yaml: |
     mode: cluster
+
+  docker.yaml: |
+    # Portainer integration used instead
