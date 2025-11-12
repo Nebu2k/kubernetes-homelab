@@ -29,7 +29,7 @@ data:
       - ArgoCD:
           href: https://argocd.elmstreet79.de
           description: GitOps Continuous Delivery
-          icon: argocd.png
+          icon: mdi-git
 
     - Services:
       - Portainer:
@@ -62,12 +62,12 @@ data:
       - Dreambox:
           href: https://dreambox.elmstreet79.de
           description: Dreambox Receiver
-          icon: si-enigma2
+          icon: mdi-television-box
       
       - Teslalogger:
           href: https://teslalogger.elmstreet79.de
           description: Tesla Logging & Analytics
-          icon: si-tesla
+          icon: mdi-car-electric
 
   bookmarks.yaml: |
     - Developer:
