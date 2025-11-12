@@ -1,7 +1,7 @@
 # Longhorn distributed storage values
 persistence:
   defaultClass: true
-  defaultClassReplicaCount: 2
+  defaultClassReplicaCount: 3
   recurringJobSelector:
     enable: true
     jobList: '[{"name":"backup-daily","isGroup":false},{"name":"backup-weekly","isGroup":false},{"name":"snapshot-cleanup-daily","isGroup":false}]'
@@ -13,7 +13,7 @@ defaultBackupStore:
 
 # Default settings
 defaultSettings:
-  defaultReplicaCount: "2"
+  defaultReplicaCount: "3"
 
 # Disable preUpgrade hook (causes issues with ArgoCD)
 preUpgradeChecker:
