@@ -3,7 +3,5 @@ kind: Kustomization
 
 resources:
   - ingress-grafana.yaml
-  - ingress-prometheus.yaml
-  - ingress-alertmanager.yaml
   # Uncomment after sealing the secret:
   - grafana-admin-sealed.yaml
