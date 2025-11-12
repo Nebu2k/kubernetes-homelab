@@ -262,7 +262,12 @@ curl -sfL https://get.k3s.io | K3S_URL=https://192.168.2.249:6443 \
   sh -
 ```
 
-**4. Verify Longhorn detects storage:**
+**4. Label node as worker (from your laptop):**
+```bash
+kubectl label node k3s-worker-1 node-role.kubernetes.io/worker=worker
+```
+
+**5. Verify Longhorn detects storage:**
 ```bash
 # From your laptop
 kubectl get nodes
