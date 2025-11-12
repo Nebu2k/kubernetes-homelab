@@ -23,6 +23,9 @@ data:
       Private:
         style: row
         columns: 3
+      Docker:
+        style: row
+        columns: 3
 
   services.yaml: |
     - ArgoCD:
@@ -68,6 +71,27 @@ data:
           href: https://teslalogger.elmstreet79.de
           description: Tesla Logging & Analytics
           icon: mdi-car-electric
+    
+    - Docker:
+      - Raspberry Pi 4:
+          href: http://192.168.2.2
+          description: Docker Containers on Pi 4
+          icon: docker.png
+          server: raspi4
+          container: /
+          widget:
+            type: docker
+            server: raspi4
+      
+      - Raspberry Pi 5:
+          href: http://192.168.2.9
+          description: Docker Containers on Pi 5
+          icon: docker.png
+          server: raspi5
+          container: /
+          widget:
+            type: docker
+            server: raspi5
 
   bookmarks.yaml: |
     - Developer:
@@ -102,28 +126,6 @@ data:
           cpu: true
           memory: true
           showLabel: true
-    
-    - resources:
-        backend: kubernetes
-        expanded: true
-        cpu: true
-        memory: true
-    
-    - resources:
-        label: Raspberry Pi 4
-        backend: docker
-        server: raspi4
-        expanded: true
-        cpu: true
-        memory: true
-    
-    - resources:
-        label: Raspberry Pi 5
-        backend: docker
-        server: raspi5
-        expanded: true
-        cpu: true
-        memory: true
 
   kubernetes.yaml: |
     mode: cluster
