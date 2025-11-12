@@ -108,8 +108,33 @@ data:
         expanded: true
         cpu: true
         memory: true
+    
+    - resources:
+        label: Raspberry Pi 4
+        backend: docker
+        server: raspi4
+        expanded: true
+        cpu: true
+        memory: true
+    
+    - resources:
+        label: Raspberry Pi 5
+        backend: docker
+        server: raspi5
+        expanded: true
+        cpu: true
+        memory: true
 
   kubernetes.yaml: |
     mode: cluster
 
-  docker.yaml: ""
+  docker.yaml: |
+    raspi4:
+      host: 192.168.2.2
+      username: Peters
+      key: /app/config/ssh/id_rsa
+    
+    raspi5:
+      host: 192.168.2.9
+      username: Peters
+      key: /app/config/ssh/id_rsa

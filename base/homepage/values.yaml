@@ -37,6 +37,12 @@ persistence:
     enabled: true
     type: emptyDir
     mountPath: /app/config/logs
+  ssh:
+    enabled: true
+    type: secret
+    name: homepage-docker-ssh
+    mountPath: /app/config/ssh
+    readOnly: true
 
 # Resources
 resources:
