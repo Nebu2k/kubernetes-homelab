@@ -36,18 +36,14 @@ resources:
   limits:
     memory: 256Mi
 
-# Enable ServiceAccount for Kubernetes integration
+# ServiceAccount - let Helm chart create it
 serviceAccount:
   create: true
-  name: homepage
 
-# RBAC for Kubernetes API access
-enableRbac: true
+# RBAC - let Helm chart create it
+rbac:
+  create: true
 
 # Config will be provided via ConfigMaps in overlay
 config:
   useExistingConfigMap: homepage-config
-
-# Kubernetes integration
-kubernetes:
-  mode: cluster
