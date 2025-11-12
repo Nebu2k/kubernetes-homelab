@@ -220,6 +220,60 @@ curl -sfL https://get.k3s.io | INSTALL_K3S_CHANNEL=stable sh -s - server \
   --write-kubeconfig-mode 644
 ```
 
+### Step 4.5: Join Worker Nodes with Longhorn Storage (**on k3s-worker-1**)
+
+**Prerequisites:**
+- Second disk installed (e.g., 2TB NVMe for Longhorn storage)
+- Static IP configured via DHCP reservation in router
+
+**1. Install system essentials:**
+```bash
+sudo apt update && sudo apt upgrade -y
+sudo apt install -y curl wget git vim htop net-tools iptables qemu-guest-agent
+sudo systemctl start qemu-guest-agent
+```
+
+**2. Prepare second disk for Longhorn:**
+```bash
+# Identify disk (usually /dev/sdb for second disk)
+lsblk
+
+# Format disk with ext4
+sudo mkfs.ext4 -L longhorn-storage /dev/sdb
+
+# Create Longhorn mountpoint
+sudo mkdir -p /var/lib/longhorn
+
+# Get UUID for permanent mounting
+sudo blkid /dev/sdb
+
+# Add to fstab (replace <uuid> with actual UUID from blkid)
+echo "UUID=<uuid> /var/lib/longhorn ext4 defaults,noatime 0 2" | sudo tee -a /etc/fstab
+
+# Mount and verify
+sudo mount -a
+df -h /var/lib/longhorn
+```
+
+**3. Join as K3s worker:**
+```bash
+curl -sfL https://get.k3s.io | K3S_URL=https://192.168.2.249:6443 \
+  K3S_TOKEN=<token-from-step-1> \
+  sh -
+```
+
+**4. Verify Longhorn detects storage:**
+```bash
+# From your laptop
+kubectl get nodes
+kubectl get pods -n longhorn-system -o wide | grep k3s-worker-1
+
+# Check Longhorn UI (http://<node-ip>:30080)
+# Node → k3s-worker-1 → should show full disk capacity
+```
+
+⚠️ **Note:** Longhorn automatically detects `/var/lib/longhorn` - no additional configuration needed!
+
 ### Step 5: Install ArgoCD via Helm (**on your laptop**)
 
 ⚠️ **ArgoCD is NOT managed via GitOps** (prevents self-management conflicts)
