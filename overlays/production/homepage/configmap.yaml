@@ -89,7 +89,27 @@ data:
     - greeting:
         text_size: xl
         text: "Willkommen auf elmstreet79.de 🏠"
+    
+    - kubernetes:
+        cluster:
+          show: true
+          cpu: true
+          memory: true
+          showLabel: true
+          label: "K3s Cluster"
+        nodes:
+          show: true
+          cpu: true
+          memory: true
+          showLabel: true
+    
+    - resources:
+        backend: kubernetes
+        expanded: true
+        cpu: true
+        memory: true
 
-  kubernetes.yaml: ""
+  kubernetes.yaml: |
+    mode: cluster
 
   docker.yaml: ""
