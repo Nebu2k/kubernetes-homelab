@@ -460,11 +460,6 @@ kubeseal --format=yaml --controller-namespace=kube-system \
   < overlays/production/cert-manager/cloudflare-token-unsealed.yaml \
   > overlays/production/cert-manager/cloudflare-token-sealed.yaml
 
-# Seal Grafana admin secret:
-kubeseal --format=yaml --controller-namespace=sealed-secrets \
-  < overlays/production/kube-prometheus-stack/grafana-admin-unsealed.yaml \
-  > overlays/production/kube-prometheus-stack/grafana-admin-sealed.yaml
-
 # If using Longhorn S3 backup:
 kubeseal --format=yaml --controller-namespace=kube-system \
   < overlays/production/longhorn/s3-secret-unsealed.yaml \
@@ -474,9 +469,6 @@ kubeseal --format=yaml --controller-namespace=kube-system \
 # macOS (BSD sed): uncomment the sealed secret entries
 sed -i '' 's/^  # - cloudflare-token-sealed.yaml/  - cloudflare-token-sealed.yaml/' \
   overlays/production/cert-manager/kustomization.yaml
-
-sed -i '' 's/^  # - grafana-admin-sealed.yaml/  - grafana-admin-sealed.yaml/' \
-  overlays/production/kube-prometheus-stack/kustomization.yaml
 
 # If using Longhorn S3 backup, also enable:
 sed -i '' 's/^  # - s3-secret-sealed.yaml/  - s3-secret-sealed.yaml/' \
@@ -556,8 +548,16 @@ URL: http://<node-ip>:30080
 Grafana:      https://grafana.elmstreet79.de
 Prometheus:   http://<node-ip>:9090 (Internal only - port-forward or use Grafana)
 Alertmanager: http://<node-ip>:9093 (Internal only - port-forward or use Grafana)
-Credentials:  admin / <from sealed-secret>
 ```
+
+**Get Grafana admin password:**
+
+```bash
+kubectl get secret -n monitoring kube-prometheus-stack-grafana \
+  -o jsonpath="{.data.admin-password}" | base64 -d && echo
+```
+
+Default user: `admin`
 
 📊 **Pre-installed dashboards:** Kubernetes cluster metrics, node metrics, pod resources, persistent volumes
 

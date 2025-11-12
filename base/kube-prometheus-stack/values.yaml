@@ -74,17 +74,6 @@ grafana:
   nodeSelector:
     node-role.kubernetes.io/worker: "worker"
   
-  # Admin credentials from secret via environment variables
-  envValueFrom:
-    GF_SECURITY_ADMIN_USER:
-      secretKeyRef:
-        name: grafana-admin-secret
-        key: admin-user
-    GF_SECURITY_ADMIN_PASSWORD:
-      secretKeyRef:
-        name: grafana-admin-secret
-        key: admin-password
-  
   # Service
   service:
     type: ClusterIP  # Use Ingress instead of LoadBalancer

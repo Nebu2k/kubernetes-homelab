@@ -3,5 +3,3 @@ kind: Kustomization
 
 resources:
   - ingress-grafana.yaml
-  # Uncomment after sealing the secret:
-  - grafana-admin-sealed.yaml
