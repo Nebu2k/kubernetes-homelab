@@ -13,43 +13,43 @@ data:
 
   services.yaml: |
     - ArgoCD:
-        - ArgoCD:
-            href: https://argocd.elmstreet79.de
-            description: GitOps Continuous Delivery
-            icon: argocd.svg
-
+      - ArgoCD:
+          href: https://argocd.elmstreet79.de
+          description: GitOps Continuous Delivery
+          icon: argocd.svg
+    
     - Services:
-        - Portainer:
-            href: https://portainer.elmstreet79.de
-            description: Container Management
-            icon: portainer.svg
-        
-        - Longhorn:
-            href: http://192.168.2.2:30080
-            description: Distributed Storage
-            icon: longhorn.svg
-        
-        - ntfy:
-            href: https://ntfy.elmstreet79.de
-            description: Push Notifications
-            icon: ntfy.svg
-
+      - Portainer:
+          href: https://portainer.elmstreet79.de
+          description: Container Management
+          icon: portainer.svg
+      
+      - Longhorn:
+          href: http://192.168.2.2:30080
+          description: Distributed Storage
+          icon: longhorn.svg
+      
+      - ntfy:
+          href: https://ntfy.elmstreet79.de
+          description: Push Notifications
+          icon: ntfy.svg
+    
     - Monitoring:
-        - Grafana:
-            href: https://grafana.elmstreet79.de
-            description: Metrics Visualization
-            icon: grafana.svg
-        
-        - Uptime Kuma:
-            href: https://uptime.elmstreet79.de
-            description: Uptime Monitoring
-            icon: uptime-kuma.svg
+      - Grafana:
+          href: https://grafana.elmstreet79.de
+          description: Metrics Visualization
+          icon: grafana.svg
+      
+      - Uptime Kuma:
+          href: https://uptime.elmstreet79.de
+          description: Uptime Monitoring
+          icon: uptime-kuma.svg
 
   bookmarks.yaml: |
     - Developer:
-        - GitHub:
-            - icon: github.svg
-              href: https://github.com/Nebu2k/kubernetes-homelab
-        - Helm Charts:
-            - icon: helm.svg
-              href: https://artifacthub.io
+      - GitHub:
+          - icon: github.svg
+            href: https://github.com/Nebu2k/kubernetes-homelab
+      - Helm Charts:
+          - icon: helm.svg
+            href: https://artifacthub.io
