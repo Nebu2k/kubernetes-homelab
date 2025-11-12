@@ -36,13 +36,9 @@ resources:
   limits:
     memory: 256Mi
 
-# ServiceAccount - let Helm chart create it
+# ServiceAccount - we manage it manually in overlay
 serviceAccount:
-  create: true
-
-# RBAC - let Helm chart create it
-rbac:
-  create: true
+  create: false
 
 # Config will be provided via ConfigMaps in overlay
 config:
