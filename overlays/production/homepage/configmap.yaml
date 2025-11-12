@@ -10,40 +10,50 @@ data:
     theme: dark
     color: slate
     headerStyle: boxed
+    layout:
+      ArgoCD:
+        style: row
+        columns: 2
+      Services:
+        style: row
+        columns: 3
+      Monitoring:
+        style: row
+        columns: 3
 
   services.yaml: |
     - ArgoCD:
       - ArgoCD:
           href: https://argocd.elmstreet79.de
           description: GitOps Continuous Delivery
-          icon: argocd.svg
+          icon: argocd.png
 
     - Services:
       - Portainer:
           href: https://portainer.elmstreet79.de
           description: Container Management
-          icon: portainer.svg
+          icon: portainer.png
       
       - Longhorn:
           href: http://192.168.2.2:30080
           description: Distributed Storage
-          icon: longhorn.svg
+          icon: longhorn.png
       
       - ntfy:
           href: https://ntfy.elmstreet79.de
           description: Push Notifications
-          icon: ntfy.svg
+          icon: ntfy.png
 
     - Monitoring:
       - Grafana:
           href: https://grafana.elmstreet79.de
           description: Metrics Visualization
-          icon: grafana.svg
+          icon: grafana.png
       
       - Uptime Kuma:
           href: https://uptime.elmstreet79.de
           description: Uptime Monitoring
-          icon: uptime-kuma.svg
+          icon: uptime-kuma.png
 
   bookmarks.yaml: |
     - Developer:
@@ -54,7 +64,24 @@ data:
           - icon: helm.svg
             href: https://artifacthub.io
 
-  widgets.yaml: ""
+  widgets.yaml: |
+    - logo:
+        icon: https://raw.githubusercontent.com/walkxcode/dashboard-icons/main/png/kubernetes.png
+    
+    - datetime:
+        text_size: xl
+        format:
+          dateStyle: short
+          timeStyle: short
+          hour12: false
+    
+    - greeting:
+        text_size: xl
+        text: "Willkommen im Homelab!"
+    
+    - search:
+        provider: google
+        target: _blank
 
   kubernetes.yaml: ""
 
