@@ -26,9 +26,6 @@ data:
       Infrastructure:
         style: row
         columns: 4
-      Docker:
-        style: row
-        columns: 3
 
   services.yaml: |
     - ArgoCD:
@@ -78,61 +75,30 @@ data:
     - Infrastructure:
       - Raspberry Pi 4:
           href: http://192.168.2.2
-          description: K3s Node | ARM64 | 8GB RAM
+          description: K3s + Docker | ARM64 | 4GB RAM
           icon: https://cdn.simpleicons.org/raspberrypi/C51A4A
           ping: 192.168.2.2
       
       - Raspberry Pi 5:
           href: http://192.168.2.9
-          description: K3s Node | ARM64 | 8GB RAM
+          description: K3s + Docker | ARM64 | 8GB RAM
           icon: https://cdn.simpleicons.org/raspberrypi/C51A4A
           ping: 192.168.2.9
       
       - Mac Mini:
           href: http://192.168.2.4
-          description: K3s Node | x86_64 | 16GB RAM
+          description: AdGuard DNS | x86_64 | 20GB RAM
           icon: https://cdn.simpleicons.org/apple/000000
           ping: 192.168.2.4
       
       - Proxmox:
-          href: http://192.168.2.7:8006
+          href: http://192.168.2.8:8006
           description: Virtualization Host
           icon: https://cdn.simpleicons.org/proxmox/E57000
           widget:
             type: proxmox
-            url: http://192.168.2.7:8006
+            url: http://192.168.2.8:8006
             node: proxmox
-
-    - Docker:
-      - 🍓 Raspberry Pi 4:
-          href: http://192.168.2.2
-          description: Docker Containers
-          icon: docker.png
-          server: raspi4
-          container: /
-          widget:
-            type: docker
-            server: raspi4
-      
-      - 🍓 Raspberry Pi 5:
-          href: http://192.168.2.9
-          description: Docker Containers
-          icon: docker.png
-          server: raspi5
-          container: /
-          widget:
-            type: docker
-            server: raspi5
-      
-      - 🍎 Mac Mini:
-          href: http://192.168.2.4
-          description: Docker Containers
-          icon: docker.png
-          server: macmini
-          container: /
-          widget:
-            type: docker
-            server: macmini
 
   bookmarks.yaml: |
     - Developer:
@@ -170,22 +136,6 @@ data:
 
   kubernetes.yaml: |
     mode: cluster
-
-  docker.yaml: |
-    raspi4:
-      host: 192.168.2.2
-      username: pi
-      key: /app/config/ssh/id_rsa
-
-    raspi5:
-      host: 192.168.2.9
-      username: pi
-      key: /app/config/ssh/id_rsa
-
-    macmini:
-      host: 192.168.2.4
-      username: speters
-      key: /app/config/ssh/id_rsa
 
   proxmox.yaml: |
     proxmox:
