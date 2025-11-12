@@ -188,7 +188,7 @@ data:
       host: 192.168.2.4
       username: Peters
       key: /app/config/ssh/id_rsa
-  
+
   proxmox.yaml: |
     proxmox:
       username: {{HOMEPAGE_VAR_PROXMOX_USER}}
