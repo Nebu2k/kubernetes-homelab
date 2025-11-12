@@ -8,7 +8,7 @@ metadata:
 spec:
   project: default
   sources:
-    - repoURL: https://gethomepage.dev/charts
+    - repoURL: https://jameswynn.github.io/helm-charts
       chart: homepage
       targetRevision: 2.1.0
       helm:
