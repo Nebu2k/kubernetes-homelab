@@ -26,6 +26,9 @@ data:
       Infrastructure:
         style: row
         columns: 4
+      Docker:
+        style: row
+        columns: 2
 
   services.yaml: |
     - ArgoCD:
@@ -101,6 +104,25 @@ data:
             username: {{HOMEPAGE_VAR_PROXMOX_USER}}
             password: {{HOMEPAGE_VAR_PROXMOX_PASS}}
 
+    - Docker:
+      - Raspberry Pi 4:
+          icon: docker.png
+          description: Docker Containers
+          server: raspi4
+          container: /
+          widget:
+            type: docker
+            server: raspi4
+      
+      - Raspberry Pi 5:
+          icon: docker.png
+          description: Docker Containers
+          server: raspi5
+          container: /
+          widget:
+            type: docker
+            server: raspi5
+
   bookmarks.yaml: |
     - Developer:
       - GitHub:
@@ -139,4 +161,12 @@ data:
     mode: cluster
 
   docker.yaml: |
-    # Docker integration disabled
+    raspi4:
+      host: 192.168.2.2
+      username: pi
+      key: /app/config/ssh/id_rsa
+
+    raspi5:
+      host: 192.168.2.9
+      username: pi
+      key: /app/config/ssh/id_rsa
