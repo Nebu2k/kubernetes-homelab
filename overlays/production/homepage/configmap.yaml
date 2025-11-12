@@ -20,6 +20,9 @@ data:
       Monitoring:
         style: row
         columns: 3
+      Private:
+        style: row
+        columns: 3
 
   services.yaml: |
     - ArgoCD:
@@ -54,14 +57,25 @@ data:
           href: https://uptime.elmstreet79.de
           description: Uptime Monitoring
           icon: uptime-kuma.png
+    
+    - Private:
+      - Dreambox:
+          href: https://dreambox.elmstreet79.de
+          description: Dreambox Receiver
+          icon: si-enigma2
+      
+      - Teslalogger:
+          href: https://teslalogger.elmstreet79.de
+          description: Tesla Logging & Analytics
+          icon: si-tesla
 
   bookmarks.yaml: |
     - Developer:
       - GitHub:
-          - icon: github.svg
+          - icon: github-light.png
             href: https://github.com/Nebu2k/kubernetes-homelab
       - Helm Charts:
-          - icon: helm.svg
+          - icon: helm.png
             href: https://artifacthub.io
 
   widgets.yaml: |
