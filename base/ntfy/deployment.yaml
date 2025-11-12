@@ -16,6 +16,10 @@ spec:
       labels:
         app: ntfy
     spec:
+      # Schedule only on worker nodes
+      nodeSelector:
+        node-role.kubernetes.io/worker: "worker"
+      
       containers:
       - name: ntfy
         image: binwiederhier/ntfy

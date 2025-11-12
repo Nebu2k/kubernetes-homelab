@@ -5,6 +5,10 @@ service:
 # Single replica for homelab (HA not supported due to BoltDB)
 replicaCount: 1
 
+# Schedule only on worker nodes
+nodeSelector:
+  node-role.kubernetes.io/worker: "worker"
+
 # Reloader auto-reload on ConfigMap/Secret changes
 annotations:
   reloader.stakater.com/auto: "true"

@@ -2,6 +2,10 @@
 controller:
   replicaCount: 2
   
+  # Schedule only on worker nodes
+  nodeSelector:
+    node-role.kubernetes.io/worker: "worker"
+  
   service:
     type: LoadBalancer
     # MetalLB will assign IP from pool

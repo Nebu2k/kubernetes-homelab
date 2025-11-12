@@ -5,3 +5,16 @@ installCRDs: true
 global:
   leaderElection:
     namespace: cert-manager
+
+# Schedule only on worker nodes
+nodeSelector:
+  node-role.kubernetes.io/worker: "worker"
+
+# Apply to webhook and cainjector as well
+webhook:
+  nodeSelector:
+    node-role.kubernetes.io/worker: "worker"
+
+cainjector:
+  nodeSelector:
+    node-role.kubernetes.io/worker: "worker"

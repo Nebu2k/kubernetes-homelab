@@ -5,6 +5,10 @@
 podAnnotations:
   reloader.stakater.com/auto: "true"
 
+# Schedule only on worker nodes
+nodeSelector:
+  node-role.kubernetes.io/worker: "worker"
+
 # Persistence for data
 persistence:
   enabled: true
