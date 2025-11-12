@@ -5,6 +5,11 @@
 podAnnotations:
   reloader.stakater.com/auto: "true"
 
+# Environment variables
+env:
+  HOMEPAGE_ALLOWED_HOSTS:
+    value: "home.elmstreet79.de"
+
 # Schedule only on worker nodes
 nodeSelector:
   node-role.kubernetes.io/worker: "worker"
