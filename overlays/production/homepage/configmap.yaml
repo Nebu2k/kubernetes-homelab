@@ -57,7 +57,7 @@ data:
           href: https://uptime.elmstreet79.de
           description: Uptime Monitoring
           icon: uptime-kuma.png
-    
+
     - Private:
       - Dreambox:
           href: https://dreambox.elmstreet79.de
@@ -74,28 +74,21 @@ data:
       - GitHub:
           - icon: github-light.png
             href: https://github.com/Nebu2k/kubernetes-homelab
-      - Helm Charts:
-          - icon: helm.png
-            href: https://artifacthub.io
 
   widgets.yaml: |
     - logo:
         icon: https://raw.githubusercontent.com/walkxcode/dashboard-icons/main/png/kubernetes.png
-    
+
     - datetime:
         text_size: xl
         format:
           dateStyle: short
           timeStyle: short
           hour12: false
-    
+
     - greeting:
         text_size: xl
-        text: "Willkommen im Homelab!"
-    
-    - search:
-        provider: google
-        target: _blank
+        text: "Willkommen auf elmstreet79.de 🏠"
 
   kubernetes.yaml: ""
 

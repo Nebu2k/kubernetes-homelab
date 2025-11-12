@@ -8,9 +8,9 @@ metadata:
 spec:
   project: default
   sources:
-    - repoURL: https://jameswynn.github.io/helm-charts
+    - repoURL: https://gethomepage.dev/charts
       chart: homepage
-      targetRevision: 1.2.3
+      targetRevision: 2.1.0
       helm:
         valueFiles:
           - $values/base/homepage/values.yaml
