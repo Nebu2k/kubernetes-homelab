@@ -99,10 +99,7 @@ homelab/
     │   ├── ingress.yaml           # ntfy HTTPS ingress
     │   └── kustomization.yaml
     ├── kube-prometheus-stack/
-    │   ├── grafana-admin-sealed.yaml    # Grafana admin credentials
     │   ├── ingress-grafana.yaml         # Grafana HTTPS ingress
-    │   ├── ingress-prometheus.yaml      # Prometheus HTTPS ingress
-    │   ├── ingress-alertmanager.yaml    # Alertmanager HTTPS ingress
     │   └── kustomization.yaml
     ├── uptime-kuma/
     │   ├── ingress.yaml           # Uptime Kuma HTTPS ingress
