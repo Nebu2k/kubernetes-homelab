@@ -108,7 +108,7 @@ data:
       - Raspberry Pi 4:
           icon: docker.png
           description: Docker Containers
-          href: http://192.168.2.2:9001
+          href: https://portainer.elmstreet79.de/#!/2/docker/containers
           widget:
             type: portainer
             url: https://portainer.elmstreet79.de
@@ -118,7 +118,7 @@ data:
       - Raspberry Pi 5:
           icon: docker.png
           description: Docker Containers  
-          href: http://192.168.2.9:9001
+          href: https://portainer.elmstreet79.de/#!/2/docker/containers
           widget:
             type: portainer
             url: https://portainer.elmstreet79.de
