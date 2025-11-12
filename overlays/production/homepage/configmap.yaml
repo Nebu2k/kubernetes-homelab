@@ -92,12 +92,12 @@ data:
           ping: 192.168.2.4
       
       - Proxmox:
-          href: http://192.168.2.8:8006
+          href: https://192.168.2.8:8006
           description: Virtualization Host
           icon: https://cdn.simpleicons.org/proxmox/E57000
           widget:
             type: proxmox
-            url: http://192.168.2.8:8006
+            url: https://192.168.2.8:8006
             node: proxmox
 
   bookmarks.yaml: |
@@ -136,6 +136,9 @@ data:
 
   kubernetes.yaml: |
     mode: cluster
+
+  docker.yaml: |
+    # Docker integration disabled
 
   proxmox.yaml: |
     proxmox:
