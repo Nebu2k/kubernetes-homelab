@@ -71,7 +71,7 @@ data:
           href: https://teslalogger.elmstreet79.de
           description: Tesla Logging & Analytics
           icon: mdi-car-electric
-    
+
     - Docker:
       - Raspberry Pi 4:
           href: http://192.168.2.2
@@ -113,7 +113,7 @@ data:
     - greeting:
         text_size: xl
         text: "Willkommen auf elmstreet79.de 🏠"
-    
+
     - kubernetes:
         cluster:
           show: true
@@ -135,7 +135,7 @@ data:
       host: 192.168.2.2
       username: Peters
       key: /app/config/ssh/id_rsa
-    
+
     raspi5:
       host: 192.168.2.9
       username: Peters
