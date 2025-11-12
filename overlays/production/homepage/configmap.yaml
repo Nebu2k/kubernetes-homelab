@@ -165,8 +165,10 @@ data:
       host: 192.168.2.2
       username: pi
       key: /app/config/ssh/id_rsa
+      port: 22
 
     raspi5:
       host: 192.168.2.9
       username: pi
       key: /app/config/ssh/id_rsa
+      port: 22
