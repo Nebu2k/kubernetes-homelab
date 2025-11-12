@@ -23,6 +23,9 @@ data:
       Private:
         style: row
         columns: 3
+      Infrastructure:
+        style: row
+        columns: 4
       Docker:
         style: row
         columns: 3
@@ -71,11 +74,42 @@ data:
           href: https://teslalogger.elmstreet79.de
           description: Tesla Logging & Analytics
           icon: mdi-car-electric
-
-    - Docker:
+    
+    - Infrastructure:
       - Raspberry Pi 4:
           href: http://192.168.2.2
-          description: Docker Containers on Pi 4
+          description: K3s Node | ARM64 | 8GB RAM
+          icon: https://cdn.simpleicons.org/raspberrypi/C51A4A
+          ping: 192.168.2.2
+      
+      - Raspberry Pi 5:
+          href: http://192.168.2.9
+          description: K3s Node | ARM64 | 8GB RAM
+          icon: https://cdn.simpleicons.org/raspberrypi/C51A4A
+          ping: 192.168.2.9
+      
+      - Mac Mini:
+          href: http://192.168.2.4
+          description: K3s Node | x86_64 | 16GB RAM
+          icon: https://cdn.simpleicons.org/apple/000000
+          ping: 192.168.2.4
+          widget:
+            type: glances
+            url: http://192.168.2.4:61208
+            metric: cpu
+      
+      - Proxmox:
+          href: http://192.168.2.7:8006
+          description: Virtualization Host
+          icon: https://cdn.simpleicons.org/proxmox/E57000
+          widget:
+            type: proxmox
+            url: http://192.168.2.7:8006
+    
+    - Docker:
+      - 🍓 Raspberry Pi 4:
+          href: http://192.168.2.2
+          description: Docker Containers
           icon: docker.png
           server: raspi4
           container: /
@@ -83,17 +117,25 @@ data:
             type: docker
             server: raspi4
       
-      - Raspberry Pi 5:
+      - 🍓 Raspberry Pi 5:
           href: http://192.168.2.9
-          description: Docker Containers on Pi 5
+          description: Docker Containers
           icon: docker.png
           server: raspi5
           container: /
           widget:
             type: docker
             server: raspi5
-
-  bookmarks.yaml: |
+      
+      - 🍎 Mac Mini:
+          href: http://192.168.2.4
+          description: Docker Containers
+          icon: docker.png
+          server: macmini
+          container: /
+          widget:
+            type: docker
+            server: macmini  bookmarks.yaml: |
     - Developer:
       - GitHub:
           - icon: github-light.png
@@ -138,5 +180,10 @@ data:
 
     raspi5:
       host: 192.168.2.9
+      username: Peters
+      key: /app/config/ssh/id_rsa
+    
+    macmini:
+      host: 192.168.2.4
       username: Peters
       key: /app/config/ssh/id_rsa
