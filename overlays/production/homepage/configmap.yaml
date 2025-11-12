@@ -142,5 +142,6 @@ data:
 
   proxmox.yaml: |
     proxmox:
-      username: {{HOMEPAGE_VAR_PROXMOX_USER}}
-      password: {{HOMEPAGE_VAR_PROXMOX_PASS}}
+      url: https://192.168.2.8:8006
+      token: {{HOMEPAGE_VAR_PROXMOX_USER}}
+      secret: {{HOMEPAGE_VAR_PROXMOX_PASS}}
