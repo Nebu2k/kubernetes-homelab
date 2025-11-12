@@ -14,6 +14,16 @@ image:
 env:
   HOMEPAGE_ALLOWED_HOSTS:
     value: "home.elmstreet79.de"
+  HOMEPAGE_VAR_PROXMOX_USER:
+    valueFrom:
+      secretKeyRef:
+        name: homepage-proxmox
+        key: username
+  HOMEPAGE_VAR_PROXMOX_PASS:
+    valueFrom:
+      secretKeyRef:
+        name: homepage-proxmox
+        key: password
 
 # Schedule only on worker nodes
 nodeSelector:

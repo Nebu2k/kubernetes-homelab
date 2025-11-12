@@ -105,6 +105,7 @@ data:
           widget:
             type: proxmox
             url: http://192.168.2.7:8006
+            node: proxmox
 
     - Docker:
       - 🍓 Raspberry Pi 4:
@@ -187,3 +188,8 @@ data:
       host: 192.168.2.4
       username: Peters
       key: /app/config/ssh/id_rsa
+  
+  proxmox.yaml: |
+    proxmox:
+      username: {{HOMEPAGE_VAR_PROXMOX_USER}}
+      password: {{HOMEPAGE_VAR_PROXMOX_PASS}}
