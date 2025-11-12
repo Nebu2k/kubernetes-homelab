@@ -5,6 +5,11 @@
 podAnnotations:
   reloader.stakater.com/auto: "true"
 
+# Use latest homepage image
+image:
+  repository: ghcr.io/gethomepage/homepage
+  tag: v1.7.0
+
 # Environment variables
 env:
   HOMEPAGE_ALLOWED_HOSTS:
