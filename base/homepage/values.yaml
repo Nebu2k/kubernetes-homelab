@@ -39,6 +39,7 @@ resources:
 # ServiceAccount - we manage it manually in overlay
 serviceAccount:
   create: false
+  name: homepage
 
 # Config will be provided via ConfigMaps in overlay
 config:
