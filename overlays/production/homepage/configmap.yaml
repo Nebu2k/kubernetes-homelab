@@ -17,7 +17,7 @@ data:
           href: https://argocd.elmstreet79.de
           description: GitOps Continuous Delivery
           icon: argocd.svg
-    
+
     - Services:
       - Portainer:
           href: https://portainer.elmstreet79.de
@@ -33,7 +33,7 @@ data:
           href: https://ntfy.elmstreet79.de
           description: Push Notifications
           icon: ntfy.svg
-    
+
     - Monitoring:
       - Grafana:
           href: https://grafana.elmstreet79.de
@@ -53,3 +53,9 @@ data:
       - Helm Charts:
           - icon: helm.svg
             href: https://artifacthub.io
+
+  widgets.yaml: ""
+
+  kubernetes.yaml: ""
+
+  docker.yaml: ""
