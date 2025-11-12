@@ -20,14 +20,14 @@ data:
       Monitoring:
         style: row
         columns: 3
-  
+
   services.yaml: |
     - ArgoCD:
         - ArgoCD:
             href: https://argocd.elmstreet79.de
             description: GitOps Continuous Delivery
             icon: argocd.svg
-    
+
     - Services:
         - Portainer:
             href: https://portainer.elmstreet79.de
@@ -43,7 +43,7 @@ data:
             href: https://ntfy.elmstreet79.de
             description: Push Notifications
             icon: ntfy.svg
-    
+
     - Monitoring:
         - Grafana:
             href: https://grafana.elmstreet79.de
@@ -54,7 +54,7 @@ data:
             href: https://uptime.elmstreet79.de
             description: Uptime Monitoring
             icon: uptime-kuma.svg
-  
+
   widgets.yaml: |
     - kubernetes:
         cluster:
@@ -68,13 +68,13 @@ data:
           cpu: true
           memory: true
           showLabel: true
-    
+
     - resources:
         backend: kubernetes
         expanded: true
         cpu: true
         memory: true
-  
+
   bookmarks.yaml: |
     - Developer:
         - GitHub:
