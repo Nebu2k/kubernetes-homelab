@@ -1,0 +1,32 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: homepage-patch-proxmox-mount
+  namespace: homepage
+  annotations:
+    argocd.argoproj.io/hook: PostSync
+    argocd.argoproj.io/hook-delete-policy: HookSucceeded
+spec:
+  template:
+    spec:
+      serviceAccountName: homepage
+      containers:
+      - name: patch
+        image: bitnami/kubectl:latest
+        command:
+        - /bin/sh
+        - -c
+        - |
+          kubectl patch deployment homepage -n homepage --type='json' -p='[
+            {
+              "op": "add",
+              "path": "/spec/template/spec/containers/0/volumeMounts/-",
+              "value": {
+                "name": "homepage-config",
+                "mountPath": "/app/config/proxmox.yaml",
+                "subPath": "proxmox.yaml"
+              }
+            }
+          ]'
+      restartPolicy: Never
+  backoffLimit: 3
