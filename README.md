@@ -262,6 +262,19 @@ curl -sfL https://get.k3s.io | K3S_URL=https://192.168.2.249:6443 \
   sh -
 ```
 
+⚠️ **For Multipass VMs with multiple network interfaces:**
+
+If the VM has both a NAT interface (e.g., 192.168.64.x) and a bridged interface (e.g., 192.168.2.x), explicitly specify the correct interface:
+
+```bash
+curl -sfL https://get.k3s.io | K3S_URL=https://192.168.2.249:6443 \
+  K3S_TOKEN=<token-from-step-1> \
+  INSTALL_K3S_EXEC="--node-ip=<bridged-ip> --flannel-iface=ens4" \
+  sh -
+```
+
+Replace `<bridged-ip>` with the IP from your cluster network (e.g., 192.168.2.x) and adjust `ens4` to match your bridged interface name (check with `ip addr show`).
+
 **4. Label node as worker (from your laptop):**
 ```bash
 kubectl label node k3s-worker-1 node-role.kubernetes.io/worker=worker
