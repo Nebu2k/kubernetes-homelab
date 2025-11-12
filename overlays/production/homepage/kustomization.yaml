@@ -6,3 +6,6 @@ resources:
   - ingress.yaml
   - docker-ssh-secret-sealed.yaml
   - proxmox-secret-sealed.yaml
+
+patchesStrategicMerge:
+  - deployment-patch.yaml
