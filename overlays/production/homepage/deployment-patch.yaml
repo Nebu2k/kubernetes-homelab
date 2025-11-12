@@ -1,6 +1,12 @@
 - op: add
+  path: /spec/template/spec/volumes/-
+  value:
+    name: homepage-proxmox-config
+    configMap:
+      name: homepage-proxmox-config
+- op: add
   path: /spec/template/spec/containers/0/volumeMounts/-
   value:
     mountPath: /app/config/proxmox.yaml
-    name: homepage-config
+    name: homepage-proxmox-config
     subPath: proxmox.yaml
