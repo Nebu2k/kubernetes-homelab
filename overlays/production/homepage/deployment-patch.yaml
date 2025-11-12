@@ -1,14 +1,6 @@
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: homepage
-  namespace: homepage
-spec:
-  template:
-    spec:
-      containers:
-      - name: homepage
-        volumeMounts:
-        - mountPath: /app/config/proxmox.yaml
-          name: homepage-config
-          subPath: proxmox.yaml
+- op: add
+  path: /spec/template/spec/containers/0/volumeMounts/-
+  value:
+    mountPath: /app/config/proxmox.yaml
+    name: homepage-config
+    subPath: proxmox.yaml
