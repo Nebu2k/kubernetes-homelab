@@ -28,6 +28,7 @@ Production-ready K3s cluster managed via GitOps using ArgoCD App-of-Apps pattern
 | 6 | ntfy | Notification service |
 | 7 | kube-prometheus-stack | Prometheus, Grafana, Alertmanager monitoring |
 | 8 | Uptime Kuma | Uptime monitoring & status page |
+| 9 | Homepage | Homelab dashboard |
 | 10 | MetalLB Config, Cert-Manager Config | IPAddressPool, ClusterIssuers |
 | 11 | NGINX Ingress Config | Custom headers |
 | 12 | ArgoCD Config, Portainer Config | Management UI ingresses |
@@ -35,6 +36,7 @@ Production-ready K3s cluster managed via GitOps using ArgoCD App-of-Apps pattern
 | 14 | ntfy Config | ntfy ingress |
 | 15 | kube-prometheus-stack Config | Grafana, Prometheus, Alertmanager ingresses |
 | 16 | Uptime Kuma Config, Private Services | Uptime Kuma ingress, External service ingresses |
+| 17 | Homepage Config | Homepage ingress & config |
 | 20 | Demo App | Sample application |
 
 ## 📁 Repository Structure
@@ -61,6 +63,8 @@ homelab/
 │   ├── ntfy-config.yaml           # Wave 14
 │   ├── uptime-kuma.yaml           # Wave 8
 │   ├── uptime-kuma-config.yaml    # Wave 16
+│   ├── homepage.yaml              # Wave 9
+│   ├── homepage-config.yaml       # Wave 17
 │   ├── kube-prometheus-stack.yaml       # Wave 7
 │   ├── kube-prometheus-stack-config.yaml # Wave 15
 │   ├── argocd-config.yaml         # Wave 12
@@ -74,6 +78,7 @@ homelab/
 │   ├── longhorn/values.yaml
 │   ├── portainer/values.yaml
 │   ├── uptime-kuma/values.yaml    # Uptime monitoring
+│   ├── homepage/values.yaml       # Homelab dashboard
 │   ├── kube-prometheus-stack/values.yaml  # Prometheus, Grafana, Alertmanager
 │   └── ntfy/                      # Notification service
 │       ├── deployment.yaml
@@ -97,6 +102,11 @@ homelab/
     ├── ntfy/
     │   ├── configmap.yaml         # ntfy server config
     │   ├── ingress.yaml           # ntfy HTTPS ingress
+    │   └── kustomization.yaml
+    ├── homepage/
+    │   ├── configmap.yaml         # Dashboard configuration
+    │   ├── ingress.yaml           # Homepage HTTPS ingress
+    │   ├── rbac.yaml              # Kubernetes API access
     │   └── kustomization.yaml
     ├── kube-prometheus-stack/
     │   ├── ingress-grafana.yaml         # Grafana HTTPS ingress
@@ -408,6 +418,7 @@ The repository is pre-configured for `elmstreet79.de`. If using your own domain,
    # Create DNS records for all services
    ./scripts/create-dns-record.sh argo elmstreet79.de $TARGET $ZONE_ID $API_TOKEN
    ./scripts/create-dns-record.sh portainer elmstreet79.de $TARGET $ZONE_ID $API_TOKEN
+   ./scripts/create-dns-record.sh home elmstreet79.de $TARGET $ZONE_ID $API_TOKEN
    ./scripts/create-dns-record.sh grafana elmstreet79.de $TARGET $ZONE_ID $API_TOKEN
    ./scripts/create-dns-record.sh ntfy elmstreet79.de $TARGET $ZONE_ID $API_TOKEN
    ./scripts/create-dns-record.sh uptime elmstreet79.de $TARGET $ZONE_ID $API_TOKEN
@@ -570,6 +581,14 @@ URL: https://ntfy.elmstreet79.de
 ```
 
 📱 **Mobile apps:** [iOS](https://apps.apple.com/app/ntfy/id1625396347) | [Android](https://play.google.com/store/apps/details?id=io.heckel.ntfy)
+
+**Homepage (Homelab Dashboard):**
+
+```text
+URL: https://home.elmstreet79.de
+```
+
+🏠 **Features:** Unified dashboard with links to all services, real-time Kubernetes cluster metrics, auto-discovery of ingresses, dark theme
 
 **Uptime Kuma (Uptime Monitoring):**
 
