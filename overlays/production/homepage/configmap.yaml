@@ -98,7 +98,8 @@ data:
           widget:
             type: proxmox
             url: https://192.168.2.8:8006
-            node: proxmox
+            username: {{HOMEPAGE_VAR_PROXMOX_USER}}
+            password: {{HOMEPAGE_VAR_PROXMOX_PASS}}
 
   bookmarks.yaml: |
     - Developer:
@@ -139,9 +140,3 @@ data:
 
   docker.yaml: |
     # Docker integration disabled
-
-  proxmox.yaml: |
-    proxmox:
-      url: https://192.168.2.8:8006
-      token: {{HOMEPAGE_VAR_PROXMOX_USER}}
-      secret: {{HOMEPAGE_VAR_PROXMOX_PASS}}

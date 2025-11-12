@@ -6,5 +6,4 @@ resources:
   - ingress.yaml
   - docker-ssh-secret-sealed.yaml
   - proxmox-secret-sealed.yaml
-  - proxmox-mount-job.yaml
 
