@@ -108,20 +108,22 @@ data:
       - Raspberry Pi 4:
           icon: docker.png
           description: Docker Containers
-          server: raspi4
-          container: /
+          href: http://192.168.2.2:9001
           widget:
-            type: docker
-            server: raspi4
+            type: portainer
+            url: https://portainer.elmstreet79.de
+            env: 4
+            key: {{HOMEPAGE_VAR_PORTAINER_KEY}}
       
       - Raspberry Pi 5:
           icon: docker.png
-          description: Docker Containers
-          server: raspi5
-          container: /
+          description: Docker Containers  
+          href: http://192.168.2.9:9001
           widget:
-            type: docker
-            server: raspi5
+            type: portainer
+            url: https://portainer.elmstreet79.de
+            env: 2
+            key: {{HOMEPAGE_VAR_PORTAINER_KEY}}
 
   bookmarks.yaml: |
     - Developer:
@@ -159,16 +161,3 @@ data:
 
   kubernetes.yaml: |
     mode: cluster
-
-  docker.yaml: |
-    raspi4:
-      host: 192.168.2.2
-      username: pi
-      key: /app/config/ssh/id_rsa
-      port: 22
-
-    raspi5:
-      host: 192.168.2.9
-      username: pi
-      key: /app/config/ssh/id_rsa
-      port: 22

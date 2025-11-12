@@ -24,6 +24,11 @@ env:
       secretKeyRef:
         name: homepage-proxmox
         key: password
+  HOMEPAGE_VAR_PORTAINER_KEY:
+    valueFrom:
+      secretKeyRef:
+        name: homepage-portainer
+        key: key
 
 # Schedule only on worker nodes
 nodeSelector:
