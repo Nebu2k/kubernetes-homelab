@@ -1,12 +1,26 @@
-- op: add
-  path: /spec/template/spec/volumes/-
-  value:
-    name: homepage-proxmox-config
-    configMap:
-      name: homepage-proxmox-config
-- op: add
-  path: /spec/template/spec/containers/0/volumeMounts/-
-  value:
-    mountPath: /app/config/proxmox.yaml
-    name: homepage-proxmox-config
-    subPath: proxmox.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: homepage
+spec:
+  template:
+    spec:
+      initContainers:
+      - name: setup-proxmox-config
+        image: busybox:latest
+        command:
+        - sh
+        - -c
+        - |
+          cat > /app/config/proxmox.yaml << 'EOF'
+          proxmox:
+            url: https://192.168.2.8:8006
+            token: ${HOMEPAGE_VAR_PROXMOX_USER}
+            secret: ${HOMEPAGE_VAR_PROXMOX_PASS}
+          EOF
+        envFrom:
+        - secretRef:
+            name: homepage-proxmox
+        volumeMounts:
+        - name: homepage-base-config
+          mountPath: /app/config

@@ -8,8 +8,5 @@ resources:
   - docker-ssh-secret-sealed.yaml
   - proxmox-secret-sealed.yaml
 
-patches:
-  - path: deployment-patch.yaml
-    target:
-      kind: Deployment
-      name: homepage
+patchesStrategicMerge:
+  - deployment-patch.yaml
