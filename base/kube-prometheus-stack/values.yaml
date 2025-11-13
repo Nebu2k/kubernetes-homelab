@@ -11,11 +11,11 @@ commonLabels:
 # Prometheus Operator
 prometheusOperator:
   enabled: true
-  
+
   # Schedule only on worker nodes
   nodeSelector:
     node-role.kubernetes.io/worker: "worker"
-  
+
   resources:
     requests:
       cpu: 50m
@@ -30,11 +30,11 @@ prometheus:
     # Schedule only on worker nodes
     nodeSelector:
       node-role.kubernetes.io/worker: "worker"
-    
+
     # Retention
     retention: 30d
     retentionSize: 10GB
-    
+
     # Storage
     storageSpec:
       volumeClaimTemplate:
@@ -44,7 +44,7 @@ prometheus:
           resources:
             requests:
               storage: 15Gi
-    
+
     # Resources
     resources:
       requests:
@@ -52,15 +52,15 @@ prometheus:
         memory: 1Gi
       limits:
         memory: 2Gi
-    
+
     # Service Monitors
     serviceMonitorSelectorNilUsesHelmValues: false
     podMonitorSelectorNilUsesHelmValues: false
-    
+
     # Scrape all namespaces
     serviceMonitorNamespaceSelector: {}
     podMonitorNamespaceSelector: {}
-    
+
     # Enable reloader annotation
     podMetadata:
       annotations:
@@ -69,32 +69,32 @@ prometheus:
 # Grafana - Enable in K8s (parallel to Docker)
 grafana:
   enabled: true
-  
+
   # Admin credentials from existing secret
   admin:
     existingSecret: grafana-admin-credentials
     userKey: admin-user
     passwordKey: admin-password
-  
+
   # Schedule only on worker nodes
   nodeSelector:
     node-role.kubernetes.io/worker: "worker"
-  
+
   # Service
   service:
-    type: ClusterIP  # Use Ingress instead of LoadBalancer
+    type: ClusterIP # Use Ingress instead of LoadBalancer
     port: 80
-  
+
   # Ingress will be added in overlay
   ingress:
     enabled: false
-  
+
   # Persistence
   persistence:
     enabled: true
     storageClassName: longhorn
     size: 5Gi
-  
+
   # Resources
   resources:
     requests:
@@ -102,7 +102,7 @@ grafana:
       memory: 256Mi
     limits:
       memory: 512Mi
-  
+
   # Datasources - Prometheus
   datasources:
     datasources.yaml:
@@ -113,11 +113,11 @@ grafana:
           url: http://prometheus-kube-prometheus-prometheus.monitoring.svc:9090
           access: proxy
           isDefault: true
-  
+
   # Default dashboards
   defaultDashboardsEnabled: true
   defaultDashboardsTimezone: Europe/Berlin
-  
+
   # Enable reloader annotation
   podAnnotations:
     reloader.stakater.com/auto: "true"
@@ -129,7 +129,7 @@ alertmanager:
     # Schedule only on worker nodes
     nodeSelector:
       node-role.kubernetes.io/worker: "worker"
-    
+
     # Storage
     storage:
       volumeClaimTemplate:
@@ -139,7 +139,7 @@ alertmanager:
           resources:
             requests:
               storage: 2Gi
-    
+
     # Resources
     resources:
       requests:
@@ -147,7 +147,7 @@ alertmanager:
         memory: 64Mi
       limits:
         memory: 128Mi
-    
+
     # Enable reloader annotation
     podMetadata:
       annotations:
@@ -195,23 +195,23 @@ defaultRules:
 kubeControllerManager:
   enabled: true
   endpoints:
-    - 192.168.2.2   # raspi4
-    - 192.168.2.9   # raspi5
-    - 192.168.2.12  # ubuntu-1
+    - 192.168.2.2 # raspi4
+    - 192.168.2.9 # raspi5
+    - 192.168.2.12 # ubuntu-1
 
 kubeScheduler:
   enabled: true
   endpoints:
-    - 192.168.2.2   # raspi4
-    - 192.168.2.9   # raspi5
-    - 192.168.2.12  # ubuntu-1
+    - 192.168.2.2 # raspi4
+    - 192.168.2.9 # raspi5
+    - 192.168.2.12 # ubuntu-1
 
 kubeProxy:
-  enabled: false  # K3s uses kube-router by default
+  enabled: false # K3s uses kube-router by default
 
 kubeEtcd:
   enabled: true
   endpoints:
-    - 192.168.2.2   # raspi4
-    - 192.168.2.9   # raspi5
-    - 192.168.2.12  # ubuntu-1
+    - 192.168.2.2 # raspi4
+    - 192.168.2.9 # raspi5
+    - 192.168.2.12 # ubuntu-1
