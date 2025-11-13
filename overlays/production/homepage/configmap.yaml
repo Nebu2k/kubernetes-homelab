@@ -29,6 +29,9 @@ data:
       Docker:
         style: row
         columns: 3
+    providers:
+      longhorn:
+        url: http://longhorn-frontend.longhorn-system
 
   services.yaml: |
     - Services:
@@ -96,7 +99,6 @@ data:
         total: true
         labels: true
         nodes: true
-        url: http://longhorn-frontend.longhorn-system
 
   kubernetes.yaml: |
     mode: cluster
