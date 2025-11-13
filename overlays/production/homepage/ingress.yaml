@@ -11,17 +11,17 @@ metadata:
 spec:
   ingressClassName: nginx
   tls:
-  - hosts:
-    - home.elmstreet79.de
-    secretName: homepage-tls
+    - hosts:
+        - home.elmstreet79.de
+      secretName: homepage-tls
   rules:
-  - host: home.elmstreet79.de
-    http:
-      paths:
-      - path: /
-        pathType: Prefix
-        backend:
-          service:
-            name: homepage
-            port:
-              number: 3000
+    - host: home.elmstreet79.de
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: homepage
+                port:
+                  number: 3000
