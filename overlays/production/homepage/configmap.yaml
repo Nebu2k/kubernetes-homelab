@@ -39,87 +39,20 @@ data:
 
     - Infrastructure:
       - Proxmox:
-           href: https://192.168.2.8:8006
-           description: Virtualization Host
-           icon: https://cdn.simpleicons.org/proxmox/E57000
-           widget:
+          href: https://192.168.2.8:8006
+          description: Virtualization Host
+          icon: https://cdn.simpleicons.org/proxmox/E57000
+          widget:
             type: proxmox
             url: https://192.168.2.8:8006
             username: {{HOMEPAGE_VAR_PROXMOX_USER}}
             password: {{HOMEPAGE_VAR_PROXMOX_PASS}}
-        
-        - Mac Mini:
-           href: http://192.168.2.4
-           description: AdGuard DNS | x86_64 | 20GB RAM
-           icon: https://cdn.simpleicons.org/apple/000000
-           ping: 192.168.2.4
-
-    - Docker:
-      - AdGuard Home (Pi4):
-          icon: adguard-home.png
-          description: DNS Ad Blocker
-          href: http://192.168.2.2:8080
-          server: raspi4
-          container: adguardhome
-          widget:
-            type: docker
-            server: raspi4
-            container: adguardhome
       
-      - Beszel (Pi5):
-          icon: beszel.png
-          description: System Monitor
-          href: http://192.168.2.9
-          server: raspi5
-          container: beszel
-          widget:
-            type: docker
-            server: raspi5
-            container: beszel
-      
-      - Pi-hole (Pi5):
-          icon: pi-hole.png
-          description: Network-wide Ad Blocking
-          href: http://192.168.2.9:80/admin
-          server: raspi5
-          container: pihole
-          widget:
-            type: docker
-            server: raspi5
-            container: pihole
-      
-      - Teslalogger (Pi5):
-          icon: https://cdn.simpleicons.org/tesla/CC0000
-          description: Tesla Data Logger
-          href: https://teslalogger.elmstreet79.de
-          server: raspi5
-          container: teslalogger-webserver
-          widget:
-            type: docker
-            server: raspi5
-            container: teslalogger-webserver
-      
-      - Homebridge (Pi5):
-          icon: homebridge.png
-          description: HomeKit Bridge
-          href: http://192.168.2.9:8581
-          server: raspi5
-          container: homebridge-homebridge-1
-          widget:
-            type: docker
-            server: raspi5
-            container: homebridge-homebridge-1
-      
-      - MinIO (Pi5):
-          icon: minio.png
-          description: S3 Storage
-          href: http://192.168.2.9:9000
-          server: raspi5
-          container: minio
-          widget:
-            type: docker
-            server: raspi5
-            container: minio
+      - Mac Mini:
+          href: http://192.168.2.4
+          description: AdGuard DNS | x86_64 | 20GB RAM
+          icon: https://cdn.simpleicons.org/apple/000000
+          ping: 192.168.2.4
 
   bookmarks.yaml: |
     - Developer:
