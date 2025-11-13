@@ -5,5 +5,8 @@ resources:
   - ingress.yaml
   - argocd-server-patch.yaml
 
-patchesStrategicMerge:
-  - argocd-cm-patch.yaml
+patches:
+  - path: argocd-cm-patch.yaml
+    target:
+      kind: ConfigMap
+      name: argocd-cm
