@@ -5,3 +5,4 @@ resources:
   - configmap.yaml
   - ingress.yaml
   - proxmox-secret-sealed.yaml
+  - argocd-token-secret-sealed.yaml

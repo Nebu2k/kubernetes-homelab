@@ -17,7 +17,7 @@ metadata:
     gethomepage.dev/weight: "10"
     gethomepage.dev/widget.type: "argocd"
     gethomepage.dev/widget.url: "https://argocd.elmstreet79.de"
-    gethomepage.dev/widget.key: "{{KUBERNETES_SECRET:argocd:argocd-homepage-token:token}}"
+    gethomepage.dev/widget.key: "{{KUBERNETES_SECRET:homepage:argocd-homepage-token:token}}"
 spec:
   ingressClassName: nginx
   tls:
