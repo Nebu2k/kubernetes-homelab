@@ -7,17 +7,13 @@ metadata:
     argocd.argoproj.io/sync-wave: "6"
 spec:
   project: default
-  source:
-    repoURL: https://victoriametrics.github.io/helm-charts/
-    chart: victoria-metrics-k8s-stack
-    targetRevision: 0.63.5
-    helm:
-      valueFiles:
-        - $values/base/victoria-metrics-k8s-stack/values.yaml
   sources:
     - repoURL: https://victoriametrics.github.io/helm-charts/
       chart: victoria-metrics-k8s-stack
       targetRevision: 0.63.5
+      helm:
+        valueFiles:
+          - $values/base/victoria-metrics-k8s-stack/values.yaml
     - repoURL: https://github.com/Nebu2k/kubernetes-homelab.git
       targetRevision: main
       ref: values
