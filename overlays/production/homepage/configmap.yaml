@@ -91,6 +91,12 @@ data:
           memory: true
           showLabel: true
 
+    - longhorn:
+        expanded: true
+        total: true
+        labels: true
+        nodes: true
+
   kubernetes.yaml: |
     mode: cluster
 
