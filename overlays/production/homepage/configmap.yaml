@@ -6,7 +6,7 @@ metadata:
 data:
   settings.yaml: |
     title: Homelab Dashboard
-    favicon: https://cdn.simpleicons.org/house/009BD5
+    favicon: https://gethomepage.dev/assets/favicon.ico
     theme: dark
     color: slate
     headerStyle: boxed
