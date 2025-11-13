@@ -524,35 +524,24 @@ echo "Grafana password: $GRAFANA_PASS"
 
 **Create Grafana Service Account for Homepage widget:**
 
+⚠️ **Important:** Homepage's Grafana widget does NOT support API keys/tokens. You must use username and password authentication. The simplest approach is to use the existing Grafana admin credentials.
+
 ```bash
-# 1. Create service account with Admin role (required for /api/admin/stats endpoint)
-kubectl exec -n monitoring deployment/victoria-metrics-k8s-stack-grafana -- \
-  wget -q -O- --header='Content-Type: application/json' \
-  --post-data='{"name":"homepage-admin","role":"Admin"}' \
-  http://admin:$GRAFANA_PASS@localhost:3000/api/serviceaccounts
-
-# 2. Create API token (replace <service-account-id> from response above, usually "3")
-GRAFANA_TOKEN=$(kubectl exec -n monitoring deployment/victoria-metrics-k8s-stack-grafana -- \
-  wget -q -O- --header='Content-Type: application/json' \
-  --post-data='{"name":"homepage-admin-widget"}' \
-  http://admin:$GRAFANA_PASS@localhost:3000/api/serviceaccounts/3/tokens | \
-  jq -r '.key')
-
-echo "Grafana API token: $GRAFANA_TOKEN"
-
-# 3. Seal the token
+# Create sealed secret with Grafana admin credentials
 kubectl create secret generic homepage-grafana --dry-run=client \
-  --from-literal=key="$GRAFANA_TOKEN" -n homepage -o yaml | \
+  --from-literal=username='admin' \
+  --from-literal=password="$GRAFANA_PASS" \
+  -n homepage -o yaml | \
   kubeseal --format=yaml --controller-namespace=kube-system \
   > overlays/production/homepage/grafana-credentials-sealed.yaml
 
-# 4. Commit and push
+# Commit and push
 git add overlays/production/homepage/grafana-credentials-sealed.yaml
-git commit -m "Add Grafana widget credentials for Homepage"
+git commit -m "Add Grafana credentials for Homepage widget"
 git push
 ```
 
-⚠️ **Note:** If you rebuild the cluster, you'll need to recreate the Grafana service account and re-seal the token using the commands above.
+⚠️ **Note:** If you rebuild the cluster, the Grafana admin password will be different, so you'll need to recreate the sealed secret with the new password.
 
 ### Step 8: Verify Deployment (**on your laptop**)
 
@@ -810,25 +799,25 @@ argocd app sync <app-name> --force
 **Check:**
 
 ```bash
-# 1. Verify Homepage has the environment variable
-kubectl get deployment homepage -n homepage -o yaml | grep GRAFANA_KEY
+# 1. Verify Homepage has the environment variables
+kubectl get deployment homepage -n homepage -o yaml | grep -E "GRAFANA_(USERNAME|PASSWORD)"
 
-# 2. Check if secret exists
-kubectl get secret homepage-grafana -n homepage
+# 2. Check if secret exists and has correct fields
+kubectl get secret homepage-grafana -n homepage -o yaml
 
 # 3. Check Homepage logs
 kubectl logs -n homepage deployment/homepage
 
-# 4. Verify Grafana service account token is valid
-GRAFANA_TOKEN=$(kubectl get secret homepage-grafana -n homepage -o jsonpath='{.data.key}' | base64 -d)
+# 4. Verify Grafana credentials work
+GRAFANA_USER=$(kubectl get secret homepage-grafana -n homepage -o jsonpath='{.data.username}' | base64 -d)
+GRAFANA_PASS=$(kubectl get secret homepage-grafana -n homepage -o jsonpath='{.data.password}' | base64 -d)
 kubectl exec -n monitoring deployment/victoria-metrics-k8s-stack-grafana -- \
-  wget -q -O- --header="Authorization: Bearer $GRAFANA_TOKEN" \
-  http://localhost:3000/api/org
+  wget -q -O- http://$GRAFANA_USER:$GRAFANA_PASS@localhost:3000/api/admin/stats
 ```
 
-**Fix if token is invalid:**
+**Fix if credentials are invalid:**
 
-Re-create the service account and token as described in Step 7.6.
+Re-create the sealed secret with current Grafana admin password as described in Step 7.6.
 
 ## 📚 Components
 

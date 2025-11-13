@@ -29,11 +29,16 @@ env:
       secretKeyRef:
         name: argocd-homepage-token
         key: token
-  HOMEPAGE_VAR_GRAFANA_KEY:
+  HOMEPAGE_VAR_GRAFANA_USERNAME:
     valueFrom:
       secretKeyRef:
         name: homepage-grafana
-        key: key
+        key: username
+  HOMEPAGE_VAR_GRAFANA_PASSWORD:
+    valueFrom:
+      secretKeyRef:
+        name: homepage-grafana
+        key: password
 
 # Schedule only on worker nodes
 nodeSelector:
