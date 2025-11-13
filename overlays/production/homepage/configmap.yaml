@@ -6,7 +6,7 @@ metadata:
 data:
   settings.yaml: |
     title: Homelab Dashboard
-    favicon: https://gethomepage.dev/img/favicon.ico
+    favicon: https://cdn.simpleicons.org/house/009BD5
     theme: dark
     color: slate
     headerStyle: boxed
@@ -35,7 +35,7 @@ data:
       - ArgoCD:
           href: https://argocd.elmstreet79.de
           description: GitOps Continuous Delivery
-          icon: argocd.png
+          icon: https://cdn.simpleicons.org/argo/EF7B4D
 
     - Services:
       - Portainer:
@@ -64,11 +64,11 @@ data:
           description: Uptime Monitoring
           icon: uptime-kuma.png
 
-    - Private:
+    - Ingress:
       - Dreambox:
           href: https://dreambox.elmstreet79.de
           description: Dreambox Receiver
-          icon: https://cdn.simpleicons.org/dreambox/000000
+          icon: mdi-television-box
       
       - Teslalogger:
           href: https://teslalogger.elmstreet79.de
@@ -76,17 +76,6 @@ data:
           icon: https://cdn.simpleicons.org/tesla/CC0000
 
     - Infrastructure:
-      - Raspberry Pi 4:
-          href: http://192.168.2.2
-          description: K3s + Docker | ARM64 | 4GB RAM
-          icon: https://cdn.simpleicons.org/raspberrypi/C51A4A
-          ping: 192.168.2.2
-      
-      - Raspberry Pi 5:
-          href: http://192.168.2.9
-          description: K3s + Docker | ARM64 | 8GB RAM
-          icon: https://cdn.simpleicons.org/raspberrypi/C51A4A
-          ping: 192.168.2.9
       
       - Mac Mini:
           href: http://192.168.2.4
