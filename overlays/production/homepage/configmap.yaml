@@ -54,6 +54,18 @@ data:
           icon: https://cdn.simpleicons.org/apple/000000
           ping: 192.168.2.4
 
+    - Docker:
+      - Teslalogger (Pi5):
+          icon: https://cdn.simpleicons.org/tesla/CC0000
+          description: Tesla Data Logger
+          href: https://teslalogger.elmstreet79.de
+          server: raspi5
+          container: teslalogger-webserver
+          widget:
+            type: docker
+            server: raspi5
+            container: teslalogger-webserver
+
   bookmarks.yaml: |
     - Developer:
       - GitHub:
