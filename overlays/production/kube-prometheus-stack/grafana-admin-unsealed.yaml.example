@@ -1,0 +1,17 @@
+apiVersion: v1apiVersion: v1
+
+kind: Secretdata:
+
+metadata:  admin-password: Y2hhbmdlbWUxMjM=
+
+  name: grafana-admin-credentials  admin-user: YWRtaW4=
+
+  namespace: monitoringkind: Secret
+
+type: Opaquemetadata:
+
+stringData:  name: grafana-admin-credentials
+
+  admin-user: admin  namespace: monitoring
+
+  admin-password: CHANGE_ME_TO_SECURE_PASSWORD

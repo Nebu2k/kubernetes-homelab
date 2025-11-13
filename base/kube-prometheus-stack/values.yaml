@@ -70,6 +70,12 @@ prometheus:
 grafana:
   enabled: true
   
+  # Admin credentials from existing secret
+  admin:
+    existingSecret: grafana-admin-credentials
+    userKey: admin-user
+    passwordKey: admin-password
+  
   # Schedule only on worker nodes
   nodeSelector:
     node-role.kubernetes.io/worker: "worker"
