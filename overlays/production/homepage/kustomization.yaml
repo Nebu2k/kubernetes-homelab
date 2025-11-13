@@ -4,6 +4,4 @@ kind: Kustomization
 resources:
   - configmap.yaml
   - ingress.yaml
-  - docker-ssh-secret-sealed.yaml
   - proxmox-secret-sealed.yaml
-  - portainer-secret-sealed.yaml
