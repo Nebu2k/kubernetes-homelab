@@ -44,6 +44,8 @@ vmalert:
   spec:
     evaluationInterval: 30s
     selectAllByDefault: true
+    extraArgs:
+      notifier.blackhole: "true"
     resources:
       requests:
         cpu: 50m
