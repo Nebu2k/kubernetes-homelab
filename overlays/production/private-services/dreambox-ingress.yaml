@@ -43,7 +43,7 @@ metadata:
     gethomepage.dev/group: "Private"
     gethomepage.dev/icon: "mdi-television-box"
     gethomepage.dev/weight: "60"
-    gethomepage.dev/pod-selector: ""
+    gethomepage.dev/ping: "192.168.2.11"
 spec:
   ingressClassName: nginx
   tls:
