@@ -12,6 +12,10 @@ metadata:
     gethomepage.dev/description: "Metrics Dashboard"
     gethomepage.dev/group: "Monitoring"
     gethomepage.dev/icon: "grafana.png"
+    gethomepage.dev/weight: "20"
+    gethomepage.dev/widget.type: "grafana"
+    gethomepage.dev/widget.url: "https://grafana.elmstreet79.de"
+    gethomepage.dev/widget.key: "{{HOMEPAGE_VAR_GRAFANA_KEY}}"
 spec:
   ingressClassName: nginx
   tls:
