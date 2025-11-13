@@ -4,9 +4,4 @@ namespace: argocd
 resources:
   - ingress.yaml
   - argocd-server-patch.yaml
-
-patches:
-  - path: argocd-cm-patch.yaml
-    target:
-      kind: ConfigMap
-      name: argocd-cm
+  - argocd-cm-patch.yaml
