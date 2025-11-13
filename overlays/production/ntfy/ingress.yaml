@@ -17,6 +17,7 @@ metadata:
     gethomepage.dev/group: "Services"
     gethomepage.dev/icon: "https://cdn.simpleicons.org/ntfy/317F6F"
     gethomepage.dev/weight: "40"
+    gethomepage.dev/pod-selector: "app=ntfy"
 spec:
   ingressClassName: nginx
   tls:
