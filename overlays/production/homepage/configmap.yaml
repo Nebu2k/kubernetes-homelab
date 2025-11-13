@@ -96,6 +96,7 @@ data:
         total: true
         labels: true
         nodes: true
+        url: http://longhorn-frontend.longhorn-system
 
   kubernetes.yaml: |
     mode: cluster
