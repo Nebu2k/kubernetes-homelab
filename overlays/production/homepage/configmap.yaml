@@ -56,7 +56,7 @@ data:
 
     - Docker:
       - Teslalogger Web (Pi5):
-          icon: https://cdn.simpleicons.org/grafana/F46800
+          icon: https://cdn.simpleicons.org/tesla/CC0000
           description: Tesla Data Logger Web
           href: http://192.168.2.9:8888
           weight: 200
@@ -64,7 +64,7 @@ data:
           container: teslalogger-webserver
 
       - Teslalogger Grafana (Pi5):
-          icon: https://cdn.simpleicons.org/tesla/CC0000
+          icon: https://cdn.simpleicons.org/grafana/F46800
           description: Tesla Data Logger Dashboard
           href: https://teslalogger.elmstreet79.de
           weight: 201
