@@ -24,9 +24,9 @@ Production-ready K3s cluster managed via GitOps using ArgoCD App-of-Apps pattern
 | 2 | Cert-Manager | TLS certificates |
 | 3 | NGINX Ingress | HTTP(S) routing |
 | 4 | Longhorn | Persistent storage |
-| 5 | Portainer | Management UI |
-| 6 | ntfy | Notification service |
-| 7 | kube-prometheus-stack | Prometheus, Grafana, Alertmanager monitoring |
+| 5 | Victoria Metrics Config | Grafana admin credentials |
+| 6 | Portainer, Victoria Metrics Stack | Management UI + Monitoring Stack |
+| 7 | ntfy | Notification service |
 | 8 | Uptime Kuma | Uptime monitoring & status page |
 | 9 | Homepage | Homelab dashboard |
 | 10 | MetalLB Config, Cert-Manager Config | IPAddressPool, ClusterIssuers |
@@ -34,9 +34,8 @@ Production-ready K3s cluster managed via GitOps using ArgoCD App-of-Apps pattern
 | 12 | ArgoCD Config, Portainer Config | Management UI ingresses |
 | 13 | Longhorn Config | Backup jobs, S3 config |
 | 14 | ntfy Config | ntfy ingress |
-| 15 | kube-prometheus-stack Config | Grafana, Prometheus, Alertmanager ingresses |
 | 16 | Uptime Kuma Config, Private Services | Uptime Kuma ingress, External service ingresses |
-| 17 | Homepage Config | Homepage ingress & config |
+| 17 | Homepage Config | Homepage ingress, config & widget secrets |
 | 20 | Demo App | Sample application |
 
 ## 📁 Repository Structure
@@ -65,8 +64,8 @@ homelab/
 │   ├── uptime-kuma-config.yaml    # Wave 16
 │   ├── homepage.yaml              # Wave 9
 │   ├── homepage-config.yaml       # Wave 17
-│   ├── kube-prometheus-stack.yaml       # Wave 7
-│   ├── kube-prometheus-stack-config.yaml # Wave 15
+│   ├── victoria-metrics-config.yaml      # Wave 5
+│   ├── victoria-metrics-k8s-stack.yaml   # Wave 6
 │   ├── argocd-config.yaml         # Wave 12
 │   ├── private-services.yaml      # Wave 16
 │   └── demo-app.yaml              # Wave 20
@@ -78,8 +77,8 @@ homelab/
 │   ├── longhorn/values.yaml
 │   ├── portainer/values.yaml
 │   ├── uptime-kuma/values.yaml    # Uptime monitoring
-│   ├── homepage/values.yaml       # Homelab dashboard
-│   ├── kube-prometheus-stack/values.yaml  # Prometheus, Grafana, Alertmanager
+│   ├── homepage/values.yaml       # Homelab dashboard (with widget env vars)
+│   ├── victoria-metrics-k8s-stack/values.yaml  # Victoria Metrics monitoring
 │   └── ntfy/                      # Notification service
 │       ├── deployment.yaml
 │       ├── service.yaml
@@ -107,8 +106,12 @@ homelab/
     │   ├── configmap.yaml         # Dashboard configuration
     │   ├── ingress.yaml           # Homepage HTTPS ingress
     │   ├── rbac.yaml              # Kubernetes API access
+    │   ├── proxmox-secret-sealed.yaml    # Proxmox widget credentials
+    │   ├── argocd-token-secret-sealed.yaml  # ArgoCD widget token
+    │   ├── grafana-credentials-sealed.yaml  # Grafana widget API key
     │   └── kustomization.yaml
-    ├── kube-prometheus-stack/
+    ├── victoria-metrics/
+    │   ├── grafana-admin-sealed.yaml    # Grafana admin credentials
     │   ├── ingress-grafana.yaml         # Grafana HTTPS ingress
     │   └── kustomization.yaml
     ├── uptime-kuma/
@@ -230,10 +233,12 @@ curl -sfL https://get.k3s.io | INSTALL_K3S_CHANNEL=stable sh -s - server \
 ### Step 4.5: Join Worker Nodes with Longhorn Storage (**on k3s-worker-1**)
 
 **Prerequisites:**
+
 - Second disk installed (e.g., 2TB NVMe for Longhorn storage)
 - Static IP configured via DHCP reservation in router
 
 **1. Install system essentials:**
+
 ```bash
 sudo apt update && sudo apt upgrade -y
 sudo apt install -y curl wget git vim htop net-tools iptables qemu-guest-agent
@@ -241,6 +246,7 @@ sudo systemctl start qemu-guest-agent
 ```
 
 **2. Prepare second disk for Longhorn:**
+
 ```bash
 # Identify disk (usually /dev/sdb for second disk)
 lsblk
@@ -263,6 +269,7 @@ df -h /var/lib/longhorn
 ```
 
 **3. Join as K3s worker:**
+
 ```bash
 curl -sfL https://get.k3s.io | K3S_URL=https://192.168.2.249:6443 \
   K3S_TOKEN=<token-from-step-1> \
@@ -283,11 +290,13 @@ curl -sfL https://get.k3s.io | K3S_URL=https://192.168.2.249:6443 \
 Replace `<bridged-ip>` with the IP from your cluster network (e.g., 192.168.2.x) and adjust `ens4` to match your bridged interface name (check with `ip addr show`).
 
 **4. Label node as worker (from your laptop):**
+
 ```bash
 kubectl label node k3s-worker-1 node-role.kubernetes.io/worker=worker
 ```
 
 **5. Verify Longhorn detects storage:**
+
 ```bash
 # From your laptop
 kubectl get nodes
@@ -473,6 +482,11 @@ kubeseal --format=yaml --controller-namespace=kube-system \
   < overlays/production/longhorn/s3-secret-unsealed.yaml \
   > overlays/production/longhorn/s3-secret-sealed.yaml
 
+# Seal Victoria Metrics Grafana admin credentials:
+kubeseal --format=yaml --controller-namespace=kube-system \
+  < overlays/production/victoria-metrics/grafana-admin-unsealed.yaml \
+  > overlays/production/victoria-metrics/grafana-admin-sealed.yaml
+
 # Enable sealed secrets in kustomization (automated)
 # macOS (BSD sed): uncomment the sealed secret entries
 sed -i '' 's/^  # - cloudflare-token-sealed.yaml/  - cloudflare-token-sealed.yaml/' \
@@ -491,6 +505,54 @@ git push
 # ArgoCD will auto-sync and apply the secrets
 kubectl get applications -n argocd -w
 ```
+
+### Step 7.6: Configure Homepage Widgets (**on your laptop** - AFTER Grafana is ready)
+
+⚠️ **Wait until Grafana is accessible:**
+
+```bash
+# Wait for Grafana to be ready
+kubectl wait --for=condition=available --timeout=300s \
+  deployment/victoria-metrics-k8s-stack-grafana -n monitoring
+
+# Get Grafana admin password
+GRAFANA_PASS=$(kubectl get secret -n monitoring grafana-admin-credentials \
+  -o jsonpath="{.data.admin-password}" | base64 -d)
+
+echo "Grafana password: $GRAFANA_PASS"
+```
+
+**Create Grafana Service Account for Homepage widget:**
+
+```bash
+# 1. Create service account
+kubectl exec -n monitoring deployment/victoria-metrics-k8s-stack-grafana -- \
+  wget -q -O- --header='Content-Type: application/json' \
+  --post-data='{"name":"homepage","role":"Viewer"}' \
+  http://admin:$GRAFANA_PASS@localhost:3000/api/serviceaccounts
+
+# 2. Create API token (replace <service-account-id> from response above, usually "2")
+GRAFANA_TOKEN=$(kubectl exec -n monitoring deployment/victoria-metrics-k8s-stack-grafana -- \
+  wget -q -O- --header='Content-Type: application/json' \
+  --post-data='{"name":"homepage-widget","role":"Viewer"}' \
+  http://admin:$GRAFANA_PASS@localhost:3000/api/serviceaccounts/2/tokens | \
+  jq -r '.key')
+
+echo "Grafana API token: $GRAFANA_TOKEN"
+
+# 3. Seal the token
+kubectl create secret generic homepage-grafana --dry-run=client \
+  --from-literal=key="$GRAFANA_TOKEN" -n homepage -o yaml | \
+  kubeseal --format=yaml --controller-namespace=kube-system \
+  > overlays/production/homepage/grafana-credentials-sealed.yaml
+
+# 4. Commit and push
+git add overlays/production/homepage/grafana-credentials-sealed.yaml
+git commit -m "Add Grafana widget credentials for Homepage"
+git push
+```
+
+⚠️ **Note:** If you rebuild the cluster, you'll need to recreate the Grafana service account and re-seal the token using the commands above.
 
 ### Step 8: Verify Deployment (**on your laptop**)
 
@@ -550,29 +612,44 @@ URL: http://<node-ip>:30080
 (Internal only, no ingress for security)
 ```
 
-**Monitoring Stack:**
+**Victoria Metrics Monitoring Stack:**
 
 ```text
-Grafana:      https://grafana.elmstreet79.de
-Prometheus:   http://<node-ip>:9090 (Internal only - port-forward or use Grafana)
-Alertmanager: http://<node-ip>:9093 (Internal only - port-forward or use Grafana)
+Grafana:        https://grafana.elmstreet79.de
+Prometheus API: http://<node-ip>:8428 (vmsingle - internal only)
+VMAgent:        Scrapes metrics from all Kubernetes components
+VMAlert:        Evaluates alerting rules (blackhole mode)
 ```
 
 **Get Grafana admin password:**
 
 ```bash
-kubectl get secret -n monitoring kube-prometheus-stack-grafana \
+kubectl get secret -n monitoring grafana-admin-credentials \
   -o jsonpath="{.data.admin-password}" | base64 -d && echo
 ```
 
 Default user: `admin`
 
-📊 **Pre-installed dashboards:** Kubernetes cluster metrics, node metrics, pod resources, persistent volumes
+📊 **Pre-installed components:**
 
-🔒 **Security note:** Prometheus and Alertmanager are not exposed publicly (no ingress). Access via:
+- **VictoriaMetrics Single**: Time-series database (30d retention, 15Gi storage)
+- **VMAgent**: Metric collection from Kubernetes components (kubelet, apiserver, etcd, etc.)
+- **Grafana**: Pre-configured with Victoria Metrics datasource and Kubernetes dashboards
+- **Node Exporter**: Hardware metrics from all nodes
+- **Kube State Metrics**: Kubernetes object metrics
 
-- Grafana datasource (recommended)
-- Port-forward: `kubectl port-forward -n monitoring svc/kube-prometheus-stack-prometheus 9090:9090`
+� **Victoria Metrics advantages over Prometheus:**
+
+- Lower resource usage (CPU & memory)
+- Faster queries on large datasets
+- Better compression (less disk space)
+- 100% Prometheus-compatible (drop-in replacement)
+
+🔒 **Security note:** VictoriaMetrics API is not exposed publicly (no ingress). Access via Grafana datasource or port-forward:
+
+```bash
+kubectl port-forward -n monitoring svc/vm-vmsingle 8428:8428
+```
 
 **ntfy (Notifications):**
 
@@ -588,7 +665,7 @@ URL: https://ntfy.elmstreet79.de
 URL: https://home.elmstreet79.de
 ```
 
-🏠 **Features:** Unified dashboard with links to all services, real-time Kubernetes cluster metrics, auto-discovery of ingresses, dark theme
+🏠 **Features:** Unified dashboard with links to all services, real-time Kubernetes cluster metrics, auto-discovery of ingresses, dark theme, widgets for Proxmox/ArgoCD/Grafana
 
 **Uptime Kuma (Uptime Monitoring):**
 
@@ -728,6 +805,31 @@ kubectl logs -n argocd deployment/argocd-application-controller
 argocd app sync <app-name> --force
 ```
 
+### Grafana Widget Not Showing on Homepage
+
+**Check:**
+
+```bash
+# 1. Verify Homepage has the environment variable
+kubectl get deployment homepage -n homepage -o yaml | grep GRAFANA_KEY
+
+# 2. Check if secret exists
+kubectl get secret homepage-grafana -n homepage
+
+# 3. Check Homepage logs
+kubectl logs -n homepage deployment/homepage
+
+# 4. Verify Grafana service account token is valid
+GRAFANA_TOKEN=$(kubectl get secret homepage-grafana -n homepage -o jsonpath='{.data.key}' | base64 -d)
+kubectl exec -n monitoring deployment/victoria-metrics-k8s-stack-grafana -- \
+  wget -q -O- --header="Authorization: Bearer $GRAFANA_TOKEN" \
+  http://localhost:3000/api/org
+```
+
+**Fix if token is invalid:**
+
+Re-create the service account and token as described in Step 7.6.
+
 ## 📚 Components
 
 | Component | Version | Purpose |
@@ -744,7 +846,8 @@ argocd app sync <app-name> --force
 | Portainer | ce-2.33.3 | Management UI |
 | ntfy | v2.14.0 | Notification service |
 | Uptime Kuma | v1.23.16 | Uptime monitoring & status page |
-| kube-prometheus-stack | v0.86.1 | Prometheus, Grafana, Alertmanager monitoring |
+| Victoria Metrics K8s Stack | v0.63.5 | Monitoring (VictoriaMetrics, Grafana, Node Exporter) |
+| Homepage | v1.7.0 | Homelab dashboard with widgets |
 
 ## 📖 Documentation
 
@@ -757,7 +860,9 @@ argocd app sync <app-name> --force
 - [Longhorn](https://longhorn.io/)
 - [ntfy](https://ntfy.sh/)
 - [Uptime Kuma](https://github.com/louislam/uptime-kuma)
-- [kube-prometheus-stack](https://github.com/prometheus-community/helm-charts/tree/main/charts/kube-prometheus-stack)
+- [Victoria Metrics](https://docs.victoriametrics.com/)
+- [Victoria Metrics K8s Stack](https://docs.victoriametrics.com/helm/victoria-metrics-k8s-stack/)
+- [Homepage](https://gethomepage.dev/)
 
 ## 📝 License
 
