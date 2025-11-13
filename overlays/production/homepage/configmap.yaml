@@ -28,14 +28,14 @@ data:
         columns: 4
       Docker:
         style: row
-        columns: 2
+        columns: 3
 
   services.yaml: |
     - ArgoCD:
       - ArgoCD:
           href: https://argocd.elmstreet79.de
           description: GitOps Continuous Delivery
-          icon: mdi-git
+          icon: argocd.png
 
     - Services:
       - Portainer:
@@ -68,12 +68,12 @@ data:
       - Dreambox:
           href: https://dreambox.elmstreet79.de
           description: Dreambox Receiver
-          icon: mdi-television-box
+          icon: https://cdn.simpleicons.org/dreambox/000000
       
       - Teslalogger:
           href: https://teslalogger.elmstreet79.de
           description: Tesla Logging & Analytics
-          icon: mdi-car-electric
+          icon: https://cdn.simpleicons.org/tesla/CC0000
 
     - Infrastructure:
       - Raspberry Pi 4:
@@ -105,25 +105,71 @@ data:
             password: {{HOMEPAGE_VAR_PROXMOX_PASS}}
 
     - Docker:
-      - Raspberry Pi 4:
-          icon: docker.png
-          description: Docker Containers
-          href: https://portainer.elmstreet79.de/#!/2/docker/containers
+      - AdGuard Home (Pi4):
+          icon: adguard-home.png
+          description: DNS Ad Blocker
+          href: http://192.168.2.2:8080
+          server: raspi4
+          container: adguardhome
           widget:
-            type: portainer
-            url: https://portainer.elmstreet79.de
-            env: 4
-            key: {{HOMEPAGE_VAR_PORTAINER_KEY}}
+            type: docker
+            server: raspi4
+            container: adguardhome
       
-      - Raspberry Pi 5:
-          icon: docker.png
-          description: Docker Containers  
-          href: https://portainer.elmstreet79.de/#!/2/docker/containers
+      - Beszel (Pi5):
+          icon: https://cdn.simpleicons.org/grafana/F46800
+          description: System Monitor
+          href: http://192.168.2.9
+          server: raspi5
+          container: beszel
           widget:
-            type: portainer
-            url: https://portainer.elmstreet79.de
-            env: 2
-            key: {{HOMEPAGE_VAR_PORTAINER_KEY}}
+            type: docker
+            server: raspi5
+            container: beszel
+      
+      - Pi-hole (Pi5):
+          icon: pi-hole.png
+          description: Network-wide Ad Blocking
+          href: http://192.168.2.9:80/admin
+          server: raspi5
+          container: pihole
+          widget:
+            type: docker
+            server: raspi5
+            container: pihole
+      
+      - Teslalogger (Pi5):
+          icon: https://cdn.simpleicons.org/tesla/CC0000
+          description: Tesla Data Logger
+          href: https://teslalogger.elmstreet79.de
+          server: raspi5
+          container: teslalogger-webserver
+          widget:
+            type: docker
+            server: raspi5
+            container: teslalogger-webserver
+      
+      - Homebridge (Pi5):
+          icon: homebridge.png
+          description: HomeKit Bridge
+          href: http://192.168.2.9:8581
+          server: raspi5
+          container: homebridge-homebridge-1
+          widget:
+            type: docker
+            server: raspi5
+            container: homebridge-homebridge-1
+      
+      - MinIO (Pi5):
+          icon: minio.png
+          description: S3 Storage
+          href: http://192.168.2.9:9000
+          server: raspi5
+          container: minio
+          widget:
+            type: docker
+            server: raspi5
+            container: minio
 
   bookmarks.yaml: |
     - Developer:
@@ -163,4 +209,10 @@ data:
     mode: cluster
 
   docker.yaml: |
-    # Portainer integration used instead
+    raspi4:
+      host: 192.168.2.2
+      port: 2375
+
+    raspi5:
+      host: 192.168.2.9
+      port: 2375
