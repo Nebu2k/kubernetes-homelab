@@ -11,6 +11,12 @@ metadata:
     nginx.ingress.kubernetes.io/websocket-services: "ntfy"
     nginx.ingress.kubernetes.io/backend-protocol: "HTTP"
     nginx.ingress.kubernetes.io/ssl-redirect: "false"
+    gethomepage.dev/enabled: "true"
+    gethomepage.dev/name: "ntfy"
+    gethomepage.dev/description: "Push Notifications"
+    gethomepage.dev/group: "Services"
+    gethomepage.dev/icon: "https://cdn.simpleicons.org/ntfy/317F6F"
+    gethomepage.dev/weight: "40"
 spec:
   ingressClassName: nginx
   tls:

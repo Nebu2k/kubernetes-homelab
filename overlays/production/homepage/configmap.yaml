@@ -22,56 +22,22 @@ data:
         columns: 3
       Private:
         style: row
-        columns: 3
+        columns: 2
       Infrastructure:
         style: row
-        columns: 4
+        columns: 2
       Docker:
         style: row
         columns: 3
 
   services.yaml: |
-    - ArgoCD:
-      - ArgoCD:
-          href: https://argocd.elmstreet79.de
-          description: GitOps Continuous Delivery
-          icon: https://cdn.simpleicons.org/argo/EF7B4D
-
     - Services:
-      - Portainer:
-          href: https://portainer.elmstreet79.de
-          description: Container Management
-          icon: https://cdn.simpleicons.org/portainer/13BEF9
-      
       - Longhorn:
           href: http://192.168.2.2:30080
           description: Distributed Storage
           icon: longhorn.png
-      
-      - ntfy:
-          href: https://ntfy.elmstreet79.de
-          description: Push Notifications
-          icon: https://cdn.simpleicons.org/ntfy/317F6F
-
-    - Monitoring:
-      - Grafana:
-          href: https://grafana.elmstreet79.de
-          description: Metrics Visualization
-          icon: grafana.png
-      
-      - Uptime Kuma:
-          href: https://uptime.elmstreet79.de
-          description: Uptime Monitoring
-          icon: uptime-kuma.png
-
-    - Ingress:
-      - Dreambox:
-          href: https://dreambox.elmstreet79.de
-          description: Dreambox Receiver
-          icon: mdi-television-box
 
     - Infrastructure:
-      
       - Mac Mini:
           href: http://192.168.2.4
           description: AdGuard DNS | x86_64 | 20GB RAM
@@ -162,9 +128,6 @@ data:
             href: https://github.com/Nebu2k/kubernetes-homelab
 
   widgets.yaml: |
-    - logo:
-        icon: https://raw.githubusercontent.com/walkxcode/dashboard-icons/main/png/kubernetes.png
-
     - kubernetes:
         cluster:
           show: true

@@ -9,6 +9,12 @@ metadata:
     nginx.ingress.kubernetes.io/ssl-passthrough: "false"
     nginx.ingress.kubernetes.io/backend-protocol: "HTTP"
     nginx.ingress.kubernetes.io/ssl-redirect: "false"
+    gethomepage.dev/enabled: "true"
+    gethomepage.dev/name: "ArgoCD"
+    gethomepage.dev/description: "GitOps Continuous Delivery"
+    gethomepage.dev/group: "ArgoCD"
+    gethomepage.dev/icon: "https://cdn.simpleicons.org/argo/EF7B4D"
+    gethomepage.dev/weight: "10"
 spec:
   ingressClassName: nginx
   tls:

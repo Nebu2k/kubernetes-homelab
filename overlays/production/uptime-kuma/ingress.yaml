@@ -7,6 +7,12 @@ metadata:
     cert-manager.io/cluster-issuer: letsencrypt-prod
     nginx.ingress.kubernetes.io/ssl-redirect: "false"
     nginx.ingress.kubernetes.io/backend-protocol: "HTTP"
+    gethomepage.dev/enabled: "true"
+    gethomepage.dev/name: "Uptime Kuma"
+    gethomepage.dev/description: "Uptime Monitoring"
+    gethomepage.dev/group: "Monitoring"
+    gethomepage.dev/icon: "uptime-kuma.png"
+    gethomepage.dev/weight: "50"
 spec:
   ingressClassName: nginx
   tls:

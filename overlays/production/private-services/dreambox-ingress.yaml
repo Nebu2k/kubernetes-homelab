@@ -37,6 +37,12 @@ metadata:
     nginx.ingress.kubernetes.io/backend-protocol: "HTTPS"
     nginx.ingress.kubernetes.io/ssl-redirect: "false"
     nginx.ingress.kubernetes.io/proxy-ssl-verify: "false"
+    gethomepage.dev/enabled: "true"
+    gethomepage.dev/name: "Dreambox"
+    gethomepage.dev/description: "Dreambox Receiver"
+    gethomepage.dev/group: "Private"
+    gethomepage.dev/icon: "mdi-television-box"
+    gethomepage.dev/weight: "60"
 spec:
   ingressClassName: nginx
   tls:
