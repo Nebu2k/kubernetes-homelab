@@ -38,21 +38,21 @@ data:
           icon: longhorn.png
 
     - Infrastructure:
-      - Mac Mini:
-          href: http://192.168.2.4
-          description: AdGuard DNS | x86_64 | 20GB RAM
-          icon: https://cdn.simpleicons.org/apple/000000
-          ping: 192.168.2.4
-      
       - Proxmox:
-          href: https://192.168.2.8:8006
-          description: Virtualization Host
-          icon: https://cdn.simpleicons.org/proxmox/E57000
-          widget:
+           href: https://192.168.2.8:8006
+           description: Virtualization Host
+           icon: https://cdn.simpleicons.org/proxmox/E57000
+           widget:
             type: proxmox
             url: https://192.168.2.8:8006
             username: {{HOMEPAGE_VAR_PROXMOX_USER}}
             password: {{HOMEPAGE_VAR_PROXMOX_PASS}}
+        
+        - Mac Mini:
+           href: http://192.168.2.4
+           description: AdGuard DNS | x86_64 | 20GB RAM
+           icon: https://cdn.simpleicons.org/apple/000000
+           ping: 192.168.2.4
 
     - Docker:
       - AdGuard Home (Pi4):
