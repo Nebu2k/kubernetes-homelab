@@ -106,7 +106,7 @@ data:
             container: adguardhome
       
       - Beszel (Pi5):
-          icon: https://cdn.simpleicons.org/grafana/F46800
+          icon: beszel.png
           description: System Monitor
           href: http://192.168.2.9
           server: raspi5
