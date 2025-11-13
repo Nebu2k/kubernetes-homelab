@@ -6,4 +6,3 @@ resources:
   - ingress.yaml
   - proxmox-secret-sealed.yaml
   - argocd-token-secret-sealed.yaml
-  - clusterrole-patch.yaml
