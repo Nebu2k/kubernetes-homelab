@@ -17,8 +17,8 @@ resources:
   - ntfy-config.yaml
   - uptime-kuma.yaml
   - uptime-kuma-config.yaml
-  # - victoria-metrics-config.yaml
-  # - victoria-metrics-k8s-stack.yaml
+  - victoria-metrics-config.yaml
+  - victoria-metrics-k8s-stack.yaml
   - homepage.yaml
   - homepage-config.yaml
   - argocd-config.yaml
