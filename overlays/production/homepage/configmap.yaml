@@ -9,7 +9,7 @@ data:
     favicon: https://gethomepage.dev/assets/favicon.ico
     theme: dark
     color: slate
-    headerStyle: boxed
+    headerStyle: boxedWidgets
     layout:
       ArgoCD:
         style: row
