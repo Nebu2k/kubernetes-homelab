@@ -64,6 +64,57 @@ serviceAccount:
 # Enable RBAC for Kubernetes integration
 enableRbac: true
 
+# Custom RBAC rules - add secrets permission for auto-discovery
+rbac:
+  clusterRole:
+    rules:
+      - apiGroups:
+          - ""
+        resources:
+          - namespaces
+          - pods
+          - nodes
+        verbs:
+          - get
+          - list
+      - apiGroups:
+          - ""
+        resources:
+          - secrets
+        verbs:
+          - get
+          - list
+      - apiGroups:
+          - extensions
+          - networking.k8s.io
+        resources:
+          - ingresses
+        verbs:
+          - get
+          - list
+      - apiGroups:
+          - traefik.containo.us
+          - traefik.io
+        resources:
+          - ingressroutes
+        verbs:
+          - get
+          - list
+      - apiGroups:
+          - metrics.k8s.io
+        resources:
+          - nodes
+          - pods
+        verbs:
+          - get
+          - list
+      - apiGroups:
+          - apiextensions.k8s.io
+        resources:
+          - customresourcedefinitions/status
+        verbs:
+          - get
+
 # Config will be provided via ConfigMaps in overlay
 config:
   useExistingConfigMap: homepage-config
