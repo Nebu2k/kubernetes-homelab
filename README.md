@@ -525,17 +525,17 @@ echo "Grafana password: $GRAFANA_PASS"
 **Create Grafana Service Account for Homepage widget:**
 
 ```bash
-# 1. Create service account
+# 1. Create service account with Admin role (required for /api/admin/stats endpoint)
 kubectl exec -n monitoring deployment/victoria-metrics-k8s-stack-grafana -- \
   wget -q -O- --header='Content-Type: application/json' \
-  --post-data='{"name":"homepage","role":"Viewer"}' \
+  --post-data='{"name":"homepage-admin","role":"Admin"}' \
   http://admin:$GRAFANA_PASS@localhost:3000/api/serviceaccounts
 
-# 2. Create API token (replace <service-account-id> from response above, usually "2")
+# 2. Create API token (replace <service-account-id> from response above, usually "3")
 GRAFANA_TOKEN=$(kubectl exec -n monitoring deployment/victoria-metrics-k8s-stack-grafana -- \
   wget -q -O- --header='Content-Type: application/json' \
-  --post-data='{"name":"homepage-widget","role":"Viewer"}' \
-  http://admin:$GRAFANA_PASS@localhost:3000/api/serviceaccounts/2/tokens | \
+  --post-data='{"name":"homepage-admin-widget"}' \
+  http://admin:$GRAFANA_PASS@localhost:3000/api/serviceaccounts/3/tokens | \
   jq -r '.key')
 
 echo "Grafana API token: $GRAFANA_TOKEN"
