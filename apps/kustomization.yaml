@@ -19,8 +19,6 @@ resources:
   - uptime-kuma-config.yaml
   - homepage.yaml
   - homepage-config.yaml
-  - kube-prometheus-stack.yaml
-  - kube-prometheus-stack-config.yaml
   - argocd-config.yaml
   - private-services.yaml
   - demo-app.yaml
