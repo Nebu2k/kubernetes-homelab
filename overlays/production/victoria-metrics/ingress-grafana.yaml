@@ -5,6 +5,7 @@ metadata:
   namespace: monitoring
   annotations:
     cert-manager.io/cluster-issuer: letsencrypt-prod
+    nginx.ingress.kubernetes.io/backend-protocol: "HTTP"
     gethomepage.dev/enabled: "true"
     gethomepage.dev/name: "Grafana"
     gethomepage.dev/description: "Metrics Dashboard"
