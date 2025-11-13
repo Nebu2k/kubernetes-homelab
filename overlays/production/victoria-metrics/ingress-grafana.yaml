@@ -14,10 +14,10 @@ spec:
   ingressClassName: nginx
   tls:
     - hosts:
-        - grafana.kube.peters.dev
+        - grafana.elmstreet79.de
       secretName: grafana-tls
   rules:
-    - host: grafana.kube.peters.dev
+    - host: grafana.elmstreet79.de
       http:
         paths:
           - path: /
