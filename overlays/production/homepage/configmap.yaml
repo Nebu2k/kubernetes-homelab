@@ -59,23 +59,17 @@ data:
           icon: https://cdn.simpleicons.org/grafana/F46800
           description: Tesla Data Logger Web
           href: http://192.168.2.9:8888
+          weight: 200
           server: raspi5
           container: teslalogger-webserver
-          widget:
-            type: docker
-            server: raspi5
-            container: teslalogger-webserver
 
       - Teslalogger Grafana (Pi5):
           icon: https://cdn.simpleicons.org/tesla/CC0000
           description: Tesla Data Logger Dashboard
           href: https://teslalogger.elmstreet79.de
+          weight: 201
           server: raspi5
           container: teslalogger-grafana
-          widget:
-            type: docker
-            server: raspi5
-            container: teslalogger-grafana
 
   bookmarks.yaml: |
     - Developer:
