@@ -20,7 +20,7 @@ data:
       Monitoring:
         style: row
         columns: 3
-      Private:
+      Ingress:
         style: row
         columns: 2
       Infrastructure:
@@ -56,6 +56,13 @@ data:
           description: AdGuard DNS | x86_64 | 20GB RAM
           icon: https://cdn.simpleicons.org/apple/000000
           ping: 192.168.2.4
+
+    - Ingress:
+      - Dreambox:
+          href: https://dreambox.elmstreet79.de
+          description: Dreambox Receiver
+          icon: mdi-television-box
+          ping: 192.168.2.11
 
     - Docker:
       - Teslalogger Web (Pi5):

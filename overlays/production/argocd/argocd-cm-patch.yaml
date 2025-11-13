@@ -4,6 +4,7 @@ metadata:
   name: argocd-cm
   namespace: argocd
 data:
+  accounts.readonly: apiKey
   timeout.reconciliation: 30s
   resource.exclusions: |
     - apiGroups:

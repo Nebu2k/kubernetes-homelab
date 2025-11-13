@@ -5,3 +5,5 @@ resources:
   - ingress.yaml
   - argocd-server-patch.yaml
   - argocd-cm-patch.yaml
+  - argocd-rbac-cm-patch.yaml
+  - argocd-token-secret-sealed.yaml
