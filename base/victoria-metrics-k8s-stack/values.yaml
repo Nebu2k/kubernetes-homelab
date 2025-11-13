@@ -1,0 +1,140 @@
+# Victoria Metrics K8s Stack Helm values
+# https://docs.victoriametrics.com/helm/victoria-metrics-k8s-stack/
+
+# Short name to avoid hitting 63 char limit
+fullnameOverride: "vm"
+
+# VictoriaMetrics Single - the time-series database
+vmsingle:
+  enabled: true
+  annotations: {}
+  spec:
+    retentionPeriod: "30d"
+    replicaCount: 1
+    storage:
+      accessModes:
+        - ReadWriteOnce
+      storageClassName: longhorn
+      resources:
+        requests:
+          storage: 15Gi
+    resources:
+      requests:
+        cpu: 200m
+        memory: 1Gi
+      limits:
+        memory: 2Gi
+
+# VMAgent - collects metrics from scrape targets
+vmagent:
+  enabled: true
+  spec:
+    selectAllByDefault: true
+    scrapeInterval: 30s
+    resources:
+      requests:
+        cpu: 50m
+        memory: 256Mi
+      limits:
+        memory: 512Mi
+
+# VMAlert - evaluates alerting rules
+vmalert:
+  enabled: true
+  spec:
+    evaluationInterval: 30s
+    selectAllByDefault: true
+    resources:
+      requests:
+        cpu: 50m
+        memory: 128Mi
+      limits:
+        memory: 256Mi
+
+# Alertmanager - not needed for basic setup
+alertmanager:
+  enabled: false
+
+# Grafana - visualization
+grafana:
+  enabled: true
+
+  # Admin credentials from existing secret
+  admin:
+    existingSecret: grafana-admin-credentials
+    userKey: admin-user
+    passwordKey: admin-password
+
+  # Service
+  service:
+    type: ClusterIP
+    port: 80
+
+  # Persistence for dashboards
+  persistence:
+    enabled: true
+    storageClassName: longhorn
+    size: 5Gi
+
+  # Resources
+  resources:
+    requests:
+      cpu: 50m
+      memory: 256Mi
+    limits:
+      memory: 512Mi
+
+  # Default timezone
+  defaultDashboardsTimezone: Europe/Berlin
+
+# Prometheus Node Exporter - hardware metrics
+prometheus-node-exporter:
+  enabled: true
+
+# Kube State Metrics - Kubernetes object metrics
+kube-state-metrics:
+  enabled: true
+
+# Default dashboards
+defaultDashboards:
+  enabled: true
+
+# Victoria Metrics Operator
+victoria-metrics-operator:
+  enabled: true
+  operator:
+    disable_prometheus_converter: false
+
+# Scrape configs for K8s components
+kubeApiServer:
+  enabled: true
+
+kubeControllerManager:
+  enabled: true
+  endpoints:
+    - 192.168.2.2 # raspi4
+    - 192.168.2.9 # raspi5
+    - 192.168.2.12 # ubuntu-1
+
+kubeScheduler:
+  enabled: true
+  endpoints:
+    - 192.168.2.2 # raspi4
+    - 192.168.2.9 # raspi5
+    - 192.168.2.12 # ubuntu-1
+
+kubeProxy:
+  enabled: false # K3s uses kube-router
+
+kubeEtcd:
+  enabled: true
+  endpoints:
+    - 192.168.2.2 # raspi4
+    - 192.168.2.9 # raspi5
+    - 192.168.2.12 # ubuntu-1
+
+coreDns:
+  enabled: true
+
+kubelet:
+  enabled: true

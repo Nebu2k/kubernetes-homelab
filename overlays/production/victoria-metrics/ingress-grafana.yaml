@@ -1,0 +1,29 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: grafana
+  namespace: monitoring
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    gethomepage.dev/enabled: "true"
+    gethomepage.dev/name: "Grafana"
+    gethomepage.dev/description: "Metrics Dashboard"
+    gethomepage.dev/group: "Monitoring"
+    gethomepage.dev/icon: "grafana.png"
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts:
+        - grafana.kube.peters.dev
+      secretName: grafana-tls
+  rules:
+    - host: grafana.kube.peters.dev
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: vm-grafana
+                port:
+                  number: 80
