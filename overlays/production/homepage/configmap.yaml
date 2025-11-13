@@ -41,7 +41,7 @@ data:
       - Portainer:
           href: https://portainer.elmstreet79.de
           description: Container Management
-          icon: portainer.png
+          icon: https://cdn.simpleicons.org/portainer/13BEF9
       
       - Longhorn:
           href: http://192.168.2.2:30080
@@ -51,7 +51,7 @@ data:
       - ntfy:
           href: https://ntfy.elmstreet79.de
           description: Push Notifications
-          icon: ntfy.png
+          icon: https://cdn.simpleicons.org/ntfy/317F6F
 
     - Monitoring:
       - Grafana:
