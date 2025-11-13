@@ -31,11 +31,11 @@ spec:
   ignoreDifferences:
     - group: ""
       kind: Secret
-      name: vm-victoria-metrics-operator-validation
+      name: victoria-metrics-k8s-stack-victoria-metrics-operator-validation
       jsonPointers:
         - /data
     - group: admissionregistration.k8s.io
       kind: ValidatingWebhookConfiguration
-      name: vm-victoria-metrics-operator-admission
+      name: victoria-metrics-k8s-stack-victoria-metrics-operator-admission
       jqPathExpressions:
         - ".webhooks[]?.clientConfig.caBundle"
