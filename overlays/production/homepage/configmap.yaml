@@ -107,6 +107,12 @@ data:
       - GitHub:
           - icon: github-light.png
             href: https://github.com/Nebu2k/kubernetes-homelab
+      - LinkedIn:
+          - icon: linkedin-light.png
+            href: https://www.linkedin.com/in/nebu2k/
+      - Website:
+          - icon: web.png
+            href: https://seb-it.com
 
   widgets.yaml: |
     - kubernetes:
