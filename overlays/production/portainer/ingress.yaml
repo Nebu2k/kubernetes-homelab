@@ -11,9 +11,9 @@ metadata:
     gethomepage.dev/enabled: "true"
     gethomepage.dev/name: "Portainer"
     gethomepage.dev/description: "Container Management"
-    gethomepage.dev/group: "Services"
+    gethomepage.dev/group: "Management"
     gethomepage.dev/icon: "https://cdn.simpleicons.org/portainer/13BEF9"
-    gethomepage.dev/weight: "30"
+    gethomepage.dev/weight: "20"
 spec:
   ingressClassName: nginx
   tls:

@@ -28,12 +28,11 @@ Creates a CNAME record for <subdomain>.<DOMAIN> pointing to <TARGET>
 Uses configuration from .env file in the homelab directory.
 
 Parameters:
-  subdomain    The subdomain to create (e.g., 'argocd', 'portainer', 'ntfy')
+  subdomain    The subdomain to create (e.g., 'argocd', 'portainer')
 
 Examples:
   ./create-dns-record.sh argocd
   ./create-dns-record.sh portainer
-  ./create-dns-record.sh ntfy
 
 Configuration:
   Edit the .env file in the homelab directory to set:

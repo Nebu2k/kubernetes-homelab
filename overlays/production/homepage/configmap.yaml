@@ -11,22 +11,16 @@ data:
     color: slate
     headerStyle: boxedWidgets
     layout:
-      ArgoCD:
+      Management:
         style: row
         columns: 2
-      Services:
-        style: row
-        columns: 3
       Monitoring:
         style: row
         columns: 3
-      Ingress:
-        style: row
-        columns: 2
       Infrastructure:
         style: row
-        columns: 2
-      Docker:
+        columns: 3
+      Applications:
         style: row
         columns: 3
     providers:
@@ -34,17 +28,18 @@ data:
         url: http://longhorn-frontend.longhorn-system
 
   services.yaml: |
-    - Services:
+    - Infrastructure:
       - Longhorn:
           href: http://192.168.2.2:30080
           description: Distributed Storage
           icon: longhorn.png
+          weight: 10
 
-    - Infrastructure:
       - Proxmox:
           href: https://192.168.2.8:8006
           description: Virtualization Host
           icon: https://cdn.simpleicons.org/proxmox/E57000
+          weight: 20
           widget:
             type: proxmox
             url: https://192.168.2.8:8006
@@ -55,21 +50,22 @@ data:
           href: http://192.168.2.4
           description: AdGuard DNS | x86_64 | 20GB RAM
           icon: https://cdn.simpleicons.org/apple/000000
+          weight: 30
           ping: 192.168.2.4
 
-    - Ingress:
+    - Applications:
       - Dreambox:
           href: https://dreambox.elmstreet79.de
           description: Dreambox Receiver
           icon: mdi-television-box
+          weight: 10
           ping: 192.168.2.11
 
-    - Docker:
       - Teslalogger Web (Pi5):
           icon: https://cdn.simpleicons.org/tesla/CC0000
           description: Tesla Data Logger Web
           href: http://192.168.2.9:8888
-          weight: 200
+          weight: 20
           server: raspi5
           container: teslalogger-webserver
 
@@ -77,7 +73,7 @@ data:
           icon: https://cdn.simpleicons.org/grafana/F46800
           description: Tesla Data Logger Dashboard
           href: https://teslalogger.elmstreet79.de
-          weight: 201
+          weight: 21
           server: raspi5
           container: teslalogger-grafana
 
