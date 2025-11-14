@@ -23,6 +23,9 @@ data:
       Applications:
         style: row
         columns: 3
+      DNS:
+        style: row
+        columns: 1
     providers:
       longhorn:
         url: http://longhorn-frontend.longhorn-system
@@ -61,18 +64,6 @@ data:
             url: https://portainer.elmstreet79.de
             env: 4
             key: {{HOMEPAGE_VAR_PORTAINER_TOKEN}}
-
-      - Mac Mini:
-          href: http://macmini.elmstreet79.de
-          description: AdGuard DNS | x86_64 | 20GB RAM
-          icon: https://cdn.simpleicons.org/apple/000000
-          weight: 31
-          ping: 192.168.2.4
-          widget:
-            type: adguard
-            url: http://macmini.elmstreet79.de
-            username: {{HOMEPAGE_VAR_ADGUARD_USER}}
-            password: {{HOMEPAGE_VAR_ADGUARD_PASS}}
           
     - Applications:
       - Teslalogger Grafana (Pi5):
@@ -97,6 +88,19 @@ data:
           icon: mdi-television-box
           weight: 10
           ping: 192.168.2.11
+
+    - DNS:
+      - AdGuard Home (Mac Mini):
+          href: http://macmini.elmstreet79.de
+          description: AdGuard DNS
+          icon: adguard-home.png
+          weight: 31
+          ping: 192.168.2.4
+          widget:
+            type: adguard
+            url: http://macmini.elmstreet79.de
+            username: {{HOMEPAGE_VAR_ADGUARD_USER}}
+            password: {{HOMEPAGE_VAR_ADGUARD_PASS}}
 
   bookmarks.yaml: |
     - Developer:
