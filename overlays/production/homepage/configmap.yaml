@@ -73,12 +73,6 @@ data:
             url: https://portainer.elmstreet79.de
             env: 4
             key: {{HOMEPAGE_VAR_PORTAINER_TOKEN}}
-      - Dreambox:
-          href: https://dreambox.elmstreet79.de
-          description: Dreambox Receiver
-          icon: mdi-television-box
-          weight: 10
-          ping: 192.168.2.11
 
       - Teslalogger Web (Pi5):
           icon: https://cdn.simpleicons.org/tesla/CC0000
@@ -95,6 +89,14 @@ data:
           weight: 21
           server: raspi5
           container: teslalogger-grafana
+          
+    -Applications:
+      - Dreambox:
+          href: https://dreambox.elmstreet79.de
+          description: Dreambox Receiver
+          icon: mdi-television-box
+          weight: 10
+          ping: 192.168.2.11
 
   bookmarks.yaml: |
     - Developer:
