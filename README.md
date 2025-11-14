@@ -30,7 +30,7 @@ Production-ready K3s cluster managed via GitOps using ArgoCD App-of-Apps pattern
 | 9 | Homepage | Homelab dashboard |
 | 10 | MetalLB Config, Cert-Manager Config | IPAddressPool, ClusterIssuers |
 | 11 | NGINX Ingress Config | Custom headers |
-| 12 | ArgoCD Config, Portainer Config | Management UI ingresses |
+| 12 | ArgoCD Config, CoreDNS Config, Portainer Config | Management UI ingresses, CoreDNS forwarding to AdGuard |
 | 13 | Longhorn Config | Backup jobs, S3 config |
 | 16 | Uptime Kuma Config, Private Services | Uptime Kuma ingress, External service ingresses |
 | 17 | Homepage Config | Homepage ingress, config & widget secrets |
@@ -62,8 +62,9 @@ homelab/
 │   ├── homepage-config.yaml       # Wave 17
 │   ├── victoria-metrics-config.yaml      # Wave 5
 │   ├── victoria-metrics-k8s-stack.yaml   # Wave 6
-│   ├── argocd-config.yaml         # Wave 12
-│   ├── private-services.yaml      # Wave 16
+  ├── argocd-config.yaml         # Wave 12
+  ├── coredns-config.yaml        # Wave 12
+  ├── private-services.yaml      # Wave 16
 │   └── demo-app.yaml              # Wave 20
 ├── base/
 │   ├── reloader/values.yaml       # Auto-reload config
@@ -85,6 +86,9 @@ homelab/
     │   └── custom-headers.yaml    # Security headers ConfigMap
     ├── argocd/
     │   └── ingress.yaml           # ArgoCD HTTPS ingress
+    ├── coredns/
+    │   ├── coredns-custom.yaml    # CoreDNS forwarding to AdGuard
+    │   └── kustomization.yaml
     ├── portainer/
     │   └── ingress.yaml           # Portainer HTTPS ingress
     ├── longhorn/
@@ -105,8 +109,18 @@ homelab/
     │   ├── ingress.yaml           # Uptime Kuma HTTPS ingress
     │   └── kustomization.yaml
     └── private-services/
-        ├── teslalogger-ingress.yaml  # TeslaLogger external service
-        └── dreambox-ingress.yaml     # Dreambox external service
+        ├── teslalogger-ingress.yaml     # TeslaLogger external service
+        ├── dreambox-ingress.yaml        # Dreambox external service
+        ├── adguard-external-service.yaml     # AdGuard external service + endpoints
+        ├── adguard-ingress.yaml         # AdGuard internal DNS name
+        ├── beszel-external-service.yaml      # Beszel monitoring external service
+        ├── beszel-ingress.yaml          # Beszel internal DNS name
+        ├── minio-external-service.yaml       # MinIO S3 storage external service
+        ├── minio-ingress.yaml           # MinIO API + Console internal DNS
+        ├── adguard-credentials-sealed.yaml   # AdGuard credentials for DNS sync
+        ├── adguard-dns-sync-rbac.yaml        # ServiceAccount + RBAC for DNS sync
+        ├── adguard-dns-sync-job.yaml         # Automated DNS Rewrite sync (PostSync Hook + CronJob)
+        └── kustomization.yaml
 ```
 
 ## 🚀 Fresh Installation
@@ -643,6 +657,44 @@ URL: https://uptime.elmstreet79.de
 ⚠️ **First visit:** Create admin account on initial access. Then add monitors for your services.
 
 **Private Services:**
+
+Private Services provide internal DNS names for services running outside Kubernetes (e.g., Docker containers on Raspberry Pis) without exposing them publicly. This architecture uses:
+
+1. **Internal DNS Names**: Services accessible via `*.elmstreet79.de` only within the local network
+2. **Automated DNS Management**: PostSync Hook + CronJob automatically sync Kubernetes Ingresses to AdGuard Home DNS Rewrites
+3. **Single Source of Truth**: AdGuard Home manages all internal DNS rewrites, CoreDNS forwards queries to AdGuard
+4. **No Public SSL**: Internal services use HTTP only (no cert-manager annotations)
+
+**Architecture:**
+
+```text
+External Service → Kubernetes Service (ClusterIP) → Manual Endpoints → External IP:Port
+                ↓
+            Ingress (no cert-manager) → NGINX LoadBalancer (192.168.2.250)
+                ↓
+            DNS Sync Job → AdGuard API → DNS Rewrite (*.elmstreet79.de → 192.168.2.250)
+                ↓
+            CoreDNS → Forward *.elmstreet79.de → AdGuard DNS (192.168.2.2, 192.168.2.4)
+```
+
+**Examples:**
+
+```text
+AdGuard Home: http://adguard.elmstreet79.de → 192.168.2.2:8080
+Beszel Monitor: http://beszel.elmstreet79.de → 192.168.2.9:8090
+MinIO Console: http://minio.elmstreet79.de → 192.168.2.9:9393
+MinIO API: http://minio-api.elmstreet79.de → 192.168.2.9:9300
+Longhorn: http://longhorn.elmstreet79.de → Internal K8s service
+```
+
+**DNS Sync Automation:**
+
+- **PostSync Hook**: Runs automatically after every ArgoCD sync
+- **CronJob**: Fallback every 6 hours
+- **Filter Logic**: Only syncs Ingresses WITHOUT `cert-manager.io/cluster-issuer` annotation
+- **AdGuard API**: Creates DNS Rewrites pointing to NGINX LoadBalancer IP (192.168.2.250)
+
+**Public SSL Services:**
 
 ```text
 TeslaLogger: https://teslalogger.elmstreet79.de (→ 192.168.2.9:3000)

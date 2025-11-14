@@ -9,7 +9,7 @@ spec:
   ports:
     - name: api
       port: 80
-      targetPort: 9000
+      targetPort: 9300
       protocol: TCP
 ---
 apiVersion: v1
@@ -22,7 +22,7 @@ subsets:
       - ip: 192.168.2.9
     ports:
       - name: api
-        port: 9000
+        port: 9300
         protocol: TCP
 ---
 apiVersion: v1
@@ -35,7 +35,7 @@ spec:
   ports:
     - name: console
       port: 80
-      targetPort: 9001
+      targetPort: 9393
       protocol: TCP
 ---
 apiVersion: v1
@@ -48,5 +48,5 @@ subsets:
       - ip: 192.168.2.9
     ports:
       - name: console
-        port: 9001
+        port: 9393
         protocol: TCP

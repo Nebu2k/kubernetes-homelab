@@ -10,6 +10,14 @@ resources:
   - beszel-ingress.yaml
   - minio-external-service.yaml
   - minio-ingress.yaml
+  - proxmox-external-service.yaml
+  - proxmox-ingress.yaml
+  - macmini-external-service.yaml
+  - macmini-ingress.yaml
+  - homebridge-external-service.yaml
+  - homebridge-ingress.yaml
+  - fr24-external-service.yaml
+  - fr24-ingress.yaml
   - adguard-credentials-sealed.yaml
   - adguard-dns-sync-rbac.yaml
   - adguard-dns-sync-job.yaml
