@@ -13,10 +13,11 @@ data:
     ADGUARD_USER="${ADGUARD_USER}"
     ADGUARD_PASS="${ADGUARD_PASS}"
     INGRESS_IP="${INGRESS_IP}"
+    DOMAIN_SUFFIX="${DOMAIN_SUFFIX}"
 
     echo "Syncing DNS rewrites to AdGuard Home at ${ADGUARD_HOST}..."
 
-    # Get current rewrites
+    # Get current rewrites from AdGuard
     CURRENT=$(curl -s -u "${ADGUARD_USER}:${ADGUARD_PASS}" \
       "http://${ADGUARD_HOST}/control/rewrite/list")
 
@@ -37,46 +38,67 @@ data:
       fi
     }
 
-    # Add rewrites for all internal ingresses
-    add_rewrite "adguard.elmstreet79.de"
-    add_rewrite "longhorn.elmstreet79.de"
+    # Get all ingress hostnames from Kubernetes API
+    echo "Fetching ingresses from Kubernetes..."
+
+    # Get service account token
+    TOKEN=$(cat /var/run/secrets/kubernetes.io/serviceaccount/token)
+
+    # Query all ingresses
+    INGRESSES=$(curl -s -k -H "Authorization: Bearer ${TOKEN}" \
+      "https://kubernetes.default.svc/apis/networking.k8s.io/v1/ingresses?limit=500")
+
+    # Extract hostnames ending with DOMAIN_SUFFIX (internal domains only)
+    echo "${INGRESSES}" | grep -o "\"host\":\"[^\"]*${DOMAIN_SUFFIX}\"" | cut -d'"' -f4 | while read -r DOMAIN; do
+      if [ -n "${DOMAIN}" ]; then
+        add_rewrite "${DOMAIN}"
+      fi
+    done
 
     echo "Done!"
 ---
 apiVersion: batch/v1
-kind: Job
+kind: CronJob
 metadata:
   name: adguard-dns-sync
   namespace: private-services
 spec:
-  ttlSecondsAfterFinished: 86400 # Clean up after 24h
-  template:
+  schedule: "0 */6 * * *" # Every 6 hours
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
     spec:
-      restartPolicy: OnFailure
-      containers:
-        - name: sync
-          image: curlimages/curl:8.5.0
-          command: ["/bin/sh", "/scripts/sync-dns.sh"]
-          env:
-            - name: ADGUARD_HOST
-              value: "192.168.2.2:8080"
-            - name: INGRESS_IP
-              value: "192.168.2.250"
-            - name: ADGUARD_USER
-              valueFrom:
-                secretKeyRef:
-                  name: homepage-adguard
-                  key: username
-            - name: ADGUARD_PASS
-              valueFrom:
-                secretKeyRef:
-                  name: homepage-adguard
-                  key: password
-          volumeMounts:
+      ttlSecondsAfterFinished: 3600 # Clean up after 1h
+      template:
+        spec:
+          serviceAccountName: adguard-dns-sync
+          restartPolicy: OnFailure
+          containers:
+            - name: sync
+              image: curlimages/curl:8.5.0
+              command: ["/bin/sh", "/scripts/sync-dns.sh"]
+              env:
+                - name: ADGUARD_HOST
+                  value: "192.168.2.2:8080"
+                - name: INGRESS_IP
+                  value: "192.168.2.250"
+                - name: DOMAIN_SUFFIX
+                  value: "elmstreet79.de"
+                - name: ADGUARD_USER
+                  valueFrom:
+                    secretKeyRef:
+                      name: homepage-adguard
+                      key: username
+                - name: ADGUARD_PASS
+                  valueFrom:
+                    secretKeyRef:
+                      name: homepage-adguard
+                      key: password
+              volumeMounts:
+                - name: scripts
+                  mountPath: /scripts
+          volumes:
             - name: scripts
-              mountPath: /scripts
-      volumes:
-        - name: scripts
-          configMap:
-            name: adguard-dns-sync
-            defaultMode: 0755
+              configMap:
+                name: adguard-dns-sync
+                defaultMode: 0755
