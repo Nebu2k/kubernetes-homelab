@@ -73,6 +73,15 @@ data:
             url: https://portainer.elmstreet79.de
             env: 4
             key: {{HOMEPAGE_VAR_PORTAINER_TOKEN}}
+          
+    - Applications:
+      - Teslalogger Grafana (Pi5):
+          icon: https://cdn.simpleicons.org/grafana/F46800
+          description: Tesla Data Logger Dashboard
+          href: https://teslalogger.elmstreet79.de
+          weight: 21
+          server: raspi5
+          container: teslalogger-grafana
 
       - Teslalogger Web (Pi5):
           icon: https://cdn.simpleicons.org/tesla/CC0000
@@ -82,15 +91,6 @@ data:
           server: raspi5
           container: teslalogger-webserver
 
-      - Teslalogger Grafana (Pi5):
-          icon: https://cdn.simpleicons.org/grafana/F46800
-          description: Tesla Data Logger Dashboard
-          href: https://teslalogger.elmstreet79.de
-          weight: 21
-          server: raspi5
-          container: teslalogger-grafana
-          
-    - Applications:
       - Dreambox:
           href: https://dreambox.elmstreet79.de
           description: Dreambox Receiver
