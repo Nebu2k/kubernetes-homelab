@@ -6,16 +6,6 @@ metadata:
   namespace: private-services
   annotations:
     nginx.ingress.kubernetes.io/backend-protocol: "HTTP"
-    gethomepage.dev/enabled: "true"
-    gethomepage.dev/name: "AdGuard Home (Pi4)"
-    gethomepage.dev/description: "DNS Ad Blocker"
-    gethomepage.dev/group: "Infrastructure"
-    gethomepage.dev/icon: "adguard-home.png"
-    gethomepage.dev/weight: "30"
-    gethomepage.dev/widget.type: "adguard"
-    gethomepage.dev/widget.url: "http://adguard.elmstreet79.de"
-    gethomepage.dev/widget.username: "{{HOMEPAGE_VAR_ADGUARD_USER}}"
-    gethomepage.dev/widget.password: "{{HOMEPAGE_VAR_ADGUARD_PASS}}"
 spec:
   ingressClassName: nginx
   rules:
