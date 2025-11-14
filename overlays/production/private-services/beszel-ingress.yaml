@@ -13,7 +13,7 @@ metadata:
     gethomepage.dev/icon: "beszel.png"
     gethomepage.dev/weight: "20"
     gethomepage.dev/widget.type: "beszel"
-    gethomepage.dev/widget.url: "http://192.168.2.9:8090"
+    gethomepage.dev/widget.url: "http://192.168.2.9:80902"
     gethomepage.dev/widget.username: "{{HOMEPAGE_VAR_BESZEL_USER}}"
     gethomepage.dev/widget.password: "{{HOMEPAGE_VAR_BESZEL_PASS}}"
     gethomepage.dev/widget.version: "2"
