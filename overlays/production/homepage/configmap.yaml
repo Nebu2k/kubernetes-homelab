@@ -64,6 +64,16 @@ data:
             url: https://portainer.elmstreet79.de
             env: 4
             key: {{HOMEPAGE_VAR_PORTAINER_TOKEN}}
+
+      - Mac Mini:
+          href: http://macmini.elmstreet79.de
+          description: Mac Mini Server
+          icon: https://cdn.simpleicons.org/apple/000000
+          weight: 100
+          ping: 192.168.2.4
+          widget:
+               type: glances
+               url: http://macmini.elmstreet79.de:61208
           
     - Applications:
       - Teslalogger Grafana (Pi5):
