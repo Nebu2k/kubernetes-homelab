@@ -4,3 +4,5 @@ namespace: private-services
 resources:
   - teslalogger-ingress.yaml
   - dreambox-ingress.yaml
+  - adguard-external-service.yaml
+  - adguard-ingress.yaml

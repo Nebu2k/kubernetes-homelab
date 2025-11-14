@@ -8,3 +8,5 @@ resources:
   - disable-local-path-default.yaml
   # Automatic backup jobs
   - recurring-backup-jobs.yaml
+  # Ingress for internal access
+  - ingress.yaml
