@@ -39,24 +39,24 @@ data:
             url: https://192.168.2.8:8006
             username: {{HOMEPAGE_VAR_PROXMOX_USER}}
             password: {{HOMEPAGE_VAR_PROXMOX_PASS}}
-
-      - Longhorn:
-          href: http://192.168.2.2:30080
-          description: Distributed Storage
-          icon: longhorn.png
-          weight: 20
       
       - Mac Mini:
           href: http://192.168.2.4
           description: AdGuard DNS | x86_64 | 20GB RAM
           icon: https://cdn.simpleicons.org/apple/000000
-          weight: 30
+          weight: 20
           ping: 192.168.2.4
           widget:
             type: adguard
             url: http://192.168.2.4
             username: {{HOMEPAGE_VAR_ADGUARD_USER}}
             password: {{HOMEPAGE_VAR_ADGUARD_PASS}}
+
+      - Longhorn:
+          href: http://192.168.2.2:30080
+          description: Distributed Storage
+          icon: longhorn.png
+          weight: 30
 
     - Applications:
       - Dreambox:
