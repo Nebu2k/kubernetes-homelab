@@ -63,7 +63,7 @@ data:
       - Teslalogger Web (Pi5):
           icon: https://cdn.simpleicons.org/tesla/CC0000
           description: Tesla Data Logger Web
-          href: http://192.168.2.9:8888
+          href: http://192.168.2.9:8888/admin
           weight: 20
           server: raspi5
           container: teslalogger-webserver
