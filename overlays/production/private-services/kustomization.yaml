@@ -6,5 +6,6 @@ resources:
   - dreambox-ingress.yaml
   - adguard-external-service.yaml
   - adguard-ingress.yaml
+  - adguard-credentials-sealed.yaml
   - adguard-dns-sync-rbac.yaml
   - adguard-dns-sync-job.yaml

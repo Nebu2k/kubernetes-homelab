@@ -87,12 +87,12 @@ spec:
                 - name: ADGUARD_USER
                   valueFrom:
                     secretKeyRef:
-                      name: homepage-adguard
+                      name: adguard-credentials
                       key: username
                 - name: ADGUARD_PASS
                   valueFrom:
                     secretKeyRef:
-                      name: homepage-adguard
+                      name: adguard-credentials
                       key: password
               volumeMounts:
                 - name: scripts
