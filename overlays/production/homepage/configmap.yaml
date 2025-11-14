@@ -52,17 +52,6 @@ data:
             username: {{HOMEPAGE_VAR_ADGUARD_USER}}
             password: {{HOMEPAGE_VAR_ADGUARD_PASS}}
 
-      - Portainer (Kubernetes):
-          href: https://portainer.elmstreet79.de
-          description: Portainer Kubernetes
-          icon: https://cdn.simpleicons.org/docker/2496ED
-          weight: 10
-          widget:
-            type: portainer
-            url: https://portainer.elmstreet79.de
-            env: 1
-            key: {{HOMEPAGE_VAR_PORTAINER_TOKEN}}
-
       - Portainer (Pi5):
           href: https://portainer.elmstreet79.de
           description: Portainer Docker Pi5
