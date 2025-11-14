@@ -8,6 +8,8 @@ resources:
   - adguard-ingress.yaml
   - beszel-external-service.yaml
   - beszel-ingress.yaml
+  - minio-external-service.yaml
+  - minio-ingress.yaml
   - adguard-credentials-sealed.yaml
   - adguard-dns-sync-rbac.yaml
   - adguard-dns-sync-job.yaml

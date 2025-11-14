@@ -1,0 +1,52 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: minio-pi5-api
+  namespace: private-services
+spec:
+  type: ClusterIP
+  ports:
+    - name: api
+      port: 80
+      targetPort: 9000
+      protocol: TCP
+---
+apiVersion: v1
+kind: Endpoints
+metadata:
+  name: minio-pi5-api
+  namespace: private-services
+subsets:
+  - addresses:
+      - ip: 192.168.2.9
+    ports:
+      - name: api
+        port: 9000
+        protocol: TCP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: minio-pi5-console
+  namespace: private-services
+spec:
+  type: ClusterIP
+  ports:
+    - name: console
+      port: 80
+      targetPort: 9001
+      protocol: TCP
+---
+apiVersion: v1
+kind: Endpoints
+metadata:
+  name: minio-pi5-console
+  namespace: private-services
+subsets:
+  - addresses:
+      - ip: 192.168.2.9
+    ports:
+      - name: console
+        port: 9001
+        protocol: TCP
