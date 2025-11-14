@@ -45,7 +45,7 @@ data:
           description: AdGuard DNS | x86_64 | 20GB RAM
           icon: https://cdn.simpleicons.org/apple/000000
           weight: 50
-          ping: macmini.elmstreet79.de
+          ping: 192.168.2.4
           widget:
             type: adguard
             url: http://macmini.elmstreet79.de
