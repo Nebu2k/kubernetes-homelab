@@ -9,6 +9,9 @@ data:
     #!/bin/sh
     set -e
 
+    # Install jq for JSON parsing
+    apk add --no-cache jq > /dev/null 2>&1
+
     ADGUARD_HOST="${ADGUARD_HOST}"
     ADGUARD_USER="${ADGUARD_USER}"
     ADGUARD_PASS="${ADGUARD_PASS}"
@@ -39,17 +42,28 @@ data:
     }
 
     # Get all ingress hostnames from Kubernetes API
-    echo "Fetching ingresses from Kubernetes..."
+    echo "Fetching internal ingresses (without cert-manager)..."
 
     # Get service account token
     TOKEN=$(cat /var/run/secrets/kubernetes.io/serviceaccount/token)
 
-    # Query all ingresses
-    INGRESSES=$(curl -s -k -H "Authorization: Bearer ${TOKEN}" \
-      "https://kubernetes.default.svc/apis/networking.k8s.io/v1/ingresses?limit=500")
+    # Query all ingresses and filter with jq:
+    # - Only ingresses WITHOUT cert-manager.io/cluster-issuer annotation
+    # - Only domains ending with DOMAIN_SUFFIX
+    DOMAINS=$(curl -s -k -H "Authorization: Bearer ${TOKEN}" \
+      "https://kubernetes.default.svc/apis/networking.k8s.io/v1/ingresses?limit=500" | \
+      jq -r ".items[] | 
+        select(.metadata.annotations[\"cert-manager.io/cluster-issuer\"] == null) | 
+        .spec.rules[]?.host | 
+        select(. != null and endswith(\"${DOMAIN_SUFFIX}\"))" | \
+      sort -u)
 
-    # Extract hostnames ending with DOMAIN_SUFFIX (internal domains only)
-    echo "${INGRESSES}" | grep -o "\"host\":\"[^\"]*${DOMAIN_SUFFIX}\"" | cut -d'"' -f4 | while read -r DOMAIN; do
+    echo "Found internal domains:"
+    echo "${DOMAINS}"
+    echo ""
+
+    # Process each domain
+    for DOMAIN in ${DOMAINS}; do
       if [ -n "${DOMAIN}" ]; then
         add_rewrite "${DOMAIN}"
       fi
@@ -57,13 +71,59 @@ data:
 
     echo "Done!"
 ---
+# PostSync Hook: Runs after every ArgoCD sync
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: adguard-dns-sync-postsync
+  namespace: private-services
+  annotations:
+    argocd.argoproj.io/hook: PostSync
+    argocd.argoproj.io/hook-delete-policy: BeforeHookCreation
+spec:
+  ttlSecondsAfterFinished: 300 # Clean up after 5min
+  template:
+    spec:
+      serviceAccountName: adguard-dns-sync
+      restartPolicy: OnFailure
+      containers:
+        - name: sync
+          image: alpine/curl:latest
+          command: ["/bin/sh", "/scripts/sync-dns.sh"]
+          env:
+            - name: ADGUARD_HOST
+              value: "192.168.2.2:8080"
+            - name: INGRESS_IP
+              value: "192.168.2.250"
+            - name: DOMAIN_SUFFIX
+              value: "elmstreet79.de"
+            - name: ADGUARD_USER
+              valueFrom:
+                secretKeyRef:
+                  name: adguard-credentials
+                  key: username
+            - name: ADGUARD_PASS
+              valueFrom:
+                secretKeyRef:
+                  name: adguard-credentials
+                  key: password
+          volumeMounts:
+            - name: scripts
+              mountPath: /scripts
+      volumes:
+        - name: scripts
+          configMap:
+            name: adguard-dns-sync
+            defaultMode: 0755
+---
+# CronJob: Fallback every 6 hours
 apiVersion: batch/v1
 kind: CronJob
 metadata:
   name: adguard-dns-sync
   namespace: private-services
 spec:
-  schedule: "0 */6 * * *" # Every 6 hours
+  schedule: "0 */6 * * *" # Every 6 hours as fallback
   successfulJobsHistoryLimit: 3
   failedJobsHistoryLimit: 3
   jobTemplate:
@@ -75,7 +135,7 @@ spec:
           restartPolicy: OnFailure
           containers:
             - name: sync
-              image: curlimages/curl:8.5.0
+              image: alpine/curl:latest
               command: ["/bin/sh", "/scripts/sync-dns.sh"]
               env:
                 - name: ADGUARD_HOST
