@@ -55,7 +55,7 @@ data:
           href: https://portainer.elmstreet79.de
           description: Portainer Docker Pi4
           icon: https://cdn.simpleicons.org/docker/2496ED
-          weight: 30
+          weight: 21
           widget:
             type: portainer
             url: https://portainer.elmstreet79.de
