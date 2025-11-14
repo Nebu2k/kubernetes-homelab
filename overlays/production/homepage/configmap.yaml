@@ -111,7 +111,7 @@ data:
           - icon: linkedin.png
             href: https://www.linkedin.com/in/nebu2k/
       - Website:
-          - icon: web.png
+          - icon: mdi-web
             href: https://seb-it.com
 
   widgets.yaml: |
