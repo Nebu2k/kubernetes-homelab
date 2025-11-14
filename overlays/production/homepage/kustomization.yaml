@@ -8,3 +8,4 @@ resources:
   - argocd-token-secret-sealed.yaml
   - grafana-credentials-sealed.yaml
   - adguard-credentials-sealed.yaml
+  - portainer-token-sealed.yaml

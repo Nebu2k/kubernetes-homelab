@@ -102,6 +102,21 @@ data:
         labels: true
         nodes: true
 
+    - portainer:
+        url: https://portainer.elmstreet79.de
+        env: 1
+        key: {{HOMEPAGE_VAR_PORTAINER_TOKEN}}
+
+    - portainer:
+        url: https://portainer.elmstreet79.de
+        env: 2
+        key: {{HOMEPAGE_VAR_PORTAINER_TOKEN}}
+
+    - portainer:
+        url: https://portainer.elmstreet79.de
+        env: 4
+        key: {{HOMEPAGE_VAR_PORTAINER_TOKEN}}
+
   kubernetes.yaml: |
     mode: cluster
 
