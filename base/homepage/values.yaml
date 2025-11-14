@@ -10,46 +10,6 @@ image:
   repository: ghcr.io/gethomepage/homepage
   tag: v1.7.0
 
-# Environment variables
-env:
-  HOMEPAGE_ALLOWED_HOSTS:
-    value: "home.elmstreet79.de"
-  HOMEPAGE_VAR_PROXMOX_USER:
-    valueFrom:
-      secretKeyRef:
-        name: homepage-proxmox
-        key: username
-  HOMEPAGE_VAR_PROXMOX_PASS:
-    valueFrom:
-      secretKeyRef:
-        name: homepage-proxmox
-        key: password
-  HOMEPAGE_VAR_ARGOCD_TOKEN:
-    valueFrom:
-      secretKeyRef:
-        name: argocd-homepage-token
-        key: token
-  HOMEPAGE_VAR_GRAFANA_USERNAME:
-    valueFrom:
-      secretKeyRef:
-        name: homepage-grafana
-        key: username
-  HOMEPAGE_VAR_GRAFANA_PASSWORD:
-    valueFrom:
-      secretKeyRef:
-        name: homepage-grafana
-        key: password
-  HOMEPAGE_VAR_ADGUARD_USER:
-    valueFrom:
-      secretKeyRef:
-        name: homepage-adguard
-        key: username
-  HOMEPAGE_VAR_ADGUARD_PASS:
-    valueFrom:
-      secretKeyRef:
-        name: homepage-adguard
-        key: password
-
 # Schedule only on worker nodes
 nodeSelector:
   node-role.kubernetes.io/worker: "worker"
