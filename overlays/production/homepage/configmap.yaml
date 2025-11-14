@@ -54,7 +54,7 @@ data:
           ping: 192.168.2.4
           widget:
             type: adguard
-            url: http://192.168.2.4:8080
+            url: http://192.168.2.4
             username: {{HOMEPAGE_VAR_ADGUARD_USER}}
             password: {{HOMEPAGE_VAR_ADGUARD_PASS}}
 
