@@ -52,7 +52,38 @@ data:
             username: {{HOMEPAGE_VAR_ADGUARD_USER}}
             password: {{HOMEPAGE_VAR_ADGUARD_PASS}}
 
-    - Applications:
+      - Portainer (Kubernetes):
+          href: https://portainer.elmstreet79.de
+          description: Portainer Kubernetes
+          icon: https://cdn.simpleicons.org/docker/2496ED
+          weight: 10
+          widget:
+            type: portainer
+            url: https://portainer.elmstreet79.de
+            env: 1
+            key: {{HOMEPAGE_VAR_PORTAINER_TOKEN}}
+
+      - Portainer (Pi5):
+          href: https://portainer.elmstreet79.de
+          description: Portainer Docker Pi5
+          icon: https://cdn.simpleicons.org/docker/2496ED
+          weight: 20
+          widget:
+            type: portainer
+            url: https://portainer.elmstreet79.de
+            env: 2
+            key: {{HOMEPAGE_VAR_PORTAINER_TOKEN}}
+
+      - Portainer (Pi4):
+          href: https://portainer.elmstreet79.de
+          description: Portainer Docker Pi4
+          icon: https://cdn.simpleicons.org/docker/2496ED
+          weight: 30
+          widget:
+            type: portainer
+            url: https://portainer.elmstreet79.de
+            env: 4
+            key: {{HOMEPAGE_VAR_PORTAINER_TOKEN}}
       - Dreambox:
           href: https://dreambox.elmstreet79.de
           description: Dreambox Receiver
@@ -101,21 +132,6 @@ data:
         total: true
         labels: true
         nodes: true
-
-    - portainer:
-        url: https://portainer.elmstreet79.de
-        env: 1
-        key: {{HOMEPAGE_VAR_PORTAINER_TOKEN}}
-
-    - portainer:
-        url: https://portainer.elmstreet79.de
-        env: 2
-        key: {{HOMEPAGE_VAR_PORTAINER_TOKEN}}
-
-    - portainer:
-        url: https://portainer.elmstreet79.de
-        env: 4
-        key: {{HOMEPAGE_VAR_PORTAINER_TOKEN}}
 
   kubernetes.yaml: |
     mode: cluster
