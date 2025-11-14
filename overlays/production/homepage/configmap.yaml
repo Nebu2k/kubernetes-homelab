@@ -30,7 +30,7 @@ data:
   services.yaml: |
     - Infrastructure:
       - Proxmox:
-          href: http://pve.elmstreet79.de
+          href: https://pve.elmstreet79.de
           description: Virtualization Host
           icon: https://cdn.simpleicons.org/proxmox/E57000
           weight: 10
