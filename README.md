@@ -26,14 +26,12 @@ Production-ready K3s cluster managed via GitOps using ArgoCD App-of-Apps pattern
 | 4 | Longhorn | Persistent storage |
 | 5 | Victoria Metrics Config | Grafana admin credentials |
 | 6 | Portainer, Victoria Metrics Stack | Management UI + Monitoring Stack |
-| 7 | ntfy | Notification service |
 | 8 | Uptime Kuma | Uptime monitoring & status page |
 | 9 | Homepage | Homelab dashboard |
 | 10 | MetalLB Config, Cert-Manager Config | IPAddressPool, ClusterIssuers |
 | 11 | NGINX Ingress Config | Custom headers |
 | 12 | ArgoCD Config, Portainer Config | Management UI ingresses |
 | 13 | Longhorn Config | Backup jobs, S3 config |
-| 14 | ntfy Config | ntfy ingress |
 | 16 | Uptime Kuma Config, Private Services | Uptime Kuma ingress, External service ingresses |
 | 17 | Homepage Config | Homepage ingress, config & widget secrets |
 | 20 | Demo App | Sample application |
@@ -58,8 +56,6 @@ homelab/
 │   ├── longhorn-config.yaml       # Wave 13
 │   ├── portainer.yaml             # Wave 5
 │   ├── portainer-config.yaml      # Wave 12
-│   ├── ntfy.yaml                  # Wave 6
-│   ├── ntfy-config.yaml           # Wave 14
 │   ├── uptime-kuma.yaml           # Wave 8
 │   ├── uptime-kuma-config.yaml    # Wave 16
 │   ├── homepage.yaml              # Wave 9
@@ -79,11 +75,6 @@ homelab/
 │   ├── uptime-kuma/values.yaml    # Uptime monitoring
 │   ├── homepage/values.yaml       # Homelab dashboard (with widget env vars)
 │   ├── victoria-metrics-k8s-stack/values.yaml  # Victoria Metrics monitoring
-│   └── ntfy/                      # Notification service
-│       ├── deployment.yaml
-│       ├── service.yaml
-│       ├── pvc.yaml
-│       └── kustomization.yaml
 └── overlays/production/
     ├── metallb/
     │   └── metallb-ip-pool.yaml   # IPAddressPool + L2Advertisement
@@ -98,10 +89,6 @@ homelab/
     │   └── ingress.yaml           # Portainer HTTPS ingress
     ├── longhorn/
     │   └── s3-secret-*.yaml       # S3 backup credentials
-    ├── ntfy/
-    │   ├── configmap.yaml         # ntfy server config
-    │   ├── ingress.yaml           # ntfy HTTPS ingress
-    │   └── kustomization.yaml
     ├── homepage/
     │   ├── configmap.yaml         # Dashboard configuration
     │   ├── ingress.yaml           # Homepage HTTPS ingress
@@ -429,7 +416,6 @@ The repository is pre-configured for `elmstreet79.de`. If using your own domain,
    ./scripts/create-dns-record.sh portainer elmstreet79.de $TARGET $ZONE_ID $API_TOKEN
    ./scripts/create-dns-record.sh home elmstreet79.de $TARGET $ZONE_ID $API_TOKEN
    ./scripts/create-dns-record.sh grafana elmstreet79.de $TARGET $ZONE_ID $API_TOKEN
-   ./scripts/create-dns-record.sh ntfy elmstreet79.de $TARGET $ZONE_ID $API_TOKEN
    ./scripts/create-dns-record.sh uptime elmstreet79.de $TARGET $ZONE_ID $API_TOKEN
    ./scripts/create-dns-record.sh teslalogger elmstreet79.de $TARGET $ZONE_ID $API_TOKEN
    ./scripts/create-dns-record.sh dreambox elmstreet79.de $TARGET $ZONE_ID $API_TOKEN
@@ -640,14 +626,6 @@ Default user: `admin`
 kubectl port-forward -n monitoring svc/vm-vmsingle 8428:8428
 ```
 
-**ntfy (Notifications):**
-
-```text
-URL: https://ntfy.elmstreet79.de
-```
-
-📱 **Mobile apps:** [iOS](https://apps.apple.com/app/ntfy/id1625396347) | [Android](https://play.google.com/store/apps/details?id=io.heckel.ntfy)
-
 **Homepage (Homelab Dashboard):**
 
 ```text
@@ -833,7 +811,6 @@ Re-create the sealed secret with current Grafana admin password as described in 
 | Cert-Manager | v1.19.1 | TLS certificates |
 | Longhorn | v1.10.0 | Distributed storage |
 | Portainer | ce-2.33.3 | Management UI |
-| ntfy | v2.14.0 | Notification service |
 | Uptime Kuma | v1.23.16 | Uptime monitoring & status page |
 | Victoria Metrics K8s Stack | v0.63.5 | Monitoring (VictoriaMetrics, Grafana, Node Exporter) |
 | Homepage | v1.7.0 | Homelab dashboard with widgets |
@@ -847,7 +824,6 @@ Re-create the sealed secret with current Grafana admin password as described in 
 - [MetalLB](https://metallb.universe.tf/)
 - [Cert-Manager](https://cert-manager.io/)
 - [Longhorn](https://longhorn.io/)
-- [ntfy](https://ntfy.sh/)
 - [Uptime Kuma](https://github.com/louislam/uptime-kuma)
 - [Victoria Metrics](https://docs.victoriametrics.com/)
 - [Victoria Metrics K8s Stack](https://docs.victoriametrics.com/helm/victoria-metrics-k8s-stack/)
