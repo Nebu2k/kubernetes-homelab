@@ -25,7 +25,7 @@ data:
         columns: 3
       DNS:
         style: row
-        columns: 1
+        columns: 2
     providers:
       longhorn:
         url: http://longhorn-frontend.longhorn-system
