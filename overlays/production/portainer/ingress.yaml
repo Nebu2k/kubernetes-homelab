@@ -14,6 +14,11 @@ metadata:
     gethomepage.dev/group: "Management"
     gethomepage.dev/icon: "https://cdn.simpleicons.org/portainer/13BEF9"
     gethomepage.dev/weight: "20"
+    gethomepage.dev/widget.type: "Portainer"
+    gethomepage.dev/widget.url: "https://portainer.elmstreet79.de"
+    gethomepage.dev/widget.key: "{{HOMEPAGE_VAR_PORTAINER_TOKEN}}"
+    gethomepage.dev/widget.env: "1"
+    gethomepage.dev/kubernetes: "true"
 spec:
   ingressClassName: nginx
   tls:
