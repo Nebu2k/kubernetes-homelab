@@ -3,6 +3,7 @@ kind: Kustomization
 resources:
   - sealed-secrets.yaml
   - reloader.yaml
+  - coredns-config.yaml
   - metallb.yaml
   - metallb-config.yaml
   - cert-manager.yaml
