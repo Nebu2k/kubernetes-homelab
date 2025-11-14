@@ -1,0 +1,82 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: adguard-dns-sync
+  namespace: private-services
+data:
+  sync-dns.sh: |
+    #!/bin/sh
+    set -e
+
+    ADGUARD_HOST="${ADGUARD_HOST}"
+    ADGUARD_USER="${ADGUARD_USER}"
+    ADGUARD_PASS="${ADGUARD_PASS}"
+    INGRESS_IP="${INGRESS_IP}"
+
+    echo "Syncing DNS rewrites to AdGuard Home at ${ADGUARD_HOST}..."
+
+    # Get current rewrites
+    CURRENT=$(curl -s -u "${ADGUARD_USER}:${ADGUARD_PASS}" \
+      "http://${ADGUARD_HOST}/control/rewrite/list")
+
+    # Function to add rewrite if not exists
+    add_rewrite() {
+      DOMAIN=$1
+      
+      # Check if rewrite already exists
+      if echo "${CURRENT}" | grep -q "\"domain\":\"${DOMAIN}\""; then
+        echo "✓ ${DOMAIN} already exists"
+      else
+        echo "→ Adding ${DOMAIN} -> ${INGRESS_IP}"
+        curl -s -X POST "http://${ADGUARD_HOST}/control/rewrite/add" \
+          -u "${ADGUARD_USER}:${ADGUARD_PASS}" \
+          -H "Content-Type: application/json" \
+          -d "{\"domain\":\"${DOMAIN}\",\"answer\":\"${INGRESS_IP}\"}" > /dev/null
+        echo "✓ ${DOMAIN} added"
+      fi
+    }
+
+    # Add rewrites for all internal ingresses
+    add_rewrite "adguard.elmstreet79.de"
+    add_rewrite "longhorn.elmstreet79.de"
+
+    echo "Done!"
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: adguard-dns-sync
+  namespace: private-services
+spec:
+  ttlSecondsAfterFinished: 86400 # Clean up after 24h
+  template:
+    spec:
+      restartPolicy: OnFailure
+      containers:
+        - name: sync
+          image: curlimages/curl:8.5.0
+          command: ["/bin/sh", "/scripts/sync-dns.sh"]
+          env:
+            - name: ADGUARD_HOST
+              value: "192.168.2.2:8080"
+            - name: INGRESS_IP
+              value: "192.168.2.250"
+            - name: ADGUARD_USER
+              valueFrom:
+                secretKeyRef:
+                  name: homepage-adguard
+                  key: username
+            - name: ADGUARD_PASS
+              valueFrom:
+                secretKeyRef:
+                  name: homepage-adguard
+                  key: password
+          volumeMounts:
+            - name: scripts
+              mountPath: /scripts
+      volumes:
+        - name: scripts
+          configMap:
+            name: adguard-dns-sync
+            defaultMode: 0755
