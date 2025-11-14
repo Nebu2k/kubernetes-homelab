@@ -39,6 +39,16 @@ env:
       secretKeyRef:
         name: homepage-grafana
         key: password
+  HOMEPAGE_VAR_ADGUARD_USER:
+    valueFrom:
+      secretKeyRef:
+        name: homepage-adguard
+        key: username
+  HOMEPAGE_VAR_ADGUARD_PASS:
+    valueFrom:
+      secretKeyRef:
+        name: homepage-adguard
+        key: password
 
 # Schedule only on worker nodes
 nodeSelector:

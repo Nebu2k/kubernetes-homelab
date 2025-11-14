@@ -29,22 +29,22 @@ data:
 
   services.yaml: |
     - Infrastructure:
-      - Longhorn:
-          href: http://192.168.2.2:30080
-          description: Distributed Storage
-          icon: longhorn.png
-          weight: 10
-
       - Proxmox:
           href: https://192.168.2.8:8006
           description: Virtualization Host
           icon: https://cdn.simpleicons.org/proxmox/E57000
-          weight: 20
+          weight: 10
           widget:
             type: proxmox
             url: https://192.168.2.8:8006
             username: {{HOMEPAGE_VAR_PROXMOX_USER}}
             password: {{HOMEPAGE_VAR_PROXMOX_PASS}}
+
+      - Longhorn:
+          href: http://192.168.2.2:30080
+          description: Distributed Storage
+          icon: longhorn.png
+          weight: 20
       
       - Mac Mini:
           href: http://192.168.2.4
@@ -52,6 +52,11 @@ data:
           icon: https://cdn.simpleicons.org/apple/000000
           weight: 30
           ping: 192.168.2.4
+          widget:
+            type: adguard
+            url: http://192.168.2.4:8080
+            username: {{HOMEPAGE_VAR_ADGUARD_USER}}
+            password: {{HOMEPAGE_VAR_ADGUARD_PASS}}
 
     - Applications:
       - Dreambox:

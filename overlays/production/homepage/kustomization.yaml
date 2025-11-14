@@ -7,3 +7,4 @@ resources:
   - proxmox-secret-sealed.yaml
   - argocd-token-secret-sealed.yaml
   - grafana-credentials-sealed.yaml
+  - adguard-credentials-sealed.yaml
