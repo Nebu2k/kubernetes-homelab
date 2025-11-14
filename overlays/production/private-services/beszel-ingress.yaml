@@ -1,0 +1,32 @@
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: beszel-pi5
+  namespace: private-services
+  annotations:
+    nginx.ingress.kubernetes.io/backend-protocol: "HTTP"
+    gethomepage.dev/enabled: "true"
+    gethomepage.dev/name: "Beszel (Pi5)"
+    gethomepage.dev/description: "System Monitor"
+    gethomepage.dev/group: "Monitoring"
+    gethomepage.dev/icon: "beszel.png"
+    gethomepage.dev/weight: "20"
+    gethomepage.dev/widget.type: "beszel"
+    gethomepage.dev/widget.url: "http://beszel.elmstreet79.de"
+    gethomepage.dev/widget.username: "{{HOMEPAGE_VAR_BESZEL_USER}}"
+    gethomepage.dev/widget.password: "{{HOMEPAGE_VAR_BESZEL_PASS}}"
+    gethomepage.dev/widget.version: "2"
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: beszel.elmstreet79.de
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: beszel-pi5
+                port:
+                  number: 80

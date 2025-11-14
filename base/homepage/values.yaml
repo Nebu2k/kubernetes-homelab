@@ -49,6 +49,16 @@ env:
       secretKeyRef:
         name: homepage-adguard
         key: password
+  HOMEPAGE_VAR_BESZEL_USER:
+    valueFrom:
+      secretKeyRef:
+        name: homepage-beszel
+        key: username
+  HOMEPAGE_VAR_BESZEL_PASS:
+    valueFrom:
+      secretKeyRef:
+        name: homepage-beszel
+        key: password
 
 # Schedule only on worker nodes
 nodeSelector:
