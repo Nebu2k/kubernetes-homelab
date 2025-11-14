@@ -76,7 +76,7 @@ data:
                url: http://macmini.elmstreet79.de:61208
           
     - Applications:
-      - Teslalogger Grafana (Pi5):
+      - Teslalogger Grafana:
           icon: https://cdn.simpleicons.org/grafana/F46800
           description: Tesla Data Logger Dashboard
           href: https://teslalogger.elmstreet79.de
@@ -84,7 +84,7 @@ data:
           server: raspi5
           container: teslalogger-grafana
 
-      - Teslalogger Web (Pi5):
+      - Teslalogger Web:
           icon: https://cdn.simpleicons.org/tesla/CC0000
           description: Tesla Data Logger Web
           href: http://teslalogger-web.elmstreet79.de/admin
