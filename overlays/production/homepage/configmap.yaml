@@ -90,7 +90,7 @@ data:
           server: raspi5
           container: teslalogger-grafana
           
-    -Applications:
+    - Applications:
       - Dreambox:
           href: https://dreambox.elmstreet79.de
           description: Dreambox Receiver
