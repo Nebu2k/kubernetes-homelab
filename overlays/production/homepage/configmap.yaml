@@ -73,7 +73,7 @@ data:
           ping: 192.168.2.4
           widget:
                type: glances
-               url: http://192.168.2.4:61208
+               url: http://glances.elmstreet79.de
                metric: memory
                version: 4
 
