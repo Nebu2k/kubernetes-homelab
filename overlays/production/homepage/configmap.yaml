@@ -19,7 +19,10 @@ data:
         columns: 3
       Infrastructure:
         style: row
-        columns: 3
+        columns: 2
+      Server:
+        style: row
+        columns: 2
       Applications:
         style: row
         columns: 3
@@ -32,11 +35,18 @@ data:
 
   services.yaml: |
     - Infrastructure:
+      - UniFi Controller:
+          href: https://192.168.2.1
+          description: UniFi Router
+          icon: https://cdn.simpleicons.org/ubiquiti/0559C9
+          weight: 10
+          ping: 192.168.2.1
+
       - Proxmox:
           href: https://pve.elmstreet79.de
           description: Virtualization Host
           icon: https://cdn.simpleicons.org/proxmox/E57000
-          weight: 10
+          weight: 20
           widget:
             type: proxmox
             url: https://pve.elmstreet79.de
@@ -47,7 +57,7 @@ data:
           href: https://portainer.elmstreet79.de
           description: Portainer Docker Pi5
           icon: https://cdn.simpleicons.org/docker/2496ED
-          weight: 20
+          weight: 30
           widget:
             type: portainer
             url: https://portainer.elmstreet79.de
@@ -58,30 +68,39 @@ data:
           href: https://portainer.elmstreet79.de
           description: Portainer Docker Pi4
           icon: https://cdn.simpleicons.org/docker/2496ED
-          weight: 21
+          weight: 40
           widget:
             type: portainer
             url: https://portainer.elmstreet79.de
             env: 4
             key: {{HOMEPAGE_VAR_PORTAINER_TOKEN}}
 
+      - Longhorn:
+          href: https://longhorn.elmstreet79.de
+          description: Distributed Storage
+          icon: https://cdn.simpleicons.org/rancher/0075A8
+          weight: 50
+          widget:
+            type: longhorn
+            url: http://longhorn-frontend.longhorn-system
+
+      - MinIO:
+          href: https://minio.elmstreet79.de
+          description: Object Storage
+          icon: https://cdn.simpleicons.org/minio/C72E49
+          weight: 60
+
+    - Server:
       - Mac Mini:
           description: Mac Mini Server
           icon: https://cdn.simpleicons.org/apple/000000
-          weight: 100
+          weight: 10
           ping: 192.168.2.4
           widget:
                type: glances
                url: https://glances-macmini.elmstreet79.de
                metric: memory
                version: 4
-
-      - UniFi Controller:
-          href: https://192.168.2.1
-          description: UniFi Router
-          icon: https://cdn.simpleicons.org/ubiquiti/0559C9
-          weight: 30x
-          ping: 192.168.2.1
      
     - Applications:
       - Teslalogger Grafana:
