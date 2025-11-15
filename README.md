@@ -36,7 +36,6 @@ Production-ready K3s cluster managed via GitOps using ArgoCD App-of-Apps pattern
 | 17 | Homepage Config | Homepage ingress, config & widget secrets |
 | 20 | Demo App | Sample application |
 
-
 ## 📁 Repository Structure
 
 ```text

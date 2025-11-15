@@ -22,7 +22,6 @@ Production-ready K3s cluster managed via GitOps using ArgoCD App-of-Apps pattern
 {% for wave, components in sync_waves.items() -%}
 | {{ wave }} | {{ components | map(attribute='name') | join(', ') | title | replace('-', ' ') }} | {{ components | map(attribute='purpose') | join(', ') }} |
 {% endfor %}
-
 ## 📁 Repository Structure
 
 ```text
@@ -791,3 +790,4 @@ MIT
 > 🤖 **This README is auto-generated** using `docs-generator/generate_readme.py`  
 > To regenerate manually: `make docs`  
 > Auto-generation on commit: Enabled via `.githooks/pre-commit` (run `.githooks/install.sh` after clone)
+

@@ -44,7 +44,7 @@ git commit --no-verify
 
 ## Troubleshooting
 
-**Error: "Conda environment 'jinja2' not found"**
+### Error: "Conda environment 'jinja2' not found"
 
 Create the environment:
 
@@ -53,7 +53,7 @@ conda create -n jinja2 python=3.11 -y
 conda run -n jinja2 pip install -r docs-generator/requirements.txt
 ```
 
-**Hook not running:**
+### Hook not running
 
 Ensure hooks are installed:
 
