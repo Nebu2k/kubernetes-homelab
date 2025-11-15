@@ -1,0 +1,89 @@
+---
+# CronJob to copy Internal CA certificate from cert-manager to homepage namespace
+# This allows homepage pods to trust internal services
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: copy-internal-ca
+  namespace: homepage
+spec:
+  schedule: "0 */12 * * *"  # Every 12 hours
+  concurrencyPolicy: Replace
+  successfulJobsHistoryLimit: 1
+  failedJobsHistoryLimit: 1
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          serviceAccountName: ca-copier
+          restartPolicy: OnFailure
+          containers:
+            - name: copy-ca
+              image: bitnami/kubectl:latest
+              command:
+                - /bin/bash
+                - -c
+                - |
+                  # Get CA certificate from cert-manager namespace
+                  kubectl get secret internal-ca-secret -n cert-manager -o jsonpath='{.data.ca\.crt}' > /tmp/ca.crt
+                  
+                  # Create or update secret in homepage namespace
+                  kubectl create secret generic internal-ca-secret \
+                    --from-file=ca.crt=/tmp/ca.crt \
+                    --namespace=homepage \
+                    --dry-run=client -o yaml | kubectl apply -f -
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: ca-copier
+  namespace: homepage
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: ca-copier
+  namespace: homepage
+rules:
+  - apiGroups: [""]
+    resources: ["secrets"]
+    verbs: ["get", "create", "update", "patch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: ca-copier
+  namespace: homepage
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: ca-copier
+subjects:
+  - kind: ServiceAccount
+    name: ca-copier
+    namespace: homepage
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: ca-copier-cert-manager
+  namespace: cert-manager
+rules:
+  - apiGroups: [""]
+    resources: ["secrets"]
+    resourceNames: ["internal-ca-secret"]
+    verbs: ["get"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: ca-copier-homepage
+  namespace: cert-manager
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: ca-copier-cert-manager
+subjects:
+  - kind: ServiceAccount
+    name: ca-copier
+    namespace: homepage

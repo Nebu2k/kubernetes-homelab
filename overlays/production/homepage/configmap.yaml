@@ -72,7 +72,7 @@ data:
           ping: 192.168.2.4
           widget:
                type: glances
-               url: http://glances-macmini.elmstreet79.de
+               url: https://glances-macmini.elmstreet79.de
                metric: memory
                version: 4
 
@@ -89,7 +89,7 @@ data:
       - Teslalogger Web:
           icon: https://cdn.simpleicons.org/tesla/CC0000
           description: Tesla Data Logger Web
-          href: http://teslalogger-web.elmstreet79.de/admin
+          href: https://teslalogger-web.elmstreet79.de/admin
           weight: 20
           server: raspi5
           container: teslalogger-webserver
@@ -103,14 +103,14 @@ data:
 
     - DNS:
       - AdGuard Home (Mac Mini):
-          href: http://adguard-macmini.elmstreet79.de
+          href: https://adguard-macmini.elmstreet79.de
           description: AdGuard DNS
           icon: adguard-home.png
           weight: 31
           ping: 192.168.2.4
           widget:
             type: adguard
-            url: http://adguard-macmini.elmstreet79.de
+            url: https://adguard-macmini.elmstreet79.de
             username: {{HOMEPAGE_VAR_ADGUARD_USER}}
             password: {{HOMEPAGE_VAR_ADGUARD_PASS}}
 
