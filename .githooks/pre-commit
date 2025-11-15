@@ -1,0 +1,64 @@
+#!/bin/bash
+
+# Pre-commit hook to auto-generate README.md
+# Runs only if relevant files changed
+
+set -e
+
+echo "🔍 Checking if README regeneration needed..."
+
+# Files that trigger README regeneration
+TRIGGER_FILES=(
+    "apps/*.yaml"
+    "base/*/values.yaml"
+    "overlays/production/homepage/*-unsealed.yaml.example"
+    "docs-generator/templates/README.md.j2"
+    "docs-generator/generate_readme.py"
+)
+
+# Check if any trigger files are staged
+NEEDS_REGEN=false
+STAGED_FILES=$(git diff --cached --name-only)
+
+for pattern in "${TRIGGER_FILES[@]}"; do
+    # Convert glob pattern to regex
+    regex_pattern="${pattern//\*/.+}"
+    if echo "$STAGED_FILES" | grep -qE "$regex_pattern"; then
+        NEEDS_REGEN=true
+        echo "  → Trigger: $pattern matched"
+        break
+    fi
+done
+
+if [ "$NEEDS_REGEN" = false ]; then
+    echo "✅ No README regeneration needed"
+    exit 0
+fi
+
+echo "📝 Trigger files changed, regenerating README.md..."
+
+# Check if conda environment exists
+if ! conda env list | grep -q "^jinja2 "; then
+    echo "❌ Error: Conda environment 'jinja2' not found"
+    echo "   Run: conda create -n jinja2 python=3.11 -y && conda run -n jinja2 pip install -r docs-generator/requirements.txt"
+    exit 1
+fi
+
+# Regenerate README
+cd docs-generator
+conda run -n jinja2 python generate_readme.py
+cd ..
+
+# Check if README.md was modified
+if git diff --name-only README.md | grep -q "README.md"; then
+    echo "✅ README.md regenerated"
+    
+    # Auto-stage the updated README
+    git add README.md
+    
+    echo "✨ README.md auto-added to commit"
+else
+    echo "ℹ️  README.md unchanged"
+fi
+
+exit 0

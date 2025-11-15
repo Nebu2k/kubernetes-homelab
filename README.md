@@ -395,6 +395,9 @@ kubectl -n argocd get secret argocd-initial-admin-secret \
 # Fork https://github.com/Nebu2k/kubernetes-homelab
 git clone https://github.com/YOUR_USERNAME/kubernetes-homelab
 cd kubernetes-homelab
+
+# Install Git hooks (enables auto-README regeneration on commit)
+.githooks/install.sh
 ```
 
 **⚙️ Configure for your environment:**
@@ -985,4 +988,5 @@ MIT
 ---
 
 > 🤖 **This README is auto-generated** using `docs-generator/generate_readme.py`  
-> To regenerate: `cd docs-generator && python3 generate_readme.py`
+> To regenerate manually: `make docs`  
+> Auto-generation on commit: Enabled via `.githooks/pre-commit` (run `.githooks/install.sh` after clone)
