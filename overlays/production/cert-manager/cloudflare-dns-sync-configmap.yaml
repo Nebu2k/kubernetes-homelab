@@ -35,15 +35,15 @@ data:
     TOKEN=$(cat /var/run/secrets/kubernetes.io/serviceaccount/token)
 
     # Get all ingress hostnames from Kubernetes API
-    echo "Fetching public ingresses (with cert-manager)..."
+    echo "Fetching public ingresses (with letsencrypt-prod)..."
 
     # Query all ingresses and filter with jq:
-    # - Only ingresses WITH cert-manager.io/cluster-issuer annotation
+    # - Only ingresses WITH cert-manager.io/cluster-issuer: letsencrypt-prod
     # - Only domains ending with DOMAIN
     INGRESS_DOMAINS=$(curl -s -k -H "Authorization: Bearer ${TOKEN}" \
       "https://kubernetes.default.svc/apis/networking.k8s.io/v1/ingresses?limit=500" | \
       jq -r ".items[] | 
-        select(.metadata.annotations[\"cert-manager.io/cluster-issuer\"] != null) | 
+        select(.metadata.annotations[\"cert-manager.io/cluster-issuer\"] == \"letsencrypt-prod\") | 
         .spec.rules[]?.host | 
         select(. != null and endswith(\"${DOMAIN}\"))" | \
       sort -u)

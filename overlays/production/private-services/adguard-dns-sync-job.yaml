@@ -24,15 +24,15 @@ data:
     TOKEN=$(cat /var/run/secrets/kubernetes.io/serviceaccount/token)
 
     # Get all ingress hostnames from Kubernetes API
-    echo "Fetching internal ingresses (without cert-manager)..."
+    echo "Fetching internal ingresses (with internal-ca-issuer)..."
 
     # Query all ingresses and filter with jq:
-    # - Only ingresses WITHOUT cert-manager.io/cluster-issuer annotation
+    # - Only ingresses WITH cert-manager.io/cluster-issuer: internal-ca-issuer
     # - Only domains ending with DOMAIN_SUFFIX
     DOMAINS=$(curl -s -k -H "Authorization: Bearer ${TOKEN}" \
       "https://kubernetes.default.svc/apis/networking.k8s.io/v1/ingresses?limit=500" | \
       jq -r ".items[] | 
-        select(.metadata.annotations[\"cert-manager.io/cluster-issuer\"] == null) | 
+        select(.metadata.annotations[\"cert-manager.io/cluster-issuer\"] == \"internal-ca-issuer\") | 
         .spec.rules[]?.host | 
         select(. != null and endswith(\"${DOMAIN_SUFFIX}\"))" | \
       sort -u)
