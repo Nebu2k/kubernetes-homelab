@@ -769,18 +769,9 @@ kubectl get secret -n monitoring grafana-admin-credentials \
 
 ## 📖 Documentation
 
-- [ArgoCD Docs](https://argo-cd.readthedocs.io/)
-- [Sealed Secrets](https://github.com/bitnami-labs/sealed-secrets)
-- [Stakater Reloader](https://github.com/stakater/Reloader)
-- [K3s Documentation](https://docs.k3s.io/)
-- [MetalLB](https://metallb.universe.tf/)
-- [Cert-Manager](https://cert-manager.io/)
-- [Longhorn](https://longhorn.io/)
-- [Uptime Kuma](https://github.com/louislam/uptime-kuma)
-- [Victoria Metrics](https://docs.victoriametrics.com/)
-- [Victoria Metrics K8s Stack](https://docs.victoriametrics.com/helm/victoria-metrics-k8s-stack/)
-- [Homepage](https://gethomepage.dev/)
-
+{% for name, url in documentation_links.items() -%}
+- [{{ name }}]({{ url }})
+{% endfor %}
 ## 📝 License
 
 MIT

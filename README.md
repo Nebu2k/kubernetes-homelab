@@ -19,15 +19,15 @@ Production-ready K3s cluster managed via GitOps using ArgoCD App-of-Apps pattern
 
 | Wave | Component | Purpose |
 |------|-----------|---------|
-| 0 | Sealed Secrets, Coredns Config | Decrypt secrets, DNS forwarding config |
-| 1 | Reloader, Metallb | Auto-reload on config changes, LoadBalancer |
-| 2 | Cert Manager | TLS certificates |
-| 3 | Nginx Ingress | HTTP(S) routing |
-| 4 | Longhorn | Persistent storage |
-| 5 | Portainer, Victoria Metrics Config | Management UI, Ingress & configuration |
-| 6 | Victoria Metrics K8s Stack | Monitoring stack |
-| 8 | Uptime Kuma | Uptime monitoring & status page |
-| 9 | Homepage | Homelab dashboard |
+| 0 | Sealed Secrets, Coredns Config | Sealed Secrets, DNS forwarding config |
+| 1 | Reloader, Metallb | Reloader, Metallb |
+| 2 | Cert Manager | Cert Manager |
+| 3 | Nginx Ingress | Ingress Nginx |
+| 4 | Longhorn | Longhorn |
+| 5 | Portainer, Victoria Metrics Config | Portainer, Ingress & configuration |
+| 6 | Victoria Metrics K8s Stack | Victoria Metrics K8S Stack |
+| 8 | Uptime Kuma | Uptime Kuma |
+| 9 | Homepage | Homepage |
 | 10 | Cert Manager Config, Metallb Config | Certificate issuers, IP address pool |
 | 11 | Nginx Ingress Config | Configuration |
 | 12 | Portainer Config, Argocd Config | Ingress configuration, Ingress & configuration |
@@ -90,15 +90,15 @@ homelab/
     │   ├── argocd-cm-patch.yaml
     │   ├── argocd-rbac-cm-patch.yaml
     │   ├── argocd-server-patch.yaml
-    │   ├── ingress.yaml  # ArgoCD HTTPS ingress
+    │   ├── ingress.yaml
     │   └── kustomization.yaml
     ├── cert-manager/
-    │   ├── cloudflare-dns-sync-configmap.yaml  # Cloudflare DNS sync script
-    │   ├── cloudflare-dns-sync-job.yaml  # PostSync Hook + CronJob
-    │   ├── cloudflare-dns-sync-rbac.yaml  # ServiceAccount + RBAC
+    │   ├── cloudflare-dns-sync-configmap.yaml
+    │   ├── cloudflare-dns-sync-job.yaml
+    │   ├── cloudflare-dns-sync-rbac.yaml
     │   ├── cloudflare-token-sealed.yaml
     │   ├── cloudflare-token-unsealed.yaml
-    │   ├── cluster-issuer.yaml  # Let's Encrypt issuers
+    │   ├── cluster-issuer.yaml
     │   └── kustomization.yaml
     ├── coredns/
     │   ├── coredns-custom.yaml
@@ -108,9 +108,9 @@ homelab/
     │   ├── adguard-credentials-unsealed.yaml
     │   ├── argocd-token-secret-sealed.yaml
     │   ├── argocd-token-secret-unsealed.yaml
-    │   ├── configmap.yaml  # Dashboard configuration
+    │   ├── configmap.yaml
     │   ├── grafana-credentials-sealed.yaml
-    │   ├── ingress.yaml  # Homepage HTTPS ingress
+    │   ├── ingress.yaml
     │   ├── internal-ca-copy.yaml
     │   ├── kustomization.yaml
     │   ├── portainer-token-sealed.yaml
@@ -126,18 +126,18 @@ homelab/
     │   └── s3-secret-unsealed.yaml
     ├── metallb/
     │   ├── kustomization.yaml
-    │   └── metallb-ip-pool.yaml  # IPAddressPool + L2Advertisement
+    │   └── metallb-ip-pool.yaml
     ├── nginx-ingress/
-    │   ├── custom-headers.yaml  # Security headers ConfigMap
+    │   ├── custom-headers.yaml
     │   └── kustomization.yaml
     ├── portainer/
-    │   ├── ingress.yaml  # Portainer HTTPS ingress
+    │   ├── ingress.yaml
     │   └── kustomization.yaml
     ├── private-services/
     │   ├── adguard-credentials-sealed.yaml
     │   ├── adguard-credentials-unsealed.yaml
-    │   ├── adguard-dns-sync-job.yaml  # PostSync Hook + CronJob
-    │   ├── adguard-dns-sync-rbac.yaml  # ServiceAccount + RBAC
+    │   ├── adguard-dns-sync-job.yaml
+    │   ├── adguard-dns-sync-rbac.yaml
     │   ├── adguard-ingress.yaml
     │   ├── adguard-macmini-ingress.yaml
     │   ├── beszel-ingress.yaml
@@ -961,17 +961,17 @@ kubectl get secret -n monitoring grafana-admin-credentials \
 
 ## 📖 Documentation
 
-- [ArgoCD Docs](https://argo-cd.readthedocs.io/)
-- [Sealed Secrets](https://github.com/bitnami-labs/sealed-secrets)
-- [Stakater Reloader](https://github.com/stakater/Reloader)
-- [K3s Documentation](https://docs.k3s.io/)
-- [MetalLB](https://metallb.universe.tf/)
-- [Cert-Manager](https://cert-manager.io/)
-- [Longhorn](https://longhorn.io/)
-- [Uptime Kuma](https://github.com/louislam/uptime-kuma)
-- [Victoria Metrics](https://docs.victoriametrics.com/)
-- [Victoria Metrics K8s Stack](https://docs.victoriametrics.com/helm/victoria-metrics-k8s-stack/)
-- [Homepage](https://gethomepage.dev/)
+- [Cert Manager](https://charts.jetstack.io)
+- [Homepage](https://jameswynn.github.io/helm-charts)
+- [Ingress Nginx](https://kubernetes.github.io/ingress-nginx)
+- [K3s](https://docs.k3s.io/)
+- [Longhorn](https://charts.longhorn.io)
+- [Metallb](https://metallb.github.io/metallb)
+- [Portainer](https://portainer.github.io/k8s)
+- [Reloader](https://stakater.github.io/stakater-charts)
+- [Sealed Secrets](https://bitnami-labs.github.io/sealed-secrets)
+- [Uptime Kuma](https://dirsigler.github.io/uptime-kuma-helm)
+- [Victoria Metrics K8S Stack](https://victoriametrics.github.io/helm-charts/)
 
 ## 📝 License
 

@@ -4,9 +4,7 @@ README.md Generator for Kubernetes Homelab
 Automatically extracts data from repository and renders README from template.
 """
 
-import os
 import yaml
-import subprocess
 from pathlib import Path
 from jinja2 import Environment, FileSystemLoader
 from collections import defaultdict
@@ -14,7 +12,6 @@ from collections import defaultdict
 # Repository root
 REPO_ROOT = Path(__file__).parent.parent
 APPS_DIR = REPO_ROOT / "apps"
-BASE_DIR = REPO_ROOT / "base"
 OVERLAYS_DIR = REPO_ROOT / "overlays" / "production"
 TEMPLATE_DIR = Path(__file__).parent / "templates"
 OUTPUT_FILE = REPO_ROOT / "README.md"
@@ -38,19 +35,12 @@ def get_sync_waves():
         annotations = app['metadata'].get('annotations', {})
         sync_wave = annotations.get('argocd.argoproj.io/sync-wave', '0')
         
-        # Get purpose from spec
-        source = app['spec'].get('source', {})
-        chart = source.get('chart', '')
-        repo_url = source.get('repoURL', '')
-        
-        # Determine component type and purpose
+        # Determine component purpose
         purpose = get_component_purpose(app_name)
         
         sync_waves[int(sync_wave)].append({
             'name': app_name,
-            'purpose': purpose,
-            'chart': chart,
-            'repo': repo_url
+            'purpose': purpose
         })
     
     return dict(sorted(sync_waves.items()))
@@ -105,21 +95,10 @@ def get_component_purpose(name):
 
 
 def get_chart_purpose(chart_name, app_name):
-    """Derive purpose from Helm chart name."""
-    chart_purposes = {
-        'sealed-secrets': 'Decrypt secrets',
-        'metallb': 'LoadBalancer',
-        'cert-manager': 'TLS certificates',
-        'ingress-nginx': 'HTTP(S) routing',
-        'longhorn': 'Persistent storage',
-        'portainer': 'Management UI',
-        'victoria-metrics-k8s-stack': 'Monitoring stack',
-        'uptime-kuma': 'Uptime monitoring & status page',
-        'homepage': 'Homelab dashboard',
-        'reloader': 'Auto-reload on config changes'
-    }
-    
-    return chart_purposes.get(chart_name, chart_name.replace('-', ' ').title())
+    """Derive purpose from Helm chart name - using generic chart name formatting."""
+    # Simply format the chart name nicely
+    # The actual purpose will be clear from the chart name itself
+    return chart_name.replace('-', ' ').title()
 
 
 def get_overlay_purpose(overlay_path, app_name):
@@ -209,7 +188,7 @@ def get_component_versions():
         if not source:
             continue
             
-        # Get version from targetRevision or chart version
+        # Get version from targetRevision
         version = source.get('targetRevision', 'latest')
         chart = source.get('chart', '')
         
@@ -222,10 +201,45 @@ def get_component_versions():
     return versions
 
 
-def get_repository_structure():
-    """Generate repository structure using manual tree generation."""
-    # Always use manual tree generation for consistency
-    return generate_tree_fallback()
+def get_documentation_links():
+    """Extract documentation links from Helm chart repositories - fully automated."""
+    docs = {}
+    
+    # Extract unique charts from applications
+    for app_file in APPS_DIR.glob("*.yaml"):
+        if app_file.name == "kustomization.yaml":
+            continue
+            
+        try:
+            with open(app_file, 'r') as f:
+                app = yaml.safe_load(f)
+                
+            if not app or app.get('kind') != 'Application':
+                continue
+                
+            spec = app['spec']
+            sources = spec.get('sources', [spec.get('source')] if 'source' in spec else [])
+            
+            for source in sources:
+                if not source:
+                    continue
+                    
+                repo_url = source.get('repoURL', '')
+                chart = source.get('chart', '')
+                
+                if chart and repo_url and not repo_url.startswith('https://github.com/Nebu2k'):
+                    # Use chart name as display name, repo URL as link
+                    doc_name = chart.replace('-', ' ').title()
+                    docs[doc_name] = repo_url
+                    
+        except Exception as e:
+            continue
+    
+    # Add always-present core components
+    docs['K3s'] = 'https://docs.k3s.io/'
+    
+    # Sort by name
+    return dict(sorted(docs.items()))
 
 
 def generate_tree_fallback():
@@ -300,47 +314,9 @@ def generate_tree_fallback():
             else:
                 file_prefix = "    │   └── " if is_last_file else "    │   ├── "
             
-            # Add comment for important files
-            comment = get_file_comment(overlay_dir.name, overlay_file.name)
-            comment_text = f"  # {comment}" if comment else ""
-            lines.append(f"{file_prefix}{overlay_file.name}{comment_text}")
+            lines.append(f"{file_prefix}{overlay_file.name}")
     
     return "\n".join(lines)
-
-
-def get_file_comment(dir_name, file_name):
-    """Get descriptive comment for important files."""
-    comments = {
-        'cert-manager': {
-            'cluster-issuer.yaml': 'Let\'s Encrypt issuers',
-            'cloudflare-dns-sync-configmap.yaml': 'Cloudflare DNS sync script',
-            'cloudflare-dns-sync-rbac.yaml': 'ServiceAccount + RBAC',
-            'cloudflare-dns-sync-job.yaml': 'PostSync Hook + CronJob'
-        },
-        'metallb': {
-            'metallb-ip-pool.yaml': 'IPAddressPool + L2Advertisement'
-        },
-        'nginx-ingress': {
-            'custom-headers.yaml': 'Security headers ConfigMap'
-        },
-        'homepage': {
-            'configmap.yaml': 'Dashboard configuration',
-            'ingress.yaml': 'Homepage HTTPS ingress',
-            'rbac.yaml': 'Kubernetes API access'
-        },
-        'private-services': {
-            'adguard-dns-sync-rbac.yaml': 'ServiceAccount + RBAC',
-            'adguard-dns-sync-job.yaml': 'PostSync Hook + CronJob'
-        },
-        'argocd': {
-            'ingress.yaml': 'ArgoCD HTTPS ingress'
-        },
-        'portainer': {
-            'ingress.yaml': 'Portainer HTTPS ingress'
-        }
-    }
-    
-    return comments.get(dir_name, {}).get(file_name, '')
 
 
 def get_homepage_widget_secrets():
@@ -385,7 +361,7 @@ def main():
     versions = get_component_versions()
     
     print("  📁 Generating repository structure...")
-    repo_structure = get_repository_structure()
+    repo_structure = generate_tree_fallback()
     
     print("  🔐 Extracting Homepage widget secrets...")
     homepage_secrets = get_homepage_widget_secrets()
@@ -393,12 +369,17 @@ def main():
     for sec in homepage_secrets:
         print(f"        - {sec['base_name']}")
     
+    print("  📚 Extracting documentation links...")
+    documentation_links = get_documentation_links()
+    print(f"      Found {len(documentation_links)} documentation sources")
+    
     # Prepare template data
     data = {
         'sync_waves': sync_waves,
         'versions': versions,
         'repo_structure': repo_structure,
-        'homepage_secrets': homepage_secrets
+        'homepage_secrets': homepage_secrets,
+        'documentation_links': documentation_links
     }
     
     # Render template
