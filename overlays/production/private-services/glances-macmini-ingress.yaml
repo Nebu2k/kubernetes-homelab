@@ -2,20 +2,20 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: glances
+  name: glances-macmini
   namespace: private-services
   annotations:
     nginx.ingress.kubernetes.io/backend-protocol: "HTTP"
 spec:
   ingressClassName: nginx
   rules:
-    - host: glances.elmstreet79.de
+    - host: glances-macmini.elmstreet79.de
       http:
         paths:
           - path: /
             pathType: Prefix
             backend:
               service:
-                name: glances
+                name: glances-macmini
                 port:
                   number: 61208
