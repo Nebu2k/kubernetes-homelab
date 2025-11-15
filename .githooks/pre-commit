@@ -14,6 +14,7 @@ TRIGGER_FILES=(
     "overlays/production/homepage/*-unsealed.yaml.example"
     "docs-generator/templates/README.md.j2"
     "docs-generator/generate_readme.py"
+    "README.md"
 )
 
 # Check if any trigger files are staged
