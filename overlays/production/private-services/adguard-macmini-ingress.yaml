@@ -2,20 +2,20 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: macmini
+  name: adguard-macmini
   namespace: private-services
   annotations:
     nginx.ingress.kubernetes.io/backend-protocol: "HTTP"
 spec:
   ingressClassName: nginx
   rules:
-    - host: macmini.elmstreet79.de
+    - host: adguard-macmini.elmstreet79.de
       http:
         paths:
           - path: /
             pathType: Prefix
             backend:
               service:
-                name: macmini
+                name: adguard-macmini
                 port:
                   number: 80

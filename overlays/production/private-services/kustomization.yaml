@@ -12,8 +12,8 @@ resources:
   - minio-ingress.yaml
   - proxmox-external-service.yaml
   - proxmox-ingress.yaml
-  - macmini-external-service.yaml
-  - macmini-ingress.yaml
+  - adguard-macmini-external-service.yaml
+  - adguard-macmini-ingress.yaml
   - homebridge-external-service.yaml
   - homebridge-ingress.yaml
   - fr24-external-service.yaml
