@@ -81,7 +81,10 @@ homelab/
     │   └── metallb-ip-pool.yaml   # IPAddressPool + L2Advertisement
     ├── cert-manager/
     │   ├── cluster-issuer.yaml    # Let's Encrypt issuers
-    │   └── cloudflare-token-*.yaml
+    │   ├── cloudflare-token-*.yaml
+    │   ├── cloudflare-dns-sync-configmap.yaml    # Cloudflare DNS sync config (Domain, Target, Zone ID)
+    │   ├── cloudflare-dns-sync-rbac.yaml         # ServiceAccount + RBAC for DNS sync
+    │   └── cloudflare-dns-sync-job.yaml          # Automated public DNS sync (PostSync Hook + CronJob)
     ├── nginx-ingress/
     │   └── custom-headers.yaml    # Security headers ConfigMap
     ├── argocd/
@@ -415,27 +418,27 @@ The repository is pre-configured for `elmstreet79.de`. If using your own domain,
 
    ⚠️ **Note:** `*-unsealed.yaml` files are gitignored for security. Only `.example` templates are committed.
 
-7. **Create DNS Records** (required for HTTPS):
+7. **Create DNS Records** (automated via Cloudflare DNS Sync):
 
-   All domains need CNAME records pointing to your DynDNS/external IP. Use the helper script:
+   **Public DNS records** (for services with HTTPS) are now **automatically managed** by the Cloudflare DNS Sync job!
 
-   ```bash
-   # Set your Cloudflare credentials
-   ZONE_ID="your-zone-id"
-   API_TOKEN="your-api-token"
-   TARGET="your-dyndns-hostname.dyndns.org"  # or external IP
-   
-   # Create DNS records for all services
-   ./scripts/create-dns-record.sh argo elmstreet79.de $TARGET $ZONE_ID $API_TOKEN
-   ./scripts/create-dns-record.sh portainer elmstreet79.de $TARGET $ZONE_ID $API_TOKEN
-   ./scripts/create-dns-record.sh home elmstreet79.de $TARGET $ZONE_ID $API_TOKEN
-   ./scripts/create-dns-record.sh grafana elmstreet79.de $TARGET $ZONE_ID $API_TOKEN
-   ./scripts/create-dns-record.sh uptime elmstreet79.de $TARGET $ZONE_ID $API_TOKEN
-   ./scripts/create-dns-record.sh teslalogger elmstreet79.de $TARGET $ZONE_ID $API_TOKEN
-   ./scripts/create-dns-record.sh dreambox elmstreet79.de $TARGET $ZONE_ID $API_TOKEN
-   ```
+   The sync job:
+   - ✅ Runs automatically after every ArgoCD sync (PostSync Hook)
+   - ✅ Creates CNAME records for all Ingresses WITH `cert-manager.io/cluster-issuer` annotation
+   - ✅ Points records to your DynDNS target (e.g., `nebu2k.ipv64.net`)
+   - ✅ Removes orphaned DNS records when Ingresses are deleted
+   - ✅ Fallback CronJob runs every 6 hours
 
-   **Get Cloudflare credentials:**
+   **Configuration** is stored in `overlays/production/cert-manager/cloudflare-dns-sync-configmap.yaml`:
+   - `DOMAIN`: Your Cloudflare domain (e.g., `elmstreet79.de`)
+   - `TARGET`: Your DynDNS hostname or external IP (e.g., `nebu2k.ipv64.net`)
+   - `ZONE_ID`: Your Cloudflare Zone ID
+
+   **The Cloudflare API token** is already configured in the sealed secret `cloudflare-api-token`.
+
+   ⚠️ **Manual DNS creation is no longer needed** - the sync job handles everything automatically!
+
+   **Get Cloudflare credentials** (only needed if updating the config):
    - Zone ID: Cloudflare Dashboard → Your Domain → Overview (right sidebar)
    - API Token: Dashboard → My Profile → API Tokens → Create Token (Zone.DNS Edit permission)
 
@@ -477,6 +480,11 @@ kubeseal --format=yaml --controller-namespace=kube-system \
   < overlays/production/cert-manager/cloudflare-token-unsealed.yaml \
   > overlays/production/cert-manager/cloudflare-token-sealed.yaml
 
+# Seal AdGuard credentials for DNS sync:
+kubeseal --format=yaml --controller-namespace=kube-system \
+  < overlays/production/private-services/adguard-credentials-unsealed.yaml \
+  > overlays/production/private-services/adguard-credentials-sealed.yaml
+
 # If using Longhorn S3 backup:
 kubeseal --format=yaml --controller-namespace=kube-system \
   < overlays/production/longhorn/s3-secret-unsealed.yaml \
@@ -486,15 +494,6 @@ kubeseal --format=yaml --controller-namespace=kube-system \
 kubeseal --format=yaml --controller-namespace=kube-system \
   < overlays/production/victoria-metrics/grafana-admin-unsealed.yaml \
   > overlays/production/victoria-metrics/grafana-admin-sealed.yaml
-
-# Enable sealed secrets in kustomization (automated)
-# macOS (BSD sed): uncomment the sealed secret entries
-sed -i '' 's/^  # - cloudflare-token-sealed.yaml/  - cloudflare-token-sealed.yaml/' \
-  overlays/production/cert-manager/kustomization.yaml
-
-# If using Longhorn S3 backup, also enable:
-sed -i '' 's/^  # - s3-secret-sealed.yaml/  - s3-secret-sealed.yaml/' \
-  overlays/production/longhorn/kustomization.yaml
 
 # Commit and push
 git add overlays/production/*/kustomization.yaml
@@ -522,12 +521,12 @@ GRAFANA_PASS=$(kubectl get secret -n monitoring grafana-admin-credentials \
 echo "Grafana password: $GRAFANA_PASS"
 ```
 
-**Create Grafana Service Account for Homepage widget:**
+**Create sealed secrets for Homepage widgets:**
 
 ⚠️ **Important:** Homepage's Grafana widget does NOT support API keys/tokens. You must use username and password authentication. The simplest approach is to use the existing Grafana admin credentials.
 
 ```bash
-# Create sealed secret with Grafana admin credentials
+# 1. Seal Grafana credentials for Homepage widget
 kubectl create secret generic homepage-grafana --dry-run=client \
   --from-literal=username='admin' \
   --from-literal=password="$GRAFANA_PASS" \
@@ -535,9 +534,46 @@ kubectl create secret generic homepage-grafana --dry-run=client \
   kubeseal --format=yaml --controller-namespace=kube-system \
   > overlays/production/homepage/grafana-credentials-sealed.yaml
 
+# 2. Seal ArgoCD token for Homepage widget
+# First, create an ArgoCD token (valid for 1 year)
+ARGOCD_TOKEN=$(argocd account generate-token --account admin --expires-in 8760h)
+
+kubectl create secret generic homepage-argocd --dry-run=client \
+  --from-literal=token="$ARGOCD_TOKEN" \
+  -n homepage -o yaml | \
+  kubeseal --format=yaml --controller-namespace=kube-system \
+  > overlays/production/homepage/argocd-token-secret-sealed.yaml
+
+# 3. Seal AdGuard credentials for Homepage widget (if using AdGuard)
+# Use the same credentials as for AdGuard DNS sync
+kubectl create secret generic homepage-adguard --dry-run=client \
+  --from-literal=username='admin' \
+  --from-literal=password='your-adguard-password' \
+  -n homepage -o yaml | \
+  kubeseal --format=yaml --controller-namespace=kube-system \
+  > overlays/production/homepage/adguard-credentials-sealed.yaml
+
+# 4. Seal Portainer token for Homepage widget (if using Portainer)
+# First, create a Portainer API token via UI: Settings > Users > admin > Add access token
+PORTAINER_TOKEN="your-portainer-api-token"
+
+kubectl create secret generic homepage-portainer --dry-run=client \
+  --from-literal=token="$PORTAINER_TOKEN" \
+  -n homepage -o yaml | \
+  kubeseal --format=yaml --controller-namespace=kube-system \
+  > overlays/production/homepage/portainer-token-sealed.yaml
+
+# 5. Seal Proxmox credentials for Homepage widget (if using Proxmox)
+kubectl create secret generic homepage-proxmox --dry-run=client \
+  --from-literal=username='root@pam' \
+  --from-literal=password='your-proxmox-password' \
+  -n homepage -o yaml | \
+  kubeseal --format=yaml --controller-namespace=kube-system \
+  > overlays/production/homepage/proxmox-secret-sealed.yaml
+
 # Commit and push
-git add overlays/production/homepage/grafana-credentials-sealed.yaml
-git commit -m "Add Grafana credentials for Homepage widget"
+git add overlays/production/homepage/*-sealed.yaml
+git commit -m "Add Homepage widget credentials"
 git push
 ```
 
@@ -672,7 +708,7 @@ External Service → Kubernetes Service (ClusterIP) → Manual Endpoints → Ext
                 ↓
             Ingress (no cert-manager) → NGINX LoadBalancer (192.168.2.250)
                 ↓
-            DNS Sync Job → AdGuard API → DNS Rewrite (*.elmstreet79.de → 192.168.2.250)
+            AdGuard DNS Sync Job → AdGuard API → DNS Rewrite (*.elmstreet79.de → 192.168.2.250)
                 ↓
             CoreDNS → Forward *.elmstreet79.de → AdGuard DNS (192.168.2.2, 192.168.2.4)
 ```
@@ -687,14 +723,28 @@ MinIO API: http://minio-api.elmstreet79.de → 192.168.2.9:9300
 Longhorn: http://longhorn.elmstreet79.de → Internal K8s service
 ```
 
-**DNS Sync Automation:**
+**AdGuard DNS Sync Automation:**
 
 - **PostSync Hook**: Runs automatically after every ArgoCD sync
 - **CronJob**: Fallback every 6 hours
 - **Filter Logic**: Only syncs Ingresses WITHOUT `cert-manager.io/cluster-issuer` annotation
-- **AdGuard API**: Creates DNS Rewrites pointing to NGINX LoadBalancer IP (192.168.2.250)
+- **AdGuard API**: Creates/updates/deletes DNS Rewrites pointing to NGINX LoadBalancer IP (192.168.2.250)
+- **Auto-Cleanup**: Removes orphaned DNS entries when Ingresses are deleted
 
-**Public SSL Services:**
+**Public Services with SSL:**
+
+Public services (accessible from the internet) use a separate DNS sync system:
+
+**Cloudflare DNS Sync Automation:**
+
+- **PostSync Hook**: Runs automatically after every ArgoCD sync
+- **CronJob**: Fallback every 6 hours
+- **Filter Logic**: Only syncs Ingresses WITH `cert-manager.io/cluster-issuer` annotation
+- **Cloudflare API**: Creates/updates/deletes CNAME records pointing to DynDNS target (e.g., `nebu2k.ipv64.net`)
+- **Auto-Cleanup**: Removes orphaned DNS records when Ingresses are deleted
+- **Let's Encrypt**: Cert-Manager automatically provisions SSL certificates via DNS-01 challenge
+
+**Examples:**
 
 ```text
 TeslaLogger: https://teslalogger.elmstreet79.de (→ 192.168.2.9:3000)

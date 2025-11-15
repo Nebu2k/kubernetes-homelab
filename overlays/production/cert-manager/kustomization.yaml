@@ -3,5 +3,7 @@ kind: Kustomization
 namespace: cert-manager
 resources:
   - cluster-issuer.yaml
-  # Uncomment after sealing the secret:
   - cloudflare-token-sealed.yaml
+  - cloudflare-dns-sync-configmap.yaml
+  - cloudflare-dns-sync-rbac.yaml
+  - cloudflare-dns-sync-job.yaml

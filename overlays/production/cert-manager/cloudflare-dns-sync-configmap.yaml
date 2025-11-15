@@ -1,0 +1,178 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cloudflare-dns-sync
+  namespace: cert-manager
+data:
+  DOMAIN: "elmstreet79.de"
+  TARGET: "nebu2k.ipv64.net"
+  ZONE_ID: "ee6597dea58f18ca57987dd261e736f4"
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cloudflare-dns-sync-script
+  namespace: cert-manager
+data:
+  sync-dns.sh: |
+    #!/bin/sh
+    set -e
+
+    # Install jq for JSON parsing
+    apk add --no-cache jq > /dev/null 2>&1
+
+    API_TOKEN="${API_TOKEN}"
+    DOMAIN="${DOMAIN}"
+    TARGET="${TARGET}"
+    ZONE_ID="${ZONE_ID}"
+
+    echo "Syncing public DNS records to Cloudflare for ${DOMAIN}..."
+    echo "Target: ${TARGET}"
+    echo ""
+
+    # Get service account token
+    TOKEN=$(cat /var/run/secrets/kubernetes.io/serviceaccount/token)
+
+    # Get all ingress hostnames from Kubernetes API
+    echo "Fetching public ingresses (with cert-manager)..."
+
+    # Query all ingresses and filter with jq:
+    # - Only ingresses WITH cert-manager.io/cluster-issuer annotation
+    # - Only domains ending with DOMAIN
+    INGRESS_DOMAINS=$(curl -s -k -H "Authorization: Bearer ${TOKEN}" \
+      "https://kubernetes.default.svc/apis/networking.k8s.io/v1/ingresses?limit=500" | \
+      jq -r ".items[] | 
+        select(.metadata.annotations[\"cert-manager.io/cluster-issuer\"] != null) | 
+        .spec.rules[]?.host | 
+        select(. != null and endswith(\"${DOMAIN}\"))" | \
+      sort -u)
+
+    echo "Found public ingress domains:"
+    echo "${INGRESS_DOMAINS}"
+    echo ""
+
+    # Get existing DNS records from Cloudflare
+    echo "Fetching existing DNS records from Cloudflare..."
+    EXISTING_RECORDS=$(curl -s -X GET "https://api.cloudflare.com/client/v4/zones/${ZONE_ID}/dns_records?type=CNAME&per_page=100" \
+      -H "Authorization: Bearer ${API_TOKEN}" \
+      -H "Content-Type: application/json")
+
+    # Check if the API call was successful
+    SUCCESS=$(echo "${EXISTING_RECORDS}" | jq -r '.success')
+    if [ "$SUCCESS" != "true" ]; then
+      echo "❌ Error fetching DNS records from Cloudflare:"
+      echo "${EXISTING_RECORDS}" | jq -r '.errors[].message'
+      exit 1
+    fi
+
+    # Filter records that point to our TARGET and end with our DOMAIN
+    CLOUDFLARE_DOMAINS=$(echo "${EXISTING_RECORDS}" | \
+      jq -r ".result[] | select(.content == \"${TARGET}\" and (.name | endswith(\"${DOMAIN}\"))) | .name" | \
+      sort -u)
+
+    echo "Current Cloudflare CNAME records pointing to ${TARGET}:"
+    echo "${CLOUDFLARE_DOMAINS}"
+    echo ""
+
+    # Remove DNS records that are no longer in Kubernetes
+    echo "Checking for orphaned DNS records..."
+    ORPHANED_COUNT=0
+    for CF_DOMAIN in ${CLOUDFLARE_DOMAINS}; do
+      if ! echo "${INGRESS_DOMAINS}" | grep -qx "${CF_DOMAIN}"; then
+        echo "✗ Removing orphaned ${CF_DOMAIN}"
+        
+        # Get record ID
+        RECORD_ID=$(echo "${EXISTING_RECORDS}" | jq -r ".result[] | select(.name == \"${CF_DOMAIN}\") | .id")
+        
+        if [ -n "${RECORD_ID}" ]; then
+          DELETE_RESULT=$(curl -s -X DELETE "https://api.cloudflare.com/client/v4/zones/${ZONE_ID}/dns_records/${RECORD_ID}" \
+            -H "Authorization: Bearer ${API_TOKEN}" \
+            -H "Content-Type: application/json")
+          
+          DELETE_SUCCESS=$(echo "${DELETE_RESULT}" | jq -r '.success')
+          if [ "$DELETE_SUCCESS" = "true" ]; then
+            echo "✓ ${CF_DOMAIN} removed"
+            ORPHANED_COUNT=$((ORPHANED_COUNT + 1))
+          else
+            echo "⚠️  Failed to remove ${CF_DOMAIN}"
+            echo "${DELETE_RESULT}" | jq -r '.errors[].message'
+          fi
+        fi
+      fi
+    done
+    
+    if [ ${ORPHANED_COUNT} -eq 0 ]; then
+      echo "No orphaned records found"
+    fi
+    echo ""
+
+    # Add or update DNS records for all ingress domains
+    echo "Adding/updating DNS records..."
+    ADDED_COUNT=0
+    UPDATED_COUNT=0
+    SKIPPED_COUNT=0
+    
+    for INGRESS_DOMAIN in ${INGRESS_DOMAINS}; do
+      if [ -z "${INGRESS_DOMAIN}" ]; then
+        continue
+      fi
+
+      # Check if record already exists
+      EXISTING_RECORD=$(echo "${EXISTING_RECORDS}" | jq -r ".result[] | select(.name == \"${INGRESS_DOMAIN}\")")
+      
+      if [ -n "${EXISTING_RECORD}" ]; then
+        # Check if it points to the correct target
+        CURRENT_TARGET=$(echo "${EXISTING_RECORD}" | jq -r '.content')
+        
+        if [ "${CURRENT_TARGET}" = "${TARGET}" ]; then
+          echo "✓ ${INGRESS_DOMAIN} already exists and is correct"
+          SKIPPED_COUNT=$((SKIPPED_COUNT + 1))
+        else
+          # Update existing record
+          echo "🔄 Updating ${INGRESS_DOMAIN} (${CURRENT_TARGET} -> ${TARGET})"
+          RECORD_ID=$(echo "${EXISTING_RECORD}" | jq -r '.id')
+          
+          UPDATE_RESULT=$(curl -s -X PUT "https://api.cloudflare.com/client/v4/zones/${ZONE_ID}/dns_records/${RECORD_ID}" \
+            -H "Authorization: Bearer ${API_TOKEN}" \
+            -H "Content-Type: application/json" \
+            --data "{\"type\":\"CNAME\",\"name\":\"${INGRESS_DOMAIN}\",\"content\":\"${TARGET}\",\"ttl\":1,\"proxied\":true}")
+          
+          UPDATE_SUCCESS=$(echo "${UPDATE_RESULT}" | jq -r '.success')
+          if [ "$UPDATE_SUCCESS" = "true" ]; then
+            echo "✓ ${INGRESS_DOMAIN} updated"
+            UPDATED_COUNT=$((UPDATED_COUNT + 1))
+          else
+            echo "⚠️  Failed to update ${INGRESS_DOMAIN}"
+            echo "${UPDATE_RESULT}" | jq -r '.errors[].message'
+          fi
+        fi
+      else
+        # Create new record
+        echo "→ Adding ${INGRESS_DOMAIN} -> ${TARGET}"
+        
+        CREATE_RESULT=$(curl -s -X POST "https://api.cloudflare.com/client/v4/zones/${ZONE_ID}/dns_records" \
+          -H "Authorization: Bearer ${API_TOKEN}" \
+          -H "Content-Type: application/json" \
+          --data "{\"type\":\"CNAME\",\"name\":\"${INGRESS_DOMAIN}\",\"content\":\"${TARGET}\",\"ttl\":1,\"proxied\":true}")
+        
+        CREATE_SUCCESS=$(echo "${CREATE_RESULT}" | jq -r '.success')
+        if [ "$CREATE_SUCCESS" = "true" ]; then
+          echo "✓ ${INGRESS_DOMAIN} added"
+          ADDED_COUNT=$((ADDED_COUNT + 1))
+        else
+          echo "⚠️  Failed to add ${INGRESS_DOMAIN}"
+          echo "${CREATE_RESULT}" | jq -r '.errors[].message'
+        fi
+      fi
+    done
+
+    echo ""
+    echo "════════════════════════════════════════"
+    echo "📊 Sync Summary:"
+    echo "   ✓ Skipped (already correct): ${SKIPPED_COUNT}"
+    echo "   ➕ Added: ${ADDED_COUNT}"
+    echo "   🔄 Updated: ${UPDATED_COUNT}"
+    echo "   ✗ Removed: ${ORPHANED_COUNT}"
+    echo "════════════════════════════════════════"
+    echo "✅ Cloudflare DNS sync complete!"
