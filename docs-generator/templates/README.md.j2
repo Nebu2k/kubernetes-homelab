@@ -19,154 +19,14 @@ Production-ready K3s cluster managed via GitOps using ArgoCD App-of-Apps pattern
 
 | Wave | Component | Purpose |
 |------|-----------|---------|
-| 0 | Sealed Secrets, Coredns Config | Decrypt secrets, CoreDNS forwarding to AdGuard |
-| 1 | Reloader, Metallb | Auto-reload on config changes, LoadBalancer |
-| 2 | Cert Manager | TLS certificates |
-| 3 | Nginx Ingress | HTTP(S) routing |
-| 4 | Longhorn | Persistent storage |
-| 5 | Portainer, Victoria Metrics Config | Management UI, Grafana admin credentials |
-| 6 | Victoria Metrics K8s Stack | Monitoring Stack |
-| 8 | Uptime Kuma | Uptime monitoring & status page |
-| 9 | Homepage | Homelab dashboard |
-| 10 | Cert Manager Config, Metallb Config | ClusterIssuers, IPAddressPool |
-| 11 | Nginx Ingress Config | Custom headers |
-| 12 | Portainer Config, Argocd Config | Management UI ingresses, Management UI ingresses |
-| 13 | Longhorn Config | Backup jobs, S3 config |
-| 16 | Uptime Kuma Config, Private Services | Uptime Kuma ingress, External service ingresses |
-| 17 | Homepage Config | Homepage ingress, config & widget secrets |
-| 20 | Demo App | Sample application |
-
+{% for wave, components in sync_waves.items() -%}
+| {{ wave }} | {{ components | map(attribute='name') | join(', ') | title | replace('-', ' ') }} | {{ components | map(attribute='purpose') | join(', ') }} |
+{% endfor %}
 
 ## 📁 Repository Structure
 
 ```text
-homelab/
-├── bootstrap/
-│   └── root-app.yaml              # App-of-Apps (deploys everything)
-├── apps/
-│   ├── kustomization.yaml         # List of all apps
-│   ├── coredns-config.yaml            # Wave 0
-│   ├── sealed-secrets.yaml            # Wave 0
-│   ├── metallb.yaml                   # Wave 1
-│   ├── reloader.yaml                  # Wave 1
-│   ├── cert-manager.yaml              # Wave 2
-│   ├── nginx-ingress.yaml             # Wave 3
-│   ├── longhorn.yaml                  # Wave 4
-│   ├── portainer.yaml                 # Wave 5
-│   ├── victoria-metrics-config.yaml   # Wave 5
-│   ├── victoria-metrics-k8s-stack.yaml # Wave 6
-│   ├── uptime-kuma.yaml               # Wave 8
-│   ├── homepage.yaml                  # Wave 9
-│   ├── cert-manager-config.yaml       # Wave 10
-│   ├── metallb-config.yaml            # Wave 10
-│   ├── nginx-ingress-config.yaml      # Wave 11
-│   ├── argocd-config.yaml             # Wave 12
-│   ├── portainer-config.yaml          # Wave 12
-│   ├── longhorn-config.yaml           # Wave 13
-│   ├── private-services.yaml          # Wave 16
-│   ├── uptime-kuma-config.yaml        # Wave 16
-│   ├── homepage-config.yaml           # Wave 17
-│   └── demo-app.yaml                  # Wave 20
-├── base/
-│   ├── cert-manager/
-│       └── values.yaml
-│   ├── homepage/
-│       └── values.yaml
-│   ├── longhorn/
-│       └── values.yaml
-│   ├── metallb/
-│       └── values.yaml
-│   ├── nginx-ingress/
-│       └── values.yaml
-│   ├── portainer/
-│       └── values.yaml
-│   ├── reloader/
-│       └── values.yaml
-│   ├── uptime-kuma/
-│       └── values.yaml
-│   └── victoria-metrics-k8s-stack/
-        └── values.yaml
-└── overlays/production/
-    ├── argocd/
-    │   ├── argocd-cm-patch.yaml
-    │   ├── argocd-rbac-cm-patch.yaml
-    │   ├── argocd-server-patch.yaml
-    │   ├── ingress.yaml  # ArgoCD HTTPS ingress
-    │   └── kustomization.yaml
-    ├── cert-manager/
-    │   ├── cloudflare-dns-sync-configmap.yaml  # Cloudflare DNS sync script
-    │   ├── cloudflare-dns-sync-job.yaml  # PostSync Hook + CronJob
-    │   ├── cloudflare-dns-sync-rbac.yaml  # ServiceAccount + RBAC
-    │   ├── cloudflare-token-sealed.yaml
-    │   ├── cloudflare-token-unsealed.yaml
-    │   ├── cluster-issuer.yaml  # Let's Encrypt issuers
-    │   └── kustomization.yaml
-    ├── coredns/
-    │   ├── coredns-custom.yaml
-    │   └── kustomization.yaml
-    ├── homepage/
-    │   ├── adguard-credentials-sealed.yaml
-    │   ├── adguard-credentials-unsealed.yaml
-    │   ├── argocd-token-secret-sealed.yaml
-    │   ├── argocd-token-secret-unsealed.yaml
-    │   ├── configmap.yaml  # Dashboard configuration
-    │   ├── grafana-credentials-sealed.yaml
-    │   ├── ingress.yaml  # Homepage HTTPS ingress
-    │   ├── kustomization.yaml
-    │   ├── portainer-token-sealed.yaml
-    │   ├── portainer-token-unsealed.yaml
-    │   ├── proxmox-secret-sealed.yaml
-    │   └── values.yaml
-    ├── longhorn/
-    │   ├── disable-local-path-default.yaml
-    │   ├── ingress.yaml
-    │   ├── kustomization.yaml
-    │   ├── recurring-backup-jobs.yaml
-    │   ├── s3-secret-sealed.yaml
-    │   └── s3-secret-unsealed.yaml
-    ├── metallb/
-    │   ├── kustomization.yaml
-    │   └── metallb-ip-pool.yaml  # IPAddressPool + L2Advertisement
-    ├── nginx-ingress/
-    │   ├── custom-headers.yaml  # Security headers ConfigMap
-    │   └── kustomization.yaml
-    ├── portainer/
-    │   ├── ingress.yaml  # Portainer HTTPS ingress
-    │   └── kustomization.yaml
-    ├── private-services/
-    │   ├── adguard-credentials-sealed.yaml
-    │   ├── adguard-credentials-unsealed.yaml
-    │   ├── adguard-dns-sync-job.yaml  # PostSync Hook + CronJob
-    │   ├── adguard-dns-sync-rbac.yaml  # ServiceAccount + RBAC
-    │   ├── adguard-external-service.yaml
-    │   ├── adguard-ingress.yaml
-    │   ├── adguard-macmini-external-service.yaml
-    │   ├── adguard-macmini-ingress.yaml
-    │   ├── beszel-external-service.yaml
-    │   ├── beszel-ingress.yaml
-    │   ├── dreambox-ingress.yaml
-    │   ├── fr24-external-service.yaml
-    │   ├── fr24-ingress.yaml
-    │   ├── glances-macmini-external-service.yaml
-    │   ├── glances-macmini-ingress.yaml
-    │   ├── homebridge-external-service.yaml
-    │   ├── homebridge-ingress.yaml
-    │   ├── kustomization.yaml
-    │   ├── minio-external-service.yaml
-    │   ├── minio-ingress.yaml
-    │   ├── proxmox-external-service.yaml
-    │   ├── proxmox-ingress.yaml
-    │   ├── teslalogger-ingress.yaml
-    │   ├── teslalogger-web-external-service.yaml
-    │   └── teslalogger-web-ingress.yaml
-    ├── uptime-kuma/
-    │   ├── ingress.yaml
-    │   └── kustomization.yaml
-    └── victoria-metrics/
-        ├── grafana-admin-sealed.yaml
-        ├── grafana-admin-unsealed.yaml
-        ├── ingress-grafana.yaml
-        └── kustomization.yaml
+{{ repo_structure }}
 ```
 
 ## 🚀 Fresh Installation
@@ -530,72 +390,20 @@ kubectl get applications -n argocd -w
 ⚠️ **Important:** For each widget secret, copy the example file, edit with your credentials, then seal it.
 
 ```bash
-
-# 1. Adguard Credentials
-cp overlays/production/homepage/adguard-credentials-unsealed.yaml.example \
-   overlays/production/homepage/adguard-credentials-unsealed.yaml
+{% for secret in homepage_secrets %}
+# {{ loop.index }}. {{ secret.base_name | replace('-', ' ') | title }}
+cp overlays/production/homepage/{{ secret.example_file }} \
+   overlays/production/homepage/{{ secret.unsealed_file }}
 
 # Edit the file and replace placeholder values with your actual credentials
-vim overlays/production/homepage/adguard-credentials-unsealed.yaml
+vim overlays/production/homepage/{{ secret.unsealed_file }}
 
 # Seal the secret
 kubeseal --format=yaml --controller-namespace=kube-system \
-  < overlays/production/homepage/adguard-credentials-unsealed.yaml \
-  > overlays/production/homepage/adguard-credentials-sealed.yaml
+  < overlays/production/homepage/{{ secret.unsealed_file }} \
+  > overlays/production/homepage/{{ secret.sealed_file }}
 
-
-# 2. Argocd Token Secret
-cp overlays/production/homepage/argocd-token-secret-unsealed.yaml.example \
-   overlays/production/homepage/argocd-token-secret-unsealed.yaml
-
-# Edit the file and replace placeholder values with your actual credentials
-vim overlays/production/homepage/argocd-token-secret-unsealed.yaml
-
-# Seal the secret
-kubeseal --format=yaml --controller-namespace=kube-system \
-  < overlays/production/homepage/argocd-token-secret-unsealed.yaml \
-  > overlays/production/homepage/argocd-token-secret-sealed.yaml
-
-
-# 3. Grafana Credentials
-cp overlays/production/homepage/grafana-credentials-unsealed.yaml.example \
-   overlays/production/homepage/grafana-credentials-unsealed.yaml
-
-# Edit the file and replace placeholder values with your actual credentials
-vim overlays/production/homepage/grafana-credentials-unsealed.yaml
-
-# Seal the secret
-kubeseal --format=yaml --controller-namespace=kube-system \
-  < overlays/production/homepage/grafana-credentials-unsealed.yaml \
-  > overlays/production/homepage/grafana-credentials-sealed.yaml
-
-
-# 4. Portainer Token
-cp overlays/production/homepage/portainer-token-unsealed.yaml.example \
-   overlays/production/homepage/portainer-token-unsealed.yaml
-
-# Edit the file and replace placeholder values with your actual credentials
-vim overlays/production/homepage/portainer-token-unsealed.yaml
-
-# Seal the secret
-kubeseal --format=yaml --controller-namespace=kube-system \
-  < overlays/production/homepage/portainer-token-unsealed.yaml \
-  > overlays/production/homepage/portainer-token-sealed.yaml
-
-
-# 5. Proxmox Secret
-cp overlays/production/homepage/proxmox-secret-unsealed.yaml.example \
-   overlays/production/homepage/proxmox-secret-unsealed.yaml
-
-# Edit the file and replace placeholder values with your actual credentials
-vim overlays/production/homepage/proxmox-secret-unsealed.yaml
-
-# Seal the secret
-kubeseal --format=yaml --controller-namespace=kube-system \
-  < overlays/production/homepage/proxmox-secret-unsealed.yaml \
-  > overlays/production/homepage/proxmox-secret-sealed.yaml
-
-
+{% endfor %}
 # Commit and push
 git add overlays/production/homepage/*-sealed.yaml
 git commit -m "Add Homepage widget credentials"
@@ -951,16 +759,9 @@ kubectl get secret -n monitoring grafana-admin-credentials \
 
 | Component | Version | Purpose |
 |-----------|---------|---------|
-| Reloader | 2.2.5 | Reloader |
-| Sealed Secrets | 2.17.7 | Sealed Secrets |
-| Metallb | 0.15.2 | Metallb |
-| Ingress Nginx | 4.14.0 | Nginx Ingress |
-| Longhorn | 1.10.0 | Longhorn |
-| Portainer | 2.33.3 | Portainer |
-| Cert Manager | v1.19.1 | Cert Manager |
-| Uptime Kuma | 2.22.0 | Uptime Kuma |
-| Victoria Metrics K8s Stack | 0.63.5 | Victoria Metrics K8s Stack |
-| Homepage | 2.1.0 | Homepage |
+{% for name, info in versions.items() -%}
+| {{ info.chart | title | replace('-', ' ') }} | {{ info.version }} | {{ name | replace('-', ' ') | title }} |
+{% endfor -%}
 | K3s | v1.33.5 | Lightweight Kubernetes |
 | Kube-VIP | v1.0.1 | Control plane HA |
 

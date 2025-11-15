@@ -19,17 +19,34 @@ Thumbs.db
 .idea/
 *.code-workspace
 
-# Ignore Python cache
+# Python
 __pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+dist/
+build/
+
+# Virtual environments
+venv/
+env/
+ENV/
+
 # Ignore node_modules (if any)
 node_modules/
+
 # Ignore backup and dump files
 *.dump
 *.backup
 *.old
+
 # Ignore test output
 coverage/
+
 # Ignore local kube configs
 .kube/
+
 # Ignore Helm release cache
 .helm/
