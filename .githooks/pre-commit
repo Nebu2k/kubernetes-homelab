@@ -1,42 +1,11 @@
 #!/bin/bash
 
 # Pre-commit hook to auto-generate README.md
-# Runs only if relevant files changed
+# Runs on EVERY commit to ensure single point of truth
 
 set -e
 
-echo "🔍 Checking if README regeneration needed..."
-
-# Files that trigger README regeneration
-TRIGGER_FILES=(
-    "apps/*.yaml"
-    "base/*/values.yaml"
-    "overlays/production/homepage/*-unsealed.yaml.example"
-    "docs-generator/templates/README.md.j2"
-    "docs-generator/generate_readme.py"
-    "README.md"
-)
-
-# Check if any trigger files are staged
-NEEDS_REGEN=false
-STAGED_FILES=$(git diff --cached --name-only)
-
-for pattern in "${TRIGGER_FILES[@]}"; do
-    # Convert glob pattern to regex
-    regex_pattern="${pattern//\*/.+}"
-    if echo "$STAGED_FILES" | grep -qE "$regex_pattern"; then
-        NEEDS_REGEN=true
-        echo "  → Trigger: $pattern matched"
-        break
-    fi
-done
-
-if [ "$NEEDS_REGEN" = false ]; then
-    echo "✅ No README regeneration needed"
-    exit 0
-fi
-
-echo "📝 Trigger files changed, regenerating README.md..."
+echo "📝 Regenerating README.md (single point of truth)..."
 
 # Check if conda environment exists
 if ! conda env list | grep -q "^jinja2 "; then
