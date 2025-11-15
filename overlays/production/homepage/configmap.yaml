@@ -80,15 +80,9 @@ data:
           href: https://192.168.2.1
           description: UniFi Router
           icon: https://cdn.simpleicons.org/ubiquiti/0559C9
-          weight: 30
+          weight: 30x
           ping: 192.168.2.1
-          widget:
-            type: unifi
-            url: https://192.168.2.1
-            username: {{HOMEPAGE_VAR_UNIFI_USER}}
-            password: {{HOMEPAGE_VAR_UNIFI_PASS}}
-
-          
+     
     - Applications:
       - Teslalogger Grafana:
           icon: https://cdn.simpleicons.org/grafana/F46800
