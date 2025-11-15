@@ -73,7 +73,7 @@ data:
           ping: 192.168.2.4
           widget:
                type: glances
-               url: http://macmini.elmstreet79.de:61208
+               url: http://192.168.2.4:61208
           
     - Applications:
       - Teslalogger Grafana:
