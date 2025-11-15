@@ -74,6 +74,8 @@ data:
           widget:
                type: glances
                url: http://192.168.2.4:61208
+               version: 4
+
           
     - Applications:
       - Teslalogger Grafana:
