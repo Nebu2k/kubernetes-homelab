@@ -1,4 +1,30 @@
 ---
+apiVersion: v1
+kind: Service
+metadata:
+  name: proxmox
+  namespace: private-services
+spec:
+  type: ClusterIP
+  ports:
+    - name: https
+      port: 443
+      targetPort: 8006
+      protocol: TCP
+---
+apiVersion: v1
+kind: Endpoints
+metadata:
+  name: proxmox
+  namespace: private-services
+subsets:
+  - addresses:
+      - ip: 192.168.2.8
+    ports:
+      - name: https
+        port: 8006
+        protocol: TCP
+---
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:

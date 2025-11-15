@@ -1,4 +1,30 @@
 ---
+# External Service (pointing to Pi4 AdGuard)
+apiVersion: v1
+kind: Service
+metadata:
+  name: adguard-pi4
+  namespace: private-services
+spec:
+  type: ClusterIP
+  ports:
+    - port: 80
+      targetPort: 8080
+      protocol: TCP
+      name: http
+---
+apiVersion: v1
+kind: Endpoints
+metadata:
+  name: adguard-pi4
+  namespace: private-services
+subsets:
+  - addresses:
+      - ip: 192.168.2.2
+    ports:
+      - port: 8080
+        name: http
+---
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
