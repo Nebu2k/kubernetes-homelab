@@ -773,6 +773,49 @@ Dreambox: https://dreambox.elmstreet79.de (→ 192.168.2.11:80)
 (External services routed via NGINX Ingress with TLS)
 ```
 
+### Internal CA for Private Services
+
+The cluster includes an **Internal Certificate Authority** for issuing self-signed certificates to private services (services without public SSL certificates). This is automatically deployed via `private-services.yaml` (Sync-Wave 16).
+
+**Architecture:**
+
+1. **Self-Signed CA**: Created by cert-manager in `cert-manager` namespace
+2. **Internal ClusterIssuer**: Issues certificates for internal services
+3. **Automatic Distribution**: CronJob copies CA certificate to `homepage` namespace every 12 hours
+4. **Use Case**: Homepage can trust internal services with self-signed certificates
+
+**Trust Internal CA on your laptop** (for accessing internal HTTPS services without browser warnings):
+
+```bash
+# Export the CA certificate from the cluster
+kubectl get secret internal-ca-secret -n cert-manager \
+  -o jsonpath='{.data.ca\.crt}' | base64 -d > internal-ca.crt
+
+# macOS: Add to system keychain and trust
+sudo security add-trusted-cert -d -r trustRoot \
+  -k /Library/Keychains/System.keychain internal-ca.crt
+
+# Linux: Add to trusted certificates
+sudo cp internal-ca.crt /usr/local/share/ca-certificates/
+sudo update-ca-certificates
+
+# Windows: Import via certmgr.msc
+# Double-click internal-ca.crt → Install Certificate → Local Machine → 
+# Place in "Trusted Root Certification Authorities"
+```
+
+⚠️ **Note:** After adding the CA certificate, restart your browser to apply the changes.
+
+**Verify CA is working:**
+
+```bash
+# Check if internal-ca certificate exists
+kubectl get certificate internal-ca -n cert-manager
+
+# Check if ClusterIssuer is ready
+kubectl get clusterissuer internal-ca-issuer
+```
+
 ## 🔧 Management
 
 ### View Application Status
