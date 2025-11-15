@@ -19,22 +19,22 @@ Production-ready K3s cluster managed via GitOps using ArgoCD App-of-Apps pattern
 
 | Wave | Component | Purpose |
 |------|-----------|---------|
-| 0 | Sealed Secrets, Coredns Config | Decrypt secrets, CoreDNS forwarding to AdGuard |
+| 0 | Sealed Secrets, Coredns Config | Decrypt secrets, DNS forwarding config |
 | 1 | Reloader, Metallb | Auto-reload on config changes, LoadBalancer |
 | 2 | Cert Manager | TLS certificates |
 | 3 | Nginx Ingress | HTTP(S) routing |
 | 4 | Longhorn | Persistent storage |
-| 5 | Portainer, Victoria Metrics Config | Management UI, Grafana admin credentials |
-| 6 | Victoria Metrics K8s Stack | Monitoring Stack |
+| 5 | Portainer, Victoria Metrics Config | Management UI, Ingress & configuration |
+| 6 | Victoria Metrics K8s Stack | Monitoring stack |
 | 8 | Uptime Kuma | Uptime monitoring & status page |
 | 9 | Homepage | Homelab dashboard |
-| 10 | Cert Manager Config, Metallb Config | ClusterIssuers, IPAddressPool |
-| 11 | Nginx Ingress Config | Custom headers |
-| 12 | Portainer Config, Argocd Config | Management UI ingresses, Management UI ingresses |
-| 13 | Longhorn Config | Backup jobs, S3 config |
-| 16 | Uptime Kuma Config, Private Services | Uptime Kuma ingress, External service ingresses |
-| 17 | Homepage Config | Homepage ingress, config & widget secrets |
-| 20 | Demo App | Sample application |
+| 10 | Cert Manager Config, Metallb Config | Certificate issuers, IP address pool |
+| 11 | Nginx Ingress Config | Configuration |
+| 12 | Portainer Config, Argocd Config | Ingress configuration, Ingress & configuration |
+| 13 | Longhorn Config | Ingress & configuration |
+| 16 | Uptime Kuma Config, Private Services | Ingress configuration, Ingress & configuration |
+| 17 | Homepage Config | Ingress & configuration |
+| 20 | Demo App | Demo App |
 
 ## 📁 Repository Structure
 
@@ -111,6 +111,7 @@ homelab/
     │   ├── configmap.yaml  # Dashboard configuration
     │   ├── grafana-credentials-sealed.yaml
     │   ├── ingress.yaml  # Homepage HTTPS ingress
+    │   ├── internal-ca-copy.yaml
     │   ├── kustomization.yaml
     │   ├── portainer-token-sealed.yaml
     │   ├── portainer-token-unsealed.yaml
@@ -137,26 +138,18 @@ homelab/
     │   ├── adguard-credentials-unsealed.yaml
     │   ├── adguard-dns-sync-job.yaml  # PostSync Hook + CronJob
     │   ├── adguard-dns-sync-rbac.yaml  # ServiceAccount + RBAC
-    │   ├── adguard-external-service.yaml
     │   ├── adguard-ingress.yaml
-    │   ├── adguard-macmini-external-service.yaml
     │   ├── adguard-macmini-ingress.yaml
-    │   ├── beszel-external-service.yaml
     │   ├── beszel-ingress.yaml
     │   ├── dreambox-ingress.yaml
-    │   ├── fr24-external-service.yaml
     │   ├── fr24-ingress.yaml
-    │   ├── glances-macmini-external-service.yaml
     │   ├── glances-macmini-ingress.yaml
-    │   ├── homebridge-external-service.yaml
     │   ├── homebridge-ingress.yaml
+    │   ├── internal-cluster-issuer.yaml
     │   ├── kustomization.yaml
-    │   ├── minio-external-service.yaml
     │   ├── minio-ingress.yaml
-    │   ├── proxmox-external-service.yaml
     │   ├── proxmox-ingress.yaml
     │   ├── teslalogger-ingress.yaml
-    │   ├── teslalogger-web-external-service.yaml
     │   └── teslalogger-web-ingress.yaml
     ├── uptime-kuma/
     │   ├── ingress.yaml

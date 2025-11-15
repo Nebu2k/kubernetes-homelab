@@ -57,32 +57,125 @@ def get_sync_waves():
 
 
 def get_component_purpose(name):
-    """Map component names to their purposes."""
-    purposes = {
+    """Automatically determine component purpose from ArgoCD Application spec."""
+    app_file = APPS_DIR / f"{name}.yaml"
+    
+    if not app_file.exists():
+        return name.replace('-', ' ').title()
+    
+    try:
+        with open(app_file, 'r') as f:
+            app = yaml.safe_load(f)
+            
+        if not app or app.get('kind') != 'Application':
+            return name.replace('-', ' ').title()
+        
+        spec = app['spec']
+        
+        # Get source(s)
+        sources = spec.get('sources', [spec.get('source')] if 'source' in spec else [])
+        
+        # Find the main source (either chart or path)
+        chart_source = None
+        path_source = None
+        
+        for source in sources:
+            if not source:
+                continue
+            if 'chart' in source:
+                chart_source = source
+            elif 'path' in source:
+                path_source = source
+        
+        # If it's a Helm chart, derive purpose from chart name
+        if chart_source:
+            chart_name = chart_source.get('chart', '')
+            return get_chart_purpose(chart_name, name)
+        
+        # If it's a path-based config, analyze the overlay directory
+        elif path_source:
+            overlay_path = Path(REPO_ROOT / path_source['path'])
+            return get_overlay_purpose(overlay_path, name)
+        
+        return name.replace('-', ' ').title()
+        
+    except Exception as e:
+        # Fallback to formatted name
+        return name.replace('-', ' ').title()
+
+
+def get_chart_purpose(chart_name, app_name):
+    """Derive purpose from Helm chart name."""
+    chart_purposes = {
         'sealed-secrets': 'Decrypt secrets',
         'metallb': 'LoadBalancer',
-        'metallb-config': 'IPAddressPool',
-        'reloader': 'Auto-reload on config changes',
         'cert-manager': 'TLS certificates',
-        'cert-manager-config': 'ClusterIssuers',
-        'nginx-ingress': 'HTTP(S) routing',
-        'nginx-ingress-config': 'Custom headers',
+        'ingress-nginx': 'HTTP(S) routing',
         'longhorn': 'Persistent storage',
-        'longhorn-config': 'Backup jobs, S3 config',
         'portainer': 'Management UI',
-        'portainer-config': 'Management UI ingresses',
-        'victoria-metrics-config': 'Grafana admin credentials',
-        'victoria-metrics-k8s-stack': 'Monitoring Stack',
+        'victoria-metrics-k8s-stack': 'Monitoring stack',
         'uptime-kuma': 'Uptime monitoring & status page',
-        'uptime-kuma-config': 'Uptime Kuma ingress',
         'homepage': 'Homelab dashboard',
-        'homepage-config': 'Homepage ingress, config & widget secrets',
-        'argocd-config': 'Management UI ingresses',
-        'coredns-config': 'CoreDNS forwarding to AdGuard',
-        'private-services': 'External service ingresses',
-        'demo-app': 'Sample application'
+        'reloader': 'Auto-reload on config changes'
     }
-    return purposes.get(name, name.replace('-', ' ').title())
+    
+    return chart_purposes.get(chart_name, chart_name.replace('-', ' ').title())
+
+
+def get_overlay_purpose(overlay_path, app_name):
+    """Analyze overlay directory to determine purpose."""
+    if not overlay_path.exists():
+        return app_name.replace('-', ' ').title()
+    
+    # Check what types of resources are in the overlay
+    resource_types = set()
+    
+    try:
+        for yaml_file in overlay_path.glob('*.yaml'):
+            if yaml_file.name == 'kustomization.yaml':
+                continue
+                
+            with open(yaml_file, 'r') as f:
+                content = f.read()
+                # Parse all documents in the file
+                for doc in yaml.safe_load_all(content):
+                    if doc and 'kind' in doc:
+                        resource_types.add(doc['kind'])
+        
+        # Determine purpose based on resource types
+        if 'Ingress' in resource_types:
+            if 'ConfigMap' in resource_types or 'Secret' in resource_types:
+                return 'Ingress & configuration'
+            return 'Ingress configuration'
+        
+        if 'ClusterIssuer' in resource_types or 'Issuer' in resource_types:
+            return 'Certificate issuers'
+        
+        if 'IPAddressPool' in resource_types:
+            return 'IP address pool'
+        
+        if 'ConfigMap' in resource_types and 'Job' in resource_types:
+            return 'Jobs & configuration'
+        
+        if 'ConfigMap' in resource_types:
+            if 'coredns' in app_name.lower():
+                return 'DNS forwarding config'
+            return 'Configuration'
+        
+        if 'CronJob' in resource_types or 'Job' in resource_types:
+            return 'Automated jobs'
+        
+        if 'Secret' in resource_types:
+            return 'Secrets'
+        
+        # Fallback based on resource types
+        if resource_types:
+            return ', '.join(sorted(resource_types))
+        
+    except Exception as e:
+        pass
+    
+    return app_name.replace('-', ' ').title()
 
 
 def get_component_versions():
