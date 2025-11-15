@@ -20,32 +20,11 @@ data:
 
     echo "Syncing DNS rewrites to AdGuard Home at ${ADGUARD_HOST}..."
 
-    # Get current rewrites from AdGuard
-    CURRENT=$(curl -s -u "${ADGUARD_USER}:${ADGUARD_PASS}" \
-      "http://${ADGUARD_HOST}/control/rewrite/list")
-
-    # Function to add rewrite if not exists
-    add_rewrite() {
-      DOMAIN=$1
-      
-      # Check if rewrite already exists
-      if echo "${CURRENT}" | grep -q "\"domain\":\"${DOMAIN}\""; then
-        echo "✓ ${DOMAIN} already exists"
-      else
-        echo "→ Adding ${DOMAIN} -> ${INGRESS_IP}"
-        curl -s -X POST "http://${ADGUARD_HOST}/control/rewrite/add" \
-          -u "${ADGUARD_USER}:${ADGUARD_PASS}" \
-          -H "Content-Type: application/json" \
-          -d "{\"domain\":\"${DOMAIN}\",\"answer\":\"${INGRESS_IP}\"}" > /dev/null
-        echo "✓ ${DOMAIN} added"
-      fi
-    }
+    # Get service account token
+    TOKEN=$(cat /var/run/secrets/kubernetes.io/serviceaccount/token)
 
     # Get all ingress hostnames from Kubernetes API
     echo "Fetching internal ingresses (without cert-manager)..."
-
-    # Get service account token
-    TOKEN=$(cat /var/run/secrets/kubernetes.io/serviceaccount/token)
 
     # Query all ingresses and filter with jq:
     # - Only ingresses WITHOUT cert-manager.io/cluster-issuer annotation
@@ -62,14 +41,48 @@ data:
     echo "${DOMAINS}"
     echo ""
 
-    # Process each domain
+    # Get current rewrites from AdGuard that point to our INGRESS_IP and end with DOMAIN_SUFFIX
+    CURRENT_REWRITES=$(curl -s -u "${ADGUARD_USER}:${ADGUARD_PASS}" \
+      "http://${ADGUARD_HOST}/control/rewrite/list" | \
+      jq -r ".[] | select(.answer == \"${INGRESS_IP}\" and (.domain | endswith(\"${DOMAIN_SUFFIX}\"))) | .domain" | \
+      sort -u)
+
+    echo "Current AdGuard rewrites for ${DOMAIN_SUFFIX}:"
+    echo "${CURRENT_REWRITES}"
+    echo ""
+
+    # Remove rewrites that are no longer in Kubernetes
+    echo "Checking for orphaned rewrites..."
+    for CURRENT_DOMAIN in ${CURRENT_REWRITES}; do
+      if ! echo "${DOMAINS}" | grep -qx "${CURRENT_DOMAIN}"; then
+        echo "✗ Removing orphaned ${CURRENT_DOMAIN}"
+        curl -s -X POST "http://${ADGUARD_HOST}/control/rewrite/delete" \
+          -u "${ADGUARD_USER}:${ADGUARD_PASS}" \
+          -H "Content-Type: application/json" \
+          -d "{\"domain\":\"${CURRENT_DOMAIN}\",\"answer\":\"${INGRESS_IP}\"}" > /dev/null
+        echo "✓ ${CURRENT_DOMAIN} removed"
+      fi
+    done
+    echo ""
+
+    # Add new rewrites
+    echo "Adding/updating rewrites..."
     for DOMAIN in ${DOMAINS}; do
       if [ -n "${DOMAIN}" ]; then
-        add_rewrite "${DOMAIN}"
+        if echo "${CURRENT_REWRITES}" | grep -qx "${DOMAIN}"; then
+          echo "✓ ${DOMAIN} already exists"
+        else
+          echo "→ Adding ${DOMAIN} -> ${INGRESS_IP}"
+          curl -s -X POST "http://${ADGUARD_HOST}/control/rewrite/add" \
+            -u "${ADGUARD_USER}:${ADGUARD_PASS}" \
+            -H "Content-Type: application/json" \
+            -d "{\"domain\":\"${DOMAIN}\",\"answer\":\"${INGRESS_IP}\"}" > /dev/null
+          echo "✓ ${DOMAIN} added"
+        fi
       fi
     done
 
-    echo "Done!"
+    echo "Sync complete!"
 ---
 # PostSync Hook: Runs after every ArgoCD sync
 apiVersion: batch/v1
