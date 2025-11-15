@@ -6,6 +6,7 @@ metadata:
   namespace: longhorn-system
   annotations:
     nginx.ingress.kubernetes.io/backend-protocol: "HTTP"
+    cert-manager.io/cluster-issuer: internal-ca-issuer
     gethomepage.dev/enabled: "true"
     gethomepage.dev/name: "Longhorn"
     gethomepage.dev/description: "Distributed Storage"
@@ -14,6 +15,10 @@ metadata:
     gethomepage.dev/weight: "50"
 spec:
   ingressClassName: nginx
+  tls:
+    - hosts:
+        - longhorn.elmstreet79.de
+      secretName: longhorn-tls
   rules:
     - host: longhorn.elmstreet79.de
       http:
