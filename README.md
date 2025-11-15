@@ -24,17 +24,7 @@ Production-ready K3s cluster managed via GitOps using ArgoCD App-of-Apps pattern
 | 2 | Cert Manager | TLS certificates |
 | 3 | Nginx Ingress | HTTP(S) routing |
 | 4 | Longhorn | Persistent storage |
-| 5 | Portainer, Victoria Metrics Config | Management UI, Ingress & configuration |
-| 6 | Victoria Metrics K8s Stack | Monitoring stack |
-| 8 | Uptime Kuma | Uptime monitoring & status page |
-| 9 | Homepage | Homelab dashboard |
-| 10 | Cert Manager Config, Metallb Config | Certificate issuers, IP address pool |
-| 11 | Nginx Ingress Config | Configuration |
-| 12 | Portainer Config, Argocd Config | Ingress configuration, Ingress & configuration |
-| 13 | Longhorn Config | Ingress & configuration |
-| 16 | Uptime Kuma Config, Private Services | Ingress configuration, Ingress & configuration |
-| 17 | Homepage Config | Ingress & configuration |
-| 20 | Demo App | Demo App |
+
 
 ## 📁 Repository Structure
 
