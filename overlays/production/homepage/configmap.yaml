@@ -72,7 +72,7 @@ data:
           ping: 192.168.2.4
           widget:
                type: glances
-               url: http://glances.elmstreet79.de
+               url: http://glances-macmini.elmstreet79.de
                metric: memory
                version: 4
 
