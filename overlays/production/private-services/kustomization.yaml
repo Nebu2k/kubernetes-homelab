@@ -18,6 +18,8 @@ resources:
   - homebridge-ingress.yaml
   - fr24-external-service.yaml
   - fr24-ingress.yaml
+  - glances-external-service.yaml
+  - glances-ingress.yaml
   - adguard-credentials-sealed.yaml
   - adguard-dns-sync-rbac.yaml
   - adguard-dns-sync-job.yaml
