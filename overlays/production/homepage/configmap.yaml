@@ -74,6 +74,7 @@ data:
           widget:
                type: glances
                url: http://192.168.2.4:61208
+               metric: cpu
                version: 4
 
           
