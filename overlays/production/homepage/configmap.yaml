@@ -92,12 +92,6 @@ data:
             env: 4
             key: {{HOMEPAGE_VAR_PORTAINER_TOKEN}}
 
-      - MinIO:
-          href: https://minio.elmstreet79.de
-          description: Object Storage
-          icon: https://cdn.simpleicons.org/minio/C72E49
-          weight: 60
-
     - Server:
       - Mac Mini:
           description: Mac Mini Server
