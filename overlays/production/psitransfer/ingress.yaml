@@ -13,7 +13,7 @@ metadata:
     gethomepage.dev/description: "Simple File Sharing"
     gethomepage.dev/group: "Applications"
     gethomepage.dev/icon: "https://cdn.simpleicons.org/files/4A90E2"
-    gethomepage.dev/weight: "30"
+    gethomepage.dev/weight: "32"
 spec:
   ingressClassName: nginx
   tls:

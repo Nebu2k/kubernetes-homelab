@@ -1,0 +1,32 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: home-assistant
+  namespace: home-assistant
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"
+    nginx.ingress.kubernetes.io/backend-protocol: "HTTP"
+    gethomepage.dev/enabled: "true"
+    gethomepage.dev/name: "Home Assistant"
+    gethomepage.dev/description: "Smart Home Hub"
+    gethomepage.dev/group: "Applications"
+    gethomepage.dev/icon: "home-assistant.png"
+    gethomepage.dev/weight: "31"
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts:
+        - homeassistant.elmstreet79.de
+      secretName: home-assistant-tls
+  rules:
+    - host: homeassistant.elmstreet79.de
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: home-assistant
+                port:
+                  name: http
