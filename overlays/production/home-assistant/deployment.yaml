@@ -4,18 +4,18 @@ metadata:
   name: home-assistant
   namespace: home-assistant
   labels:
-    app: home-assistant
+    app.kubernetes.io/name: home-assistant
 spec:
   replicas: 1
   strategy:
     type: Recreate
   selector:
     matchLabels:
-      app: home-assistant
+      app.kubernetes.io/name: home-assistant
   template:
     metadata:
       labels:
-        app: home-assistant
+        app.kubernetes.io/name: home-assistant
     spec:
       hostNetwork: true
       dnsPolicy: ClusterFirstWithHostNet

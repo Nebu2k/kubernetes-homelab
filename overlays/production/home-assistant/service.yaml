@@ -4,7 +4,7 @@ metadata:
   name: home-assistant
   namespace: home-assistant
   labels:
-    app: home-assistant
+    app.kubernetes.io/name: home-assistant
 spec:
   type: ClusterIP
   ports:
@@ -13,4 +13,4 @@ spec:
     protocol: TCP
     name: http
   selector:
-    app: home-assistant
+    app.kubernetes.io/name: home-assistant
