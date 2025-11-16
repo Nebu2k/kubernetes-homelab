@@ -13,6 +13,7 @@ resources:
   - homebridge-ingress.yaml
   - fr24-ingress.yaml
   - glances-macmini-ingress.yaml
+  - unifi-ingress.yaml
   - adguard-credentials-sealed.yaml
   - adguard-dns-sync-rbac.yaml
   - adguard-dns-sync-job.yaml
