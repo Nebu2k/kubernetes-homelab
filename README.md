@@ -151,7 +151,8 @@ homelab/
     │   ├── minio-ingress.yaml
     │   ├── proxmox-ingress.yaml
     │   ├── teslalogger-ingress.yaml
-    │   └── teslalogger-web-ingress.yaml
+    │   ├── teslalogger-web-ingress.yaml
+    │   └── unifi-ingress.yaml
     ├── psitransfer/
     │   ├── deployment.yaml
     │   ├── ingress.yaml
