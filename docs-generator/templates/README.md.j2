@@ -17,10 +17,10 @@ Production-ready K3s cluster managed via GitOps using ArgoCD App-of-Apps pattern
 
 ### Sync-Wave Order
 
-| Wave | Component | Purpose |
-|------|-----------|---------|
+| Wave | Component |
+|------|-----------|
 {% for wave, components in sync_waves.items() -%}
-| {{ wave }} | {{ components | map(attribute='name') | join(', ') | title | replace('-', ' ') }} | {{ components | map(attribute='purpose') | join(', ') }} |
+| {{ wave }} | {{ components | join(', ') | title | replace('-', ' ') }} |
 {% endfor %}
 ## 📁 Repository Structure
 

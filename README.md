@@ -17,24 +17,24 @@ Production-ready K3s cluster managed via GitOps using ArgoCD App-of-Apps pattern
 
 ### Sync-Wave Order
 
-| Wave | Component | Purpose |
-|------|-----------|---------|
-| 0 | Sealed Secrets, Coredns Config | Sealed Secrets, DNS forwarding config |
-| 1 | Reloader, Metallb | Reloader, Metallb |
-| 2 | Cert Manager | Cert Manager |
-| 3 | Nginx Ingress | Ingress Nginx |
-| 4 | Longhorn | Longhorn |
-| 5 | Portainer, Psitransfer, Victoria Metrics Config | Portainer, Ingress & configuration, Ingress & configuration |
-| 6 | Victoria Metrics K8s Stack | Victoria Metrics K8S Stack |
-| 8 | Uptime Kuma, Home Assistant | Uptime Kuma, Ingress configuration |
-| 9 | Homepage | Homepage |
-| 10 | Cert Manager Config, Metallb Config | Certificate issuers, IP address pool |
-| 11 | Nginx Ingress Config | Configuration |
-| 12 | Portainer Config, Argocd Config | Ingress configuration, Ingress & configuration |
-| 13 | Longhorn Config | Ingress & configuration |
-| 16 | Uptime Kuma Config, Private Services | Ingress configuration, Ingress & configuration |
-| 17 | Homepage Config | Ingress & configuration |
-| 20 | Demo App | Demo App |
+| Wave | Component |
+|------|-----------|
+| 0 | Sealed Secrets, Coredns Config |
+| 1 | Reloader, Metallb |
+| 2 | Cert Manager |
+| 3 | Nginx Ingress |
+| 4 | Longhorn |
+| 5 | Portainer, Psitransfer, Victoria Metrics Config |
+| 6 | Victoria Metrics K8s Stack |
+| 8 | Uptime Kuma, Home Assistant |
+| 9 | Homepage |
+| 10 | Cert Manager Config, Metallb Config |
+| 11 | Nginx Ingress Config |
+| 12 | Portainer Config, Argocd Config |
+| 13 | Longhorn Config |
+| 16 | Uptime Kuma Config, Private Services |
+| 17 | Homepage Config |
+| 20 | Demo App |
 
 ## 📁 Repository Structure
 
