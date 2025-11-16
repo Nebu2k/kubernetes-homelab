@@ -37,19 +37,22 @@ data:
     # Get all ingress hostnames from Kubernetes API
     echo "Fetching public ingresses (with letsencrypt-prod)..."
 
-    # Query all ingresses and filter with jq:
+    # Query all ingresses and create a JSON array with domain and proxied status
     # - Only ingresses WITH cert-manager.io/cluster-issuer: letsencrypt-prod
     # - Only domains ending with DOMAIN
-    INGRESS_DOMAINS=$(curl -s -k -H "Authorization: Bearer ${TOKEN}" \
+    # - Check for cloudflare.io/proxied annotation (default: true)
+    INGRESS_DATA=$(curl -s -k -H "Authorization: Bearer ${TOKEN}" \
       "https://kubernetes.default.svc/apis/networking.k8s.io/v1/ingresses?limit=500" | \
       jq -r ".items[] | 
         select(.metadata.annotations[\"cert-manager.io/cluster-issuer\"] == \"letsencrypt-prod\") | 
-        .spec.rules[]?.host | 
-        select(. != null and endswith(\"${DOMAIN}\"))" | \
-      sort -u)
+        {
+          host: .spec.rules[]?.host,
+          proxied: (.metadata.annotations[\"cloudflare.io/proxied\"] // \"true\")
+        } | 
+        select(.host != null and (.host | endswith(\"${DOMAIN}\")))")
 
     echo "Found public ingress domains:"
-    echo "${INGRESS_DOMAINS}"
+    echo "${INGRESS_DATA}" | jq -r '.host'
     echo ""
 
     # Get existing DNS records from Cloudflare
@@ -79,7 +82,7 @@ data:
     echo "Checking for orphaned DNS records..."
     ORPHANED_COUNT=0
     for CF_DOMAIN in ${CLOUDFLARE_DOMAINS}; do
-      if ! echo "${INGRESS_DOMAINS}" | grep -qx "${CF_DOMAIN}"; then
+      if ! echo "${INGRESS_DATA}" | jq -e "select(.host == \"${CF_DOMAIN}\")" > /dev/null 2>&1; then
         echo "✗ Removing orphaned ${CF_DOMAIN}"
         
         # Get record ID
@@ -113,7 +116,10 @@ data:
     UPDATED_COUNT=0
     SKIPPED_COUNT=0
     
-    for INGRESS_DOMAIN in ${INGRESS_DOMAINS}; do
+    echo "${INGRESS_DATA}" | jq -c '.' | while read -r ingress_entry; do
+      INGRESS_DOMAIN=$(echo "${ingress_entry}" | jq -r '.host')
+      PROXIED=$(echo "${ingress_entry}" | jq -r '.proxied')
+      
       if [ -z "${INGRESS_DOMAIN}" ]; then
         continue
       fi
@@ -122,21 +128,22 @@ data:
       EXISTING_RECORD=$(echo "${EXISTING_RECORDS}" | jq -r ".result[] | select(.name == \"${INGRESS_DOMAIN}\")")
       
       if [ -n "${EXISTING_RECORD}" ]; then
-        # Check if it points to the correct target
+        # Check if it points to the correct target and has correct proxy setting
         CURRENT_TARGET=$(echo "${EXISTING_RECORD}" | jq -r '.content')
+        CURRENT_PROXIED=$(echo "${EXISTING_RECORD}" | jq -r '.proxied')
         
-        if [ "${CURRENT_TARGET}" = "${TARGET}" ]; then
-          echo "✓ ${INGRESS_DOMAIN} already exists and is correct"
+        if [ "${CURRENT_TARGET}" = "${TARGET}" ] && [ "${CURRENT_PROXIED}" = "${PROXIED}" ]; then
+          echo "✓ ${INGRESS_DOMAIN} already exists and is correct (proxied: ${PROXIED})"
           SKIPPED_COUNT=$((SKIPPED_COUNT + 1))
         else
           # Update existing record
-          echo "🔄 Updating ${INGRESS_DOMAIN} (${CURRENT_TARGET} -> ${TARGET})"
+          echo "🔄 Updating ${INGRESS_DOMAIN} (target: ${CURRENT_TARGET} -> ${TARGET}, proxied: ${CURRENT_PROXIED} -> ${PROXIED})"
           RECORD_ID=$(echo "${EXISTING_RECORD}" | jq -r '.id')
           
           UPDATE_RESULT=$(curl -s -X PUT "https://api.cloudflare.com/client/v4/zones/${ZONE_ID}/dns_records/${RECORD_ID}" \
             -H "Authorization: Bearer ${API_TOKEN}" \
             -H "Content-Type: application/json" \
-            --data "{\"type\":\"CNAME\",\"name\":\"${INGRESS_DOMAIN}\",\"content\":\"${TARGET}\",\"ttl\":1,\"proxied\":true}")
+            --data "{\"type\":\"CNAME\",\"name\":\"${INGRESS_DOMAIN}\",\"content\":\"${TARGET}\",\"ttl\":1,\"proxied\":${PROXIED}}")
           
           UPDATE_SUCCESS=$(echo "${UPDATE_RESULT}" | jq -r '.success')
           if [ "$UPDATE_SUCCESS" = "true" ]; then
@@ -149,12 +156,12 @@ data:
         fi
       else
         # Create new record
-        echo "→ Adding ${INGRESS_DOMAIN} -> ${TARGET}"
+        echo "→ Adding ${INGRESS_DOMAIN} -> ${TARGET} (proxied: ${PROXIED})"
         
         CREATE_RESULT=$(curl -s -X POST "https://api.cloudflare.com/client/v4/zones/${ZONE_ID}/dns_records" \
           -H "Authorization: Bearer ${API_TOKEN}" \
           -H "Content-Type: application/json" \
-          --data "{\"type\":\"CNAME\",\"name\":\"${INGRESS_DOMAIN}\",\"content\":\"${TARGET}\",\"ttl\":1,\"proxied\":true}")
+          --data "{\"type\":\"CNAME\",\"name\":\"${INGRESS_DOMAIN}\",\"content\":\"${TARGET}\",\"ttl\":1,\"proxied\":${PROXIED}}")
         
         CREATE_SUCCESS=$(echo "${CREATE_RESULT}" | jq -r '.success')
         if [ "$CREATE_SUCCESS" = "true" ]; then

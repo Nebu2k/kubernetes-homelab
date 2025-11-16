@@ -5,6 +5,7 @@ metadata:
   namespace: home-assistant
   annotations:
     cert-manager.io/cluster-issuer: letsencrypt-prod
+    cloudflare.io/proxied: "false"
     nginx.ingress.kubernetes.io/ssl-redirect: "false"
     nginx.ingress.kubernetes.io/backend-protocol: "HTTP"
     gethomepage.dev/enabled: "true"
