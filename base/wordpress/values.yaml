@@ -4,17 +4,21 @@ wordpressEmail: admin@example.com
 wordpressBlogName: "WordPress Site"
 wordpressScheme: https
 
-# PHP Configuration für Backup/Restore
-# Erhöht Limits für große Backups und UpdraftPlus
-wordpressExtraConfigContent: |
-  @ini_set('max_execution_time', 600);
-  @ini_set('max_input_time', 600);
-  @ini_set('memory_limit', '512M');
-  @ini_set('post_max_size', '512M');
-  @ini_set('upload_max_filesize', '512M');
-
 # WordPress mit Memcached Caching
 wordpressConfigureCache: true
+
+# PHP Configuration für Backup/Restore über Environment Variables
+extraEnvVars:
+  - name: PHP_MAX_EXECUTION_TIME
+    value: "600"
+  - name: PHP_MAX_INPUT_TIME
+    value: "600"
+  - name: PHP_MEMORY_LIMIT
+    value: "512M"
+  - name: PHP_POST_MAX_SIZE
+    value: "512M"
+  - name: PHP_UPLOAD_MAX_FILESIZE
+    value: "512M"
 
 # Deployment - HA mit 2 Replicas
 replicaCount: 2
