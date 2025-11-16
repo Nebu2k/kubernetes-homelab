@@ -23,11 +23,11 @@ spec:
   replicas: 1
   selector:
     matchLabels:
-      app: psitransfer
+      app.kubernetes.io/name: psitransfer
   template:
     metadata:
       labels:
-        app: psitransfer
+        app.kubernetes.io/name: psitransfer
     spec:
       nodeSelector:
         node-role.kubernetes.io/worker: "worker"
@@ -99,4 +99,4 @@ spec:
       protocol: TCP
       name: http
   selector:
-    app: psitransfer
+    app.kubernetes.io/name: psitransfer
