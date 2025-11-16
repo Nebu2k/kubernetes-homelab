@@ -98,15 +98,6 @@ data:
             env: 4
             key: {{HOMEPAGE_VAR_PORTAINER_TOKEN}}
 
-      - Longhorn:
-          href: https://longhorn.elmstreet79.de
-          description: Distributed Storage
-          icon: https://cdn.simpleicons.org/rancher/0075A8
-          weight: 50
-          widget:
-            type: longhorn
-            url: http://longhorn-frontend.longhorn-system
-
       - MinIO:
           href: https://minio.elmstreet79.de
           description: Object Storage
