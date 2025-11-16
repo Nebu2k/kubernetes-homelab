@@ -12,7 +12,7 @@ metadata:
     gethomepage.dev/enabled: "true"
     gethomepage.dev/name: "Haushelden Service"
     gethomepage.dev/description: "WordPress Website"
-    gethomepage.dev/group: "Public Services"
+    gethomepage.dev/group: "Website"
     gethomepage.dev/icon: "https://cdn.simpleicons.org/wordpress/21759B"
     gethomepage.dev/weight: "10"
 spec:
