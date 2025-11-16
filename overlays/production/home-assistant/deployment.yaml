@@ -23,6 +23,11 @@ spec:
       - name: home-assistant
         image: ghcr.io/home-assistant/home-assistant:stable
         imagePullPolicy: IfNotPresent
+        securityContext:
+          capabilities:
+            add:
+              - NET_ADMIN
+              - NET_RAW
         ports:
         - name: http
           containerPort: 8123
@@ -33,6 +38,9 @@ spec:
         volumeMounts:
         - name: config
           mountPath: /config
+        - name: home-assistant-config
+          mountPath: /config/configuration.yaml
+          subPath: configuration.yaml
         livenessProbe:
           httpGet:
             path: /
@@ -60,3 +68,6 @@ spec:
       - name: config
         persistentVolumeClaim:
           claimName: home-assistant-config
+      - name: home-assistant-config
+        configMap:
+          name: home-assistant-config
