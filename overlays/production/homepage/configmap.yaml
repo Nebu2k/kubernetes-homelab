@@ -14,9 +14,6 @@ data:
       Management:
         style: row
         columns: 2
-      Website:
-        style: row
-        columns: 3
       Monitoring:
         style: row
         columns: 3
@@ -37,19 +34,6 @@ data:
         url: http://longhorn-frontend.longhorn-system
 
   services.yaml: |
-
-    - Website:
-      - WordOps:
-          href: https://haushelden-service.de:22222
-          description: WordOps Dashboard
-          icon: https://cdn.simpleicons.org/wordpress/21759B
-          weight: 20
-
-      - Haushelden Service:
-          href: https://haushelden-service.de/wp-admin
-          description: Haushelden Webseite
-          icon: https://haushelden-service.de/favicon.ico
-          weight: 30
 
     - Infrastructure:
       - UniFi Controller:
@@ -127,6 +111,12 @@ data:
           icon: mdi-television-box
           weight: 10
           ping: 192.168.2.11
+
+      - Haushelden Service:
+          href: https://haushelden-service.de/wp-admin
+          description: Haushelden Webseite
+          icon: https://haushelden-service.de/favicon.ico
+          weight: 30
 
     - DNS:
       - AdGuard Home (Mac Mini):

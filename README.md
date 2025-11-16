@@ -84,8 +84,9 @@ homelab/
 │       └── values.yaml
 │   ├── uptime-kuma/
 │       └── values.yaml
-│   └── victoria-metrics-k8s-stack/
-        └── values.yaml
+│   ├── victoria-metrics-k8s-stack/
+│       └── values.yaml
+│   └── wordpress/
 └── overlays/production/
     ├── argocd/
     │   ├── argocd-cm-patch.yaml
