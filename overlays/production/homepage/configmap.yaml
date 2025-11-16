@@ -16,7 +16,7 @@ data:
         columns: 2
       Website:
         style: row
-        columns: 2
+        columns: 3
       Monitoring:
         style: row
         columns: 3
@@ -164,6 +164,17 @@ data:
       - Website:
           - icon: mdi-web
             href: https://seb-it.com
+
+    - Website:
+      - Haushelden Service:
+          - icon: https://haushelden-service.de/favicon.ico
+            href: https://haushelden-service.de
+      - WordPress Admin:
+          - icon: https://cdn.simpleicons.org/wordpress/21759B
+            href: https://haushelden-service.de/wp-admin
+      - WordOps Dashboard:
+          - icon: https://docs.wordops.net/images/favicon.png
+            href: https://haushelden-service.de:22222
 
   widgets.yaml: |
     - kubernetes:
