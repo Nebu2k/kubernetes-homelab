@@ -17,6 +17,8 @@ spec:
       labels:
         app.kubernetes.io/name: home-assistant
     spec:
+      hostNetwork: true
+      dnsPolicy: ClusterFirstWithHostNet
       initContainers:
       - name: config-setup
         image: busybox:latest
@@ -29,6 +31,9 @@ spec:
             cat > /config/configuration.yaml << 'EOF'
           # Loads default set of integrations. Do not remove.
           default_config:
+          
+          # Disable Bluetooth
+          bluetooth:
           
           # HTTP Configuration for reverse proxy
           http:
