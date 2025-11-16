@@ -19,40 +19,6 @@ spec:
     spec:
       hostNetwork: true
       dnsPolicy: ClusterFirstWithHostNet
-      initContainers:
-      - name: config-setup
-        image: busybox:latest
-        command:
-        - sh
-        - -c
-        - |
-          echo "Ensuring configuration files exist..."
-          if [ ! -f /config/configuration.yaml ]; then
-            cat > /config/configuration.yaml << 'EOF'
-          # Loads default set of integrations. Do not remove.
-          default_config:
-          
-          # HTTP Configuration for reverse proxy
-          http:
-            use_x_forwarded_for: true
-            trusted_proxies:
-              - 10.0.0.0/8
-              - 172.16.0.0/12
-              - 192.168.0.0/16
-          
-          automation: !include automations.yaml
-          script: !include scripts.yaml
-          scene: !include scenes.yaml
-          EOF
-          fi
-          
-          touch /config/automations.yaml
-          touch /config/scripts.yaml
-          touch /config/scenes.yaml
-          echo "Configuration files ready."
-        volumeMounts:
-        - name: config
-          mountPath: /config
       containers:
       - name: home-assistant
         image: ghcr.io/home-assistant/home-assistant:stable
