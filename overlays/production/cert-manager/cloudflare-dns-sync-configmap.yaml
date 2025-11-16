@@ -176,3 +176,103 @@ data:
     echo "   ✗ Removed: ${ORPHANED_COUNT}"
     echo "════════════════════════════════════════"
     echo "✅ Cloudflare DNS sync complete!"
+  
+  watcher.sh: |
+    #!/bin/sh
+    set -e
+    
+    echo "🔍 Starting Cloudflare DNS Sync Controller..."
+    echo "   Watching for Ingresses with: cert-manager.io/cluster-issuer=letsencrypt-prod"
+    echo ""
+    
+    # Get service account token
+    TOKEN=$(cat /var/run/secrets/kubernetes.io/serviceaccount/token)
+    
+    # Function to trigger sync
+    trigger_sync() {
+      echo "⚡ Triggering DNS sync at $(date '+%Y-%m-%d %H:%M:%S')..."
+      if /scripts/sync-dns.sh; then
+        echo "✅ Sync completed successfully"
+        return 0
+      else
+        echo "❌ Sync failed"
+        return 1
+      fi
+    }
+    
+    # Initial sync on startup
+    echo "🚀 Running initial sync..."
+    trigger_sync || echo "⚠️  Initial sync failed, will retry on events"
+    echo ""
+    
+    # Retry logic with exponential backoff
+    RETRY_COUNT=0
+    MAX_RETRIES=5
+    BACKOFF=1
+    
+    while true; do
+      echo "👀 Starting Ingress watch (attempt $((RETRY_COUNT + 1)))..."
+      
+      # Watch for ingress changes with timeout handling
+      if curl -N -s -k -H "Authorization: Bearer ${TOKEN}" \
+        --max-time 0 \
+        "https://kubernetes.default.svc/apis/networking.k8s.io/v1/ingresses?watch=true" | \
+      while read -r line; do
+        # Skip empty lines
+        [ -z "${line}" ] && continue
+        
+        # Check for error responses
+        if echo "${line}" | grep -q '"type":"ERROR"'; then
+          echo "⚠️  Received ERROR event from API server"
+          echo "${line}"
+          exit 1
+        fi
+        
+        # Parse event
+        EVENT_TYPE=$(echo "${line}" | jq -r '.type // empty' 2>/dev/null)
+        
+        # Skip if we can't parse the event
+        [ -z "${EVENT_TYPE}" ] && continue
+        
+        # Check if this ingress has letsencrypt-prod annotation
+        HAS_ANNOTATION=$(echo "${line}" | jq -r 'select(.object.metadata.annotations["cert-manager.io/cluster-issuer"] == "letsencrypt-prod") | .type' 2>/dev/null)
+        
+        if [ -n "${HAS_ANNOTATION}" ]; then
+          INGRESS_NAME=$(echo "${line}" | jq -r '.object.metadata.name // "unknown"')
+          INGRESS_NS=$(echo "${line}" | jq -r '.object.metadata.namespace // "unknown"')
+          
+          echo ""
+          echo "📡 Detected ${EVENT_TYPE} event: ${INGRESS_NS}/${INGRESS_NAME}"
+          
+          # Trigger sync and reset retry counter on success
+          if trigger_sync; then
+            RETRY_COUNT=0
+            BACKOFF=1
+          fi
+          echo ""
+        fi
+      done; then
+        # Watch completed successfully (shouldn't happen unless connection closed)
+        echo "⚠️  Watch connection closed, reconnecting..."
+        RETRY_COUNT=0
+        BACKOFF=1
+        sleep 2
+      else
+        # Watch failed
+        RETRY_COUNT=$((RETRY_COUNT + 1))
+        
+        if [ ${RETRY_COUNT} -ge ${MAX_RETRIES} ]; then
+          echo "❌ Max retries (${MAX_RETRIES}) reached, resetting counter and continuing..."
+          RETRY_COUNT=0
+          BACKOFF=1
+        fi
+        
+        echo "⚠️  Watch failed, retrying in ${BACKOFF}s..."
+        sleep ${BACKOFF}
+        
+        # Exponential backoff: 1, 2, 4, 8, 16 seconds (max)
+        BACKOFF=$((BACKOFF * 2))
+        [ ${BACKOFF} -gt 16 ] && BACKOFF=16
+      fi
+    done
+

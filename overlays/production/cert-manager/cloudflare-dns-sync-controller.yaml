@@ -9,6 +9,8 @@ metadata:
     app: cloudflare-dns-sync-controller
 spec:
   replicas: 1
+  strategy:
+    type: Recreate  # Only one instance should run at a time
   selector:
     matchLabels:
       app: cloudflare-dns-sync-controller
@@ -54,6 +56,24 @@ spec:
             limits:
               cpu: 100m
               memory: 128Mi
+          livenessProbe:
+            exec:
+              command:
+                - sh
+                - -c
+                - "ps aux | grep -v grep | grep -q watcher.sh"
+            initialDelaySeconds: 30
+            periodSeconds: 30
+            timeoutSeconds: 5
+            failureThreshold: 3
+          readinessProbe:
+            exec:
+              command:
+                - sh
+                - -c
+                - "ps aux | grep -v grep | grep -q watcher.sh"
+            initialDelaySeconds: 5
+            periodSeconds: 10
       volumes:
         - name: scripts
           configMap:
