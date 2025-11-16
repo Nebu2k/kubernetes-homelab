@@ -107,7 +107,6 @@ homelab/
     │   ├── coredns-custom.yaml
     │   └── kustomization.yaml
     ├── home-assistant/
-    │   ├── configmap.yaml
     │   ├── deployment.yaml
     │   ├── ingress.yaml
     │   ├── kustomization.yaml

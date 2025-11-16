@@ -19,6 +19,37 @@ spec:
     spec:
       hostNetwork: true
       dnsPolicy: ClusterFirstWithHostNet
+      initContainers:
+      - name: config-setup
+        image: busybox:latest
+        command:
+        - sh
+        - -c
+        - |
+          if [ ! -f /config/configuration.yaml ]; then
+            echo "Creating initial configuration.yaml..."
+            cat > /config/configuration.yaml << 'EOF'
+          # Loads default set of integrations. Do not remove.
+          default_config:
+
+          # HTTP Configuration for reverse proxy
+          http:
+            use_x_forwarded_for: true
+            trusted_proxies:
+              - 10.0.0.0/8
+              - 172.16.0.0/12
+              - 192.168.0.0/16
+
+          automation: !include automations.yaml
+          script: !include scripts.yaml
+          scene: !include scenes.yaml
+          EOF
+          else
+            echo "configuration.yaml already exists, skipping..."
+          fi
+        volumeMounts:
+        - name: config
+          mountPath: /config
       containers:
       - name: home-assistant
         image: ghcr.io/home-assistant/home-assistant:stable
@@ -38,9 +69,6 @@ spec:
         volumeMounts:
         - name: config
           mountPath: /config
-        - name: home-assistant-config
-          mountPath: /config/configuration.yaml
-          subPath: configuration.yaml
         livenessProbe:
           httpGet:
             path: /
@@ -68,6 +96,3 @@ spec:
       - name: config
         persistentVolumeClaim:
           claimName: home-assistant-config
-      - name: home-assistant-config
-        configMap:
-          name: home-assistant-config
