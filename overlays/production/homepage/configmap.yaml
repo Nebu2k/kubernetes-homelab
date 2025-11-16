@@ -37,12 +37,6 @@ data:
         url: http://longhorn-frontend.longhorn-system
 
   services.yaml: |
-    - Management:
-      - AWS:
-          href: https://d-99675baf99.awsapps.com/start/
-          description: AWS Console
-          icon: mdi-aws
-          weight: 10
 
     - Website:
       - WordOps:
