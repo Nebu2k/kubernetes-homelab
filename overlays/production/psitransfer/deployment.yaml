@@ -31,6 +31,13 @@ spec:
     spec:
       nodeSelector:
         node-role.kubernetes.io/worker: "worker"
+      initContainers:
+        - name: init-permissions
+          image: busybox:latest
+          command: ['sh', '-c', 'mkdir -p /data/uploads && chown -R 1000:1000 /data && chmod -R 755 /data']
+          volumeMounts:
+            - name: data
+              mountPath: /data
       containers:
         - name: psitransfer
           image: psitrax/psitransfer:latest
