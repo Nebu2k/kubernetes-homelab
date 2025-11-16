@@ -14,6 +14,9 @@ data:
       Management:
         style: row
         columns: 2
+      Website:
+        style: row
+        columns: 2
       Monitoring:
         style: row
         columns: 3
@@ -38,17 +41,18 @@ data:
       - AWS:
           href: https://d-99675baf99.awsapps.com/start/
           description: AWS Console
-          icon: https://cdn.simpleicons.org/amazonaws/FF9900
+          icon: mdi-aws
           weight: 10
 
-      - WordOps:
+      - Website:
+        - WordOps:
           href: https://haushelden-service.de:22222
           description: WordOps Dashboard
           icon: https://cdn.simpleicons.org/wordpress/21759B
           weight: 20
 
-      - Haushelden Service:
-          href: https://haushelden-service.de
+        - Haushelden Service:
+          href: https://haushelden-service.de/wp-admin
           description: Haushelden Webseite
           icon: https://haushelden-service.de/favicon.ico
           weight: 30
