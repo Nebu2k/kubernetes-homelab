@@ -1,0 +1,112 @@
+# WordPress Configuration - Dummy values
+wordpressUsername: admin
+wordpressEmail: admin@example.com
+wordpressBlogName: "WordPress Site"
+wordpressScheme: https
+
+# WordPress mit Memcached Caching
+wordpressConfigureCache: true
+
+# Deployment - HA mit 2 Replicas
+replicaCount: 2
+updateStrategy:
+  type: RollingUpdate
+
+# Node Selector - nur auf Worker Nodes
+nodeSelector:
+  node-role.kubernetes.io/worker: "worker"
+
+# Auto-Reload bei ConfigMap/Secret Änderungen
+podAnnotations:
+  reloader.stakater.com/auto: "true"
+
+# Service Type
+service:
+  type: ClusterIP
+  ports:
+    http: 80
+    https: 443
+
+# Ingress wird im Production Overlay konfiguriert
+ingress:
+  enabled: false
+
+# Persistence - RWX für Multi-Pod Support
+persistence:
+  enabled: true
+  storageClass: longhorn
+  accessModes:
+    - ReadWriteMany
+  size: 10Gi
+
+# Resources - angepasst für Worker Nodes (6 CPU, 8-16GB RAM)
+resources:
+  requests:
+    memory: 512Mi
+    cpu: 250m
+  limits:
+    memory: 1Gi
+    cpu: 1000m
+
+# Probes
+livenessProbe:
+  initialDelaySeconds: 60
+  periodSeconds: 10
+  timeoutSeconds: 5
+  failureThreshold: 6
+
+readinessProbe:
+  initialDelaySeconds: 20
+  periodSeconds: 10
+  timeoutSeconds: 3
+  failureThreshold: 3
+
+# MariaDB Subchart
+mariadb:
+  enabled: true
+  architecture: standalone
+  auth:
+    database: bitnami_wordpress
+    username: bn_wordpress
+    # Passwords werden automatisch generiert und in Secrets gespeichert
+  primary:
+    persistence:
+      enabled: true
+      storageClass: longhorn
+      size: 8Gi
+    resources:
+      requests:
+        memory: 512Mi
+        cpu: 250m
+      limits:
+        memory: 1Gi
+        cpu: 1000m
+    nodeSelector:
+      node-role.kubernetes.io/worker: "worker"
+
+# Memcached für Object Caching
+memcached:
+  enabled: true
+  resources:
+    requests:
+      memory: 128Mi
+      cpu: 100m
+    limits:
+      memory: 256Mi
+      cpu: 250m
+  nodeSelector:
+    node-role.kubernetes.io/worker: "worker"
+
+# Metrics (optional für Prometheus)
+metrics:
+  enabled: false
+
+# Security Context
+podSecurityContext:
+  enabled: true
+  fsGroup: 1001
+
+containerSecurityContext:
+  enabled: true
+  runAsUser: 1001
+  runAsNonRoot: true
