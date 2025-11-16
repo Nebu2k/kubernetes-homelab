@@ -26,3 +26,15 @@ spec:
       selfHeal: true
     syncOptions:
       - CreateNamespace=true
+    # Ignore auto-generated secrets differences
+    ignoreDifferences:
+      - group: ""
+        kind: Secret
+        name: wordpress
+        jsonPointers:
+          - /data
+      - group: ""
+        kind: Secret
+        name: wordpress-mariadb
+        jsonPointers:
+          - /data
