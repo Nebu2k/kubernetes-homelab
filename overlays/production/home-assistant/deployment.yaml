@@ -32,9 +32,6 @@ spec:
           # Loads default set of integrations. Do not remove.
           default_config:
           
-          # Disable Bluetooth
-          bluetooth:
-          
           # HTTP Configuration for reverse proxy
           http:
             use_x_forwarded_for: true
@@ -47,11 +44,6 @@ spec:
           script: !include scripts.yaml
           scene: !include scenes.yaml
           EOF
-          else
-            # Add bluetooth: line if not present
-            if ! grep -q "^bluetooth:" /config/configuration.yaml; then
-              sed -i '/^default_config:/a\\nbluetooth:' /config/configuration.yaml
-            fi
           fi
           
           touch /config/automations.yaml
@@ -65,6 +57,11 @@ spec:
       - name: home-assistant
         image: ghcr.io/home-assistant/home-assistant:stable
         imagePullPolicy: IfNotPresent
+        securityContext:
+          capabilities:
+            add:
+              - NET_ADMIN
+              - NET_RAW
         ports:
         - name: http
           containerPort: 8123
