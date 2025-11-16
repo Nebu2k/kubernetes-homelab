@@ -47,6 +47,11 @@ spec:
           script: !include scripts.yaml
           scene: !include scenes.yaml
           EOF
+          else
+            # Add bluetooth: line if not present
+            if ! grep -q "^bluetooth:" /config/configuration.yaml; then
+              sed -i '/^default_config:/a\\nbluetooth:' /config/configuration.yaml
+            fi
           fi
           
           touch /config/automations.yaml
