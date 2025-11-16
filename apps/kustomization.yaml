@@ -24,4 +24,4 @@ resources:
   - private-services.yaml
   - demo-app.yaml
   - psitransfer.yaml
-  # - home-assistant.yaml
+  - home-assistant.yaml
