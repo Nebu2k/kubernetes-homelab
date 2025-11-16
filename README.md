@@ -25,8 +25,7 @@ Production-ready K3s cluster managed via GitOps using ArgoCD App-of-Apps pattern
 | 3 | Nginx Ingress | Ingress Nginx |
 | 4 | Longhorn | Longhorn |
 | 5 | Portainer, Psitransfer, Victoria Metrics Config | Portainer, Ingress & configuration, Ingress & configuration |
-| 6 | Wordpress, Victoria Metrics K8s Stack | Wordpress, Victoria Metrics K8S Stack |
-| 7 | Wordpress Config | Ingress configuration |
+| 6 | Victoria Metrics K8s Stack | Victoria Metrics K8S Stack |
 | 8 | Uptime Kuma | Uptime Kuma |
 | 9 | Homepage | Homepage |
 | 10 | Cert Manager Config, Metallb Config | Certificate issuers, IP address pool |
@@ -56,8 +55,6 @@ homelab/
 │   ├── psitransfer.yaml               # Wave 5
 │   ├── victoria-metrics-config.yaml   # Wave 5
 │   ├── victoria-metrics-k8s-stack.yaml # Wave 6
-│   ├── wordpress.yaml                 # Wave 6
-│   ├── wordpress-config.yaml          # Wave 7
 │   ├── uptime-kuma.yaml               # Wave 8
 │   ├── homepage.yaml                  # Wave 9
 │   ├── cert-manager-config.yaml       # Wave 10
@@ -87,9 +84,7 @@ homelab/
 │       └── values.yaml
 │   ├── uptime-kuma/
 │       └── values.yaml
-│   ├── victoria-metrics-k8s-stack/
-│       └── values.yaml
-│   └── wordpress/
+│   └── victoria-metrics-k8s-stack/
         └── values.yaml
 └── overlays/production/
     ├── argocd/
@@ -167,13 +162,10 @@ homelab/
     ├── uptime-kuma/
     │   ├── ingress.yaml
     │   └── kustomization.yaml
-    ├── victoria-metrics/
-    │   ├── grafana-admin-sealed.yaml
-    │   ├── grafana-admin-unsealed.yaml
-    │   ├── ingress-grafana.yaml
-    │   └── kustomization.yaml
-    └── wordpress/
-        ├── ingress.yaml
+    └── victoria-metrics/
+        ├── grafana-admin-sealed.yaml
+        ├── grafana-admin-unsealed.yaml
+        ├── ingress-grafana.yaml
         └── kustomization.yaml
 ```
 
@@ -1009,7 +1001,6 @@ kubectl get secret -n monitoring grafana-admin-credentials \
 | Sealed Secrets | 2.17.7 | Sealed Secrets |
 | Metallb | 0.15.2 | Metallb |
 | Ingress Nginx | 4.14.0 | Nginx Ingress |
-| Wordpress | 27.1.8 | Wordpress |
 | Longhorn | 1.10.0 | Longhorn |
 | Portainer | 2.33.3 | Portainer |
 | Cert Manager | v1.19.1 | Cert Manager |
@@ -1032,7 +1023,6 @@ kubectl get secret -n monitoring grafana-admin-credentials \
 - [Sealed Secrets](https://bitnami-labs.github.io/sealed-secrets)
 - [Uptime Kuma](https://dirsigler.github.io/uptime-kuma-helm)
 - [Victoria Metrics K8S Stack](https://victoriametrics.github.io/helm-charts/)
-- [Wordpress](https://charts.bitnami.com/bitnami)
 
 ## 📝 License
 

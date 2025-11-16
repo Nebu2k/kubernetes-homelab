@@ -24,5 +24,3 @@ resources:
   - private-services.yaml
   - demo-app.yaml
   - psitransfer.yaml
-  - wordpress.yaml
-  - wordpress-config.yaml
