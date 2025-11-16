@@ -34,6 +34,13 @@ data:
         url: http://longhorn-frontend.longhorn-system
 
   services.yaml: |
+    - Management:
+      - AWS:
+          href: https://d-99675baf99.awsapps.com/start/
+          description: AWS Console
+          icon: https://cdn.simpleicons.org/amazonaws/FF9900
+          weight: 10
+
     - Infrastructure:
       - UniFi Controller:
           href: https://192.168.2.1
