@@ -1,0 +1,100 @@
+---
+# CronJob: Runs every 5 minutes to sync DNS records
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: cloudflare-dns-sync
+  namespace: cert-manager
+spec:
+  schedule: "*/5 * * * *"  # Every 5 minutes
+  successfulJobsHistoryLimit: 1
+  failedJobsHistoryLimit: 1
+  jobTemplate:
+    spec:
+      ttlSecondsAfterFinished: 300
+      template:
+        spec:
+          serviceAccountName: cloudflare-dns-sync
+          restartPolicy: OnFailure
+          containers:
+            - name: sync
+              image: alpine/curl:latest
+              command: ["/bin/sh", "/scripts/sync-dns.sh"]
+              env:
+                - name: DOMAIN
+                  valueFrom:
+                    configMapKeyRef:
+                      name: cloudflare-dns-sync
+                      key: DOMAIN
+                - name: TARGET
+                  valueFrom:
+                    configMapKeyRef:
+                      name: cloudflare-dns-sync
+                      key: TARGET
+                - name: ZONE_ID
+                  valueFrom:
+                    configMapKeyRef:
+                      name: cloudflare-dns-sync
+                      key: ZONE_ID
+                - name: API_TOKEN
+                  valueFrom:
+                    secretKeyRef:
+                      name: cloudflare-api-token
+                      key: api-token
+              volumeMounts:
+                - name: scripts
+                  mountPath: /scripts
+          volumes:
+            - name: scripts
+              configMap:
+                name: cloudflare-dns-sync-script
+                defaultMode: 0755
+---
+# PostSync Hook: Runs after every ArgoCD sync for immediate updates
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: cloudflare-dns-sync-postsync
+  namespace: cert-manager
+  annotations:
+    argocd.argoproj.io/hook: PostSync
+    argocd.argoproj.io/hook-delete-policy: BeforeHookCreation
+spec:
+  ttlSecondsAfterFinished: 300
+  template:
+    spec:
+      serviceAccountName: cloudflare-dns-sync
+      restartPolicy: OnFailure
+      containers:
+        - name: sync
+          image: alpine/curl:latest
+          command: ["/bin/sh", "/scripts/sync-dns.sh"]
+          env:
+            - name: DOMAIN
+              valueFrom:
+                configMapKeyRef:
+                  name: cloudflare-dns-sync
+                  key: DOMAIN
+            - name: TARGET
+              valueFrom:
+                configMapKeyRef:
+                  name: cloudflare-dns-sync
+                  key: TARGET
+            - name: ZONE_ID
+              valueFrom:
+                configMapKeyRef:
+                  name: cloudflare-dns-sync
+                  key: ZONE_ID
+            - name: API_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: cloudflare-api-token
+                  key: api-token
+          volumeMounts:
+            - name: scripts
+              mountPath: /scripts
+      volumes:
+        - name: scripts
+          configMap:
+            name: cloudflare-dns-sync-script
+            defaultMode: 0755

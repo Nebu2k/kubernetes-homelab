@@ -94,8 +94,7 @@ homelab/
     │   └── kustomization.yaml
     ├── cert-manager/
     │   ├── cloudflare-dns-sync-configmap.yaml
-    │   ├── cloudflare-dns-sync-controller.yaml
-    │   ├── cloudflare-dns-sync-job.yaml
+    │   ├── cloudflare-dns-sync-jobs.yaml
     │   ├── cloudflare-dns-sync-rbac.yaml
     │   ├── cloudflare-token-sealed.yaml
     │   ├── cloudflare-token-unsealed.yaml

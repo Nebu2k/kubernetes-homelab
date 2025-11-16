@@ -6,4 +6,4 @@ resources:
   - cloudflare-token-sealed.yaml
   - cloudflare-dns-sync-configmap.yaml
   - cloudflare-dns-sync-rbac.yaml
-  - cloudflare-dns-sync-controller.yaml
+  - cloudflare-dns-sync-jobs.yaml
