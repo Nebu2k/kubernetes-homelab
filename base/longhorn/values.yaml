@@ -14,6 +14,8 @@ defaultBackupStore:
 # Default settings
 defaultSettings:
   defaultReplicaCount: "3"
+  # RWX (ReadWriteMany) Support via NFS
+  rwxVolumeFastFailover: "true"
 
 # Disable preUpgrade hook (causes issues with ArgoCD)
 preUpgradeChecker:
