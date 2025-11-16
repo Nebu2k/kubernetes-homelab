@@ -31,7 +31,7 @@ spec:
             cat > /config/configuration.yaml << 'EOF'
           # Loads default set of integrations. Do not remove.
           default_config:
-
+          
           # HTTP Configuration for reverse proxy
           http:
             use_x_forwarded_for: true
@@ -39,7 +39,7 @@ spec:
               - 10.0.0.0/8
               - 172.16.0.0/12
               - 192.168.0.0/16
-
+          
           automation: !include automations.yaml
           script: !include scripts.yaml
           scene: !include scenes.yaml
@@ -50,7 +50,10 @@ spec:
             touch /config/scenes.yaml
             echo "Configuration files created."
           else
-            echo "configuration.yaml already exists, skipping..."
+            echo "configuration.yaml already exists, ensuring include files exist..."
+            [ ! -f /config/automations.yaml ] && touch /config/automations.yaml
+            [ ! -f /config/scripts.yaml ] && touch /config/scripts.yaml
+            [ ! -f /config/scenes.yaml ] && touch /config/scenes.yaml
           fi
         volumeMounts:
         - name: config
