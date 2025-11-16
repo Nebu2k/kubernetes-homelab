@@ -1,0 +1,45 @@
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: wordpress
+  namespace: wordpress
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod-external
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+    # Optional: Homepage Integration
+    gethomepage.dev/enabled: "true"
+    gethomepage.dev/name: "Haushelden Service"
+    gethomepage.dev/description: "WordPress Website"
+    gethomepage.dev/group: "Public Services"
+    gethomepage.dev/icon: "https://cdn.simpleicons.org/wordpress/21759B"
+    gethomepage.dev/weight: "10"
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts:
+        - haushelden-service.de
+        - www.haushelden-service.de
+      secretName: wordpress-tls
+  rules:
+    - host: haushelden-service.de
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: wordpress
+                port:
+                  number: 80
+    - host: www.haushelden-service.de
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: wordpress
+                port:
+                  number: 80
