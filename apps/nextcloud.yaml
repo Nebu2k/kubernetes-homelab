@@ -11,13 +11,9 @@ spec:
     - repoURL: https://nextcloud.github.io/helm
       chart: nextcloud
       targetRevision: 8.5.2  # Check for latest stable version
-      helm:
-        valueFiles:
-          - $values/base/nextcloud/values.yaml
-          - $values/overlays/production/nextcloud/values-production.yaml
     - repoURL: https://github.com/Nebu2k/kubernetes-homelab
       targetRevision: main
-      ref: values
+      path: overlays/production/nextcloud
   destination:
     server: https://kubernetes.default.svc
     namespace: nextcloud

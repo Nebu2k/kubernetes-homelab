@@ -25,7 +25,7 @@ Production-ready K3s cluster managed via GitOps using ArgoCD App-of-Apps pattern
 | 3 | Nginx Ingress |
 | 4 | Longhorn |
 | 5 | Nextcloud, Portainer, Psitransfer, Victoria Metrics Config |
-| 6 | Nextcloud Config, Victoria Metrics K8s Stack |
+| 6 | Victoria Metrics K8s Stack |
 | 7 | Home Assistant |
 | 8 | Uptime Kuma |
 | 9 | Homepage |
@@ -56,7 +56,6 @@ homelab/
 │   ├── portainer.yaml                 # Wave 5
 │   ├── psitransfer.yaml               # Wave 5
 │   ├── victoria-metrics-config.yaml   # Wave 5
-│   ├── nextcloud-config.yaml          # Wave 6
 │   ├── victoria-metrics-k8s-stack.yaml # Wave 6
 │   ├── home-assistant.yaml            # Wave 7
 │   ├── uptime-kuma.yaml               # Wave 8
@@ -79,8 +78,6 @@ homelab/
 │   ├── longhorn/
 │       └── values.yaml
 │   ├── metallb/
-│       └── values.yaml
-│   ├── nextcloud/
 │       └── values.yaml
 │   ├── nginx-ingress/
 │       └── values.yaml
@@ -143,13 +140,8 @@ homelab/
     │   ├── kustomization.yaml
     │   └── metallb-ip-pool.yaml
     ├── nextcloud/
-    │   ├── ingress-wellknown-redirects.yaml
-    │   ├── ingress-wellknown-rewrite.yaml
     │   ├── ingress.yaml
-    │   ├── kustomization.yaml
-    │   ├── nextcloud-secrets-sealed.yaml
-    │   ├── nextcloud-secrets-unsealed.yaml
-    │   └── values-production.yaml
+    │   └── kustomization.yaml
     ├── nginx-ingress/
     │   ├── custom-headers.yaml
     │   └── kustomization.yaml

@@ -2,11 +2,4 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 namespace: nextcloud
 resources:
-  # Ingress with production domain configuration
   - ingress.yaml
-  - ingress-wellknown-redirects.yaml
-  - ingress-wellknown-rewrite.yaml
-  
-  # Sealed secrets (create this file first!)
-  # See nextcloud-secrets-unsealed.yaml.example for template
-  - nextcloud-secrets-sealed.yaml
