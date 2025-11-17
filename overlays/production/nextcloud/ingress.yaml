@@ -11,6 +11,8 @@ metadata:
     cert-manager.io/cluster-issuer: "letsencrypt-prod"
     nginx.ingress.kubernetes.io/proxy-body-size: "10G"  # Max upload size
     nginx.ingress.kubernetes.io/proxy-buffering: "off"
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"
+    nginx.ingress.kubernetes.io/backend-protocol: "HTTP"
     # Homepage dashboard discovery (https://gethomepage.dev/latest/integrations/kubernetes/#ingress)
     gethomepage.dev/enabled: "true"
     gethomepage.dev/name: "Nextcloud"
