@@ -10,14 +10,6 @@ metadata:
     nginx.ingress.kubernetes.io/backend-protocol: "HTTP"
     nginx.ingress.kubernetes.io/proxy-body-size: "10G"
     nginx.ingress.kubernetes.io/proxy-buffering: "off"
-    nginx.ingress.kubernetes.io/server-snippet: |
-      location ^~ /.well-known {
-        location = /.well-known/carddav { return 301 /remote.php/dav/; }
-        location = /.well-known/caldav  { return 301 /remote.php/dav/; }
-        location = /.well-known/webfinger { return 301 /index.php/.well-known/webfinger; }
-        location = /.well-known/nodeinfo { return 301 /index.php/.well-known/nodeinfo; }
-        try_files $uri $uri/ =404;
-      }
     gethomepage.dev/enabled: "true"
     gethomepage.dev/name: "Nextcloud"
     gethomepage.dev/description: "Cloud Storage & Collaboration"
