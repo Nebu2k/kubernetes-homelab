@@ -146,6 +146,7 @@ homelab/
     │   ├── ingress-wellknown-redirects.yaml
     │   ├── ingress-wellknown-rewrite.yaml
     │   ├── ingress.yaml
+    │   ├── job-create-can-install.yaml
     │   ├── kustomization.yaml
     │   ├── nextcloud-secrets-sealed.yaml
     │   ├── nextcloud-secrets-unsealed.yaml
