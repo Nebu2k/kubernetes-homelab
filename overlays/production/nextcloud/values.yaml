@@ -1,3 +1,2 @@
-host: nextcloud.elmstreet79.de
-trustedDomains:
-  - nextcloud.elmstreet79.de
+nextcloud:
+  host: nextcloud.elmstreet79.de
