@@ -4,6 +4,8 @@ kind: PersistentVolumeClaim
 metadata:
   name: psitransfer-data
   namespace: psitransfer
+  annotations:
+    longhorn.io/backup: "false"
 spec:
   accessModes:
     - ReadWriteOnce
