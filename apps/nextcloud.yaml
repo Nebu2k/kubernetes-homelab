@@ -27,9 +27,3 @@ spec:
       selfHeal: true
     syncOptions:
       - CreateNamespace=true
-    ignoreDifferences:
-      - group: ""
-        kind: Secret
-        name: nextcloud-postgresql
-        jsonPointers:
-          - /data

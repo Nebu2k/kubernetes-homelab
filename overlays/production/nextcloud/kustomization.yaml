@@ -3,3 +3,5 @@ kind: Kustomization
 namespace: nextcloud
 resources:
   - ingress.yaml
+  - nextcloud-db-secret-sealed.yaml
+  - nextcloud-redis-secret-sealed.yaml

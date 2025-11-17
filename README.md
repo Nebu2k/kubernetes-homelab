@@ -146,6 +146,10 @@ homelab/
     ├── nextcloud/
     │   ├── ingress.yaml
     │   ├── kustomization.yaml
+    │   ├── nextcloud-db-secret-sealed.yaml
+    │   ├── nextcloud-db-secret-unsealed.yaml
+    │   ├── nextcloud-redis-secret-sealed.yaml
+    │   ├── nextcloud-redis-secret-unsealed.yaml
     │   └── values.yaml
     ├── nginx-ingress/
     │   ├── custom-headers.yaml

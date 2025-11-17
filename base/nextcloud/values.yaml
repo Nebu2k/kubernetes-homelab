@@ -16,3 +16,55 @@ persistence:
   enabled: true
   size: 100Gi
   storageClass: longhorn
+
+internalDatabase:
+  enabled: false
+
+externalDatabase:
+  enabled: true
+  type: postgresql
+  host: nextcloud-postgresql
+  database: nextcloud
+  user: nextcloud
+  existingSecret:
+    enabled: true
+    secretName: nextcloud-postgresql
+    usernameKey: username
+    passwordKey: password
+
+postgresql:
+  enabled: true
+  auth:
+    username: nextcloud
+    database: nextcloud
+    existingSecret: nextcloud-postgresql
+    secretKeys:
+      adminPasswordKey: postgres-password
+      userPasswordKey: password
+  primary:
+    persistence:
+      enabled: true
+      size: 20Gi
+      storageClass: longhorn
+
+redis:
+  enabled: true
+  auth:
+    enabled: true
+    existingSecret: nextcloud-redis
+    existingSecretPasswordKey: redis-password
+  master:
+    persistence:
+      enabled: false
+
+cronjob:
+  enabled: true
+  schedule: "*/5 * * * *"
+
+phpConfigs:
+  nextcloud.ini: |
+    memory_limit=2G
+    upload_max_filesize=10G
+    post_max_size=10G
+    max_execution_time=3600
+    max_input_time=3600
