@@ -143,6 +143,8 @@ homelab/
     │   ├── kustomization.yaml
     │   └── metallb-ip-pool.yaml
     ├── nextcloud/
+    │   ├── ingress-wellknown-redirects.yaml
+    │   ├── ingress-wellknown-rewrite.yaml
     │   ├── ingress.yaml
     │   ├── kustomization.yaml
     │   ├── nextcloud-secrets-sealed.yaml
