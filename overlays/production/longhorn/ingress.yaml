@@ -13,7 +13,6 @@ metadata:
     gethomepage.dev/group: "Infrastructure"
     gethomepage.dev/icon: "longhorn.png"
     gethomepage.dev/weight: "50"
-    gethomepage.dev/ping: longhorn.elmstreet79.de
 spec:
   ingressClassName: nginx
   tls:
