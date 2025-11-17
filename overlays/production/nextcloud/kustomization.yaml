@@ -7,9 +7,6 @@ resources:
   - ingress-wellknown-redirects.yaml
   - ingress-wellknown-rewrite.yaml
   
-  # One-time job to enable installation
-  - job-create-can-install.yaml
-  
   # Sealed secrets (create this file first!)
   # See nextcloud-secrets-unsealed.yaml.example for template
   - nextcloud-secrets-sealed.yaml

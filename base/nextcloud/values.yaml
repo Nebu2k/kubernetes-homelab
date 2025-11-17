@@ -15,6 +15,25 @@ strategy:
 ## Replicas - Start with 1, can scale later with RWX storage
 replicaCount: 1
 
+## Init containers to prepare environment
+extraInitContainers:
+  - name: create-can-install
+    image: busybox:latest
+    command:
+      - /bin/sh
+      - -c
+      - |
+        echo "Creating CAN_INSTALL file for initial setup..."
+        touch /var/www/html/config/CAN_INSTALL
+        echo "CAN_INSTALL file created"
+    volumeMounts:
+      - name: nextcloud-main
+        mountPath: /var/www/html
+        subPath: root
+      - name: nextcloud-main
+        mountPath: /var/www/html/config
+        subPath: config
+
 ## Ingress Configuration
 # Note: Ingress is disabled in base - configured per environment in overlays
 ingress:
