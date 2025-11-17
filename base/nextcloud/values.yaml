@@ -176,24 +176,19 @@ externalDatabase:
 
 ## Metrics (optional - can enable later for monitoring)
 metrics:
-  enabled: true
+  enabled: false
   https: true  # Use HTTPS for metrics endpoint
   token:
     enabled: false  # Disable token auth for internal monitoring
   serviceMonitor:
-    enabled: true
+    enabled: false
     namespace: nextcloud
     labels:
       prometheus: kube-prometheus  # Adjust if your Victoria Metrics uses different labels
 
 ## Security Context
-securityContext:
-  runAsUser: 33  # www-data
-  runAsGroup: 33
-  fsGroup: 33
+securityContext: {}
 
 ## Pod Security Context
 podSecurityContext:
-  runAsNonRoot: true
-  runAsUser: 33
   fsGroup: 33
