@@ -24,8 +24,8 @@ Production-ready K3s cluster managed via GitOps using ArgoCD App-of-Apps pattern
 | 2 | Cert Manager |
 | 3 | Nginx Ingress |
 | 4 | Longhorn |
-| 5 | Portainer, Psitransfer, Victoria Metrics Config |
-| 6 | Victoria Metrics K8s Stack |
+| 5 | Nextcloud, Portainer, Psitransfer, Victoria Metrics Config |
+| 6 | Nextcloud Config, Victoria Metrics K8s Stack |
 | 7 | Home Assistant |
 | 8 | Uptime Kuma |
 | 9 | Homepage |
@@ -52,9 +52,11 @@ homelab/
 │   ├── cert-manager.yaml              # Wave 2
 │   ├── nginx-ingress.yaml             # Wave 3
 │   ├── longhorn.yaml                  # Wave 4
+│   ├── nextcloud.yaml                 # Wave 5
 │   ├── portainer.yaml                 # Wave 5
 │   ├── psitransfer.yaml               # Wave 5
 │   ├── victoria-metrics-config.yaml   # Wave 5
+│   ├── nextcloud-config.yaml          # Wave 6
 │   ├── victoria-metrics-k8s-stack.yaml # Wave 6
 │   ├── home-assistant.yaml            # Wave 7
 │   ├── uptime-kuma.yaml               # Wave 8
@@ -78,6 +80,8 @@ homelab/
 │       └── values.yaml
 │   ├── metallb/
 │       └── values.yaml
+│   ├── nextcloud/
+│       └── values.yaml
 │   ├── nginx-ingress/
 │       └── values.yaml
 │   ├── portainer/
@@ -86,9 +90,8 @@ homelab/
 │       └── values.yaml
 │   ├── uptime-kuma/
 │       └── values.yaml
-│   ├── victoria-metrics-k8s-stack/
-│       └── values.yaml
-│   └── wordpress/
+│   └── victoria-metrics-k8s-stack/
+        └── values.yaml
 └── overlays/production/
     ├── argocd/
     │   ├── argocd-cm-patch.yaml
@@ -139,6 +142,12 @@ homelab/
     ├── metallb/
     │   ├── kustomization.yaml
     │   └── metallb-ip-pool.yaml
+    ├── nextcloud/
+    │   ├── ingress.yaml
+    │   ├── kustomization.yaml
+    │   ├── nextcloud-secrets-sealed.yaml
+    │   ├── nextcloud-secrets-unsealed.yaml
+    │   └── values-production.yaml
     ├── nginx-ingress/
     │   ├── custom-headers.yaml
     │   └── kustomization.yaml
@@ -1016,6 +1025,7 @@ kubectl get secret -n monitoring grafana-admin-credentials \
 | Component | Version | Purpose |
 |-----------|---------|---------|
 | Reloader | 2.2.5 | Reloader |
+| Nextcloud | 8.5.2 | Nextcloud |
 | Sealed Secrets | 2.17.7 | Sealed Secrets |
 | Metallb | 0.15.2 | Metallb |
 | Ingress Nginx | 4.14.0 | Nginx Ingress |
@@ -1036,6 +1046,7 @@ kubectl get secret -n monitoring grafana-admin-credentials \
 - [K3s](https://docs.k3s.io/)
 - [Longhorn](https://charts.longhorn.io)
 - [Metallb](https://metallb.github.io/metallb)
+- [Nextcloud](https://nextcloud.github.io/helm)
 - [Portainer](https://portainer.github.io/k8s)
 - [Reloader](https://stakater.github.io/stakater-charts)
 - [Sealed Secrets](https://bitnami-labs.github.io/sealed-secrets)

@@ -1,0 +1,72 @@
+---
+# Nextcloud Ingress Configuration
+# Production-specific configuration for nextcloud.elmstreet79.de
+
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: nextcloud
+  namespace: nextcloud
+  annotations:
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    nginx.ingress.kubernetes.io/proxy-body-size: "10G"  # Max upload size
+    nginx.ingress.kubernetes.io/proxy-buffering: "off"
+    # Homepage dashboard discovery (https://gethomepage.dev/latest/integrations/kubernetes/#ingress)
+    gethomepage.dev/enabled: "true"
+    gethomepage.dev/name: "Nextcloud"
+    gethomepage.dev/description: "Cloud Storage & Collaboration"
+    gethomepage.dev/group: "Applications"
+    gethomepage.dev/icon: "nextcloud"
+    gethomepage.dev/href: "https://nextcloud.elmstreet79.de"
+    gethomepage.dev/weight: "5"
+    gethomepage.dev/ping: "http://nextcloud.nextcloud.svc.cluster.local"
+    # Nextcloud-specific server configuration for CalDAV/CardDAV/WebDAV support
+    nginx.ingress.kubernetes.io/server-snippet: |
+      server_tokens off;
+      proxy_hide_header X-Powered-By;
+      
+      # WebFinger and NodeInfo for federation
+      rewrite ^/.well-known/webfinger /index.php/.well-known/webfinger last;
+      rewrite ^/.well-known/nodeinfo /index.php/.well-known/nodeinfo last;
+      rewrite ^/.well-known/host-meta /public.php?service=host-meta last;
+      rewrite ^/.well-known/host-meta.json /public.php?service=host-meta-json;
+      
+      # CalDAV and CardDAV redirects (critical for calendar/contacts sync)
+      location = /.well-known/carddav {
+        return 301 $scheme://$host/remote.php/dav;
+      }
+      location = /.well-known/caldav {
+        return 301 $scheme://$host/remote.php/dav;
+      }
+      
+      # Robots.txt
+      location = /robots.txt {
+        allow all;
+        log_not_found off;
+        access_log off;
+      }
+      
+      # Security: Block access to internal directories
+      location ~ ^/(?:build|tests|config|lib|3rdparty|templates|data)/ {
+        deny all;
+      }
+      location ~ ^/(?:autotest|occ|issue|indie|db_|console) {
+        deny all;
+      }
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts:
+        - nextcloud.elmstreet79.de
+      secretName: nextcloud-tls
+  rules:
+    - host: nextcloud.elmstreet79.de
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: nextcloud
+                port:
+                  number: 8080

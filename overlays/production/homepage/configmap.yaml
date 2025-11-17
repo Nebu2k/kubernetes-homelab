@@ -109,7 +109,7 @@ data:
           href: https://dreambox.elmstreet79.de
           description: Dreambox Receiver
           icon: mdi-television-box
-          weight: 10
+          weight: 23
           ping: 192.168.2.11
 
     - DNS:

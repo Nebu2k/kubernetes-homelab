@@ -1,0 +1,199 @@
+# Nextcloud Helm Chart Values
+# Chart: https://github.com/nextcloud/helm
+
+## Nextcloud Image Configuration
+# Let the Helm chart control the image tag via its appVersion.
+# If you want to pin a specific image in the future, set image.tag here.
+image:
+  repository: nextcloud
+  pullPolicy: IfNotPresent
+
+## Deployment Strategy
+strategy:
+  type: Recreate  # Required for RWO volumes
+
+## Replicas - Start with 1, can scale later with RWX storage
+replicaCount: 1
+
+## Ingress Configuration
+# Note: Ingress is disabled in base - configured per environment in overlays
+ingress:
+  enabled: false
+
+## Nextcloud Configuration
+nextcloud:
+  # Host and trusted domains - Override in overlay for your specific domain
+  host: localhost
+  
+  # Admin credentials - Use sealed secrets in overlay
+  username: admin
+  existingSecret:
+    enabled: true
+    secretName: nextcloud-secrets
+    usernameKey: username
+    passwordKey: password
+  
+  # Trusted domains - Override in overlay
+  trustedDomains:
+    - localhost
+  
+  # Data directory
+  datadir: /var/www/html/data
+  
+  # SMTP Configuration (optional - configure if you want email)
+  mail:
+    enabled: false
+    # fromAddress: nextcloud
+    # domain: elmstreet79.de
+    # smtp:
+    #   host: smtp.example.com
+    #   secure: ssl
+    #   port: 465
+    #   authtype: LOGIN
+    #   name: ""
+    #   password: ""
+  
+  # PHP Configuration
+  phpConfigs:
+    uploadLimit.ini: |
+      upload_max_filesize = 10G
+      post_max_size = 10G
+      max_input_time = 3600
+      max_execution_time = 3600
+    memory-limit.ini: |
+      memory_limit = 512M
+  
+  # Nextcloud config.php settings
+  configs:
+    # Performance tuning - Proxy configuration for ingress
+    proxy.config.php: |-
+      <?php
+      $CONFIG = array (
+        'trusted_proxies' => array(
+          0 => '127.0.0.1',
+          1 => '10.0.0.0/8',
+        ),
+        'forwarded_for_headers' => array('HTTP_X_FORWARDED_FOR'),
+      );
+    
+    # Note: Domain-specific configs are in overlay/production/nextcloud/nextcloud-config.yaml
+
+## Persistence for Nextcloud data
+persistence:
+  enabled: true
+  storageClass: "longhorn"
+  accessMode: ReadWriteOnce
+  size: 100Gi
+  # nextcloudData:
+  #   enabled: true
+  #   storageClass: "longhorn"
+  #   accessMode: ReadWriteOnce
+  #   size: 100Gi
+
+## Resources - Adjust based on your cluster capacity
+resources:
+  requests:
+    cpu: 500m
+    memory: 512Mi
+  limits:
+    cpu: 2000m
+    memory: 2Gi
+
+## Liveness and Readiness Probes
+livenessProbe:
+  enabled: true
+  initialDelaySeconds: 30
+  periodSeconds: 10
+  timeoutSeconds: 5
+  failureThreshold: 3
+  successThreshold: 1
+
+readinessProbe:
+  enabled: true
+  initialDelaySeconds: 30
+  periodSeconds: 10
+  timeoutSeconds: 5
+  failureThreshold: 3
+  successThreshold: 1
+
+## Cronjob for background tasks
+cronjob:
+  enabled: true
+  schedule: "*/5 * * * *"  # Every 5 minutes
+
+## Redis for caching and file locking
+redis:
+  enabled: true
+  auth:
+    enabled: true
+    existingSecret: nextcloud-secrets
+    existingSecretPasswordKey: redis-password
+  master:
+    persistence:
+      enabled: true
+      storageClass: "longhorn"
+      size: 8Gi
+    resources:
+      requests:
+        cpu: 100m
+        memory: 128Mi
+      limits:
+        cpu: 500m
+        memory: 512Mi
+
+## PostgreSQL Database
+postgresql:
+  enabled: true
+  global:
+    postgresql:
+      auth:
+        username: nextcloud
+        database: nextcloud
+        existingSecret: nextcloud-secrets
+        secretKeys:
+          adminPasswordKey: postgresql-password
+          userPasswordKey: postgresql-password
+  primary:
+    persistence:
+      enabled: true
+      storageClass: "longhorn"
+      size: 20Gi
+    resources:
+      requests:
+        cpu: 250m
+        memory: 256Mi
+      limits:
+        cpu: 1000m
+        memory: 1Gi
+
+## Internal Database (SQLite) - Disabled, we use PostgreSQL
+internalDatabase:
+  enabled: false
+
+## External Database - Not used, we use the postgresql subchart
+externalDatabase:
+  enabled: false
+
+## Metrics (optional - can enable later for monitoring)
+metrics:
+  enabled: true
+  https: true  # Use HTTPS for metrics endpoint
+  token:
+    enabled: false  # Disable token auth for internal monitoring
+  serviceMonitor:
+    enabled: true
+    namespace: nextcloud
+    labels:
+      prometheus: kube-prometheus  # Adjust if your Victoria Metrics uses different labels
+
+## Security Context
+securityContext:
+  runAsUser: 33  # www-data
+  runAsGroup: 33
+  fsGroup: 33
+
+## Pod Security Context
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 33
+  fsGroup: 33
