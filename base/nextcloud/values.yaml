@@ -52,31 +52,6 @@ nextcloud:
     #   authtype: LOGIN
     #   name: ""
     #   password: ""
-  
-  # PHP Configuration
-  phpConfigs:
-    uploadLimit.ini: |
-      upload_max_filesize = 10G
-      post_max_size = 10G
-      max_input_time = 3600
-      max_execution_time = 3600
-    memory-limit.ini: |
-      memory_limit = 512M
-  
-  # Nextcloud config.php settings
-  configs:
-    # Performance tuning - Proxy configuration for ingress
-    proxy.config.php: |-
-      <?php
-      $CONFIG = array (
-        'trusted_proxies' => array(
-          0 => '127.0.0.1',
-          1 => '10.0.0.0/8',
-        ),
-        'forwarded_for_headers' => array('HTTP_X_FORWARDED_FOR'),
-      );
-    
-    # Note: Domain-specific configs are in overlay/production/nextcloud/nextcloud-config.yaml
 
 ## Persistence for Nextcloud data
 persistence:
@@ -84,11 +59,6 @@ persistence:
   storageClass: "longhorn"
   accessMode: ReadWriteOnce
   size: 100Gi
-  # nextcloudData:
-  #   enabled: true
-  #   storageClass: "longhorn"
-  #   accessMode: ReadWriteOnce
-  #   size: 100Gi
 
 ## Resources - Adjust based on your cluster capacity
 resources:
@@ -185,10 +155,3 @@ metrics:
     namespace: nextcloud
     labels:
       prometheus: kube-prometheus  # Adjust if your Victoria Metrics uses different labels
-
-## Security Context
-securityContext: {}
-
-## Pod Security Context
-podSecurityContext:
-  fsGroup: 33
