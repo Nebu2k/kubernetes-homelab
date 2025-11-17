@@ -14,7 +14,7 @@ spec:
     - host: nextcloud.elmstreet79.de
       http:
         paths:
-          - path: ^/.well-known/(webfinger|nodeinfo)$
+          - path: /.well-known/(webfinger|nodeinfo)
             pathType: ImplementationSpecific
             backend:
               service:

@@ -6,7 +6,7 @@ metadata:
   name: nextcloud-wellknown-dav-redirects
   namespace: nextcloud
   annotations:
-    nginx.ingress.kubernetes.io/permanent-redirect: https://$host/remote.php/dav
+    nginx.ingress.kubernetes.io/permanent-redirect: https://nextcloud.elmstreet79.de/remote.php/dav
     nginx.ingress.kubernetes.io/permanent-redirect-code: "308"
 spec:
   ingressClassName: nginx
@@ -36,7 +36,7 @@ metadata:
   name: nextcloud-wellknown-host-meta-redirect
   namespace: nextcloud
   annotations:
-    nginx.ingress.kubernetes.io/permanent-redirect: https://$host/public.php?service=host-meta
+    nginx.ingress.kubernetes.io/permanent-redirect: https://nextcloud.elmstreet79.de/public.php?service=host-meta
     nginx.ingress.kubernetes.io/permanent-redirect-code: "308"
 spec:
   ingressClassName: nginx
@@ -59,7 +59,7 @@ metadata:
   name: nextcloud-wellknown-host-meta-json-redirect
   namespace: nextcloud
   annotations:
-    nginx.ingress.kubernetes.io/permanent-redirect: https://$host/public.php?service=host-meta-json
+    nginx.ingress.kubernetes.io/permanent-redirect: https://nextcloud.elmstreet79.de/public.php?service=host-meta-json
     nginx.ingress.kubernetes.io/permanent-redirect-code: "308"
 spec:
   ingressClassName: nginx
