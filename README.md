@@ -145,7 +145,8 @@ homelab/
     │   └── metallb-ip-pool.yaml
     ├── nextcloud/
     │   ├── ingress.yaml
-    │   └── kustomization.yaml
+    │   ├── kustomization.yaml
+    │   └── values.yaml
     ├── nginx-ingress/
     │   ├── custom-headers.yaml
     │   └── kustomization.yaml
