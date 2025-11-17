@@ -9,7 +9,8 @@ data:
     http:
       use_x_forwarded_for: true
       trusted_proxies:
-        - 192.168.2.0/24
         - 10.0.0.0/8
+        - 172.16.0.0/12
+        - 192.168.0.0/16
       ip_ban_enabled: true
       login_attempts_threshold: 5
