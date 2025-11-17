@@ -112,12 +112,6 @@ data:
           weight: 10
           ping: 192.168.2.11
 
-      - Haushelden Service:
-          href: https://haushelden-service.de/wp-admin
-          description: Haushelden Webseite
-          icon: https://haushelden-service.de/favicon.ico
-          weight: 30
-
     - DNS:
       - AdGuard Home (Mac Mini):
           href: https://adguard-macmini.elmstreet79.de
@@ -142,17 +136,6 @@ data:
       - Website:
           - icon: mdi-web
             href: https://seb-it.com
-
-    - Website:
-      - Haushelden Service:
-          - icon: https://haushelden-service.de/favicon.ico
-            href: https://haushelden-service.de
-      - WordPress Admin:
-          - icon: https://cdn.simpleicons.org/wordpress/21759B
-            href: https://haushelden-service.de/wp-admin
-      - WordOps Dashboard:
-          - icon: https://docs.wordops.net/images/favicon.png
-            href: https://haushelden-service.de:22222
 
   widgets.yaml: |
     - kubernetes:
