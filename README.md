@@ -847,6 +847,13 @@ kubectl describe application <app-name> -n argocd
 ### Update Component
 
 ```bash
+# Check for latest Helm chart version
+helm repo update
+helm search repo <chart-name> --versions | head -n 5
+
+# Example: Check nginx-ingress latest version
+helm search repo ingress-nginx/ingress-nginx --versions | head -n 5
+
 # Edit Helm values
 vim base/nginx-ingress/values.yaml
 
