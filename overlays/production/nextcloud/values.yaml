@@ -1,2 +1,3 @@
-# nextcloud:
-#   host: nextcloud.elmstreet79.de
+nextcloud:
+  host: nextcloud.kube.home
+  trustedDomains: [nextcloud.elmstreet79.de]
