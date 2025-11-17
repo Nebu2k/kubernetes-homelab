@@ -3,3 +3,39 @@ nextcloud:
   trustedDomains:
     - nextcloud.kube.home
     - nextcloud.elmstreet79.de
+  trustedProxies:
+    - 10.42.0.0/16
+    - 10.43.0.0/16
+  
+internalDatabase:
+  enabled: false
+
+externalDatabase:
+  enabled: true
+  type: postgresql
+  host: nextcloud-postgresql
+  database: nextcloud
+  user: nextcloud
+
+postgresql:
+  enabled: true
+  auth:
+    username: nextcloud
+    database: nextcloud
+  primary:
+    persistence:
+      enabled: true
+      size: 20Gi
+      storageClass: longhorn
+
+cronjob:
+  enabled: true
+  schedule: "*/5 * * * *"
+
+phpConfigs:
+  nextcloud.ini: |
+    memory_limit=2G
+    upload_max_filesize=10G
+    post_max_size=10G
+    max_execution_time=3600
+    max_input_time=3600
