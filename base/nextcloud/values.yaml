@@ -1,0 +1,18 @@
+resources:
+  requests:
+    cpu: 500m
+    memory: 1Gi
+  limits:
+    cpu: 2
+    memory: 3Gi
+
+nodeSelector:
+  node-role.kubernetes.io/worker: "worker"
+
+podAnnotations:
+  reloader.stakater.com/auto: "true"
+
+persistence:
+  enabled: true
+  size: 100Gi
+  storageClass: longhorn 
