@@ -26,7 +26,8 @@ Production-ready K3s cluster managed via GitOps using ArgoCD App-of-Apps pattern
 | 4 | Longhorn |
 | 5 | Portainer, Psitransfer, Victoria Metrics Config |
 | 6 | Victoria Metrics K8s Stack |
-| 8 | Uptime Kuma, Home Assistant |
+| 7 | Home Assistant |
+| 8 | Uptime Kuma |
 | 9 | Homepage |
 | 10 | Cert Manager Config, Metallb Config |
 | 11 | Nginx Ingress Config |
@@ -55,7 +56,7 @@ homelab/
 │   ├── psitransfer.yaml               # Wave 5
 │   ├── victoria-metrics-config.yaml   # Wave 5
 │   ├── victoria-metrics-k8s-stack.yaml # Wave 6
-│   ├── home-assistant.yaml            # Wave 8
+│   ├── home-assistant.yaml            # Wave 7
 │   ├── uptime-kuma.yaml               # Wave 8
 │   ├── homepage.yaml                  # Wave 9
 │   ├── cert-manager-config.yaml       # Wave 10
