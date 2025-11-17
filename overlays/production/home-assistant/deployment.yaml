@@ -17,8 +17,8 @@ spec:
       labels:
         app.kubernetes.io/name: home-assistant
     spec:
-      hostNetwork: true
-      dnsPolicy: ClusterFirstWithHostNet
+      hostNetwork: false
+      dnsPolicy: ClusterFirst
       initContainers:
       - name: copy-config
         image: busybox:1.36
