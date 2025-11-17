@@ -1,3 +1,5 @@
 nextcloud:
-  host: nextcloud.kube.home
-  trustedDomains: [nextcloud.elmstreet79.de]
+  host: nextcloud.elmstreet79.de
+  trustedDomains:
+    - nextcloud.kube.home
+    - nextcloud.elmstreet79.de
