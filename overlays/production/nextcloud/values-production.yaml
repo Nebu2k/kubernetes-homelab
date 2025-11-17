@@ -10,13 +10,13 @@ nextcloud:
     - nextcloud.elmstreet79.de
   
   # Production-specific config.php settings
-  configs:
-    # Domain-specific configuration
-    production.config.php: |-
-      <?php
-      $CONFIG = array (
-        'overwrite.cli.url' => 'https://nextcloud.elmstreet79.de',
-        'overwritehost' => 'nextcloud.elmstreet79.de',
-        'overwriteprotocol' => 'https',
-        'default_locale' => 'de_DE',
-      );
+  # configs:
+  #   # Domain-specific configuration
+  #   production.config.php: |-
+  #     <?php
+  #     $CONFIG = array (
+  #       'overwrite.cli.url' => 'https://nextcloud.elmstreet79.de',
+  #       'overwritehost' => 'nextcloud.elmstreet79.de',
+  #       'overwriteprotocol' => 'https',
+  #       'default_locale' => 'de_DE',
+  #     );
