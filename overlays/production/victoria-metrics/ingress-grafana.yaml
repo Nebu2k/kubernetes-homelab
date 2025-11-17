@@ -17,6 +17,7 @@ metadata:
     gethomepage.dev/widget.url: "https://grafana.elmstreet79.de"
     gethomepage.dev/widget.username: "{{HOMEPAGE_VAR_GRAFANA_USERNAME}}"
     gethomepage.dev/widget.password: "{{HOMEPAGE_VAR_GRAFANA_PASSWORD}}"
+    gethomepage.dev/ping: grafana.elmstreet79.de
 spec:
   ingressClassName: nginx
   tls:

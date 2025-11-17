@@ -18,6 +18,8 @@ metadata:
     gethomepage.dev/widget.type: "argocd"
     gethomepage.dev/widget.url: "https://argocd.elmstreet79.de"
     gethomepage.dev/widget.key: "{{HOMEPAGE_VAR_ARGOCD_TOKEN}}"
+    gethomepage.dev/ping: argocd.elmstreet79.de
+    
 spec:
   ingressClassName: nginx
   tls:

@@ -21,6 +21,7 @@ metadata:
     gethomepage.dev/icon: "nextcloud"
     gethomepage.dev/href: "https://nextcloud.elmstreet79.de"
     gethomepage.dev/weight: "5"
+    gethomepage.dev/ping: nextcloud.elmstreet79.de
 spec:
   ingressClassName: nginx
   tls:
