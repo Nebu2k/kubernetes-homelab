@@ -14,7 +14,7 @@ metadata:
     gethomepage.dev/group: "Applications"
     gethomepage.dev/icon: "https://cdn.simpleicons.org/files/4A90E2"
     gethomepage.dev/weight: "32"
-    gethomepage.dev/ping: psitransfer.elmstreet79.de
+    gethomepage.dev/ping: psitransfer.psitransfer.svc.cluster.local
 spec:
   ingressClassName: nginx
   tls:

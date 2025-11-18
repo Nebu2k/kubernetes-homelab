@@ -14,7 +14,7 @@ metadata:
     gethomepage.dev/group: "Management"
     gethomepage.dev/icon: "https://cdn.simpleicons.org/portainer/13BEF9"
     gethomepage.dev/weight: "20"
-    gethomepage.dev/ping: portainer.elmstreet79.de
+    gethomepage.dev/ping: portainer.portainer.svc.cluster.local
 spec:
   ingressClassName: nginx
   tls:

@@ -16,7 +16,7 @@ metadata:
     gethomepage.dev/group: "Applications"
     gethomepage.dev/icon: "home-assistant.png"
     gethomepage.dev/weight: "31"
-    gethomepage.dev/ping: homeassistant.elmstreet79.de
+    gethomepage.dev/ping: home-assistant.home-assistant.svc.cluster.local
 spec:
   ingressClassName: nginx
   tls:

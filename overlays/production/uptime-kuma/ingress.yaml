@@ -16,7 +16,7 @@ metadata:
     gethomepage.dev/widget.type: "uptimekuma"
     gethomepage.dev/widget.url: "https://uptime.elmstreet79.de"
     gethomepage.dev/widget.slug: "homelab"
-    gethomepage.dev/ping: uptime.elmstreet79.de
+    gethomepage.dev/ping: uptime-kuma.uptime-kuma.svc.cluster.local
 spec:
   ingressClassName: nginx
   tls:
