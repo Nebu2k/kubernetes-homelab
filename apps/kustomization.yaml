@@ -25,5 +25,3 @@ resources:
   - demo-app.yaml
   - psitransfer.yaml
   - home-assistant.yaml
-  - nextcloud.yaml
-  - nextcloud-config.yaml
