@@ -13,12 +13,11 @@ metadata:
     gethomepage.dev/name: "ArgoCD"
     gethomepage.dev/description: "GitOps Continuous Delivery"
     gethomepage.dev/group: "Management"
-    gethomepage.dev/icon: "https://cdn.simpleicons.org/argo/EF7B4D"
+    gethomepage.dev/icon: "argocd.png"
     gethomepage.dev/weight: "10"
     gethomepage.dev/widget.type: "argocd"
     gethomepage.dev/widget.url: "https://argocd.elmstreet79.de"
     gethomepage.dev/widget.key: "{{HOMEPAGE_VAR_ARGOCD_TOKEN}}"
-    gethomepage.dev/ping: argocd-server.argocd.svc.cluster.local
     
 spec:
   ingressClassName: nginx

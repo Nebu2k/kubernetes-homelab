@@ -39,14 +39,14 @@ data:
       - UniFi Controller:
           href: https://unifi.elmstreet79.de
           description: UniFi Router
-          icon: https://cdn.simpleicons.org/ubiquiti/0559C9
+          icon: ubiquiti.png
           weight: 10
           ping: 192.168.2.1
 
       - Proxmox:
           href: https://pve.elmstreet79.de
           description: Virtualization Host
-          icon: https://cdn.simpleicons.org/proxmox/E57000
+          icon: proxmox.png
           weight: 20
           widget:
             type: proxmox
@@ -57,7 +57,7 @@ data:
       - Container (Pi5):
           href: https://portainer.elmstreet79.de
           description: Portainer Docker Pi5
-          icon: https://cdn.simpleicons.org/docker/2496ED
+          icon: docker.png
           weight: 30
           widget:
             type: portainer
@@ -68,7 +68,7 @@ data:
       - Container (Pi4):
           href: https://portainer.elmstreet79.de
           description: Portainer Docker Pi4
-          icon: https://cdn.simpleicons.org/docker/2496ED
+          icon: docker.png
           weight: 40
           widget:
             type: portainer
@@ -79,7 +79,7 @@ data:
     - Server:
       - Mac Mini:
           description: Mac Mini Server
-          icon: https://cdn.simpleicons.org/apple/000000
+          icon: apple.png
           weight: 10
           ping: 192.168.2.4
           widget:
@@ -90,7 +90,7 @@ data:
      
     - Applications:
       - Teslalogger Grafana:
-          icon: https://cdn.simpleicons.org/grafana/F46800
+          icon: grafana.png
           description: Tesla Data Logger Dashboard
           href: https://teslalogger.elmstreet79.de
           weight: 21
@@ -98,7 +98,7 @@ data:
           container: teslalogger-grafana
 
       - Teslalogger Web:
-          icon: https://cdn.simpleicons.org/tesla/CC0000
+          icon: tesla.png
           description: Tesla Data Logger Web
           href: https://teslalogger-web.elmstreet79.de/admin
           weight: 20
