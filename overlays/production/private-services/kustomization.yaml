@@ -18,4 +18,4 @@ resources:
   - adguard-dns-sync-rbac.yaml
   - adguard-dns-sync-job.yaml
   - teslalogger-web-ingress.yaml
-  - adguard-home-sync-ingress.yaml
+  - adguard-sync-ingress.yaml
