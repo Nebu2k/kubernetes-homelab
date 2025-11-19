@@ -151,6 +151,7 @@ homelab/
     │   ├── adguard-dns-sync-rbac.yaml
     │   ├── adguard-ingress.yaml
     │   ├── adguard-macmini-ingress.yaml
+    │   ├── adguard-sync-ingress.yaml
     │   ├── beszel-ingress.yaml
     │   ├── dreambox-ingress.yaml
     │   ├── fr24-ingress.yaml
