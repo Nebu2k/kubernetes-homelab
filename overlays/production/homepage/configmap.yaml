@@ -98,7 +98,7 @@ data:
           container: teslalogger-grafana
 
       - Teslalogger Web:
-          icon: tesla.png
+          icon: https://cdn.simpleicons.org/tesla/CC0000
           description: Tesla Data Logger Web
           href: https://teslalogger-web.elmstreet79.de/admin
           weight: 20
