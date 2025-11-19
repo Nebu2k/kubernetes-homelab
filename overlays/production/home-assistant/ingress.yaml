@@ -13,9 +13,9 @@ metadata:
     gethomepage.dev/enabled: "true"
     gethomepage.dev/name: "Home Assistant"
     gethomepage.dev/description: "Smart Home Hub"
-    gethomepage.dev/group: "Applications"
+    gethomepage.dev/group: "Smart Home"
     gethomepage.dev/icon: "home-assistant.png"
-    gethomepage.dev/weight: "31"
+    gethomepage.dev/weight: "10"
 spec:
   ingressClassName: nginx
   tls:

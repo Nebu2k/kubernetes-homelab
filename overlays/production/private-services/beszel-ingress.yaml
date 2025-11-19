@@ -31,8 +31,15 @@ metadata:
   name: beszel-pi5
   namespace: private-services
   annotations:
-    cert-manager.io/cluster-issuer: internal-ca-issuer
+    cert-manager.io/cluster-issuer: letsencrypt-prod
     nginx.ingress.kubernetes.io/backend-protocol: "HTTP"
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"
+    gethomepage.dev/enabled: "true"
+    gethomepage.dev/name: "Beszel"
+    gethomepage.dev/description: "System Monitor"
+    gethomepage.dev/group: "Monitoring"
+    gethomepage.dev/icon: "beszel.png"
+    gethomepage.dev/weight: "30"
 spec:
   ingressClassName: nginx
   tls:

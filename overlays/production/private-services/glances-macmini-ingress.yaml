@@ -33,6 +33,16 @@ metadata:
   annotations:
     cert-manager.io/cluster-issuer: internal-ca-issuer
     nginx.ingress.kubernetes.io/backend-protocol: "HTTP"
+    gethomepage.dev/enabled: "true"
+    gethomepage.dev/name: "Mac Mini"
+    gethomepage.dev/description: "Mac Mini Server"
+    gethomepage.dev/group: "Server"
+    gethomepage.dev/icon: "apple.png"
+    gethomepage.dev/weight: "10"
+    gethomepage.dev/widget.type: "glances"
+    gethomepage.dev/widget.url: "https://glances-macmini.elmstreet79.de"
+    gethomepage.dev/widget.metric: "memory"
+    gethomepage.dev/widget.version: "4"
 spec:
   ingressClassName: nginx
   tls:

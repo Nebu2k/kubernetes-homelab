@@ -11,9 +11,9 @@ metadata:
     gethomepage.dev/enabled: "true"
     gethomepage.dev/name: "PsiTransfer"
     gethomepage.dev/description: "Simple File Sharing"
-    gethomepage.dev/group: "Applications"
+    gethomepage.dev/group: "Applications - Extern"
     gethomepage.dev/icon: "psitransfer.png"
-    gethomepage.dev/weight: "32"
+    gethomepage.dev/weight: "10"
 spec:
   ingressClassName: nginx
   tls:
