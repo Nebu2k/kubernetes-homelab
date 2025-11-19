@@ -11,16 +11,16 @@ metadata:
     gethomepage.dev/name: "TeslaMate Grafana"
     gethomepage.dev/description: "Tesla Analytics Dashboards"
     gethomepage.dev/group: "Applications - Extern"
-    gethomepage.dev/icon: "grafana.png"
+    gethomepage.dev/icon: "teslamate.png"
     gethomepage.dev/weight: "26"
 spec:
   ingressClassName: nginx
   tls:
     - hosts:
-        - teslamate-grafana.elmstreet79.de
+        - teslamate.elmstreet79.de
       secretName: teslamate-grafana-tls
   rules:
-    - host: teslamate-grafana.elmstreet79.de
+    - host: teslamate.elmstreet79.de
       http:
         paths:
           - path: /

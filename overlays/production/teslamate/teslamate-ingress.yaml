@@ -8,7 +8,7 @@ metadata:
     nginx.ingress.kubernetes.io/ssl-redirect: "false"
     nginx.ingress.kubernetes.io/backend-protocol: "HTTP"
     gethomepage.dev/enabled: "true"
-    gethomepage.dev/name: "TeslaMate"
+    gethomepage.dev/name: "TeslaMate Settings"
     gethomepage.dev/description: "Tesla Tracking & Analytics"
     gethomepage.dev/group: "Applications - Intern"
     gethomepage.dev/icon: "teslamate.png"
@@ -17,10 +17,10 @@ spec:
   ingressClassName: nginx
   tls:
     - hosts:
-        - teslamate.elmstreet79.de
+        - teslamate-settings.elmstreet79.de
       secretName: teslamate-tls
   rules:
-    - host: teslamate.elmstreet79.de
+    - host: teslamate-settings.elmstreet79.de
       http:
         paths:
           - path: /
