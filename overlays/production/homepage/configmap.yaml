@@ -40,10 +40,27 @@ data:
         url: http://longhorn-frontend.longhorn-system
 
   services.yaml: |
-    # Nur Services die nicht über Ingress-Annotations oder Docker-Labels verfügbar sind
-    # z.B. spezielle Widget-Konfigurationen
+    # Services die manuell konfiguriert werden müssen (Health-Check Probleme mit Annotations)
     
     - Infrastructure:
+      - Proxmox:
+          href: https://pve.elmstreet79.de
+          description: Virtualization Host
+          icon: proxmox.png
+          weight: 10
+          widget:
+            type: proxmox
+            url: https://pve.elmstreet79.de
+            username: {{HOMEPAGE_VAR_PROXMOX_USER}}
+            password: {{HOMEPAGE_VAR_PROXMOX_PASS}}
+
+      - UniFi Controller:
+          href: https://unifi.elmstreet79.de
+          description: UniFi Router
+          icon: ubiquiti.png
+          weight: 20
+          ping: 192.168.2.1
+
       - Container (Pi5):
           href: https://portainer.elmstreet79.de
           description: Portainer Docker Pi5
@@ -65,6 +82,52 @@ data:
             url: https://portainer.elmstreet79.de
             env: 4
             key: {{HOMEPAGE_VAR_PORTAINER_TOKEN}}
+
+    - Server:
+      - Mac Mini:
+          description: Mac Mini Server
+          icon: apple.png
+          weight: 10
+          ping: 192.168.2.4
+          widget:
+            type: glances
+            url: https://glances-macmini.elmstreet79.de
+            metric: memory
+            version: 4
+
+    - Applications - Extern:
+      - Teslalogger Grafana:
+          icon: grafana.png
+          description: Tesla Data Logger Dashboard
+          href: https://teslalogger.elmstreet79.de
+          weight: 20
+
+      - Dreambox:
+          href: https://dreambox.elmstreet79.de
+          description: Dreambox Receiver
+          icon: mdi-television-box
+          weight: 30
+          ping: 192.168.2.11
+
+    - Applications - Intern:
+      - Teslalogger Web:
+          icon: https://github.com/bassmaster187/TeslaLogger/blob/master/img/logo.jpg
+          description: Tesla Data Logger Web
+          href: https://teslalogger-web.elmstreet79.de/admin
+          weight: 10
+
+    - DNS:
+      - AdGuard Home (Mac Mini):
+          href: https://adguard-macmini.elmstreet79.de
+          description: AdGuard DNS
+          icon: adguard-home.png
+          weight: 20
+          ping: 192.168.2.4
+          widget:
+            type: adguard
+            url: https://adguard-macmini.elmstreet79.de
+            username: {{HOMEPAGE_VAR_ADGUARD_USER}}
+            password: {{HOMEPAGE_VAR_ADGUARD_PASS}}
 
 
   bookmarks.yaml: |
