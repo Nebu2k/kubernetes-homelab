@@ -29,9 +29,9 @@ data:
       Infrastructure:
         style: row
         columns: 2
-      Test:
+      Cluster Info:
         style: row
-        columns: 1
+        columns: 2
       Applications - Intern:
         style: row
         columns: 2
@@ -94,6 +94,31 @@ data:
             metric: memory
             version: 4
 
+    - Cluster Info:
+      - Kubernetes Cluster:
+          widget:
+            type: kubernetes
+            cluster:
+              show: true
+              cpu: true
+              memory: true
+              showLabel: true
+              label: "K3s Cluster"
+            nodes:
+              show: true
+              cpu: true
+              memory: true
+              showLabel: true
+
+      - Longhorn Storage:
+          widget:
+            type: longhorn
+            url: http://longhorn-frontend.longhorn-system
+            expanded: true
+            total: true
+            labels: true
+            nodes: true
+
     - Applications - Extern:
       - Teslalogger Grafana:
           icon: grafana.png
@@ -107,29 +132,6 @@ data:
           icon: mdi-television-box
           weight: 30
           ping: 192.168.2.11
-
-    - Test:
-      - Kubernetes:
-          description: Kubernetes Cluster Overview
-          kubernetes:
-            cluster:
-             show: true
-             cpu: true
-             memory: true
-             showLabel: true
-             label: "K3s Cluster"
-            nodes:
-             show: true
-             cpu: true
-             memory: true
-             showLabel: true
-      - Longhorn:
-          description: Longhorn Storage Overview
-          longhorn:
-           expanded: true
-           total: true
-           labels: true
-           nodes: true
 
     - Applications - Intern:
       - Teslalogger Web:
