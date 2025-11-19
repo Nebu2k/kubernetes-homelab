@@ -10,6 +10,12 @@ data:
     theme: dark
     color: slate
     headerStyle: boxedWidgets
+    useEqualHeights: true
+    showStats: true
+    quicklaunch:
+      searchDescriptions: true
+      hideInternetSearch: true
+      hideVisitURL: true
     layout:
       Management:
         style: row
@@ -139,6 +145,12 @@ data:
             href: https://seb-it.com
 
   widgets.yaml: |
+    - resources:
+        cpu: true
+        memory: true
+        disk: /
+        expanded: true
+
     - kubernetes:
         cluster:
           show: true
