@@ -9,7 +9,7 @@ data:
     favicon: https://gethomepage.dev/assets/favicon.ico
     theme: dark
     color: slate
-    headerStyle: boxedWidgets
+    headerStyle: clean
     layout:
       Management:
         style: row
@@ -27,6 +27,9 @@ data:
         style: row
         columns: 3
       Infrastructure:
+        style: row
+        columns: 2
+      Widgets:
         style: row
         columns: 2
       Applications - Intern:
