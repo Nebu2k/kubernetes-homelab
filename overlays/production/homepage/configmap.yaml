@@ -28,7 +28,7 @@ data:
         columns: 2
       Applications - Extern:
         style: row
-        columns: 4
+        columns: 3
       Applications - Intern:
         style: row
         columns: 2
