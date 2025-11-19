@@ -11,7 +11,7 @@ metadata:
     gethomepage.dev/name: "TeslaMate"
     gethomepage.dev/description: "Tesla Tracking & Analytics"
     gethomepage.dev/group: "Applications - Extern"
-    gethomepage.dev/icon: "https://raw.githubusercontent.com/teslamate-org/teslamate/master/website/static/img/logo.png"
+    gethomepage.dev/icon: "teslamate.png"
     gethomepage.dev/weight: "25"
 spec:
   ingressClassName: nginx
