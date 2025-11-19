@@ -14,13 +14,10 @@ data:
       Management:
         style: row
         columns: 2
-      Infrastructure:
-        style: row
-        columns: 2
       Monitoring:
         style: row
         columns: 3
-      Server:
+      DNS:
         style: row
         columns: 2
       Smart Home:
@@ -29,10 +26,10 @@ data:
       Applications - Extern:
         style: row
         columns: 3
-      Applications - Intern:
+      Infrastructure:
         style: row
         columns: 2
-      DNS:
+      Applications - Intern:
         style: row
         columns: 2
     providers:
@@ -83,11 +80,10 @@ data:
             env: 4
             key: {{HOMEPAGE_VAR_PORTAINER_TOKEN}}
 
-    - Server:
       - Mac Mini:
           description: Mac Mini Server
           icon: apple.png
-          weight: 10
+          weight: 70
           ping: 192.168.2.4
           widget:
             type: glances
