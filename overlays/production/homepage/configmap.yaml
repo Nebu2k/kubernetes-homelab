@@ -12,10 +12,6 @@ data:
     headerStyle: boxedWidgets
     useEqualHeights: true
     showStats: true
-    quicklaunch:
-      searchDescriptions: true
-      hideInternetSearch: true
-      hideVisitURL: true
     layout:
       Management:
         style: row
