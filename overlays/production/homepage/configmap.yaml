@@ -108,7 +108,7 @@ data:
           weight: 30
           ping: 192.168.2.11
 
-    - :
+    - Test:
       - Kubernetes:
           description: Kubernetes Cluster Overview
           kubernetes:
