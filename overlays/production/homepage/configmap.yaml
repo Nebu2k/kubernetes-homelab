@@ -145,12 +145,6 @@ data:
             href: https://seb-it.com
 
   widgets.yaml: |
-    - resources:
-        cpu: true
-        memory: true
-        disk: /
-        expanded: true
-
     - kubernetes:
         cluster:
           show: true
