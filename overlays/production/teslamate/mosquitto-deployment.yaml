@@ -1,0 +1,54 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: teslamate-mosquitto
+  namespace: teslamate
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: teslamate-mosquitto
+  template:
+    metadata:
+      labels:
+        app: teslamate-mosquitto
+    spec:
+      containers:
+      - name: mosquitto
+        image: eclipse-mosquitto:2
+        command: ["mosquitto", "-c", "/mosquitto-no-auth.conf"]
+        ports:
+        - containerPort: 1883
+        volumeMounts:
+        - name: conf
+          mountPath: /mosquitto/config
+        - name: data
+          mountPath: /mosquitto/data
+        resources:
+          requests:
+            memory: "64Mi"
+            cpu: "50m"
+          limits:
+            memory: "128Mi"
+            cpu: "100m"
+      volumes:
+      - name: conf
+        persistentVolumeClaim:
+          claimName: mosquitto-conf
+      - name: data
+        persistentVolumeClaim:
+          claimName: mosquitto-data
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: teslamate-mosquitto
+  namespace: teslamate
+spec:
+  selector:
+    app: teslamate-mosquitto
+  ports:
+  - port: 1883
+    targetPort: 1883

@@ -24,7 +24,7 @@ Production-ready K3s cluster managed via GitOps using ArgoCD App-of-Apps pattern
 | 2 | Cert Manager |
 | 3 | Nginx Ingress |
 | 4 | Longhorn |
-| 5 | Portainer, Psitransfer, Victoria Metrics Config |
+| 5 | Portainer, Psitransfer, Teslamate, Victoria Metrics Config |
 | 6 | Victoria Metrics K8s Stack |
 | 7 | Home Assistant |
 | 8 | Uptime Kuma |
@@ -54,6 +54,7 @@ homelab/
 │   ├── longhorn.yaml                  # Wave 4
 │   ├── portainer.yaml                 # Wave 5
 │   ├── psitransfer.yaml               # Wave 5
+│   ├── teslamate.yaml                 # Wave 5
 │   ├── victoria-metrics-config.yaml   # Wave 5
 │   ├── victoria-metrics-k8s-stack.yaml # Wave 6
 │   ├── home-assistant.yaml            # Wave 7
@@ -170,6 +171,20 @@ homelab/
     │   ├── kustomization.yaml
     │   ├── psitransfer-secret-sealed.yaml
     │   └── psitransfer-secret-unsealed.yaml
+    ├── teslamate/
+    │   ├── database-deployment.yaml
+    │   ├── database-pvc.yaml
+    │   ├── grafana-deployment.yaml
+    │   ├── grafana-ingress.yaml
+    │   ├── grafana-pvc.yaml
+    │   ├── kustomization.yaml
+    │   ├── mosquitto-deployment.yaml
+    │   ├── mosquitto-pvc.yaml
+    │   ├── namespace.yaml
+    │   ├── teslamate-deployment.yaml
+    │   ├── teslamate-ingress.yaml
+    │   ├── teslamate-secret-sealed.yaml
+    │   └── teslamate-secret-unsealed.yaml
     ├── uptime-kuma/
     │   ├── ingress.yaml
     │   └── kustomization.yaml
@@ -442,6 +457,16 @@ cd kubernetes-homelab
    
    # Note: Sealing happens AFTER cluster bootstrap (Step 7+)
    # For now, keep it unsealed locally (gitignored)
+   ```
+
+   **Generate secure passwords/keys:**
+
+   ```bash
+   # Generate a secure password (32 bytes, base64 encoded)
+   openssl rand -base64 32
+   
+   # Generate a longer encryption key (64 bytes, base64 encoded)
+   openssl rand -base64 64
    ```
 
 4. **Longhorn S3 Backup** (optional):

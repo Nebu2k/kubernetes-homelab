@@ -1,0 +1,66 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: teslamate
+  namespace: teslamate
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: teslamate
+  template:
+    metadata:
+      labels:
+        app: teslamate
+    spec:
+      containers:
+      - name: teslamate
+        image: teslamate/teslamate:latest
+        env:
+        - name: ENCRYPTION_KEY
+          valueFrom:
+            secretKeyRef:
+              name: teslamate-secrets
+              key: ENCRYPTION_KEY
+        - name: DATABASE_USER
+          valueFrom:
+            secretKeyRef:
+              name: teslamate-secrets
+              key: DATABASE_USER
+        - name: DATABASE_PASS
+          valueFrom:
+            secretKeyRef:
+              name: teslamate-secrets
+              key: DATABASE_PASS
+        - name: DATABASE_NAME
+          valueFrom:
+            secretKeyRef:
+              name: teslamate-secrets
+              key: DATABASE_NAME
+        - name: DATABASE_HOST
+          value: "teslamate-database"
+        - name: MQTT_HOST
+          value: "teslamate-mosquitto"
+        ports:
+        - containerPort: 4000
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "100m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: teslamate
+  namespace: teslamate
+spec:
+  selector:
+    app: teslamate
+  ports:
+  - port: 4000
+    targetPort: 4000

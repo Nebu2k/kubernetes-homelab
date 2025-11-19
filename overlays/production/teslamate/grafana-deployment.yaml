@@ -1,0 +1,66 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: teslamate-grafana
+  namespace: teslamate
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: teslamate-grafana
+  template:
+    metadata:
+      labels:
+        app: teslamate-grafana
+    spec:
+      containers:
+      - name: grafana
+        image: teslamate/grafana:latest
+        env:
+        - name: DATABASE_USER
+          valueFrom:
+            secretKeyRef:
+              name: teslamate-secrets
+              key: DATABASE_USER
+        - name: DATABASE_PASS
+          valueFrom:
+            secretKeyRef:
+              name: teslamate-secrets
+              key: DATABASE_PASS
+        - name: DATABASE_NAME
+          valueFrom:
+            secretKeyRef:
+              name: teslamate-secrets
+              key: DATABASE_NAME
+        - name: DATABASE_HOST
+          value: "teslamate-database"
+        ports:
+        - containerPort: 3000
+        volumeMounts:
+        - name: data
+          mountPath: /var/lib/grafana
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "256Mi"
+            cpu: "200m"
+      volumes:
+      - name: data
+        persistentVolumeClaim:
+          claimName: teslamate-grafana
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: teslamate-grafana
+  namespace: teslamate
+spec:
+  selector:
+    app: teslamate-grafana
+  ports:
+  - port: 3000
+    targetPort: 3000

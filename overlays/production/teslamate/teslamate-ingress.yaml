@@ -1,0 +1,32 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: teslamate
+  namespace: teslamate
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"
+    nginx.ingress.kubernetes.io/backend-protocol: "HTTP"
+    gethomepage.dev/enabled: "true"
+    gethomepage.dev/name: "TeslaMate"
+    gethomepage.dev/description: "Tesla Tracking & Analytics"
+    gethomepage.dev/group: "Applications - Extern"
+    gethomepage.dev/icon: "https://raw.githubusercontent.com/teslamate-org/teslamate/master/website/static/img/logo.png"
+    gethomepage.dev/weight: "25"
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts:
+        - teslamate.elmstreet79.de
+      secretName: teslamate-tls
+  rules:
+    - host: teslamate.elmstreet79.de
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: teslamate
+                port:
+                  number: 4000

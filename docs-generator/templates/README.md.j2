@@ -292,6 +292,16 @@ cd kubernetes-homelab
    # For now, keep it unsealed locally (gitignored)
    ```
 
+   **Generate secure passwords/keys:**
+
+   ```bash
+   # Generate a secure password (32 bytes, base64 encoded)
+   openssl rand -base64 32
+   
+   # Generate a longer encryption key (64 bytes, base64 encoded)
+   openssl rand -base64 64
+   ```
+
 4. **Longhorn S3 Backup** (optional):
 
    ```bash
