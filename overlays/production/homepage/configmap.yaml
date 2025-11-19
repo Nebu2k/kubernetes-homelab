@@ -111,7 +111,7 @@ data:
 
     - Applications - Intern:
       - Teslalogger Web:
-          icon: https://github.com/bassmaster187/TeslaLogger/blob/master/img/logo.jpg
+          icon: https://teslalogger-web.elmstreet79.de/admin/logo.jpg
           description: Tesla Data Logger Web
           href: https://teslalogger-web.elmstreet79.de/admin
           weight: 10
