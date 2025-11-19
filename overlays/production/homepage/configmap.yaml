@@ -21,7 +21,7 @@ data:
         columns: 3
       DNS:
         style: row
-        columns: 2
+        columns: 3
       Smart Home:
         style: row
         columns: 2
@@ -33,7 +33,7 @@ data:
         columns: 2
       Applications - Intern:
         style: row
-        columns: 3
+        columns: 2
     providers:
       longhorn:
         url: http://longhorn-frontend.longhorn-system
