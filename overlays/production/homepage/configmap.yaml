@@ -9,7 +9,7 @@ data:
     favicon: https://gethomepage.dev/assets/favicon.ico
     theme: dark
     color: slate
-    headerStyle: clean
+    headerStyle: boxedWidgets
     layout:
       Management:
         style: row
@@ -27,9 +27,6 @@ data:
         style: row
         columns: 3
       Infrastructure:
-        style: row
-        columns: 2
-      Cluster Info:
         style: row
         columns: 2
       Applications - Intern:
@@ -94,31 +91,6 @@ data:
             metric: memory
             version: 4
 
-    - Cluster Info:
-      - Kubernetes Cluster:
-          widget:
-            type: kubernetes
-            cluster:
-              show: true
-              cpu: true
-              memory: true
-              showLabel: true
-              label: "K3s Cluster"
-            nodes:
-              show: true
-              cpu: true
-              memory: true
-              showLabel: true
-
-      - Longhorn Storage:
-          widget:
-            type: longhorn
-            url: http://longhorn-frontend.longhorn-system
-            expanded: true
-            total: true
-            labels: true
-            nodes: true
-
     - Applications - Extern:
       - Teslalogger Grafana:
           icon: grafana.png
@@ -167,6 +139,24 @@ data:
             href: https://seb-it.com
 
   widgets.yaml: |
+    - kubernetes:
+        cluster:
+          show: true
+          cpu: true
+          memory: true
+          showLabel: true
+          label: "K3s Cluster"
+        nodes:
+          show: true
+          cpu: true
+          memory: true
+          showLabel: true
+
+    - longhorn:
+        expanded: true
+        total: true
+        labels: true
+        nodes: true
 
   kubernetes.yaml: |
     mode: cluster
