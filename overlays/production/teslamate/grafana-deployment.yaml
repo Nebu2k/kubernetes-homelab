@@ -15,6 +15,13 @@ spec:
       labels:
         app: teslamate-grafana
     spec:
+      initContainers:
+      - name: fix-permissions
+        image: busybox:latest
+        command: ['sh', '-c', 'chown -R 472:472 /var/lib/grafana']
+        volumeMounts:
+        - name: data
+          mountPath: /var/lib/grafana
       containers:
       - name: grafana
         image: teslamate/grafana:latest
