@@ -13,6 +13,7 @@ metadata:
     gethomepage.dev/group: "Applications - Extern"
     gethomepage.dev/icon: "teslamate.png"
     gethomepage.dev/weight: "26"
+    gethomepage.dev/pod-selector: "app=teslamate-grafana"
 spec:
   ingressClassName: nginx
   tls:

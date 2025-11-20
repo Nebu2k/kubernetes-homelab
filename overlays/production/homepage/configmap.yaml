@@ -39,7 +39,7 @@ data:
         url: http://longhorn-frontend.longhorn-system
 
   services.yaml: |
-    # Services die manuell konfiguriert werden müssen (Health-Check Probleme mit Annotations)
+    # Services die manuell konfiguriert werden müssen, da nicht in Kubernetes gehostet
     
     - Infrastructure:
       - Proxmox:
