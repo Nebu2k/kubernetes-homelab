@@ -112,6 +112,7 @@ homelab/
     │   ├── deployment.yaml
     │   ├── ingress.yaml
     │   ├── kustomization.yaml
+    │   ├── matter-pvc.yaml
     │   ├── namespace.yaml
     │   ├── pvc.yaml
     │   └── service.yaml

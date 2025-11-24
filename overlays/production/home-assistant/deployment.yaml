@@ -70,6 +70,34 @@ spec:
           limits:
             memory: "2Gi"
             cpu: "2000m"
+      - name: matter-server
+        image: ghcr.io/home-assistant-libs/python-matter-server:stable
+        imagePullPolicy: IfNotPresent
+        ports:
+        - name: matter
+          containerPort: 5580
+          protocol: TCP
+        env:
+        - name: TZ
+          value: "Europe/Berlin"
+        volumeMounts:
+        - name: matter-data
+          mountPath: /data
+        command:
+        - python
+        - -m
+        - matter_server.server
+        - --storage-path
+        - /data
+        - --port
+        - "5580"
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "256Mi"
+            cpu: "500m"
       volumes:
       - name: config
         persistentVolumeClaim:
@@ -80,3 +108,6 @@ spec:
           items:
             - key: configuration.yaml
               path: configuration.yaml
+      - name: matter-data
+        persistentVolumeClaim:
+          claimName: home-assistant-matter-data
