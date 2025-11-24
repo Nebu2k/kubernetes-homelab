@@ -38,6 +38,22 @@ spec:
           mountPath: /config
         - name: config-cm
           mountPath: /tmp/config
+      - name: install-hacs
+        image: ghcr.io/home-assistant/home-assistant:stable
+        command:
+        - /bin/bash
+        - -c
+        - |
+          if [ ! -d "/config/custom_components/hacs" ]; then
+            echo "Installing HACS..."
+            wget -q -O - https://get.hacs.xyz | bash -
+            echo "HACS installed successfully"
+          else
+            echo "HACS already installed, skipping"
+          fi
+        volumeMounts:
+        - name: config
+          mountPath: /config
       containers:
       - name: home-assistant
         image: ghcr.io/home-assistant/home-assistant:stable
