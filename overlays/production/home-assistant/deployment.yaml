@@ -19,6 +19,8 @@ spec:
     spec:
       hostNetwork: true
       dnsPolicy: ClusterFirstWithHostNet
+      nodeSelector:
+        kubernetes.io/hostname: raspi5
       initContainers:
       - name: copy-config
         image: busybox:1.36
@@ -47,6 +49,9 @@ spec:
         volumeMounts:
         - name: config
           mountPath: /config
+        - name: dbus
+          mountPath: /run/dbus
+          readOnly: true
         livenessProbe:
           httpGet:
             path: /
@@ -111,3 +116,7 @@ spec:
       - name: matter-data
         persistentVolumeClaim:
           claimName: home-assistant-matter-data
+      - name: dbus
+        hostPath:
+          path: /run/dbus
+          type: Directory
