@@ -62,7 +62,6 @@ data:
           widget:
             type: unifi
             url: https://unifi.elmstreet79.de
-            fields: ["wan", "lan", "lan_devices", "wlan_devices"] 
             username: {{HOMEPAGE_VAR_UNIFI_USER}}
             password: {{HOMEPAGE_VAR_UNIFI_PASS}}
         
