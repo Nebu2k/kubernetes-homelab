@@ -60,7 +60,7 @@ data:
           weight: 20
           ping: 192.168.2.1
           widget:
-            type: unifi_controller
+            type: unifi
             url: https://unifi.elmstreet79.de
             username: {{HOMEPAGE_VAR_UNIFI_USER}}
             password: {{HOMEPAGE_VAR_UNIFI_PASS}}
@@ -165,7 +165,7 @@ data:
         labels: true
         nodes: true
 
-    - grafana:unifi_console:
+    - unifi_console:
         url: https://unifi.elmstreet79.de
         username: {{HOMEPAGE_VAR_UNIFI_USER}}
         password: {{HOMEPAGE_VAR_UNIFI_PASS}}
