@@ -43,6 +43,16 @@ env:
       secretKeyRef:
         name: homepage-portainer
         key: token
+  HOMEPAGE_VAR_UNIFI_USER:
+    valueFrom:
+      secretKeyRef:
+        name: homepage-unifi
+        key: username
+  HOMEPAGE_VAR_UNIFI_PASS:
+    valueFrom:
+      secretKeyRef:
+        name: homepage-unifi
+        key: password
 
 # Mount Internal CA certificate
 persistence:
