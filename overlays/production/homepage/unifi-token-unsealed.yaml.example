@@ -1,0 +1,10 @@
+# Seal with: kubeseal --format=yaml --controller-namespace=kube-system < unifi-token-unsealed.yaml > unifi-token-sealed.yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: homepage-unifi
+  namespace: homepage
+type: Opaque
+stringData:
+  username: "admin"
+  password: "your-unifi-password-here"

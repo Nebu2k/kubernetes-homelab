@@ -129,6 +129,8 @@ homelab/
     │   ├── portainer-token-sealed.yaml
     │   ├── portainer-token-unsealed.yaml
     │   ├── proxmox-secret-sealed.yaml
+    │   ├── unifi-token-sealed.yaml
+    │   ├── unifi-token-unsealed.yaml
     │   └── values.yaml
     ├── longhorn/
     │   ├── disable-local-path-default.yaml
@@ -634,6 +636,19 @@ vim overlays/production/homepage/proxmox-secret-unsealed.yaml
 kubeseal --format=yaml --controller-namespace=kube-system \
   < overlays/production/homepage/proxmox-secret-unsealed.yaml \
   > overlays/production/homepage/proxmox-secret-sealed.yaml
+
+
+# 6. Unifi Token
+cp overlays/production/homepage/unifi-token-unsealed.yaml.example \
+   overlays/production/homepage/unifi-token-unsealed.yaml
+
+# Edit the file and replace placeholder values with your actual credentials
+vim overlays/production/homepage/unifi-token-unsealed.yaml
+
+# Seal the secret
+kubeseal --format=yaml --controller-namespace=kube-system \
+  < overlays/production/homepage/unifi-token-unsealed.yaml \
+  > overlays/production/homepage/unifi-token-sealed.yaml
 
 
 # Commit and push

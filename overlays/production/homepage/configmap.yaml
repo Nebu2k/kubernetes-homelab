@@ -59,6 +59,11 @@ data:
           icon: ubiquiti.png
           weight: 20
           ping: 192.168.2.1
+          widget:
+            type: unifi_controller
+            url: https://unifi.elmstreet79.de
+            username: {{HOMEPAGE_VAR_UNIFI_USER}}
+            password: {{HOMEPAGE_VAR_UNIFI_PASS}}
 
       - Container (Pi5):
           href: https://portainer.elmstreet79.de
@@ -159,6 +164,11 @@ data:
         total: true
         labels: true
         nodes: true
+
+    - grafana:unifi_console:
+        url: https://unifi.elmstreet79.de
+        username: {{HOMEPAGE_VAR_UNIFI_USER}}
+        password: {{HOMEPAGE_VAR_UNIFI_PASS}}
 
   kubernetes.yaml: |
     mode: cluster
