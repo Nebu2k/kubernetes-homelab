@@ -30,11 +30,13 @@ data:
     # - Ingresses with internal-ca-issuer (internal-only services)
     # - Ingresses with letsencrypt-prod (external services with split-horizon DNS)
     # - Only domains ending with DOMAIN_SUFFIX
+    # - Exclude ingresses with annotation adguard-dns-sync/exclude: "true"
     DOMAINS=$(curl -s -k -H "Authorization: Bearer ${TOKEN}" \
       "https://kubernetes.default.svc/apis/networking.k8s.io/v1/ingresses?limit=500" | \
       jq -r ".items[] | 
         select(.metadata.annotations[\"cert-manager.io/cluster-issuer\"] == \"internal-ca-issuer\" or 
-               .metadata.annotations[\"cert-manager.io/cluster-issuer\"] == \"letsencrypt-prod\") | 
+               .metadata.annotations[\"cert-manager.io/cluster-issuer\"] == \"letsencrypt-prod\") |
+        select(.metadata.annotations[\"adguard-dns-sync/exclude\"] != \"true\") |
         .spec.rules[]?.host | 
         select(. != null and endswith(\"${DOMAIN_SUFFIX}\"))" | \
       sort -u)
