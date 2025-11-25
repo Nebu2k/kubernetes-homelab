@@ -165,6 +165,9 @@ homelab/
     │   ├── kustomization.yaml
     │   ├── minio-ingress.yaml
     │   ├── proxmox-ingress.yaml
+    │   ├── tesla-key-configmap.yaml
+    │   ├── tesla-key-deployment.yaml
+    │   ├── tesla-key-ingress.yaml
     │   ├── teslalogger-ingress.yaml
     │   ├── teslalogger-web-ingress.yaml
     │   └── unifi-ingress.yaml

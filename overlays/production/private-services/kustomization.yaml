@@ -19,3 +19,6 @@ resources:
   - adguard-dns-sync-job.yaml
   - teslalogger-web-ingress.yaml
   - adguard-sync-ingress.yaml
+  - tesla-key-configmap.yaml
+  - tesla-key-deployment.yaml
+  - tesla-key-ingress.yaml

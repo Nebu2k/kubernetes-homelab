@@ -1,0 +1,59 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tesla-key
+  namespace: private-services
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: tesla-key
+  template:
+    metadata:
+      labels:
+        app: tesla-key
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:alpine
+        ports:
+        - containerPort: 80
+        volumeMounts:
+        - name: nginx-config
+          mountPath: /etc/nginx/conf.d/default.conf
+          subPath: nginx.conf
+        - name: tesla-key
+          mountPath: /usr/share/nginx/html/com.tesla.3p.public-key.pem
+          subPath: com.tesla.3p.public-key.pem
+        resources:
+          requests:
+            memory: "32Mi"
+            cpu: "50m"
+          limits:
+            memory: "64Mi"
+            cpu: "100m"
+      volumes:
+      - name: nginx-config
+        configMap:
+          name: tesla-key
+          items:
+          - key: nginx.conf
+            path: nginx.conf
+      - name: tesla-key
+        configMap:
+          name: tesla-key
+          items:
+          - key: com.tesla.3p.public-key.pem
+            path: com.tesla.3p.public-key.pem
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: tesla-key
+  namespace: private-services
+spec:
+  selector:
+    app: tesla-key
+  ports:
+  - port: 80
+    targetPort: 80
