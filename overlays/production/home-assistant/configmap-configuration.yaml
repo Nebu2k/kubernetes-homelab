@@ -17,3 +17,12 @@ data:
     
     # Enable discovery for automatic device detection
     default_config:
+    
+    # Enable automations UI
+    automation: !include automations.yaml
+    
+    # Enable scripts UI
+    script: !include scripts.yaml
+    
+    # Enable scenes UI
+    scene: !include scenes.yaml
