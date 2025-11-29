@@ -12,13 +12,6 @@ vmsingle:
   spec:
     retentionPeriod: "30d"
     replicaCount: 1
-    affinity:
-      nodeAffinity:
-        requiredDuringSchedulingIgnoredDuringExecution:
-          nodeSelectorTerms:
-          - matchExpressions:
-            - key: node-role.kubernetes.io/worker
-              operator: Exists
     storage:
       accessModes:
         - ReadWriteOnce
@@ -32,6 +25,13 @@ vmsingle:
         memory: 1Gi
       limits:
         memory: 2Gi
+    affinity:
+      nodeAffinity:
+        requiredDuringSchedulingIgnoredDuringExecution:
+          nodeSelectorTerms:
+          - matchExpressions:
+            - key: node-role.kubernetes.io/worker
+              operator: Exists
 
 # VMAgent - collects metrics from scrape targets
 vmagent:
