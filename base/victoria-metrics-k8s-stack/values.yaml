@@ -131,16 +131,16 @@ kubeApiServer:
 kubeControllerManager:
   enabled: true
   endpoints:
+    - 192.168.2.19 # k3s-cp-1
     - 192.168.2.2 # raspi4
     - 192.168.2.9 # raspi5
-    - 192.168.2.12 # ubuntu-1
 
 kubeScheduler:
   enabled: true
   endpoints:
+    - 192.168.2.19 # k3s-cp-1
     - 192.168.2.2 # raspi4
     - 192.168.2.9 # raspi5
-    - 192.168.2.12 # ubuntu-1
 
 kubeProxy:
   enabled: false # K3s uses kube-router
@@ -148,9 +148,9 @@ kubeProxy:
 kubeEtcd:
   enabled: true
   endpoints:
+    - 192.168.2.19 # k3s-cp-1
     - 192.168.2.2 # raspi4
     - 192.168.2.9 # raspi5
-    - 192.168.2.12 # ubuntu-1
 
 coreDns:
   enabled: true
