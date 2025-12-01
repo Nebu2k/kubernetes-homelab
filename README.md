@@ -203,7 +203,7 @@ homelab/
     │   └── kustomization.yaml
     └── wazuh-kubernetes/
         ├── kustomization.yaml
-        └── wazuh-agent-daemonset.yaml
+        └── wazuh-k8s-rbac.yaml
 ```
 
 ## 🚀 Fresh Installation
