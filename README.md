@@ -170,7 +170,8 @@ homelab/
     │   ├── tesla-key-ingress.yaml
     │   ├── teslalogger-ingress.yaml
     │   ├── teslalogger-web-ingress.yaml
-    │   └── unifi-ingress.yaml
+    │   ├── unifi-ingress.yaml
+    │   └── wazuh-ingress.yaml
     ├── psitransfer/
     │   ├── deployment.yaml
     │   ├── ingress.yaml
