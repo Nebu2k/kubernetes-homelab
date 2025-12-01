@@ -34,7 +34,7 @@ Production-ready K3s cluster managed via GitOps using ArgoCD App-of-Apps pattern
 | 12 | Portainer Config, Argocd Config |
 | 13 | Longhorn Config |
 | 16 | Uptime Kuma Config, Private Services |
-| 17 | Homepage Config, Wazuh Kubernetes |
+| 17 | Homepage Config |
 | 20 | Demo App |
 
 ## 📁 Repository Structure
@@ -69,7 +69,6 @@ homelab/
 │   ├── private-services.yaml          # Wave 16
 │   ├── uptime-kuma-config.yaml        # Wave 16
 │   ├── homepage-config.yaml           # Wave 17
-│   ├── wazuh-kubernetes.yaml          # Wave 17
 │   └── demo-app.yaml                  # Wave 20
 ├── base/
 │   ├── cert-manager/
@@ -196,14 +195,11 @@ homelab/
     ├── uptime-kuma/
     │   ├── ingress.yaml
     │   └── kustomization.yaml
-    ├── victoria-metrics/
-    │   ├── grafana-admin-sealed.yaml
-    │   ├── grafana-admin-unsealed.yaml
-    │   ├── ingress-grafana.yaml
-    │   └── kustomization.yaml
-    └── wazuh-kubernetes/
-        ├── kustomization.yaml
-        └── wazuh-k8s-rbac.yaml
+    └── victoria-metrics/
+        ├── grafana-admin-sealed.yaml
+        ├── grafana-admin-unsealed.yaml
+        ├── ingress-grafana.yaml
+        └── kustomization.yaml
 ```
 
 ## 🚀 Fresh Installation
