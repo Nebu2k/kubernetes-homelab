@@ -26,3 +26,4 @@ resources:
   - psitransfer.yaml
   - home-assistant.yaml
   - teslamate.yaml
+  - wazuh-kubernetes.yaml
