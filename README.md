@@ -25,6 +25,7 @@ Production-ready K3s cluster managed via GitOps using ArgoCD App-of-Apps pattern
 | 3 | Nginx Ingress |
 | 4 | Longhorn |
 | 5 | Portainer, Psitransfer, Teslamate |
+| 6 | Kube Prometheus Stack |
 | 7 | Home Assistant |
 | 8 | Uptime Kuma |
 | 9 | Homepage |
@@ -32,6 +33,7 @@ Production-ready K3s cluster managed via GitOps using ArgoCD App-of-Apps pattern
 | 11 | Nginx Ingress Config |
 | 12 | Portainer Config, Argocd Config |
 | 13 | Longhorn Config |
+| 14 | Kube Prometheus Stack Config |
 | 16 | Uptime Kuma Config, Private Services |
 | 17 | Homepage Config |
 | 20 | Demo App |
@@ -54,6 +56,7 @@ homelab/
 │   ├── portainer.yaml                 # Wave 5
 │   ├── psitransfer.yaml               # Wave 5
 │   ├── teslamate.yaml                 # Wave 5
+│   ├── kube-prometheus-stack.yaml     # Wave 6
 │   ├── home-assistant.yaml            # Wave 7
 │   ├── uptime-kuma.yaml               # Wave 8
 │   ├── homepage.yaml                  # Wave 9
@@ -63,6 +66,7 @@ homelab/
 │   ├── argocd-config.yaml             # Wave 12
 │   ├── portainer-config.yaml          # Wave 12
 │   ├── longhorn-config.yaml           # Wave 13
+│   ├── kube-prometheus-stack-config.yaml # Wave 14
 │   ├── private-services.yaml          # Wave 16
 │   ├── uptime-kuma-config.yaml        # Wave 16
 │   ├── homepage-config.yaml           # Wave 17
@@ -71,6 +75,8 @@ homelab/
 │   ├── cert-manager/
 │       └── values.yaml
 │   ├── homepage/
+│       └── values.yaml
+│   ├── kube-prometheus-stack/
 │       └── values.yaml
 │   ├── longhorn/
 │       └── values.yaml
@@ -126,6 +132,11 @@ homelab/
     │   ├── unifi-token-sealed.yaml
     │   ├── unifi-token-unsealed.yaml
     │   └── values.yaml
+    ├── kube-prometheus-stack/
+    │   ├── alertmanager-ingress.yaml
+    │   ├── grafana-ingress.yaml
+    │   ├── kustomization.yaml
+    │   └── prometheus-ingress.yaml
     ├── longhorn/
     │   ├── disable-local-path-default.yaml
     │   ├── ingress.yaml
@@ -990,6 +1001,7 @@ kubectl get secret -n monitoring grafana-admin-credentials \
 | Component | Version | Purpose |
 |-----------|---------|---------|
 | Reloader | 2.2.5 | Reloader |
+| Kube Prometheus Stack | 79.9.0 | Kube Prometheus Stack |
 | Sealed Secrets | 2.17.7 | Sealed Secrets |
 | Metallb | 0.15.2 | Metallb |
 | Ingress Nginx | 4.14.0 | Nginx Ingress |
@@ -1007,6 +1019,7 @@ kubectl get secret -n monitoring grafana-admin-credentials \
 - [Homepage](https://jameswynn.github.io/helm-charts)
 - [Ingress Nginx](https://kubernetes.github.io/ingress-nginx)
 - [K3s](https://docs.k3s.io/)
+- [Kube Prometheus Stack](https://prometheus-community.github.io/helm-charts)
 - [Longhorn](https://charts.longhorn.io)
 - [Metallb](https://metallb.github.io/metallb)
 - [Portainer](https://portainer.github.io/k8s)

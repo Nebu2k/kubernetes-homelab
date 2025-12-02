@@ -12,6 +12,8 @@ resources:
   - nginx-ingress-config.yaml
   - longhorn.yaml
   - longhorn-config.yaml
+  - kube-prometheus-stack.yaml
+  - kube-prometheus-stack-config.yaml
   - portainer.yaml
   - portainer-config.yaml
   - uptime-kuma.yaml

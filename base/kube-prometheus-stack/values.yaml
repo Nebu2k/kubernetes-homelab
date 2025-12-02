@@ -1,0 +1,182 @@
+# kube-prometheus-stack Helm values
+# Optimized for Raspberry Pi homelab
+
+# Global settings
+defaultRules:
+  create: true
+  rules:
+    alertmanager: true
+    etcd: false  # K3s uses embedded SQLite by default
+    kubeScheduler: false  # K3s scheduler metrics not exposed
+    kubeControllerManager: false  # K3s controller metrics not exposed
+
+# Prometheus configuration
+prometheus:
+  prometheusSpec:
+    # Resource limits (conservative for Pi)
+    resources:
+      requests:
+        cpu: 200m
+        memory: 512Mi
+      limits:
+        cpu: 1000m
+        memory: 2Gi
+    
+    # Storage configuration
+    storageSpec:
+      volumeClaimTemplate:
+        spec:
+          storageClassName: longhorn
+          accessModes: ["ReadWriteOnce"]
+          resources:
+            requests:
+              storage: 20Gi
+    
+    # Retention policy
+    retention: 30d
+    retentionSize: "18GB"
+    
+    # Service monitors
+    serviceMonitorSelectorNilUsesHelmValues: false
+    podMonitorSelectorNilUsesHelmValues: false
+    
+    # Enable scraping of kube-system components
+    additionalScrapeConfigs:
+      - job_name: 'kubernetes-nodes'
+        kubernetes_sd_configs:
+          - role: node
+        relabel_configs:
+          - source_labels: [__address__]
+            regex: '(.*):10250'
+            replacement: '${1}:10250'
+            target_label: __address__
+            action: replace
+
+# Grafana configuration
+grafana:
+  enabled: true
+  
+  # Admin credentials (change in production!)
+  adminPassword: prom-operator
+  
+  # Persistence
+  persistence:
+    enabled: true
+    storageClassName: longhorn
+    size: 5Gi
+  
+  # Ingress will be configured in overlays/production
+  ingress:
+    enabled: false
+  
+  # Resources (conservative for Pi)
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+  
+  # Pre-installed dashboards
+  dashboardProviders:
+    dashboardproviders.yaml:
+      apiVersion: 1
+      providers:
+      - name: 'default'
+        orgId: 1
+        folder: ''
+        type: file
+        disableDeletion: false
+        editable: true
+        options:
+          path: /var/lib/grafana/dashboards/default
+  
+  # Additional dashboards
+  dashboards:
+    default:
+      # Kubernetes cluster overview
+      kubernetes-cluster:
+        gnetId: 7249
+        revision: 1
+        datasource: Prometheus
+      # Node exporter full
+      node-exporter:
+        gnetId: 1860
+        revision: 31
+        datasource: Prometheus
+      # Longhorn dashboard
+      longhorn:
+        gnetId: 13032
+        revision: 6
+        datasource: Prometheus
+      # NGINX Ingress Controller
+      nginx-ingress:
+        gnetId: 9614
+        revision: 1
+        datasource: Prometheus
+
+# Alert Manager
+alertmanager:
+  enabled: true
+  
+  alertmanagerSpec:
+    resources:
+      requests:
+        cpu: 50m
+        memory: 128Mi
+      limits:
+        cpu: 200m
+        memory: 256Mi
+    
+    storage:
+      volumeClaimTemplate:
+        spec:
+          storageClassName: longhorn
+          accessModes: ["ReadWriteOnce"]
+          resources:
+            requests:
+              storage: 2Gi
+
+# Node exporter (collects node metrics)
+nodeExporter:
+  enabled: true
+
+# Kube-state-metrics (cluster state metrics)
+kubeStateMetrics:
+  enabled: true
+
+# Prometheus Operator
+prometheusOperator:
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+  
+  # Enable monitoring of namespaces
+  namespaces:
+    releaseNamespace: true
+    additional:
+      - kube-system
+      - ingress-nginx
+      - cert-manager
+      - longhorn-system
+      - home-assistant
+      - teslamate
+
+# Service Monitors for additional components
+additionalServiceMonitors:
+  # Monitor NGINX Ingress Controller
+  - name: nginx-ingress-controller
+    selector:
+      matchLabels:
+        app.kubernetes.io/name: ingress-nginx
+    namespaceSelector:
+      matchNames:
+        - ingress-nginx
+    endpoints:
+      - port: metrics
+        interval: 30s
