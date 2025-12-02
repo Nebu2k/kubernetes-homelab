@@ -181,12 +181,12 @@ alertmanager:
   
   alertmanagerSpec:
     # Mount SMTP credentials secret as files
-    volumes:
+    additionalVolumes:
       - name: smtp-credentials
         secret:
           secretName: alertmanager-smtp-credentials
     
-    volumeMounts:
+    additionalVolumeMounts:
       - name: smtp-credentials
         mountPath: /etc/alertmanager/secrets/alertmanager-smtp-credentials
         readOnly: true
