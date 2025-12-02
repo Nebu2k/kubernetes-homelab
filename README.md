@@ -143,7 +143,8 @@ homelab/
     │   ├── kustomization.yaml
     │   ├── recurring-backup-jobs.yaml
     │   ├── s3-secret-sealed.yaml
-    │   └── s3-secret-unsealed.yaml
+    │   ├── s3-secret-unsealed.yaml
+    │   └── servicemonitor.yaml
     ├── metallb/
     │   ├── kustomization.yaml
     │   └── metallb-ip-pool.yaml

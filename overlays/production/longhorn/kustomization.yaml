@@ -6,3 +6,4 @@ resources:
   - disable-local-path-default.yaml
   - recurring-backup-jobs.yaml
   - ingress.yaml
+  - servicemonitor.yaml
