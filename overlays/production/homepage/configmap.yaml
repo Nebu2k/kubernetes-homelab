@@ -33,7 +33,7 @@ data:
         columns: 2
       Applications - Intern:
         style: row
-        columns: 2
+        columns: 3
     providers:
       longhorn:
         url: http://longhorn-frontend.longhorn-system
