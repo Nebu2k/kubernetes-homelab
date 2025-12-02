@@ -10,6 +10,8 @@ defaultRules:
     kubeScheduler: false  # K3s scheduler metrics not exposed
     kubeControllerManager: false  # K3s controller metrics not exposed
     kubeProxy: false  # K3s uses kube-router instead of kube-proxy
+  disabled:
+    KubeSchedulerDown: true  # K3s scheduler metrics not available
 
 # Prometheus configuration
 prometheus:
