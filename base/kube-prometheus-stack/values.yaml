@@ -43,18 +43,6 @@ prometheus:
     # Service monitors
     serviceMonitorSelectorNilUsesHelmValues: false
     podMonitorSelectorNilUsesHelmValues: false
-    
-    # Enable scraping of kube-system components
-    additionalScrapeConfigs:
-      - job_name: 'kubernetes-nodes'
-        kubernetes_sd_configs:
-          - role: node
-        relabel_configs:
-          - source_labels: [__address__]
-            regex: '(.*):10250'
-            replacement: '${1}:10250'
-            target_label: __address__
-            action: replace
 
 # Grafana configuration
 grafana:
