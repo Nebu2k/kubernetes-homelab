@@ -133,9 +133,12 @@ homelab/
     │   └── values.yaml
     ├── kube-prometheus-stack/
     │   ├── alertmanager-ingress.yaml
+    │   ├── alertmanager-ses-sealed.yaml
+    │   ├── alertmanager-ses-unsealed.yaml
     │   ├── grafana-ingress.yaml
     │   ├── kustomization.yaml
-    │   └── prometheus-ingress.yaml
+    │   ├── prometheus-ingress.yaml
+    │   └── prometheus-rules.yaml
     ├── longhorn/
     │   ├── disable-local-path-default.yaml
     │   ├── ingress.yaml

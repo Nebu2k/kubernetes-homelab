@@ -7,3 +7,5 @@ resources:
   - grafana-ingress.yaml
   - prometheus-ingress.yaml
   - alertmanager-ingress.yaml
+  - prometheus-rules.yaml
+  - alertmanager-ses-sealed.yaml

@@ -128,6 +128,11 @@ grafana:
 alertmanager:
   enabled: true
   
+  # AlertManager configuration - Email via Amazon SES
+  # Credentials are injected from sealed secret: alertmanager-ses-sealed.yaml
+  # The secret creates alertmanager-config which contains the full alertmanager.yaml
+  alertmanagerConfigSecret: alertmanager-config
+  
   alertmanagerSpec:
     resources:
       requests:

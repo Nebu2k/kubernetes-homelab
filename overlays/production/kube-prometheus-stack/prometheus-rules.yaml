@@ -1,0 +1,205 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: homelab-alerts
+  namespace: monitoring
+  labels:
+    app.kubernetes.io/name: kube-prometheus-stack
+    app.kubernetes.io/instance: kube-prometheus-stack
+spec:
+  groups:
+    # Node filesystem alerts
+    - name: node-disk-space
+      interval: 30s
+      rules:
+        - alert: NodeFilesystemSpaceWarning
+          expr: |
+            (
+              node_filesystem_avail_bytes{mountpoint!~"^/run.*|^/sys.*|^/proc.*|^/dev.*"} / 
+              node_filesystem_size_bytes{mountpoint!~"^/run.*|^/sys.*|^/proc.*|^/dev.*"}
+            ) < 0.20
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            summary: "Node filesystem space is running low"
+            description: "Filesystem {{ $labels.mountpoint }} on {{ $labels.instance }} has only {{ $value | humanizePercentage }} available (threshold: 20%)."
+
+        - alert: NodeFilesystemSpaceCritical
+          expr: |
+            (
+              node_filesystem_avail_bytes{mountpoint!~"^/run.*|^/sys.*|^/proc.*|^/dev.*"} / 
+              node_filesystem_size_bytes{mountpoint!~"^/run.*|^/sys.*|^/proc.*|^/dev.*"}
+            ) < 0.10
+          for: 2m
+          labels:
+            severity: critical
+          annotations:
+            summary: "Node filesystem space is critically low"
+            description: "Filesystem {{ $labels.mountpoint }} on {{ $labels.instance }} has only {{ $value | humanizePercentage }} available (threshold: 10%)."
+
+        - alert: NodeFilesystemInodeWarning
+          expr: |
+            (
+              node_filesystem_files_free{mountpoint!~"^/run.*|^/sys.*|^/proc.*|^/dev.*"} / 
+              node_filesystem_files{mountpoint!~"^/run.*|^/sys.*|^/proc.*|^/dev.*"}
+            ) < 0.20
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            summary: "Node filesystem inodes are running low"
+            description: "Filesystem {{ $labels.mountpoint }} on {{ $labels.instance }} has only {{ $value | humanizePercentage }} inodes available."
+
+    # Longhorn volume alerts
+    - name: longhorn-storage
+      interval: 30s
+      rules:
+        - alert: LonghornVolumeSpaceWarning
+          expr: |
+            (
+              longhorn_volume_actual_size_bytes / 
+              longhorn_volume_capacity_bytes
+            ) > 0.80
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            summary: "Longhorn volume space usage is high"
+            description: "Volume {{ $labels.volume }} is {{ $value | humanizePercentage }} full (threshold: 80%)."
+
+        - alert: LonghornVolumeSpaceCritical
+          expr: |
+            (
+              longhorn_volume_actual_size_bytes / 
+              longhorn_volume_capacity_bytes
+            ) > 0.90
+          for: 2m
+          labels:
+            severity: critical
+          annotations:
+            summary: "Longhorn volume space usage is critical"
+            description: "Volume {{ $labels.volume }} is {{ $value | humanizePercentage }} full (threshold: 90%)."
+
+        - alert: LonghornVolumeDegraded
+          expr: longhorn_volume_robustness == 2
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            summary: "Longhorn volume is degraded"
+            description: "Volume {{ $labels.volume }} is in degraded state. Check replica health."
+
+        - alert: LonghornVolumeFaulted
+          expr: longhorn_volume_robustness == 3
+          for: 1m
+          labels:
+            severity: critical
+          annotations:
+            summary: "Longhorn volume is faulted"
+            description: "Volume {{ $labels.volume }} is in faulted state. Immediate action required!"
+
+        - alert: LonghornNodeStorageWarning
+          expr: |
+            (
+              longhorn_node_storage_usage_bytes / 
+              longhorn_node_storage_capacity_bytes
+            ) > 0.80
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            summary: "Longhorn node storage usage is high"
+            description: "Node {{ $labels.node }} storage is {{ $value | humanizePercentage }} full (threshold: 80%)."
+
+        - alert: LonghornNodeStorageCritical
+          expr: |
+            (
+              longhorn_node_storage_usage_bytes / 
+              longhorn_node_storage_capacity_bytes
+            ) > 0.90
+          for: 2m
+          labels:
+            severity: critical
+          annotations:
+            summary: "Longhorn node storage usage is critical"
+            description: "Node {{ $labels.node }} storage is {{ $value | humanizePercentage }} full (threshold: 90%)."
+
+    # Pod and container alerts
+    - name: pod-health
+      interval: 30s
+      rules:
+        - alert: PodCrashLooping
+          expr: rate(kube_pod_container_status_restarts_total[15m]) > 0
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            summary: "Pod is crash looping"
+            description: "Pod {{ $labels.namespace }}/{{ $labels.pod }} container {{ $labels.container }} is restarting frequently."
+
+        - alert: PodNotReady
+          expr: |
+            kube_pod_status_phase{phase!~"Succeeded|Running"} > 0
+          for: 10m
+          labels:
+            severity: warning
+          annotations:
+            summary: "Pod is not ready"
+            description: "Pod {{ $labels.namespace }}/{{ $labels.pod }} has been in {{ $labels.phase }} state for more than 10 minutes."
+
+    # Node alerts
+    - name: node-health
+      interval: 30s
+      rules:
+        - alert: NodeMemoryPressure
+          expr: kube_node_status_condition{condition="MemoryPressure",status="true"} == 1
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            summary: "Node is under memory pressure"
+            description: "Node {{ $labels.node }} is experiencing memory pressure."
+
+        - alert: NodeDiskPressure
+          expr: kube_node_status_condition{condition="DiskPressure",status="true"} == 1
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            summary: "Node is under disk pressure"
+            description: "Node {{ $labels.node }} is experiencing disk pressure."
+
+        - alert: NodeNotReady
+          expr: kube_node_status_condition{condition="Ready",status="true"} == 0
+          for: 5m
+          labels:
+            severity: critical
+          annotations:
+            summary: "Node is not ready"
+            description: "Node {{ $labels.node }} is not ready. Check node status immediately."
+
+        - alert: NodeHighCPU
+          expr: |
+            (
+              100 - (avg by (instance) (rate(node_cpu_seconds_total{mode="idle"}[5m])) * 100)
+            ) > 80
+          for: 10m
+          labels:
+            severity: warning
+          annotations:
+            summary: "Node CPU usage is high"
+            description: "Node {{ $labels.instance }} CPU usage is {{ $value | humanize }}% (threshold: 80%)."
+
+        - alert: NodeHighMemory
+          expr: |
+            (
+              (node_memory_MemTotal_bytes - node_memory_MemAvailable_bytes) / 
+              node_memory_MemTotal_bytes
+            ) > 0.85
+          for: 10m
+          labels:
+            severity: warning
+          annotations:
+            summary: "Node memory usage is high"
+            description: "Node {{ $labels.instance }} memory usage is {{ $value | humanizePercentage }} (threshold: 85%)."
