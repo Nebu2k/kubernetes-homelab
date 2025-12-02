@@ -123,6 +123,8 @@ homelab/
     │   ├── argocd-token-secret-sealed.yaml
     │   ├── argocd-token-secret-unsealed.yaml
     │   ├── configmap.yaml
+    │   ├── grafana-credentials-sealed.yaml
+    │   ├── grafana-credentials-unsealed.yaml
     │   ├── ingress.yaml
     │   ├── internal-ca-copy.yaml
     │   ├── kustomization.yaml
@@ -598,7 +600,20 @@ kubeseal --format=yaml --controller-namespace=kube-system \
   > overlays/production/homepage/argocd-token-secret-sealed.yaml
 
 
-# 3. Portainer Token
+# 3. Grafana Credentials
+cp overlays/production/homepage/grafana-credentials-unsealed.yaml.example \
+   overlays/production/homepage/grafana-credentials-unsealed.yaml
+
+# Edit the file and replace placeholder values with your actual credentials
+vim overlays/production/homepage/grafana-credentials-unsealed.yaml
+
+# Seal the secret
+kubeseal --format=yaml --controller-namespace=kube-system \
+  < overlays/production/homepage/grafana-credentials-unsealed.yaml \
+  > overlays/production/homepage/grafana-credentials-sealed.yaml
+
+
+# 4. Portainer Token
 cp overlays/production/homepage/portainer-token-unsealed.yaml.example \
    overlays/production/homepage/portainer-token-unsealed.yaml
 
@@ -611,7 +626,7 @@ kubeseal --format=yaml --controller-namespace=kube-system \
   > overlays/production/homepage/portainer-token-sealed.yaml
 
 
-# 4. Proxmox Secret
+# 5. Proxmox Secret
 cp overlays/production/homepage/proxmox-secret-unsealed.yaml.example \
    overlays/production/homepage/proxmox-secret-unsealed.yaml
 
@@ -624,7 +639,7 @@ kubeseal --format=yaml --controller-namespace=kube-system \
   > overlays/production/homepage/proxmox-secret-sealed.yaml
 
 
-# 5. Unifi Token
+# 6. Unifi Token
 cp overlays/production/homepage/unifi-token-unsealed.yaml.example \
    overlays/production/homepage/unifi-token-unsealed.yaml
 

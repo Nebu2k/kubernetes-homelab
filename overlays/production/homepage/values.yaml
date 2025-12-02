@@ -43,6 +43,16 @@ env:
       secretKeyRef:
         name: homepage-unifi
         key: password
+  HOMEPAGE_VAR_GRAFANA_USER:
+    valueFrom:
+      secretKeyRef:
+        name: homepage-grafana
+        key: username
+  HOMEPAGE_VAR_GRAFANA_PASS:
+    valueFrom:
+      secretKeyRef:
+        name: homepage-grafana
+        key: password
 
 # Mount Internal CA certificate
 persistence:

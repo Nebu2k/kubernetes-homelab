@@ -10,3 +10,4 @@ resources:
   - adguard-credentials-sealed.yaml
   - portainer-token-sealed.yaml
   - unifi-token-sealed.yaml
+  - grafana-credentials-sealed.yaml

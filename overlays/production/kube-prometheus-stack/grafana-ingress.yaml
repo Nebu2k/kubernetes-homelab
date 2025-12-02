@@ -6,6 +6,17 @@ metadata:
   annotations:
     cert-manager.io/cluster-issuer: "letsencrypt-prod"
     nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    # Homepage integration
+    gethomepage.dev/enabled: "true"
+    gethomepage.dev/group: "Monitoring"
+    gethomepage.dev/name: "Grafana"
+    gethomepage.dev/icon: "grafana.png"
+    gethomepage.dev/description: "Metrics & Dashboards"
+    gethomepage.dev/weight: "10"
+    gethomepage.dev/widget.type: "grafana"
+    gethomepage.dev/widget.url: "https://grafana.elmstreet79.de"
+    gethomepage.dev/widget.username: "{{HOMEPAGE_VAR_GRAFANA_USER}}"
+    gethomepage.dev/widget.password: "{{HOMEPAGE_VAR_GRAFANA_PASS}}"
 spec:
   ingressClassName: nginx
   tls:
