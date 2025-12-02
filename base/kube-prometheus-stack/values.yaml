@@ -181,8 +181,11 @@ alertmanager:
   
   alertmanagerSpec:
     # Inject SMTP credentials from sealed secret as environment variables
-    secrets:
-      - alertmanager-smtp-credentials
+    containers:
+      - name: alertmanager
+        envFrom:
+          - secretRef:
+              name: alertmanager-smtp-credentials
     
     resources:
       requests:
