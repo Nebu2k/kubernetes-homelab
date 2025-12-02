@@ -6,6 +6,7 @@ metadata:
   labels:
     app.kubernetes.io/name: kube-prometheus-stack
     app.kubernetes.io/instance: kube-prometheus-stack
+    release: kube-prometheus-stack
 spec:
   groups:
     # Node filesystem alerts
