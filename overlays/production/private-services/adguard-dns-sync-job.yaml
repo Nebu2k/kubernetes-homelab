@@ -133,14 +133,14 @@ spec:
             name: adguard-dns-sync
             defaultMode: 0755
 ---
-# CronJob: Fallback every 6 hours
+# CronJob: Runs every 5 minutes
 apiVersion: batch/v1
 kind: CronJob
 metadata:
   name: adguard-dns-sync
   namespace: private-services
 spec:
-  schedule: "0 */6 * * *" # Every 6 hours as fallback
+  schedule: "*/5 * * * *" # Every 5 minutes
   successfulJobsHistoryLimit: 3
   failedJobsHistoryLimit: 3
   jobTemplate:
