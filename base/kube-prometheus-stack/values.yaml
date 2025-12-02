@@ -117,11 +117,6 @@ grafana:
 alertmanager:
   enabled: true
   
-  # AlertManager configuration is provided via sealed secret
-  # See: overlays/production/kube-prometheus-stack/alertmanager-smtp-credentials-sealed.yaml
-  # The secret contains the full alertmanager.yaml with SMTP credentials
-  alertmanagerConfigSecret: alertmanager-config
-  
   alertmanagerSpec:
     resources:
       requests:

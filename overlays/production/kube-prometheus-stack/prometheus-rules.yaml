@@ -197,8 +197,8 @@ spec:
             (
               (node_memory_MemTotal_bytes - node_memory_MemAvailable_bytes) / 
               node_memory_MemTotal_bytes
-            ) > 0.10
-          for: 1m
+            ) > 0.85
+          for: 10m
           labels:
             severity: warning
           annotations:
