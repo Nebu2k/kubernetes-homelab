@@ -7,7 +7,6 @@ resources:
   - internal-ca-copy.yaml
   - proxmox-secret-sealed.yaml
   - argocd-token-secret-sealed.yaml
-  - grafana-credentials-sealed.yaml
   - adguard-credentials-sealed.yaml
   - portainer-token-sealed.yaml
   - unifi-token-sealed.yaml

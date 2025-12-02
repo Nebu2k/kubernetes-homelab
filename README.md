@@ -24,8 +24,7 @@ Production-ready K3s cluster managed via GitOps using ArgoCD App-of-Apps pattern
 | 2 | Cert Manager |
 | 3 | Nginx Ingress |
 | 4 | Longhorn |
-| 5 | Portainer, Psitransfer, Teslamate, Victoria Metrics Config |
-| 6 | Victoria Metrics K8s Stack |
+| 5 | Portainer, Psitransfer, Teslamate |
 | 7 | Home Assistant |
 | 8 | Uptime Kuma |
 | 9 | Homepage |
@@ -55,8 +54,6 @@ homelab/
 │   ├── portainer.yaml                 # Wave 5
 │   ├── psitransfer.yaml               # Wave 5
 │   ├── teslamate.yaml                 # Wave 5
-│   ├── victoria-metrics-config.yaml   # Wave 5
-│   ├── victoria-metrics-k8s-stack.yaml # Wave 6
 │   ├── home-assistant.yaml            # Wave 7
 │   ├── uptime-kuma.yaml               # Wave 8
 │   ├── homepage.yaml                  # Wave 9
@@ -85,9 +82,7 @@ homelab/
 │       └── values.yaml
 │   ├── reloader/
 │       └── values.yaml
-│   ├── uptime-kuma/
-│       └── values.yaml
-│   └── victoria-metrics-k8s-stack/
+│   └── uptime-kuma/
         └── values.yaml
 └── overlays/production/
     ├── argocd/
@@ -122,7 +117,6 @@ homelab/
     │   ├── argocd-token-secret-sealed.yaml
     │   ├── argocd-token-secret-unsealed.yaml
     │   ├── configmap.yaml
-    │   ├── grafana-credentials-sealed.yaml
     │   ├── ingress.yaml
     │   ├── internal-ca-copy.yaml
     │   ├── kustomization.yaml
@@ -192,13 +186,8 @@ homelab/
     │   ├── teslamate-ingress.yaml
     │   ├── teslamate-secret-sealed.yaml
     │   └── teslamate-secret-unsealed.yaml
-    ├── uptime-kuma/
-    │   ├── ingress.yaml
-    │   └── kustomization.yaml
-    └── victoria-metrics/
-        ├── grafana-admin-sealed.yaml
-        ├── grafana-admin-unsealed.yaml
-        ├── ingress-grafana.yaml
+    └── uptime-kuma/
+        ├── ingress.yaml
         └── kustomization.yaml
 ```
 
@@ -554,11 +543,6 @@ kubeseal --format=yaml --controller-namespace=kube-system \
   < overlays/production/longhorn/s3-secret-unsealed.yaml \
   > overlays/production/longhorn/s3-secret-sealed.yaml
 
-# Seal Victoria Metrics Grafana admin credentials:
-kubeseal --format=yaml --controller-namespace=kube-system \
-  < overlays/production/victoria-metrics/grafana-admin-unsealed.yaml \
-  > overlays/production/victoria-metrics/grafana-admin-sealed.yaml
-
 # Commit and push
 git add overlays/production/*/kustomization.yaml
 git add overlays/production/*/*-sealed.yaml
@@ -603,20 +587,7 @@ kubeseal --format=yaml --controller-namespace=kube-system \
   > overlays/production/homepage/argocd-token-secret-sealed.yaml
 
 
-# 3. Grafana Credentials
-cp overlays/production/homepage/grafana-credentials-unsealed.yaml.example \
-   overlays/production/homepage/grafana-credentials-unsealed.yaml
-
-# Edit the file and replace placeholder values with your actual credentials
-vim overlays/production/homepage/grafana-credentials-unsealed.yaml
-
-# Seal the secret
-kubeseal --format=yaml --controller-namespace=kube-system \
-  < overlays/production/homepage/grafana-credentials-unsealed.yaml \
-  > overlays/production/homepage/grafana-credentials-sealed.yaml
-
-
-# 4. Portainer Token
+# 3. Portainer Token
 cp overlays/production/homepage/portainer-token-unsealed.yaml.example \
    overlays/production/homepage/portainer-token-unsealed.yaml
 
@@ -629,7 +600,7 @@ kubeseal --format=yaml --controller-namespace=kube-system \
   > overlays/production/homepage/portainer-token-sealed.yaml
 
 
-# 5. Proxmox Secret
+# 4. Proxmox Secret
 cp overlays/production/homepage/proxmox-secret-unsealed.yaml.example \
    overlays/production/homepage/proxmox-secret-unsealed.yaml
 
@@ -642,7 +613,7 @@ kubeseal --format=yaml --controller-namespace=kube-system \
   > overlays/production/homepage/proxmox-secret-sealed.yaml
 
 
-# 6. Unifi Token
+# 5. Unifi Token
 cp overlays/production/homepage/unifi-token-unsealed.yaml.example \
    overlays/production/homepage/unifi-token-unsealed.yaml
 
@@ -721,45 +692,6 @@ kubectl delete pod -n portainer -l app.kubernetes.io/name=portainer
 ```text
 URL: http://longhorn.elmstreet79.de
 (Internal DNS only, managed by AdGuard DNS Sync)
-```
-
-**Victoria Metrics Monitoring Stack:**
-
-```text
-Grafana:        https://grafana.elmstreet79.de
-Prometheus API: http://<node-ip>:8428 (vmsingle - internal only)
-VMAgent:        Scrapes metrics from all Kubernetes components
-VMAlert:        Evaluates alerting rules (blackhole mode)
-```
-
-**Get Grafana admin password:**
-
-```bash
-kubectl get secret -n monitoring grafana-admin-credentials \
-  -o jsonpath="{.data.admin-password}" | base64 -d && echo
-```
-
-Default user: `admin`
-
-📊 **Pre-installed components:**
-
-- **VictoriaMetrics Single**: Time-series database (30d retention, 15Gi storage)
-- **VMAgent**: Metric collection from Kubernetes components (kubelet, apiserver, etcd, etc.)
-- **Grafana**: Pre-configured with Victoria Metrics datasource and Kubernetes dashboards
-- **Node Exporter**: Hardware metrics from all nodes
-- **Kube State Metrics**: Kubernetes object metrics
-
-⚡ **Victoria Metrics advantages over Prometheus:**
-
-- Lower resource usage (CPU & memory)
-- Faster queries on large datasets
-- Better compression (less disk space)
-- 100% Prometheus-compatible (drop-in replacement)
-
-🔒 **Security note:** VictoriaMetrics API is not exposed publicly (no ingress). Access via Grafana datasource or port-forward:
-
-```bash
-kubectl port-forward -n monitoring svc/vm-vmsingle 8428:8428
 ```
 
 **Homepage (Homelab Dashboard):**
@@ -1023,16 +955,13 @@ kubectl get secret homepage-grafana -n homepage -o yaml
 # 3. Check Homepage logs
 kubectl logs -n homepage deployment/homepage
 
-# 4. Verify Grafana credentials work
-GRAFANA_USER=$(kubectl get secret homepage-grafana -n homepage -o jsonpath='{.data.username}' | base64 -d)
-GRAFANA_PASS=$(kubectl get secret homepage-grafana -n homepage -o jsonpath='{.data.password}' | base64 -d)
-kubectl exec -n monitoring deployment/victoria-metrics-k8s-stack-grafana -- \
-  wget -q -O- http://$GRAFANA_USER:$GRAFANA_PASS@localhost:3000/api/admin/stats
+# 4. Verify credentials are set correctly
+kubectl get secret homepage-grafana -n homepage -o yaml
 ```
 
 **Fix if credentials are invalid:**
 
-Re-create the sealed secret with current Grafana admin password as described in Step 7.6.
+Re-create the sealed secret as described in Step 7.6.
 
 ### Unseal a Sealed Secret (for debugging)
 
@@ -1068,7 +997,6 @@ kubectl get secret -n monitoring grafana-admin-credentials \
 | Portainer | 2.33.3 | Portainer |
 | Cert Manager | v1.19.1 | Cert Manager |
 | Uptime Kuma | 2.22.0 | Uptime Kuma |
-| Victoria Metrics K8s Stack | 0.63.5 | Victoria Metrics K8s Stack |
 | Homepage | 2.1.0 | Homepage |
 | K3s | v1.33.5 | Lightweight Kubernetes |
 | Kube-VIP | v1.0.1 | Control plane HA |
@@ -1085,7 +1013,6 @@ kubectl get secret -n monitoring grafana-admin-credentials \
 - [Reloader](https://stakater.github.io/stakater-charts)
 - [Sealed Secrets](https://bitnami-labs.github.io/sealed-secrets)
 - [Uptime Kuma](https://dirsigler.github.io/uptime-kuma-helm)
-- [Victoria Metrics K8S Stack](https://victoriametrics.github.io/helm-charts/)
 
 ## 📝 License
 

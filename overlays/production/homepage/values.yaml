@@ -18,16 +18,6 @@ env:
       secretKeyRef:
         name: argocd-homepage-token
         key: token
-  HOMEPAGE_VAR_GRAFANA_USERNAME:
-    valueFrom:
-      secretKeyRef:
-        name: homepage-grafana
-        key: username
-  HOMEPAGE_VAR_GRAFANA_PASSWORD:
-    valueFrom:
-      secretKeyRef:
-        name: homepage-grafana
-        key: password
   HOMEPAGE_VAR_ADGUARD_USER:
     valueFrom:
       secretKeyRef:
