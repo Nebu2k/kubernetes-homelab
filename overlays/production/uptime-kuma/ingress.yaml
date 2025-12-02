@@ -16,7 +16,6 @@ metadata:
     gethomepage.dev/widget.type: "uptimekuma"
     gethomepage.dev/widget.url: "https://uptime.elmstreet79.de"
     gethomepage.dev/widget.slug: "homelab"
-    gethomepage.dev/widget.key: "{{HOMEPAGE_VAR_UPTIME_KUMA_KEY}}"
 spec:
   ingressClassName: nginx
   tls:

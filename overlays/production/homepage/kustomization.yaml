@@ -10,4 +10,3 @@ resources:
   - adguard-credentials-sealed.yaml
   - portainer-token-sealed.yaml
   - unifi-token-sealed.yaml
-  - uptime-kuma-token-sealed.yaml

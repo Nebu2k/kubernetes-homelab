@@ -43,11 +43,6 @@ env:
       secretKeyRef:
         name: homepage-unifi
         key: password
-  HOMEPAGE_VAR_UPTIME_KUMA_KEY:
-    valueFrom:
-      secretKeyRef:
-        name: homepage-uptime-kuma
-        key: key
 
 # Mount Internal CA certificate
 persistence:

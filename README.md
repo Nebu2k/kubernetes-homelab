@@ -125,8 +125,6 @@ homelab/
     │   ├── proxmox-secret-sealed.yaml
     │   ├── unifi-token-sealed.yaml
     │   ├── unifi-token-unsealed.yaml
-    │   ├── uptime-kuma-token-sealed.yaml
-    │   ├── uptime-kuma-token-unsealed.yaml
     │   └── values.yaml
     ├── longhorn/
     │   ├── disable-local-path-default.yaml
@@ -626,19 +624,6 @@ vim overlays/production/homepage/unifi-token-unsealed.yaml
 kubeseal --format=yaml --controller-namespace=kube-system \
   < overlays/production/homepage/unifi-token-unsealed.yaml \
   > overlays/production/homepage/unifi-token-sealed.yaml
-
-
-# 6. Uptime Kuma Token
-cp overlays/production/homepage/uptime-kuma-token-unsealed.yaml.example \
-   overlays/production/homepage/uptime-kuma-token-unsealed.yaml
-
-# Edit the file and replace placeholder values with your actual credentials
-vim overlays/production/homepage/uptime-kuma-token-unsealed.yaml
-
-# Seal the secret
-kubeseal --format=yaml --controller-namespace=kube-system \
-  < overlays/production/homepage/uptime-kuma-token-unsealed.yaml \
-  > overlays/production/homepage/uptime-kuma-token-sealed.yaml
 
 
 # Commit and push
