@@ -118,11 +118,72 @@ alertmanager:
   enabled: true
   
   # AlertManager configuration - Email via Amazon SES
-  # Credentials are injected from sealed secret: alertmanager-ses-sealed.yaml
-  # The secret creates alertmanager-config which contains the full alertmanager.yaml
-  alertmanagerConfigSecret: alertmanager-config
+  # SMTP credentials are mounted from sealed secret: alertmanager-smtp-credentials
+  config:
+    global:
+      resolve_timeout: 5m
+      smtp_from: '{{ env "SMTP_FROM" }}'
+      smtp_smarthost: '{{ env "SMTP_SMARTHOST" }}'
+      smtp_auth_username: '{{ env "SMTP_USERNAME" }}'
+      smtp_auth_password: '{{ env "SMTP_PASSWORD" }}'
+      smtp_require_tls: true
+
+    route:
+      group_by: ['alertname', 'cluster', 'service']
+      group_wait: 10s
+      group_interval: 10s
+      repeat_interval: 12h
+      receiver: 'email-default'
+      routes:
+        # Critical alerts get sent immediately
+        - match:
+            severity: critical
+          receiver: 'email-critical'
+          group_wait: 0s
+          repeat_interval: 4h
+        
+        # Warning alerts are grouped
+        - match:
+            severity: warning
+          receiver: 'email-warning'
+          group_wait: 30s
+          repeat_interval: 12h
+
+    receivers:
+      - name: 'email-default'
+        email_configs:
+          - to: '{{ env "SMTP_TO" }}'
+            headers:
+              Subject: '[Homelab Alert] {{ .GroupLabels.alertname }}'
+            send_resolved: true
+
+      - name: 'email-critical'
+        email_configs:
+          - to: '{{ env "SMTP_TO" }}'
+            headers:
+              Subject: '🚨 [CRITICAL] {{ .GroupLabels.alertname }}'
+            send_resolved: true
+
+      - name: 'email-warning'
+        email_configs:
+          - to: '{{ env "SMTP_TO" }}'
+            headers:
+              Subject: '⚠️  [WARNING] {{ .GroupLabels.alertname }}'
+            send_resolved: true
+
+    inhibit_rules:
+      # Inhibit warning if critical alert is firing
+      - source_match:
+          severity: 'critical'
+        target_match:
+          severity: 'warning'
+        equal: ['alertname', 'instance']
   
   alertmanagerSpec:
+    # Inject SMTP credentials from sealed secret as environment variables
+    secrets:
+      - alertmanager-smtp-credentials
+    
     resources:
       requests:
         cpu: 50m

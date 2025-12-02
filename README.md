@@ -133,8 +133,8 @@ homelab/
     │   └── values.yaml
     ├── kube-prometheus-stack/
     │   ├── alertmanager-ingress.yaml
-    │   ├── alertmanager-ses-sealed.yaml
-    │   ├── alertmanager-ses-unsealed.yaml
+    │   ├── alertmanager-smtp-credentials-sealed.yaml
+    │   ├── alertmanager-smtp-credentials-unsealed.yaml
     │   ├── grafana-ingress.yaml
     │   ├── kustomization.yaml
     │   ├── prometheus-ingress.yaml
