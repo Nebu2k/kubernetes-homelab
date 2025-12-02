@@ -160,13 +160,9 @@ kubeStateMetrics:
   prometheus:
     monitor:
       enabled: true
-  # Run on worker nodes only
+  # Run on worker nodes only - correct path for subchart
   nodeSelector:
-    node-role.kubernetes.io/worker: worker
-  # Additional spec for kube-state-metrics deployment
-  spec:
-    nodeSelector:
-      node-role.kubernetes.io/worker: worker
+    node-role.kubernetes.io/worker: "worker"
 
 # Prometheus Operator
 prometheusOperator:
