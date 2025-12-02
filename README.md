@@ -24,7 +24,7 @@ Production-ready K3s cluster managed via GitOps using ArgoCD App-of-Apps pattern
 | 2 | Cert Manager |
 | 3 | Nginx Ingress |
 | 4 | Longhorn |
-| 5 | Portainer, Psitransfer, Teslamate |
+| 5 | Portainer, Teslamate |
 | 6 | Kube Prometheus Stack |
 | 7 | Home Assistant |
 | 8 | Uptime Kuma |
@@ -36,7 +36,6 @@ Production-ready K3s cluster managed via GitOps using ArgoCD App-of-Apps pattern
 | 14 | Kube Prometheus Stack Config |
 | 16 | Uptime Kuma Config, Private Services |
 | 17 | Homepage Config |
-| 20 | Demo App |
 
 ## 📁 Repository Structure
 
@@ -54,7 +53,6 @@ homelab/
 │   ├── nginx-ingress.yaml             # Wave 3
 │   ├── longhorn.yaml                  # Wave 4
 │   ├── portainer.yaml                 # Wave 5
-│   ├── psitransfer.yaml               # Wave 5
 │   ├── teslamate.yaml                 # Wave 5
 │   ├── kube-prometheus-stack.yaml     # Wave 6
 │   ├── home-assistant.yaml            # Wave 7
@@ -69,8 +67,7 @@ homelab/
 │   ├── kube-prometheus-stack-config.yaml # Wave 14
 │   ├── private-services.yaml          # Wave 16
 │   ├── uptime-kuma-config.yaml        # Wave 16
-│   ├── homepage-config.yaml           # Wave 17
-│   └── demo-app.yaml                  # Wave 20
+│   └── homepage-config.yaml           # Wave 17
 ├── base/
 │   ├── cert-manager/
 │       └── values.yaml
@@ -179,12 +176,6 @@ homelab/
     │   ├── teslalogger-web-ingress.yaml
     │   ├── unifi-ingress.yaml
     │   └── wazuh-ingress.yaml
-    ├── psitransfer/
-    │   ├── deployment.yaml
-    │   ├── ingress.yaml
-    │   ├── kustomization.yaml
-    │   ├── psitransfer-secret-sealed.yaml
-    │   └── psitransfer-secret-unsealed.yaml
     ├── teslamate/
     │   ├── database-deployment.yaml
     │   ├── database-pvc.yaml

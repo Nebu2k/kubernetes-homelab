@@ -22,7 +22,5 @@ resources:
   - homepage-config.yaml
   - argocd-config.yaml
   - private-services.yaml
-  - demo-app.yaml
-  - psitransfer.yaml
   - home-assistant.yaml
   - teslamate.yaml
