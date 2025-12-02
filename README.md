@@ -1012,9 +1012,9 @@ kubectl get secret -n monitoring grafana-admin-credentials \
 | Metallb | 0.15.2 | Metallb |
 | Ingress Nginx | 4.14.0 | Nginx Ingress |
 | Longhorn | 1.10.0 | Longhorn |
-| Portainer | 2.33.3 | Portainer |
+| Portainer | 2.33.5 | Portainer |
 | Cert Manager | v1.19.1 | Cert Manager |
-| Uptime Kuma | 2.22.0 | Uptime Kuma |
+| Uptime Kuma | 2.24.0 | Uptime Kuma |
 | Homepage | 2.1.0 | Homepage |
 | K3s | v1.33.5 | Lightweight Kubernetes |
 | Kube-VIP | v1.0.1 | Control plane HA |
