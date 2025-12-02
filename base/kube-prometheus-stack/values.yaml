@@ -157,8 +157,16 @@ nodeExporter:
 # Kube-state-metrics (cluster state metrics)
 kubeStateMetrics:
   enabled: true
+  prometheus:
+    monitor:
+      enabled: true
+  # Run on worker nodes only
   nodeSelector:
     node-role.kubernetes.io/worker: worker
+  # Additional spec for kube-state-metrics deployment
+  spec:
+    nodeSelector:
+      node-role.kubernetes.io/worker: worker
 
 # Prometheus Operator
 prometheusOperator:
