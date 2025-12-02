@@ -1,0 +1,9 @@
+# Seal with: kubeseal --format=yaml --controller-namespace=kube-system < uptime-kuma-token-unsealed.yaml > uptime-kuma-token-sealed.yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: homepage-uptime-kuma
+  namespace: homepage
+type: Opaque
+stringData:
+  key: "uk1_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
