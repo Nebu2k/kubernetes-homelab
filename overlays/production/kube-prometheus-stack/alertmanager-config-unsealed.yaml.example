@@ -1,0 +1,88 @@
+# This is a template for AlertManager Amazon SES configuration
+# 
+# Usage:
+# 1. Copy this file and rename:
+#    cp alertmanager-config-unsealed.yaml.example alertmanager-config-unsealed.yaml
+#
+# 2. Fill in your actual SES credentials below
+#
+# 3. Seal the secret (requires cluster connection):
+#    kubeseal --format=yaml --controller-namespace=kube-system \
+#      < alertmanager-config-unsealed.yaml \
+#      > alertmanager-config-sealed.yaml
+#
+# 4. Delete the unsealed version:
+#    rm alertmanager-config-unsealed.yaml
+#
+# 5. Commit the sealed version
+#
+# Amazon SES SMTP Credentials:
+# Get from: AWS Console → SES → SMTP Settings → Create SMTP Credentials
+# Note: Also verify your sender email in SES (alerts@elmstreet79.de)
+
+apiVersion: v1
+kind: Secret
+metadata:
+  name: alertmanager-config
+  namespace: monitoring
+type: Opaque
+stringData:
+  alertmanager.yaml: |
+    global:
+      resolve_timeout: 5m
+      smtp_from: 'alerts@elmstreet79.de'
+      smtp_smarthost: 'email-smtp.eu-west-1.amazonaws.com:587'
+      smtp_auth_username: 'YOUR_SES_SMTP_USERNAME'
+      smtp_auth_password: 'YOUR_SES_SMTP_PASSWORD'
+      smtp_require_tls: true
+
+    route:
+      group_by: ['alertname', 'cluster', 'service']
+      group_wait: 10s
+      group_interval: 10s
+      repeat_interval: 12h
+      receiver: 'email-default'
+      routes:
+        # Critical alerts get sent immediately
+        - match:
+            severity: critical
+          receiver: 'email-critical'
+          group_wait: 0s
+          repeat_interval: 4h
+        
+        # Warning alerts are grouped
+        - match:
+            severity: warning
+          receiver: 'email-warning'
+          group_wait: 30s
+          repeat_interval: 12h
+
+    receivers:
+      - name: 'email-default'
+        email_configs:
+          - to: 'alerts@elmstreet79.de'
+            headers:
+              Subject: '[Homelab Alert] {{ .GroupLabels.alertname }}'
+            send_resolved: true
+
+      - name: 'email-critical'
+        email_configs:
+          - to: 'alerts@elmstreet79.de'
+            headers:
+              Subject: '🚨 [CRITICAL] {{ .GroupLabels.alertname }}'
+            send_resolved: true
+
+      - name: 'email-warning'
+        email_configs:
+          - to: 'alerts@elmstreet79.de'
+            headers:
+              Subject: '⚠️  [WARNING] {{ .GroupLabels.alertname }}'
+            send_resolved: true
+
+    inhibit_rules:
+      # Inhibit warning if critical alert is firing
+      - source_match:
+          severity: 'critical'
+        target_match:
+          severity: 'warning'
+        equal: ['alertname', 'instance']

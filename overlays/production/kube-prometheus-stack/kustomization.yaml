@@ -8,4 +8,4 @@ resources:
   - prometheus-ingress.yaml
   - alertmanager-ingress.yaml
   - prometheus-rules.yaml
-  - alertmanager-smtp-credentials-sealed.yaml
+  - alertmanager-config-sealed.yaml

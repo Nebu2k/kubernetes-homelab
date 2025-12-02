@@ -132,9 +132,9 @@ homelab/
     │   ├── unifi-token-unsealed.yaml
     │   └── values.yaml
     ├── kube-prometheus-stack/
+    │   ├── alertmanager-config-sealed.yaml
+    │   ├── alertmanager-config-unsealed.yaml
     │   ├── alertmanager-ingress.yaml
-    │   ├── alertmanager-smtp-credentials-sealed.yaml
-    │   ├── alertmanager-smtp-credentials-unsealed.yaml
     │   ├── grafana-ingress.yaml
     │   ├── kustomization.yaml
     │   ├── prometheus-ingress.yaml

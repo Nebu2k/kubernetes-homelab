@@ -117,73 +117,12 @@ grafana:
 alertmanager:
   enabled: true
   
-  # AlertManager configuration - Email via Amazon SES
-  # SMTP credentials are mounted from sealed secret: alertmanager-smtp-credentials
-  config:
-    global:
-      resolve_timeout: 5m
-      smtp_from: 'alerts@elmstreet79.de'
-      smtp_smarthost: 'email-smtp.eu-west-1.amazonaws.com:587'
-      smtp_auth_username_file: '/etc/alertmanager/secrets/alertmanager-smtp-credentials/smtp_username'
-      smtp_auth_password_file: '/etc/alertmanager/secrets/alertmanager-smtp-credentials/smtp_password'
-      smtp_require_tls: true
-
-    route:
-      group_by: ['alertname', 'cluster', 'service']
-      group_wait: 10s
-      group_interval: 10s
-      repeat_interval: 12h
-      receiver: 'email-default'
-      routes:
-        # Critical alerts get sent immediately
-        - match:
-            severity: critical
-          receiver: 'email-critical'
-          group_wait: 0s
-          repeat_interval: 4h
-        
-        # Warning alerts are grouped
-        - match:
-            severity: warning
-          receiver: 'email-warning'
-          group_wait: 30s
-          repeat_interval: 12h
-
-    receivers:
-      - name: 'email-default'
-        email_configs:
-          - to: 'alerts@elmstreet79.de'
-            headers:
-              Subject: '[Homelab Alert] {{ .GroupLabels.alertname }}'
-            send_resolved: true
-
-      - name: 'email-critical'
-        email_configs:
-          - to: 'alerts@elmstreet79.de'
-            headers:
-              Subject: '🚨 [CRITICAL] {{ .GroupLabels.alertname }}'
-            send_resolved: true
-
-      - name: 'email-warning'
-        email_configs:
-          - to: 'alerts@elmstreet79.de'
-            headers:
-              Subject: '⚠️  [WARNING] {{ .GroupLabels.alertname }}'
-            send_resolved: true
-
-    inhibit_rules:
-      # Inhibit warning if critical alert is firing
-      - source_match:
-          severity: 'critical'
-        target_match:
-          severity: 'warning'
-        equal: ['alertname', 'instance']
+  # AlertManager configuration is provided via sealed secret
+  # See: overlays/production/kube-prometheus-stack/alertmanager-smtp-credentials-sealed.yaml
+  # The secret contains the full alertmanager.yaml with SMTP credentials
+  alertmanagerConfigSecret: alertmanager-config
   
   alertmanagerSpec:
-    # Mount SMTP credentials secret as files  
-    secrets:
-      - 'alertmanager-smtp-credentials'
-    
     resources:
       requests:
         cpu: 50m
