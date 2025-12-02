@@ -61,13 +61,13 @@ spec:
             (
               longhorn_volume_actual_size_bytes / 
               longhorn_volume_capacity_bytes
-            ) > 0.01
-          for: 1m
+            ) > 0.80
+          for: 5m
           labels:
             severity: warning
           annotations:
             summary: "Longhorn volume space usage is high"
-            description: "Volume {{ $labels.volume }} is {{ $value | humanizePercentage }} full (threshold: 1% - TEST ALERT)."
+            description: "Volume {{ $labels.volume }} is {{ $value | humanizePercentage }} full (threshold: 80%)."
 
         - alert: LonghornVolumeSpaceCritical
           expr: |
@@ -197,10 +197,10 @@ spec:
             (
               (node_memory_MemTotal_bytes - node_memory_MemAvailable_bytes) / 
               node_memory_MemTotal_bytes
-            ) > 0.85
-          for: 10m
+            ) > 0.10
+          for: 1m
           labels:
             severity: warning
           annotations:
             summary: "Node memory usage is high"
-            description: "Node {{ $labels.instance }} memory usage is {{ $value | humanizePercentage }} (threshold: 85%)."
+            description: "Node {{ $labels.instance }} memory usage is {{ $value | humanizePercentage }} (threshold: 10% - TEST ALERT)."
