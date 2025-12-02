@@ -154,13 +154,8 @@ alertmanager:
 nodeExporter:
   enabled: true
 
-# Kube-state-metrics (cluster state metrics)
-kubeStateMetrics:
-  enabled: true
-  prometheus:
-    monitor:
-      enabled: true
-  # Run on worker nodes only - correct path for subchart
+# Kube-state-metrics (cluster state metrics) - note: uses hyphens not camelCase
+kube-state-metrics:
   nodeSelector:
     node-role.kubernetes.io/worker: "worker"
 
