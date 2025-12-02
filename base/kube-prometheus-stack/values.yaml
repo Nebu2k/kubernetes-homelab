@@ -180,16 +180,9 @@ alertmanager:
         equal: ['alertname', 'instance']
   
   alertmanagerSpec:
-    # Mount SMTP credentials secret as files
-    additionalVolumes:
-      - name: smtp-credentials
-        secret:
-          secretName: alertmanager-smtp-credentials
-    
-    additionalVolumeMounts:
-      - name: smtp-credentials
-        mountPath: /etc/alertmanager/secrets/alertmanager-smtp-credentials
-        readOnly: true
+    # Mount SMTP credentials secret as files  
+    secrets:
+      - 'alertmanager-smtp-credentials'
     
     resources:
       requests:
