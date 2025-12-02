@@ -122,10 +122,10 @@ alertmanager:
   config:
     global:
       resolve_timeout: 5m
-      smtp_from: '{{ env "SMTP_FROM" }}'
-      smtp_smarthost: '{{ env "SMTP_SMARTHOST" }}'
-      smtp_auth_username: '{{ env "SMTP_USERNAME" }}'
-      smtp_auth_password: '{{ env "SMTP_PASSWORD" }}'
+      smtp_from: 'alerts@elmstreet79.de'
+      smtp_smarthost: 'email-smtp.eu-west-1.amazonaws.com:587'
+      smtp_auth_username_file: '/etc/alertmanager/secrets/alertmanager-smtp-credentials/smtp_username'
+      smtp_auth_password_file: '/etc/alertmanager/secrets/alertmanager-smtp-credentials/smtp_password'
       smtp_require_tls: true
 
     route:
@@ -152,21 +152,21 @@ alertmanager:
     receivers:
       - name: 'email-default'
         email_configs:
-          - to: '{{ env "SMTP_TO" }}'
+          - to: 'alerts@elmstreet79.de'
             headers:
               Subject: '[Homelab Alert] {{ .GroupLabels.alertname }}'
             send_resolved: true
 
       - name: 'email-critical'
         email_configs:
-          - to: '{{ env "SMTP_TO" }}'
+          - to: 'alerts@elmstreet79.de'
             headers:
               Subject: '🚨 [CRITICAL] {{ .GroupLabels.alertname }}'
             send_resolved: true
 
       - name: 'email-warning'
         email_configs:
-          - to: '{{ env "SMTP_TO" }}'
+          - to: 'alerts@elmstreet79.de'
             headers:
               Subject: '⚠️  [WARNING] {{ .GroupLabels.alertname }}'
             send_resolved: true
@@ -180,12 +180,9 @@ alertmanager:
         equal: ['alertname', 'instance']
   
   alertmanagerSpec:
-    # Inject SMTP credentials from sealed secret as environment variables
-    containers:
-      - name: alertmanager
-        envFrom:
-          - secretRef:
-              name: alertmanager-smtp-credentials
+    # Mount SMTP credentials secret as files
+    secrets:
+      - alertmanager-smtp-credentials
     
     resources:
       requests:
