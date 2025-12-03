@@ -4,3 +4,4 @@ namespace: monitoring
 resources:
   - servicemonitor.yaml
   - unifi-credentials-sealed.yaml
+  - deployment-env-patch.yaml

@@ -15,7 +15,6 @@ resources:
   - kube-prometheus-stack.yaml
   - kube-prometheus-stack-config.yaml
   - unifi-poller.yaml
-  - unifi-poller-config.yaml
   - portainer.yaml
   - portainer-config.yaml
   - uptime-kuma.yaml

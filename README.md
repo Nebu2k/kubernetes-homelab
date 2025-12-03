@@ -30,7 +30,7 @@ Production-ready K3s cluster managed via GitOps using ArgoCD App-of-Apps pattern
 | 8 | Uptime Kuma |
 | 9 | Homepage |
 | 10 | Cert Manager Config, Metallb Config |
-| 11 | Unifi Poller Config, Nginx Ingress Config |
+| 11 | Nginx Ingress Config |
 | 12 | Portainer Config, Argocd Config |
 | 13 | Longhorn Config |
 | 14 | Kube Prometheus Stack Config |
@@ -62,7 +62,6 @@ homelab/
 │   ├── cert-manager-config.yaml       # Wave 10
 │   ├── metallb-config.yaml            # Wave 10
 │   ├── nginx-ingress-config.yaml      # Wave 11
-│   ├── unifi-poller-config.yaml       # Wave 11
 │   ├── argocd-config.yaml             # Wave 12
 │   ├── portainer-config.yaml          # Wave 12
 │   ├── longhorn-config.yaml           # Wave 13
@@ -197,7 +196,7 @@ homelab/
     │   ├── teslamate-secret-sealed.yaml
     │   └── teslamate-secret-unsealed.yaml
     ├── unifi-poller/
-    │   ├── deployment-patch.yaml
+    │   ├── deployment-env-patch.yaml
     │   ├── kustomization.yaml
     │   ├── servicemonitor.yaml
     │   ├── unifi-credentials-sealed.yaml

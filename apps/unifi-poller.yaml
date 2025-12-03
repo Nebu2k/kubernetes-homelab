@@ -8,15 +8,21 @@ metadata:
 spec:
   project: default
   sources:
+    # Helm chart
     - repoURL: https://unpoller.github.io/helm-chart/
       chart: unpoller
       targetRevision: 2.11.2-Chart6
       helm:
         valueFiles:
           - $values/base/unifi-poller/values.yaml
+    # Values reference
     - repoURL: https://github.com/Nebu2k/kubernetes-homelab
       targetRevision: main
       ref: values
+    # Additional resources (sealed secrets, servicemonitor, patches)
+    - repoURL: https://github.com/Nebu2k/kubernetes-homelab
+      targetRevision: main
+      path: overlays/production/unifi-poller
   destination:
     server: https://kubernetes.default.svc
     namespace: monitoring
@@ -26,6 +32,7 @@ spec:
       selfHeal: true
     syncOptions:
       - CreateNamespace=true
+      - ServerSideApply=true
     retry:
       limit: 5
       backoff:

@@ -20,22 +20,8 @@ dashboards:
   grafana:
     create: false
 
-# Environment variables to inject credentials from sealed secret
-# These override the config file values
-env:
-  - name: UP_UNIFI_DEFAULT_USER
-    valueFrom:
-      secretKeyRef:
-        name: unifi-poller-credentials
-        key: username
-  - name: UP_UNIFI_DEFAULT_PASS
-    valueFrom:
-      secretKeyRef:
-        name: unifi-poller-credentials
-        key: password
-
 # UnPoller configuration
-# Credentials are injected via environment variables above
+# Credentials are injected via env vars from sealed secret (see overlays/production/unifi-poller/)
 upConfig: |
   [poller]
       debug = false
