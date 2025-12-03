@@ -137,9 +137,7 @@ homelab/
     │   ├── grafana-ingress.yaml
     │   ├── kustomization.yaml
     │   ├── prometheus-ingress.yaml
-    │   ├── prometheus-rules.yaml
-    │   ├── smtp-credentials-sealed.yaml
-    │   └── smtp-credentials-unsealed.yaml
+    │   └── prometheus-rules.yaml
     ├── longhorn/
     │   ├── disable-local-path-default.yaml
     │   ├── ingress.yaml

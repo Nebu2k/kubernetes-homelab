@@ -61,8 +61,8 @@ spec:
             (
               longhorn_volume_actual_size_bytes / 
               longhorn_volume_capacity_bytes
-            ) > 0.01
-          for: 1m
+            ) > 0.80
+          for: 5m
           labels:
             severity: warning
           annotations:
