@@ -1,0 +1,26 @@
+# Patch to mount the sealed upConfig secret as a volume
+# This overrides the upConfig from Helm values with our sealed secret
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: unpoller
+  namespace: monitoring
+spec:
+  template:
+    spec:
+      containers:
+        - name: unpoller
+          env:
+            - name: UP_POLLER_CONFIG
+              value: /config/up.conf
+          volumeMounts:
+            - name: config
+              mountPath: /config
+              readOnly: true
+      volumes:
+        - name: config
+          secret:
+            secretName: unifi-poller-config
+            items:
+              - key: upConfig
+                path: up.conf

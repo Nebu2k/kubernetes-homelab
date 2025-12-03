@@ -112,6 +112,26 @@ grafana:
         gnetId: 9614
         revision: 1
         datasource: Prometheus
+      # UniFi Poller - Client Insights
+      unifi-client-insights:
+        gnetId: 11315
+        revision: 9
+        datasource: Prometheus
+      # UniFi Poller - Network Sites
+      unifi-sites:
+        gnetId: 11311
+        revision: 5
+        datasource: Prometheus
+      # UniFi Poller - UAP Insights
+      unifi-uap:
+        gnetId: 11314
+        revision: 10
+        datasource: Prometheus
+      # UniFi Poller - USW Insights
+      unifi-usw:
+        gnetId: 11312
+        revision: 9
+        datasource: Prometheus
 
 # Alert Manager
 alertmanager:

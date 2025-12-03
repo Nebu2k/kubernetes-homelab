@@ -1,0 +1,15 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: unifi-poller
+  namespace: monitoring
+  labels:
+    release: kube-prometheus-stack
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: unpoller
+  endpoints:
+    - port: tcp
+      interval: 30s
+      path: /metrics

@@ -26,11 +26,11 @@ Production-ready K3s cluster managed via GitOps using ArgoCD App-of-Apps pattern
 | 4 | Longhorn |
 | 5 | Portainer, Teslamate |
 | 6 | Kube Prometheus Stack |
-| 7 | Home Assistant |
+| 7 | Unifi Poller, Home Assistant |
 | 8 | Uptime Kuma |
 | 9 | Homepage |
 | 10 | Cert Manager Config, Metallb Config |
-| 11 | Nginx Ingress Config |
+| 11 | Unifi Poller Config, Nginx Ingress Config |
 | 12 | Portainer Config, Argocd Config |
 | 13 | Longhorn Config |
 | 14 | Kube Prometheus Stack Config |
@@ -56,11 +56,13 @@ homelab/
 │   ├── teslamate.yaml                 # Wave 5
 │   ├── kube-prometheus-stack.yaml     # Wave 6
 │   ├── home-assistant.yaml            # Wave 7
+│   ├── unifi-poller.yaml              # Wave 7
 │   ├── uptime-kuma.yaml               # Wave 8
 │   ├── homepage.yaml                  # Wave 9
 │   ├── cert-manager-config.yaml       # Wave 10
 │   ├── metallb-config.yaml            # Wave 10
 │   ├── nginx-ingress-config.yaml      # Wave 11
+│   ├── unifi-poller-config.yaml       # Wave 11
 │   ├── argocd-config.yaml             # Wave 12
 │   ├── portainer-config.yaml          # Wave 12
 │   ├── longhorn-config.yaml           # Wave 13
@@ -84,6 +86,8 @@ homelab/
 │   ├── portainer/
 │       └── values.yaml
 │   ├── reloader/
+│       └── values.yaml
+│   ├── unifi-poller/
 │       └── values.yaml
 │   └── uptime-kuma/
         └── values.yaml
@@ -192,6 +196,12 @@ homelab/
     │   ├── teslamate-ingress.yaml
     │   ├── teslamate-secret-sealed.yaml
     │   └── teslamate-secret-unsealed.yaml
+    ├── unifi-poller/
+    │   ├── deployment-patch.yaml
+    │   ├── kustomization.yaml
+    │   ├── servicemonitor.yaml
+    │   ├── unifi-config-sealed.yaml
+    │   └── unifi-config-unsealed.yaml
     └── uptime-kuma/
         ├── ingress.yaml
         └── kustomization.yaml
@@ -1014,6 +1024,7 @@ kubectl get secret -n monitoring grafana-admin-credentials \
 | Metallb | 0.15.2 | Metallb |
 | Ingress Nginx | 4.14.0 | Nginx Ingress |
 | Longhorn | 1.10.0 | Longhorn |
+| Unpoller | 2.11.2-Chart6 | Unifi Poller |
 | Portainer | 2.33.5 | Portainer |
 | Cert Manager | v1.19.1 | Cert Manager |
 | Uptime Kuma | 2.24.0 | Uptime Kuma |
@@ -1033,6 +1044,7 @@ kubectl get secret -n monitoring grafana-admin-credentials \
 - [Portainer](https://portainer.github.io/k8s)
 - [Reloader](https://stakater.github.io/stakater-charts)
 - [Sealed Secrets](https://bitnami-labs.github.io/sealed-secrets)
+- [Unpoller](https://unpoller.github.io/helm-chart/)
 - [Uptime Kuma](https://dirsigler.github.io/uptime-kuma-helm)
 
 ## 📝 License

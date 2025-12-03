@@ -1,0 +1,22 @@
+# UniFi Poller Helm values
+# Collects metrics from UniFi Controller for Prometheus
+
+# Resources (conservative for Pi)
+resources:
+  requests:
+    cpu: 50m
+    memory: 64Mi
+  limits:
+    cpu: 200m
+    memory: 128Mi
+
+# Run on worker nodes only
+nodeSelector:
+  node-role.kubernetes.io/worker: "worker"
+
+# Dashboards disabled (we manage them via kube-prometheus-stack)
+dashboards:
+  create: false
+
+# Configuration stored in overlays/production/unifi-poller/unifi-config-sealed.yaml
+# The chart will be patched to mount this as a ConfigMap
