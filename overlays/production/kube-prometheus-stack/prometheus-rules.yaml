@@ -9,19 +9,6 @@ metadata:
     release: kube-prometheus-stack
 spec:
   groups:
-    # Override K3s-incompatible alerts
-    - name: k3s-overrides
-      interval: 30s
-      rules:
-        # Override KubeSchedulerDown - K3s doesn't expose scheduler metrics by default
-        - alert: KubeSchedulerDown
-          expr: vector(0)  # Never fires
-          labels:
-            severity: none
-          annotations:
-            summary: "Disabled for K3s"
-            description: "K3s does not expose kube-scheduler metrics by default."
-    
     # Node filesystem alerts
     - name: node-disk-space
       interval: 30s
