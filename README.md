@@ -200,8 +200,8 @@ homelab/
     │   ├── deployment-patch.yaml
     │   ├── kustomization.yaml
     │   ├── servicemonitor.yaml
-    │   ├── unifi-config-sealed.yaml
-    │   └── unifi-config-unsealed.yaml
+    │   ├── unifi-credentials-sealed.yaml
+    │   └── unifi-credentials-unsealed.yaml
     └── uptime-kuma/
         ├── ingress.yaml
         └── kustomization.yaml
