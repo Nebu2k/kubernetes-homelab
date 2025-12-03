@@ -17,6 +17,8 @@ nodeSelector:
 # Dashboards disabled (we manage them via kube-prometheus-stack)
 dashboards:
   create: false
+  grafana:
+    create: false
 
 # Environment variables to inject credentials from sealed secret
 # These override the config file values
