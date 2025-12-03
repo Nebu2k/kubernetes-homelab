@@ -17,7 +17,7 @@ stringData:
         disable = false
         http_listen = "0.0.0.0:9130"
         report_errors = false
-        namespace = "unifipoller"
+        namespace = "unpoller"
         
     [influxdb]
         disable = true
