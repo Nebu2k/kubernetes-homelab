@@ -3,5 +3,4 @@ kind: Kustomization
 namespace: monitoring
 resources:
   - servicemonitor.yaml
-  - unifi-credentials-sealed.yaml
-  - deployment-env-patch.yaml
+  - unifi-config-sealed.yaml

@@ -3,6 +3,7 @@
 *.secret.yaml
 *.secrets.yaml
 *-unsealed.yaml
+*-private.yaml
 *.bak
 *.swp
 *.swo

@@ -20,37 +20,6 @@ dashboards:
   grafana:
     create: false
 
-# UnPoller configuration
-# Credentials are injected via env vars from sealed secret (see overlays/production/unifi-poller/)
-upConfig: |
-  [poller]
-      debug = false
-      quiet = false
-      plugins = []
-      
-  [prometheus]
-      disable = false
-      http_listen = "0.0.0.0:9130"
-      report_errors = false
-      namespace = "unifipoller"
-      
-  [influxdb]
-      disable = true
-      
-  [loki]
-      disable = true
-      
-  [unifi]
-      dynamic = false
-      
-  [[unifi.controller]]    
-      url         = "https://unifi.elmstreet79.de"
-      # user/pass injected via UP_UNIFI_DEFAULT_USER and UP_UNIFI_DEFAULT_PASS env vars
-      user        = "placeholder"
-      pass        = "placeholder"
-      sites       = ["all"]
-      save_ids    = true
-      save_dpi    = true
-      save_sites  = true
-      hash_pii    = false
-      verify_ssl  = false
+# upConfig is provided via sealed secret (overlays/production/unifi-poller/unifi-config-sealed.yaml)
+# The sealed secret is deployed BEFORE this Helm chart (wave 6 vs wave 7)
+# so our secret with credentials takes precedence over the Helm-created one

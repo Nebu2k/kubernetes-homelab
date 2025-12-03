@@ -25,7 +25,7 @@ Production-ready K3s cluster managed via GitOps using ArgoCD App-of-Apps pattern
 | 3 | Nginx Ingress |
 | 4 | Longhorn |
 | 5 | Portainer, Teslamate |
-| 6 | Kube Prometheus Stack |
+| 6 | Unifi Poller Config, Kube Prometheus Stack |
 | 7 | Unifi Poller, Home Assistant |
 | 8 | Uptime Kuma |
 | 9 | Homepage |
@@ -55,6 +55,7 @@ homelab/
 │   ├── portainer.yaml                 # Wave 5
 │   ├── teslamate.yaml                 # Wave 5
 │   ├── kube-prometheus-stack.yaml     # Wave 6
+│   ├── unifi-poller-config.yaml       # Wave 6
 │   ├── home-assistant.yaml            # Wave 7
 │   ├── unifi-poller.yaml              # Wave 7
 │   ├── uptime-kuma.yaml               # Wave 8
@@ -196,11 +197,10 @@ homelab/
     │   ├── teslamate-secret-sealed.yaml
     │   └── teslamate-secret-unsealed.yaml
     ├── unifi-poller/
-    │   ├── deployment-env-patch.yaml
     │   ├── kustomization.yaml
     │   ├── servicemonitor.yaml
-    │   ├── unifi-credentials-sealed.yaml
-    │   └── unifi-credentials-unsealed.yaml
+    │   ├── unifi-config-sealed.yaml
+    │   └── unifi-config-unsealed.yaml
     └── uptime-kuma/
         ├── ingress.yaml
         └── kustomization.yaml
