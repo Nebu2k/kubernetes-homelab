@@ -11,6 +11,16 @@ defaultRules:
     kubeControllerManager: false  # K3s controller metrics not exposed
     kubeProxy: false  # K3s uses kube-router instead of kube-proxy
 
+# Disable K3s components that don't expose metrics
+kubeScheduler:
+  enabled: false
+kubeControllerManager:
+  enabled: false
+kubeProxy:
+  enabled: false
+kubeEtcd:
+  enabled: false
+
 # Prometheus configuration
 prometheus:
   prometheusSpec:
