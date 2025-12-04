@@ -45,11 +45,11 @@ prometheus:
           accessModes: ["ReadWriteOnce"]
           resources:
             requests:
-              storage: 20Gi
+              storage: 30Gi
     
     # Retention policy
     retention: 30d
-    retentionSize: "18GB"
+    retentionSize: "24GB"
     
     # Service monitors
     serviceMonitorSelectorNilUsesHelmValues: false
