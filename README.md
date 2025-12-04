@@ -167,7 +167,6 @@ homelab/
     │   ├── dreambox-ingress.yaml
     │   ├── fr24-ingress.yaml
     │   ├── glances-macmini-ingress.yaml
-    │   ├── homebridge-ingress.yaml
     │   ├── internal-cluster-issuer.yaml
     │   ├── kustomization.yaml
     │   ├── minio-ingress.yaml
@@ -175,8 +174,6 @@ homelab/
     │   ├── tesla-key-configmap.yaml
     │   ├── tesla-key-deployment.yaml
     │   ├── tesla-key-ingress.yaml
-    │   ├── teslalogger-ingress.yaml
-    │   ├── teslalogger-web-ingress.yaml
     │   ├── unifi-ingress.yaml
     │   └── wazuh-ingress.yaml
     ├── teslamate/

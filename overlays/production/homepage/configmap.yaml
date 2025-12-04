@@ -100,11 +100,6 @@ data:
             version: 4
 
     - Applications - Extern:
-      - Teslalogger Grafana:
-          icon: grafana.png
-          description: Tesla Data Logger Dashboard
-          href: https://teslalogger.elmstreet79.de
-          weight: 20
 
       - Dreambox:
           href: https://dreambox.elmstreet79.de
@@ -112,13 +107,6 @@ data:
           icon: mdi-television-box
           weight: 30
           ping: 192.168.2.11
-
-    - Applications - Intern:
-      - Teslalogger Web:
-          icon: https://teslalogger-web.elmstreet79.de/admin/logo.jpg
-          description: Tesla Data Logger Web
-          href: https://teslalogger-web.elmstreet79.de/admin
-          weight: 10
 
     - DNS:
       - AdGuard Home (Mac Mini):
