@@ -26,17 +26,3 @@ data:
     
     # Enable scenes UI
     scene: !include scenes.yaml
-    
-    # Template lock for door entry
-    lock:
-      - platform: template
-        name: "Vordereingang"
-        value_template: "locked"
-        lock:
-          service: button.press
-          target:
-            entity_id: button.vordereingang_open_door
-        unlock:
-          service: button.press
-          target:
-            entity_id: button.vordereingang_open_door
