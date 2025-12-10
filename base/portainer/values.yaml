@@ -39,10 +39,3 @@ readinessProbe:
   periodSeconds: 30        # Check every 30s
   timeoutSeconds: 5        # Allow 5s for response (was 1s - too aggressive)
   failureThreshold: 3      # 3 failures before marking unready (3 * 30s = 1.5min)
-
-# TLS Configuration
-tls:
-  force: false  # Allow both HTTP and HTTPS
-
-# Enable HTTP on port 9000 (in addition to HTTPS on 9443)
-httpEnabled: true
