@@ -3,7 +3,7 @@ apiVersion: traefik.io/v1alpha1
 kind: ServersTransport
 metadata:
   name: insecure-transport
-  namespace: portainer
+  namespace: traefik
 spec:
   insecureSkipVerify: true
   serverName: "*"
