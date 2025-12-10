@@ -1,0 +1,47 @@
+# Kured Helm values
+# Automatically drain and reboot nodes when /var/run/reboot-required exists
+
+configuration:
+  # Lock annotations for coordination
+  lockAnnotation: weave.works/kured-node-lock
+  
+  # Reboot window (optional - restrict to specific times)
+  startTime: "02:00"
+  endTime: "05:00"
+  timeZone: "Europe/Berlin"
+  
+  # Reboot delay (wait before rebooting after drain)
+  rebootDelay: 0
+  
+  # Prometheus metrics
+  metricsHost: "0.0.0.0"
+  metricsPort: 8080
+  
+  # Notify via Slack/webhook (optional)
+  # slackHookUrl: ""
+  # slackChannel: "#homelab"
+  
+  # Node selector - run on all nodes
+  # (DaemonSet will run on control-plane + workers)
+  
+tolerations:
+  # Allow running on control-plane nodes
+  - key: node-role.kubernetes.io/control-plane
+    operator: Exists
+    effect: NoSchedule
+  - key: node-role.kubernetes.io/master
+    operator: Exists
+    effect: NoSchedule
+
+# Resource limits
+resources:
+  limits:
+    cpu: 100m
+    memory: 128Mi
+  requests:
+    cpu: 10m
+    memory: 32Mi
+
+# Service monitor for Prometheus integration
+metrics:
+  create: true

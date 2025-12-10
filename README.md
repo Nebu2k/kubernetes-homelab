@@ -20,7 +20,7 @@ Production-ready K3s cluster managed via GitOps using ArgoCD App-of-Apps pattern
 | Wave | Component |
 |------|-----------|
 | 0 | Sealed Secrets, Coredns Config |
-| 1 | Reloader, Metallb |
+| 1 | Reloader, Kured, Metallb |
 | 2 | Cert Manager |
 | 3 | Nginx Ingress |
 | 4 | Longhorn |
@@ -47,6 +47,7 @@ homelab/
 │   ├── kustomization.yaml         # List of all apps
 │   ├── coredns-config.yaml            # Wave 0
 │   ├── sealed-secrets.yaml            # Wave 0
+│   ├── kured.yaml                     # Wave 1
 │   ├── metallb.yaml                   # Wave 1
 │   ├── reloader.yaml                  # Wave 1
 │   ├── cert-manager.yaml              # Wave 2
@@ -75,6 +76,8 @@ homelab/
 │   ├── homepage/
 │       └── values.yaml
 │   ├── kube-prometheus-stack/
+│       └── values.yaml
+│   ├── kured/
 │       └── values.yaml
 │   ├── longhorn/
 │       └── values.yaml
@@ -1016,6 +1019,7 @@ kubectl get secret -n monitoring grafana-admin-credentials \
 | Reloader | 2.2.5 | Reloader |
 | Kube Prometheus Stack | 79.9.0 | Kube Prometheus Stack |
 | Sealed Secrets | 2.17.7 | Sealed Secrets |
+| Kured | 5.10.0 | Kured |
 | Metallb | 0.15.2 | Metallb |
 | Ingress Nginx | 4.14.0 | Nginx Ingress |
 | Longhorn | 1.10.0 | Longhorn |
@@ -1033,6 +1037,7 @@ kubectl get secret -n monitoring grafana-admin-credentials \
 - [Ingress Nginx](https://kubernetes.github.io/ingress-nginx)
 - [K3s](https://docs.k3s.io/)
 - [Kube Prometheus Stack](https://prometheus-community.github.io/helm-charts)
+- [Kured](https://kubereboot.github.io/charts)
 - [Longhorn](https://charts.longhorn.io)
 - [Metallb](https://metallb.github.io/metallb)
 - [Portainer](https://portainer.github.io/k8s)
