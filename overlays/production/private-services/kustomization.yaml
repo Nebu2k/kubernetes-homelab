@@ -3,7 +3,6 @@ kind: Kustomization
 namespace: private-services
 resources:
   - internal-cluster-issuer.yaml
-  - teslalogger-ingress.yaml
   - dreambox-ingress.yaml
   - adguard-ingress.yaml
   - beszel-ingress.yaml
@@ -17,7 +16,6 @@ resources:
   - adguard-credentials-sealed.yaml
   - adguard-dns-sync-rbac.yaml
   - adguard-dns-sync-job.yaml
-  - teslalogger-web-ingress.yaml
   - adguard-sync-ingress.yaml
   - tesla-key-configmap.yaml
   - tesla-key-deployment.yaml
