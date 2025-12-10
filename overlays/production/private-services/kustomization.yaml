@@ -4,7 +4,6 @@ namespace: private-services
 resources:
   - internal-cluster-issuer.yaml
   - minio-middleware.yaml
-  - traefik-dashboard-certificate.yaml
   - dreambox-ingress.yaml
   - adguard-ingress.yaml
   - beszel-ingress.yaml

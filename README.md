@@ -183,7 +183,6 @@ homelab/
     │   ├── tesla-key-configmap.yaml
     │   ├── tesla-key-deployment.yaml
     │   ├── tesla-key-ingress.yaml
-    │   ├── traefik-dashboard-certificate.yaml
     │   ├── unifi-ingress.yaml
     │   └── wazuh-ingress.yaml
     ├── teslamate/
@@ -202,7 +201,8 @@ homelab/
     │   └── teslamate-secret-unsealed.yaml
     ├── traefik/
     │   ├── kustomization.yaml
-    │   └── servers-transport-insecure.yaml
+    │   ├── servers-transport-insecure.yaml
+    │   └── traefik-dashboard-certificate.yaml
     ├── unifi-poller/
     │   ├── deployment.yaml
     │   ├── kustomization.yaml
