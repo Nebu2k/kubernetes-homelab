@@ -6,9 +6,9 @@ configuration:
   lockAnnotation: weave.works/kured-node-lock
   
   # Reboot window (optional - restrict to specific times)
-  startTime: "02:00"
-  endTime: "05:00"
-  timeZone: "Europe/Berlin"
+  #startTime: "02:00"
+  #endTime: "05:00"
+  #timeZone: "Europe/Berlin"
   
   # Reboot delay (wait before rebooting after drain)
   rebootDelay: 0
