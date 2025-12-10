@@ -13,6 +13,11 @@ configuration:
   # Reboot delay (wait before rebooting after drain)
   rebootDelay: 0
   
+  # Drain settings
+  drainGracePeriod: -1  # Respect pod terminationGracePeriodSeconds
+  drainPodSelector: ""  # Drain all pods
+  skipWaitForDeleteTimeoutSeconds: 60
+  
   # Prometheus metrics
   metricsHost: "0.0.0.0"
   metricsPort: 8080
