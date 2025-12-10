@@ -8,6 +8,7 @@ metadata:
     cert-manager.io/cluster-issuer: letsencrypt-prod
     traefik.ingress.kubernetes.io/service.serversscheme: https
     traefik.ingress.kubernetes.io/service.serverstransport: insecure-transport@kubernetescrd
+    traefik.ingress.kubernetes.io/router.tls: "true"
     gethomepage.dev/enabled: "true"
     gethomepage.dev/name: "Portainer"
     gethomepage.dev/description: "Container Management"
