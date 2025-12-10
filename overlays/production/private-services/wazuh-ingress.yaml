@@ -33,7 +33,7 @@ metadata:
   annotations:
     cert-manager.io/cluster-issuer: letsencrypt-prod
     traefik.ingress.kubernetes.io/service.serversscheme: https
-    traefik.ingress.kubernetes.io/service.serverstransport: insecure-transport@kubernetescrd
+    traefik.ingress.kubernetes.io/service.serverstransport: insecure-transport
 spec:
   ingressClassName: traefik
   tls:
