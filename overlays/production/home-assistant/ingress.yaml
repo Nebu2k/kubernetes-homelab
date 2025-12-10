@@ -5,11 +5,7 @@ metadata:
   namespace: home-assistant
   annotations:
     cert-manager.io/cluster-issuer: letsencrypt-prod
-    nginx.ingress.kubernetes.io/ssl-redirect: "false"
-    nginx.ingress.kubernetes.io/backend-protocol: "HTTP"
-    nginx.ingress.kubernetes.io/enable-real-ip: "true"
-    nginx.ingress.kubernetes.io/real-ip-header: "X-Forwarded-For"
-    nginx.ingress.kubernetes.io/set-real-ip-from: "192.168.0.0/16,10.42.0.0/16"
+    traefik.ingress.kubernetes.io/router.middlewares: home-assistant-real-ip@kubernetescrd
     gethomepage.dev/enabled: "true"
     gethomepage.dev/name: "Home Assistant"
     gethomepage.dev/description: "Smart Home Hub"
@@ -17,7 +13,7 @@ metadata:
     gethomepage.dev/icon: "home-assistant.png"
     gethomepage.dev/weight: "10"
 spec:
-  ingressClassName: nginx
+  ingressClassName: traefik
   tls:
     - hosts:
         - homeassistant.elmstreet79.de

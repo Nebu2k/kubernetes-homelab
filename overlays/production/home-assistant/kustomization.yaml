@@ -11,3 +11,4 @@ resources:
   - service.yaml
   - ingress.yaml
   - configmap-configuration.yaml
+  - middleware-real-ip.yaml

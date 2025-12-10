@@ -5,7 +5,6 @@ metadata:
   namespace: monitoring
   annotations:
     cert-manager.io/cluster-issuer: "letsencrypt-prod"
-    nginx.ingress.kubernetes.io/ssl-redirect: "true"
     # Homepage integration
     gethomepage.dev/enabled: "true"
     gethomepage.dev/group: "Monitoring"
@@ -18,7 +17,7 @@ metadata:
     gethomepage.dev/widget.username: "{{HOMEPAGE_VAR_GRAFANA_USER}}"
     gethomepage.dev/widget.password: "{{HOMEPAGE_VAR_GRAFANA_PASS}}"
 spec:
-  ingressClassName: nginx
+  ingressClassName: traefik
   tls:
     - hosts:
         - grafana.elmstreet79.de

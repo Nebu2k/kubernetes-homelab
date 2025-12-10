@@ -32,9 +32,8 @@ metadata:
   namespace: private-services
   annotations:
     cert-manager.io/cluster-issuer: internal-ca-issuer
-    nginx.ingress.kubernetes.io/backend-protocol: "HTTP"
 spec:
-  ingressClassName: nginx
+  ingressClassName: traefik
   tls:
     - hosts:
         - adguard-sync.elmstreet79.de

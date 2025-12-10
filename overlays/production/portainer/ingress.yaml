@@ -6,9 +6,7 @@ metadata:
   namespace: portainer
   annotations:
     cert-manager.io/cluster-issuer: letsencrypt-prod
-    nginx.ingress.kubernetes.io/backend-protocol: "HTTPS"
-    nginx.ingress.kubernetes.io/proxy-ssl-verify: "off"
-    nginx.ingress.kubernetes.io/ssl-redirect: "false"
+    traefik.ingress.kubernetes.io/service.serverstransport: insecure-transport@kubernetescrd
     gethomepage.dev/enabled: "true"
     gethomepage.dev/name: "Portainer"
     gethomepage.dev/description: "Container Management"
@@ -16,7 +14,7 @@ metadata:
     gethomepage.dev/icon: "portainer.png"
     gethomepage.dev/weight: "20"
 spec:
-  ingressClassName: nginx
+  ingressClassName: traefik
   tls:
     - hosts:
         - portainer.elmstreet79.de

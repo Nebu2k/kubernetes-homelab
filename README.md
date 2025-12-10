@@ -22,7 +22,7 @@ Production-ready K3s cluster managed via GitOps using ArgoCD App-of-Apps pattern
 | 0 | Sealed Secrets, Coredns Config |
 | 1 | Reloader, Kured, Metallb |
 | 2 | Cert Manager |
-| 3 | Nginx Ingress |
+| 3 | Nginx Ingress, Traefik |
 | 4 | Longhorn |
 | 5 | Portainer, Teslamate |
 | 6 | Kube Prometheus Stack |
@@ -52,6 +52,7 @@ homelab/
 │   ├── reloader.yaml                  # Wave 1
 │   ├── cert-manager.yaml              # Wave 2
 │   ├── nginx-ingress.yaml             # Wave 3
+│   ├── traefik.yaml                   # Wave 3
 │   ├── longhorn.yaml                  # Wave 4
 │   ├── portainer.yaml                 # Wave 5
 │   ├── teslamate.yaml                 # Wave 5
@@ -89,6 +90,8 @@ homelab/
 │       └── values.yaml
 │   ├── reloader/
 │       └── values.yaml
+│   ├── traefik/
+│       └── values.yaml
 │   └── uptime-kuma/
         └── values.yaml
 └── overlays/production/
@@ -115,6 +118,7 @@ homelab/
     │   ├── ingress.yaml
     │   ├── kustomization.yaml
     │   ├── matter-pvc.yaml
+    │   ├── middleware-real-ip.yaml
     │   ├── namespace.yaml
     │   ├── pvc.yaml
     │   └── service.yaml
@@ -157,7 +161,8 @@ homelab/
     │   └── kustomization.yaml
     ├── portainer/
     │   ├── ingress.yaml
-    │   └── kustomization.yaml
+    │   ├── kustomization.yaml
+    │   └── servers-transport-insecure.yaml
     ├── private-services/
     │   ├── adguard-credentials-sealed.yaml
     │   ├── adguard-credentials-unsealed.yaml
@@ -173,10 +178,13 @@ homelab/
     │   ├── internal-cluster-issuer.yaml
     │   ├── kustomization.yaml
     │   ├── minio-ingress.yaml
+    │   ├── minio-middleware.yaml
     │   ├── proxmox-ingress.yaml
+    │   ├── servers-transport-insecure.yaml
     │   ├── tesla-key-configmap.yaml
     │   ├── tesla-key-deployment.yaml
     │   ├── tesla-key-ingress.yaml
+    │   ├── traefik-dashboard-certificate.yaml
     │   ├── unifi-ingress.yaml
     │   └── wazuh-ingress.yaml
     ├── teslamate/
@@ -1026,6 +1034,7 @@ kubectl get secret -n monitoring grafana-admin-credentials \
 | Portainer | 2.33.5 | Portainer |
 | Cert Manager | v1.19.1 | Cert Manager |
 | Uptime Kuma | 2.24.0 | Uptime Kuma |
+| Traefik | 37.4.0 | Traefik |
 | Homepage | 2.1.0 | Homepage |
 | K3s | v1.33.5 | Lightweight Kubernetes |
 | Kube-VIP | v1.0.1 | Control plane HA |
@@ -1043,6 +1052,7 @@ kubectl get secret -n monitoring grafana-admin-credentials \
 - [Portainer](https://portainer.github.io/k8s)
 - [Reloader](https://stakater.github.io/stakater-charts)
 - [Sealed Secrets](https://bitnami-labs.github.io/sealed-secrets)
+- [Traefik](https://traefik.github.io/charts)
 - [Uptime Kuma](https://dirsigler.github.io/uptime-kuma-helm)
 
 ## 📝 License

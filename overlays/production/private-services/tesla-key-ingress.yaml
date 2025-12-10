@@ -5,11 +5,10 @@ metadata:
   namespace: private-services
   annotations:
     cert-manager.io/cluster-issuer: letsencrypt-prod
-    nginx.ingress.kubernetes.io/ssl-redirect: "false"
     gethomepage.dev/enabled: "false"
     adguard-dns-sync/exclude: "true"
 spec:
-  ingressClassName: nginx
+  ingressClassName: traefik
   tls:
     - hosts:
         - tesla-key.elmstreet79.de

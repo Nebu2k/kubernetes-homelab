@@ -1,0 +1,71 @@
+---
+deployment:
+  replicas: 2
+
+nodeSelector:
+  node-role.kubernetes.io/worker: "worker"
+
+# CRD providers for Middleware and ServersTransport
+providers:
+  kubernetesCRD:
+    enabled: true
+    allowCrossNamespace: false
+  kubernetesIngress:
+    enabled: true
+
+# MetalLB LoadBalancer IP
+service:
+  annotations:
+    metallb.universe.tf/loadBalancerIPs: 192.168.2.250
+  type: LoadBalancer
+
+# Prometheus metrics
+metrics:
+  prometheus:
+    enabled: true
+    service:
+      enabled: true
+    serviceMonitor:
+      enabled: true
+
+# Access logs
+logs:
+  general:
+    level: INFO
+  access:
+    enabled: true
+
+# Security headers
+globalArguments:
+  - "--api.dashboard=true"
+  - "--ping=true"
+
+# Dashboard
+ingressRoute:
+  dashboard:
+    enabled: true
+    matchRule: Host(`traefik.elmstreet79.de`)
+    entryPoints: ["websecure"]
+    tls:
+      secretName: traefik-dashboard-tls
+
+# Ports
+ports:
+  web:
+    port: 80
+    exposedPort: 80
+    expose:
+      default: true
+  websecure:
+    port: 443
+    exposedPort: 443
+    expose:
+      default: true
+    http3:
+      enabled: false
+    tls:
+      enabled: true
+  metrics:
+    port: 9100
+    expose:
+      default: false

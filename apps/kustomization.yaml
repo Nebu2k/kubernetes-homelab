@@ -9,8 +9,7 @@ resources:
   - metallb-config.yaml
   - cert-manager.yaml
   - cert-manager-config.yaml
-  - nginx-ingress.yaml
-  - nginx-ingress-config.yaml
+  - traefik.yaml
   - longhorn.yaml
   - longhorn-config.yaml
   - kube-prometheus-stack.yaml
