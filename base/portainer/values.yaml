@@ -43,3 +43,6 @@ readinessProbe:
 # TLS Configuration
 tls:
   force: false  # Allow both HTTP and HTTPS
+
+# Enable HTTP on port 9000 (in addition to HTTPS on 9443)
+httpEnabled: true
