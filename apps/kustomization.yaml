@@ -10,6 +10,7 @@ resources:
   - cert-manager.yaml
   - cert-manager-config.yaml
   - traefik.yaml
+  - traefik-config.yaml
   - longhorn.yaml
   - longhorn-config.yaml
   - kube-prometheus-stack.yaml

@@ -29,7 +29,7 @@ Production-ready K3s cluster managed via GitOps using ArgoCD App-of-Apps pattern
 | 7 | Unifi Poller, Home Assistant |
 | 8 | Uptime Kuma |
 | 9 | Homepage |
-| 10 | Cert Manager Config, Metallb Config |
+| 10 | Cert Manager Config, Traefik Config, Metallb Config |
 | 11 | Nginx Ingress Config |
 | 12 | Portainer Config, Argocd Config |
 | 13 | Longhorn Config |
@@ -63,6 +63,7 @@ homelab/
 │   ├── homepage.yaml                  # Wave 9
 │   ├── cert-manager-config.yaml       # Wave 10
 │   ├── metallb-config.yaml            # Wave 10
+│   ├── traefik-config.yaml            # Wave 10
 │   ├── nginx-ingress-config.yaml      # Wave 11
 │   ├── argocd-config.yaml             # Wave 12
 │   ├── portainer-config.yaml          # Wave 12
@@ -161,8 +162,7 @@ homelab/
     │   └── kustomization.yaml
     ├── portainer/
     │   ├── ingress.yaml
-    │   ├── kustomization.yaml
-    │   └── servers-transport-insecure.yaml
+    │   └── kustomization.yaml
     ├── private-services/
     │   ├── adguard-credentials-sealed.yaml
     │   ├── adguard-credentials-unsealed.yaml
@@ -180,7 +180,6 @@ homelab/
     │   ├── minio-ingress.yaml
     │   ├── minio-middleware.yaml
     │   ├── proxmox-ingress.yaml
-    │   ├── servers-transport-insecure.yaml
     │   ├── tesla-key-configmap.yaml
     │   ├── tesla-key-deployment.yaml
     │   ├── tesla-key-ingress.yaml
@@ -201,6 +200,9 @@ homelab/
     │   ├── teslamate-ingress.yaml
     │   ├── teslamate-secret-sealed.yaml
     │   └── teslamate-secret-unsealed.yaml
+    ├── traefik/
+    │   ├── kustomization.yaml
+    │   └── servers-transport-insecure.yaml
     ├── unifi-poller/
     │   ├── deployment.yaml
     │   ├── kustomization.yaml
