@@ -1,15 +1,12 @@
 ---
-# External Service pointing to Nextcloud AIO VM with dedicated LoadBalancer IP
+# External Service pointing to Nextcloud AIO VM
 apiVersion: v1
 kind: Service
 metadata:
   name: nextcloud-aio
   namespace: private-services
-  annotations:
-    metallb.universe.tf/loadBalancerIPs: "192.168.2.251"
-    adguard-dns-sync/exclude: "true"  # Exclude from AdGuard sync, we'll use Cloudflare DNS
 spec:
-  type: LoadBalancer
+  type: ClusterIP
   ports:
     - name: http
       port: 11000
@@ -30,11 +27,29 @@ subsets:
         port: 11000
         protocol: TCP
 ---
-# Ingress for Cloudflare DNS sync (creates DNS record without proxy)
+# Traefik IngressRoute for Nextcloud
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: nextcloud
+  namespace: private-services
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - match: Host(`cloud.elmstreet79.de`)
+      kind: Rule
+      services:
+        - name: nextcloud-aio
+          port: 11000
+  tls:
+    secretName: nextcloud-tls
+---
+# Ingress for cert-manager and Cloudflare DNS sync
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: nextcloud-cloudflare
+  name: nextcloud-dns
   namespace: private-services
   annotations:
     cert-manager.io/cluster-issuer: letsencrypt-prod
