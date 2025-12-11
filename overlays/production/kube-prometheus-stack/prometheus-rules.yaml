@@ -59,28 +59,28 @@ spec:
         - alert: LonghornVolumeSpaceWarning
           expr: |
             (
-              longhorn_volume_actual_size_bytes / 
-              longhorn_volume_capacity_bytes
+              kubelet_volume_stats_used_bytes{persistentvolumeclaim=~".+"} / 
+              kubelet_volume_stats_capacity_bytes{persistentvolumeclaim=~".+"}
             ) > 0.80
           for: 5m
           labels:
             severity: warning
           annotations:
             summary: "Longhorn volume space usage is high"
-            description: "Volume {{ $labels.volume }} is {{ $value | humanizePercentage }} full (threshold: 80%)."
+            description: "PVC {{ $labels.namespace }}/{{ $labels.persistentvolumeclaim }} is {{ $value | humanizePercentage }} full (threshold: 80%)."
 
         - alert: LonghornVolumeSpaceCritical
           expr: |
             (
-              longhorn_volume_actual_size_bytes / 
-              longhorn_volume_capacity_bytes
+              kubelet_volume_stats_used_bytes{persistentvolumeclaim=~".+"} / 
+              kubelet_volume_stats_capacity_bytes{persistentvolumeclaim=~".+"}
             ) > 0.90
           for: 2m
           labels:
             severity: critical
           annotations:
             summary: "Longhorn volume space usage is critical"
-            description: "Volume {{ $labels.volume }} is {{ $value | humanizePercentage }} full (threshold: 90%)."
+            description: "PVC {{ $labels.namespace }}/{{ $labels.persistentvolumeclaim }} is {{ $value | humanizePercentage }} full (threshold: 90%)."
 
         - alert: LonghornVolumeDegraded
           expr: longhorn_volume_robustness == 2
@@ -203,4 +203,4 @@ spec:
             severity: warning
           annotations:
             summary: "Node memory usage is high"
-            description: "Node {{ $labels.instance }} memory usage is {{ $value | humanizePercentage }} (threshold: 10% - TEST ALERT)."
+            description: "Node {{ $labels.instance }} memory usage is {{ $value | humanizePercentage }} (threshold: 85%)."
