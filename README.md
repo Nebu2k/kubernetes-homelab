@@ -22,7 +22,7 @@ Production-ready K3s cluster managed via GitOps using ArgoCD App-of-Apps pattern
 | 0 | Sealed Secrets, Coredns Config |
 | 1 | Reloader, Kured, Metallb |
 | 2 | Cert Manager |
-| 3 | Nginx Ingress, Traefik |
+| 3 | Traefik |
 | 4 | Longhorn |
 | 5 | Portainer, Teslamate |
 | 6 | Kube Prometheus Stack |
@@ -30,7 +30,6 @@ Production-ready K3s cluster managed via GitOps using ArgoCD App-of-Apps pattern
 | 8 | Uptime Kuma |
 | 9 | Homepage |
 | 10 | Cert Manager Config, Traefik Config, Metallb Config |
-| 11 | Nginx Ingress Config |
 | 12 | Portainer Config, Argocd Config |
 | 13 | Longhorn Config |
 | 14 | Kube Prometheus Stack Config |
@@ -51,7 +50,6 @@ homelab/
 │   ├── metallb.yaml                   # Wave 1
 │   ├── reloader.yaml                  # Wave 1
 │   ├── cert-manager.yaml              # Wave 2
-│   ├── nginx-ingress.yaml             # Wave 3
 │   ├── traefik.yaml                   # Wave 3
 │   ├── longhorn.yaml                  # Wave 4
 │   ├── portainer.yaml                 # Wave 5
@@ -64,7 +62,6 @@ homelab/
 │   ├── cert-manager-config.yaml       # Wave 10
 │   ├── metallb-config.yaml            # Wave 10
 │   ├── traefik-config.yaml            # Wave 10
-│   ├── nginx-ingress-config.yaml      # Wave 11
 │   ├── argocd-config.yaml             # Wave 12
 │   ├── portainer-config.yaml          # Wave 12
 │   ├── longhorn-config.yaml           # Wave 13
@@ -84,8 +81,6 @@ homelab/
 │   ├── longhorn/
 │       └── values.yaml
 │   ├── metallb/
-│       └── values.yaml
-│   ├── nginx-ingress/
 │       └── values.yaml
 │   ├── portainer/
 │       └── values.yaml
@@ -157,9 +152,6 @@ homelab/
     ├── metallb/
     │   ├── kustomization.yaml
     │   └── metallb-ip-pool.yaml
-    ├── nginx-ingress/
-    │   ├── custom-headers.yaml
-    │   └── kustomization.yaml
     ├── portainer/
     │   ├── ingress.yaml
     │   ├── kustomization.yaml
@@ -1032,7 +1024,6 @@ kubectl get secret -n monitoring grafana-admin-credentials \
 | Sealed Secrets | 2.17.7 | Sealed Secrets |
 | Kured | 5.10.0 | Kured |
 | Metallb | 0.15.2 | Metallb |
-| Ingress Nginx | 4.14.0 | Nginx Ingress |
 | Longhorn | 1.10.0 | Longhorn |
 | Portainer | 2.33.5 | Portainer |
 | Cert Manager | v1.19.1 | Cert Manager |
@@ -1046,7 +1037,6 @@ kubectl get secret -n monitoring grafana-admin-credentials \
 
 - [Cert Manager](https://charts.jetstack.io)
 - [Homepage](https://jameswynn.github.io/helm-charts)
-- [Ingress Nginx](https://kubernetes.github.io/ingress-nginx)
 - [K3s](https://docs.k3s.io/)
 - [Kube Prometheus Stack](https://prometheus-community.github.io/helm-charts)
 - [Kured](https://kubereboot.github.io/charts)
