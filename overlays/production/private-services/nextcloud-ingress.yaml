@@ -6,11 +6,10 @@ metadata:
   name: nextcloud-aio
   namespace: private-services
   annotations:
-    metallb.universe.tf/loadBalancerIPs: 192.168.2.251
+    metallb.universe.tf/loadBalancerIPs: "192.168.2.251"
     adguard-dns-sync/exclude: "true"  # Exclude from AdGuard sync, we'll use Cloudflare DNS
 spec:
   type: LoadBalancer
-  loadBalancerIP: 192.168.2.251
   ports:
     - name: http
       port: 11000
