@@ -6,3 +6,4 @@ namespace: traefik
 
 resources:
   - traefik-dashboard-certificate.yaml
+  - traefik-dashboard-ingress.yaml

@@ -1,0 +1,26 @@
+---
+# Dummy Ingress for DNS sync
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: traefik-dashboard-dns
+  namespace: traefik
+  annotations:
+    cert-manager.io/cluster-issuer: internal-ca-issuer
+spec:
+  ingressClassName: traefik
+  tls:
+    - hosts:
+        - traefik.elmstreet79.de
+      secretName: traefik-dashboard-tls
+  rules:
+    - host: traefik.elmstreet79.de
+      http:
+        paths:
+          - path: /__dns_sync_only__
+            pathType: Exact
+            backend:
+              service:
+                name: traefik
+                port:
+                  number: 9000
