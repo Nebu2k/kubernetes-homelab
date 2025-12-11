@@ -1,18 +1,12 @@
 ---
-# Dummy Ingress for DNS sync
+# Dummy Ingress for DNS sync only (Dashboard routing handled by Helm IngressRoute)
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: traefik-dashboard-dns
   namespace: traefik
-  annotations:
-    cert-manager.io/cluster-issuer: internal-ca-issuer
 spec:
   ingressClassName: traefik
-  tls:
-    - hosts:
-        - traefik.elmstreet79.de
-      secretName: traefik-dashboard-tls
   rules:
     - host: traefik.elmstreet79.de
       http:

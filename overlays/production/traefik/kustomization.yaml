@@ -5,4 +5,5 @@ kind: Kustomization
 namespace: traefik
 
 resources:
-  - traefik-dashboard-ingress.yaml
+  - traefik-dashboard-certificate.yaml
+  - traefik-dashboard-ingress-dns.yaml

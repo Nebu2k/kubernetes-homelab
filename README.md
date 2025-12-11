@@ -203,7 +203,8 @@ homelab/
     │   └── teslamate-secret-unsealed.yaml
     ├── traefik/
     │   ├── kustomization.yaml
-    │   └── traefik-dashboard-ingress.yaml
+    │   ├── traefik-dashboard-certificate.yaml
+    │   └── traefik-dashboard-ingress-dns.yaml
     ├── unifi-poller/
     │   ├── deployment.yaml
     │   ├── kustomization.yaml
