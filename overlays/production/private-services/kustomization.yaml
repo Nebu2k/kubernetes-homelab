@@ -3,6 +3,7 @@ kind: Kustomization
 namespace: private-services
 resources:
   - internal-cluster-issuer.yaml
+  - servers-transport.yaml
   - minio-middleware.yaml
   - dreambox-ingress.yaml
   - adguard-ingress.yaml

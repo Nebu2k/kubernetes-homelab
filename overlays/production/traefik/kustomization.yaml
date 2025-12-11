@@ -5,5 +5,4 @@ kind: Kustomization
 namespace: traefik
 
 resources:
-  - servers-transport-insecure.yaml
   - traefik-dashboard-certificate.yaml

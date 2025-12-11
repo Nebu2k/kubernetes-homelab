@@ -181,6 +181,7 @@ homelab/
     │   ├── minio-ingress.yaml
     │   ├── minio-middleware.yaml
     │   ├── proxmox-ingress.yaml
+    │   ├── servers-transport.yaml
     │   ├── tesla-key-configmap.yaml
     │   ├── tesla-key-deployment.yaml
     │   ├── tesla-key-ingress.yaml
@@ -202,7 +203,6 @@ homelab/
     │   └── teslamate-secret-unsealed.yaml
     ├── traefik/
     │   ├── kustomization.yaml
-    │   ├── servers-transport-insecure.yaml
     │   └── traefik-dashboard-certificate.yaml
     ├── unifi-poller/
     │   ├── deployment.yaml

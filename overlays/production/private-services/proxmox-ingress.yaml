@@ -25,15 +25,33 @@ subsets:
         port: 8006
         protocol: TCP
 ---
-apiVersion: networking.k8s.io/v1
-kind: Ingress
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
 metadata:
   name: proxmox
   namespace: private-services
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - match: Host(`pve.elmstreet79.de`)
+      kind: Rule
+      services:
+        - name: proxmox
+          port: 443
+          scheme: https
+          serversTransport: insecure-transport
+  tls:
+    secretName: proxmox-tls
+---
+# Dummy Ingress for DNS sync and cert-manager
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: proxmox-dns
+  namespace: private-services
   annotations:
     cert-manager.io/cluster-issuer: internal-ca-issuer
-    traefik.ingress.kubernetes.io/service.serversscheme: https
-    traefik.ingress.kubernetes.io/service.serverstransport: insecure-transport@kubernetescrd
 spec:
   ingressClassName: traefik
   tls:
@@ -44,8 +62,8 @@ spec:
     - host: pve.elmstreet79.de
       http:
         paths:
-          - path: /
-            pathType: Prefix
+          - path: /__dns_sync_only__
+            pathType: Exact
             backend:
               service:
                 name: proxmox
