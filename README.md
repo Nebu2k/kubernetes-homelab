@@ -423,7 +423,7 @@ kubectl -n argocd get secret argocd-initial-admin-secret \
 **Why `server.insecure=true`?**
 
 - ArgoCD runs on HTTP internally
-- NGINX Ingress terminates TLS
+- Traefik terminates TLS
 - Prevents redirect loops
 
 **Note:** If you changed the domain in Step 5, update the Helm values accordingly.
@@ -533,7 +533,7 @@ kubectl get applications -n argocd -w
 **What happens:**
 
 - Sealed Secrets Controller installs first (Sync-Wave 0)
-- MetalLB, Cert-Manager, NGINX, etc. follow in order
+- MetalLB, Cert-Manager, Traefik, etc. follow in order
 - Some apps will stay "Progressing" until secrets are sealed (next step)
 
 ### Step 7.5: Seal Secrets (**on your laptop** - AFTER Step 7)
@@ -671,8 +671,8 @@ git push
 kubectl get applications -n argocd
 
 # MetalLB assigned LoadBalancer IP
-kubectl get svc -n ingress-nginx
-# EXTERNAL-IP should show 192.168.2.250-254 range
+kubectl get svc -n traefik
+# EXTERNAL-IP should show 192.168.2.250
 
 # Certificates issued (takes 2-5 min for DNS-01)
 kubectl get certificate -A
@@ -754,7 +754,7 @@ Private Services provide internal DNS names for services running outside Kuberne
 ```text
 External Service → Kubernetes Service (ClusterIP) → Manual Endpoints → External IP:Port
                 ↓
-            Ingress (no cert-manager) → NGINX LoadBalancer (192.168.2.250)
+            IngressRoute → Traefik LoadBalancer (192.168.2.250)
                 ↓
             AdGuard DNS Sync Job → AdGuard API → DNS Rewrite (*.elmstreet79.de → 192.168.2.250)
                 ↓
@@ -775,7 +775,7 @@ Longhorn: http://longhorn.elmstreet79.de → Internal K8s service
 
 - **PostSync Hook**: Runs automatically after every ArgoCD sync
 - **Filter Logic**: Only syncs Ingresses WITHOUT `cert-manager.io/cluster-issuer` annotation
-- **AdGuard API**: Creates/updates/deletes DNS Rewrites pointing to NGINX LoadBalancer IP (192.168.2.250)
+- **AdGuard API**: Creates/updates/deletes DNS Rewrites pointing to Traefik LoadBalancer IP (192.168.2.250)
 - **Auto-Cleanup**: Removes orphaned DNS entries when Ingresses are deleted
 
 **Public Services with SSL:**
@@ -796,7 +796,7 @@ Public services (accessible from the internet) use a separate DNS sync system:
 ```text
 TeslaLogger: https://teslalogger.elmstreet79.de (→ 192.168.2.9:3000)
 Dreambox: https://dreambox.elmstreet79.de (→ 192.168.2.11:80)
-(External services routed via NGINX Ingress with TLS)
+(External services routed via Traefik IngressRoute with TLS)
 ```
 
 ### Internal CA for Private Services
@@ -858,19 +858,19 @@ kubectl describe application <app-name> -n argocd
 helm repo update
 helm search repo <chart-name> --versions | head -n 5
 
-# Example: Check nginx-ingress latest version
-helm search repo ingress-nginx/ingress-nginx --versions | head -n 5
+# Example: Check traefik latest version
+helm search repo traefik/traefik --versions | head -n 5
 
 # Edit Helm values
-vim base/nginx-ingress/values.yaml
+vim base/traefik/values.yaml
 
 # Commit and push - ArgoCD auto-syncs
-git add base/nginx-ingress/values.yaml
-git commit -m "Update NGINX to 2 replicas"
+git add base/traefik/values.yaml
+git commit -m "Update Traefik to 2 replicas"
 git push
 
 # Watch sync
-kubectl get application nginx-ingress -n argocd -w
+kubectl get application traefik -n argocd -w
 ```
 
 ### Update Secrets
