@@ -1,0 +1,98 @@
+---
+# External Service pointing to Nextcloud AIO VM
+apiVersion: v1
+kind: Service
+metadata:
+  name: nextcloud-aio
+  namespace: private-services
+spec:
+  type: ClusterIP
+  ports:
+    - name: http
+      port: 11000
+      targetPort: 11000
+      protocol: TCP
+---
+# Endpoint for Nextcloud AIO VM
+apiVersion: v1
+kind: Endpoints
+metadata:
+  name: nextcloud-aio
+  namespace: private-services
+subsets:
+  - addresses:
+      - ip: 192.168.2.12
+    ports:
+      - name: http
+        port: 11000
+        protocol: TCP
+---
+# Traefik IngressRoute for Nextcloud
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: nextcloud
+  namespace: private-services
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - match: Host(`cloud.elmstreet79.de`)
+      kind: Rule
+      services:
+        - name: nextcloud-aio
+          port: 11000
+      middlewares:
+        - name: nextcloud-headers
+  tls:
+    secretName: nextcloud-tls
+---
+# Traefik Middleware for Nextcloud-specific headers
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: nextcloud-headers
+  namespace: private-services
+spec:
+  headers:
+    customRequestHeaders:
+      X-Forwarded-Proto: "https"
+      X-Forwarded-For: ""
+      X-Forwarded-Host: ""
+      X-Real-IP: ""
+    hostsProxyHeaders:
+      - "X-Forwarded-Host"
+    sslRedirect: true
+    stsSeconds: 31536000
+    stsIncludeSubdomains: true
+    stsPreload: true
+    referrerPolicy: "same-origin"
+---
+# Dummy Ingress for DNS sync and cert-manager
+# This ingress is used for:
+# 1. AdGuard DNS sync (creates DNS rewrite for internal access)
+# 2. cert-manager to issue Let's Encrypt certificate
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: nextcloud-dummy
+  namespace: private-services
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+spec:
+  ingressClassName: traefik
+  rules:
+    - host: cloud.elmstreet79.de
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: nextcloud-aio
+                port:
+                  number: 11000
+  tls:
+    - hosts:
+        - cloud.elmstreet79.de
+      secretName: nextcloud-tls
