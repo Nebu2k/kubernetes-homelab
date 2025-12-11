@@ -172,6 +172,7 @@ homelab/
     │   ├── kustomization.yaml
     │   ├── minio-ingress.yaml
     │   ├── minio-middleware.yaml
+    │   ├── nextcloud-ingress.yaml
     │   ├── proxmox-ingress.yaml
     │   ├── servers-transport.yaml
     │   ├── unifi-ingress.yaml

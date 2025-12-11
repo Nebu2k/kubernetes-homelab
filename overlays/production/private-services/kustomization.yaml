@@ -5,6 +5,7 @@ resources:
   - internal-cluster-issuer.yaml
   - servers-transport.yaml
   - minio-middleware.yaml
+  - nextcloud-ingress.yaml
   - dreambox-ingress.yaml
   - adguard-ingress.yaml
   - beszel-ingress.yaml

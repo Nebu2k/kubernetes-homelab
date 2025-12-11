@@ -39,6 +39,7 @@ logs:
 globalArguments:
   - "--api.dashboard=true"
   - "--ping=true"
+  - "--entrypoints.websecure.transport.respondingTimeouts.readTimeout=24h"
 
 # Dashboard
 ingressRoute:
