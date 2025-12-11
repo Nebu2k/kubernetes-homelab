@@ -1,13 +1,10 @@
 ---
-apiVersion: networking.k8s.io/v1
-kind: Ingress
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
 metadata:
   name: portainer
   namespace: portainer
   annotations:
-    cert-manager.io/cluster-issuer: letsencrypt-prod
-    traefik.ingress.kubernetes.io/service.serversscheme: https
-    traefik.ingress.kubernetes.io/service.serverstransport: insecure-transport@kubernetescrd
     gethomepage.dev/enabled: "true"
     gethomepage.dev/name: "Portainer"
     gethomepage.dev/description: "Container Management"
@@ -15,19 +12,15 @@ metadata:
     gethomepage.dev/icon: "portainer.png"
     gethomepage.dev/weight: "20"
 spec:
-  ingressClassName: traefik
+  entryPoints:
+    - websecure
+  routes:
+    - match: Host(`portainer.elmstreet79.de`)
+      kind: Rule
+      services:
+        - name: portainer
+          port: 9443
+          scheme: https
+          serversTransport: traefik-insecure-transport
   tls:
-    - hosts:
-        - portainer.elmstreet79.de
-      secretName: portainer-tls
-  rules:
-    - host: portainer.elmstreet79.de
-      http:
-        paths:
-          - path: /
-            pathType: Prefix
-            backend:
-              service:
-                name: portainer
-                port:
-                  number: 9443
+    secretName: portainer-tls

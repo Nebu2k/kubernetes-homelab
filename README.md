@@ -161,6 +161,7 @@ homelab/
     │   ├── custom-headers.yaml
     │   └── kustomization.yaml
     ├── portainer/
+    │   ├── certificate.yaml
     │   ├── ingress.yaml
     │   └── kustomization.yaml
     ├── private-services/

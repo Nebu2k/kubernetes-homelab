@@ -3,3 +3,4 @@ kind: Kustomization
 namespace: portainer
 resources:
   - ingress.yaml
+  - certificate.yaml
