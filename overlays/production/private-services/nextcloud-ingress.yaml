@@ -29,3 +29,30 @@ subsets:
       - name: http
         port: 11000
         protocol: TCP
+---
+# Ingress for Cloudflare DNS sync (creates DNS record without proxy)
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: nextcloud-cloudflare
+  namespace: private-services
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    cloudflare.io/proxied: "false"  # Disable Cloudflare proxy (grey cloud)
+spec:
+  ingressClassName: traefik
+  rules:
+    - host: cloud.elmstreet79.de
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: nextcloud-aio
+                port:
+                  number: 11000
+  tls:
+    - hosts:
+        - cloud.elmstreet79.de
+      secretName: nextcloud-tls
