@@ -13,6 +13,8 @@ metadata:
     gethomepage.dev/group: "Applications - Intern"
     gethomepage.dev/icon: "traefik.png"
     gethomepage.dev/weight: "10"
+    gethomepage.dev/href: "https://traefik.elmstreet79.de"
+    gethomepage.dev/pod-selector: "app.kubernetes.io/name=traefik"
 spec:
   ingressClassName: traefik
   rules:
