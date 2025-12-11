@@ -162,7 +162,8 @@ homelab/
     │   └── kustomization.yaml
     ├── portainer/
     │   ├── ingress.yaml
-    │   └── kustomization.yaml
+    │   ├── kustomization.yaml
+    │   └── servers-transport.yaml
     ├── private-services/
     │   ├── adguard-credentials-sealed.yaml
     │   ├── adguard-credentials-unsealed.yaml

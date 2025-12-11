@@ -21,7 +21,7 @@ spec:
         - name: portainer
           port: 9443
           scheme: https
-          serversTransport: traefik-insecure-transport@kubernetescrd
+          serversTransport: insecure-transport
   tls:
     secretName: portainer-tls
 ---
