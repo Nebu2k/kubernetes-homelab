@@ -19,6 +19,3 @@ resources:
   - adguard-dns-sync-rbac.yaml
   - adguard-dns-sync-job.yaml
   - adguard-sync-ingress.yaml
-  - tesla-key-configmap.yaml
-  - tesla-key-deployment.yaml
-  - tesla-key-ingress.yaml

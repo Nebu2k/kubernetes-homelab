@@ -174,9 +174,6 @@ homelab/
     │   ├── minio-middleware.yaml
     │   ├── proxmox-ingress.yaml
     │   ├── servers-transport.yaml
-    │   ├── tesla-key-configmap.yaml
-    │   ├── tesla-key-deployment.yaml
-    │   ├── tesla-key-ingress.yaml
     │   ├── unifi-ingress.yaml
     │   └── wazuh-ingress.yaml
     ├── teslamate/
