@@ -108,7 +108,12 @@ homelab/
     │   ├── cloudflare-token-sealed.yaml
     │   ├── cloudflare-token-unsealed.yaml
     │   ├── cluster-issuer.yaml
-    │   └── kustomization.yaml
+    │   ├── kustomization.yaml
+    │   ├── pangolin-credentials-sealed.yaml
+    │   ├── pangolin-credentials-unsealed.yaml
+    │   ├── pangolin-resource-sync-configmap.yaml
+    │   ├── pangolin-resource-sync-jobs.yaml
+    │   └── pangolin-resource-sync-rbac.yaml
     ├── coredns/
     │   ├── coredns-custom.yaml
     │   └── kustomization.yaml
@@ -1036,7 +1041,7 @@ kubectl get secret -n monitoring grafana-admin-credentials \
 | Cert Manager | v1.19.1 | Cert Manager |
 | Uptime Kuma | 2.24.0 | Uptime Kuma |
 | Traefik | 37.4.0 | Traefik |
-| Newt | 0.1.0 | Newt |
+| Newt | 1.1.0 | Newt |
 | Homepage | 2.1.0 | Homepage |
 | K3s | v1.33.5 | Lightweight Kubernetes |
 | Kube-VIP | v1.0.1 | Control plane HA |
