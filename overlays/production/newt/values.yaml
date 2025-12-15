@@ -1,22 +1,16 @@
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: newt-values
-  namespace: newt
-  annotations:
-    argocd.argoproj.io/sync-options: Replace=true
-data:
-  values.yaml: |
-    newtInstances:
-      - name: main-tunnel
-        auth:
-          keys:
-            endpointKey: https://pangolin.elmstreet79.de
-            idKey:
-              secretKeyRef:
-                name: newt-auth
-                key: id
-            secretKey:
-              secretKeyRef:
-                name: newt-auth
-                key: secret
+# Newt (Pangolin Tunnel Client) Helm values
+# https://github.com/fossorial/charts/tree/main/charts/newt
+
+newtInstances:
+  - name: main-tunnel
+    auth:
+      keys:
+        endpointKey: https://pangolin.elmstreet79.de
+        idKey:
+          secretKeyRef:
+            name: newt-auth
+            key: id
+        secretKey:
+          secretKeyRef:
+            name: newt-auth
+            key: secret

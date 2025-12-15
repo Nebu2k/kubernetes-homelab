@@ -33,7 +33,7 @@ Production-ready K3s cluster managed via GitOps using ArgoCD App-of-Apps pattern
 | 12 | Portainer Config, Argocd Config |
 | 13 | Longhorn Config |
 | 14 | Kube Prometheus Stack Config |
-| 16 | Uptime Kuma Config, Newt Config, Private Services |
+| 16 | Uptime Kuma Config, Private Services |
 | 17 | Homepage Config |
 
 ## 📁 Repository Structure
@@ -67,7 +67,6 @@ homelab/
 │   ├── portainer-config.yaml          # Wave 12
 │   ├── longhorn-config.yaml           # Wave 13
 │   ├── kube-prometheus-stack-config.yaml # Wave 14
-│   ├── newt-config.yaml               # Wave 16
 │   ├── private-services.yaml          # Wave 16
 │   ├── uptime-kuma-config.yaml        # Wave 16
 │   └── homepage-config.yaml           # Wave 17
@@ -83,8 +82,6 @@ homelab/
 │   ├── longhorn/
 │       └── values.yaml
 │   ├── metallb/
-│       └── values.yaml
-│   ├── newt/
 │       └── values.yaml
 │   ├── portainer/
 │       └── values.yaml

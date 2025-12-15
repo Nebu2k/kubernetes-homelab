@@ -3,4 +3,3 @@ kind: Kustomization
 
 resources:
   - newt-auth-sealed.yaml
-  - values.yaml

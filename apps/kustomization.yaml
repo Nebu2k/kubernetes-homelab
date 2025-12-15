@@ -21,7 +21,6 @@ resources:
   - uptime-kuma.yaml
   - uptime-kuma-config.yaml
   - newt.yaml
-  - newt-config.yaml
   - homepage.yaml
   - homepage-config.yaml
   - argocd-config.yaml

@@ -1,5 +1,0 @@
-# Newt (Pangolin Tunnel Client) Helm values
-# https://github.com/fossorial/charts/tree/main/charts/newt
-
-# Newt instances configuration will be provided via overlay
-newtInstances: []
