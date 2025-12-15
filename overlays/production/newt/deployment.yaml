@@ -23,15 +23,22 @@ spec:
         - name: newt
           image: ghcr.io/fosrl/newt:latest
           imagePullPolicy: Always
+          command:
+            - /newt-client
+          args:
+            - --endpoint
+            - "https://pangolin.elmstreet79.de"
+            - --id
+            - "$(NEWT_ID)"
+            - --secret
+            - "$(NEWT_SECRET)"
           env:
-            - name: ENDPOINT
-              value: "https://pangolin.elmstreet79.de"
-            - name: ID
+            - name: NEWT_ID
               valueFrom:
                 secretKeyRef:
                   name: newt-auth
                   key: id
-            - name: SECRET
+            - name: NEWT_SECRET
               valueFrom:
                 secretKeyRef:
                   name: newt-auth
