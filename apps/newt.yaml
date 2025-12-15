@@ -7,19 +7,10 @@ metadata:
     argocd.argoproj.io/sync-wave: "8"
 spec:
   project: default
-  sources:
-    - repoURL: https://charts.fossorial.io
-      chart: newt
-      targetRevision: 1.1.0
-      helm:
-        valueFiles:
-          - $values/overlays/production/newt/values.yaml
-    - repoURL: https://github.com/Nebu2k/kubernetes-homelab.git
-      targetRevision: main
-      ref: values
-    - repoURL: https://github.com/Nebu2k/kubernetes-homelab.git
-      targetRevision: main
-      path: overlays/production/newt
+  source:
+    repoURL: https://github.com/Nebu2k/kubernetes-homelab.git
+    targetRevision: main
+    path: overlays/production/newt
   destination:
     server: https://kubernetes.default.svc
     namespace: newt

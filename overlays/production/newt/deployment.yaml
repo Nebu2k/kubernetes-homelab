@@ -1,0 +1,44 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: newt
+  namespace: newt
+  annotations:
+    reloader.stakater.com/auto: "true"
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: newt
+  template:
+    metadata:
+      labels:
+        app: newt
+      annotations:
+        reloader.stakater.com/auto: "true"
+    spec:
+      nodeSelector:
+        node-role.kubernetes.io/worker: "worker"
+      containers:
+        - name: newt
+          image: ghcr.io/fosrl/newt:latest
+          imagePullPolicy: Always
+          env:
+            - name: ENDPOINT
+              value: "https://pangolin.elmstreet79.de"
+            - name: ID
+              valueFrom:
+                secretKeyRef:
+                  name: newt-auth
+                  key: id
+            - name: SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: newt-auth
+                  key: secret
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              memory: 128Mi

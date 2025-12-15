@@ -159,10 +159,10 @@ homelab/
     │   ├── kustomization.yaml
     │   └── metallb-ip-pool.yaml
     ├── newt/
+    │   ├── deployment.yaml
     │   ├── kustomization.yaml
     │   ├── newt-auth-sealed.yaml
-    │   ├── newt-auth-unsealed.yaml
-    │   └── values.yaml
+    │   └── newt-auth-unsealed.yaml
     ├── portainer/
     │   ├── ingress.yaml
     │   ├── kustomization.yaml
@@ -1038,7 +1038,6 @@ kubectl get secret -n monitoring grafana-admin-credentials \
 | Cert Manager | v1.19.1 | Cert Manager |
 | Uptime Kuma | 2.24.0 | Uptime Kuma |
 | Traefik | 37.4.0 | Traefik |
-| Newt | 1.1.0 | Newt |
 | Homepage | 2.1.0 | Homepage |
 | K3s | v1.33.5 | Lightweight Kubernetes |
 | Kube-VIP | v1.0.1 | Control plane HA |
@@ -1052,7 +1051,6 @@ kubectl get secret -n monitoring grafana-admin-credentials \
 - [Kured](https://kubereboot.github.io/charts)
 - [Longhorn](https://charts.longhorn.io)
 - [Metallb](https://metallb.github.io/metallb)
-- [Newt](https://charts.fossorial.io)
 - [Portainer](https://portainer.github.io/k8s)
 - [Reloader](https://stakater.github.io/stakater-charts)
 - [Sealed Secrets](https://bitnami-labs.github.io/sealed-secrets)
