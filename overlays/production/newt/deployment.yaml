@@ -1,7 +1,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: newt
+  name: olm
   namespace: newt
   annotations:
     reloader.stakater.com/auto: "true"
@@ -9,43 +9,49 @@ spec:
   replicas: 1
   selector:
     matchLabels:
-      app: newt
+      app: olm
   template:
     metadata:
       labels:
-        app: newt
+        app: olm
       annotations:
         reloader.stakater.com/auto: "true"
     spec:
       nodeSelector:
         node-role.kubernetes.io/worker: "worker"
+      hostNetwork: true
       containers:
-        - name: newt
-          image: ghcr.io/fosrl/newt:latest
+        - name: olm
+          image: fosrl/olm:latest
           imagePullPolicy: Always
-          command:
-            - /newt-client
-          args:
-            - --endpoint
-            - "https://pangolin.elmstreet79.de"
-            - --id
-            - "$(NEWT_ID)"
-            - --secret
-            - "$(NEWT_SECRET)"
           env:
-            - name: NEWT_ID
+            - name: PANGOLIN_ENDPOINT
+              value: "https://pangolin.elmstreet79.de"
+            - name: OLM_ID
               valueFrom:
                 secretKeyRef:
                   name: newt-auth
                   key: id
-            - name: NEWT_SECRET
+            - name: OLM_SECRET
               valueFrom:
                 secretKeyRef:
                   name: newt-auth
                   key: secret
+          securityContext:
+            capabilities:
+              add:
+                - NET_ADMIN
+          volumeMounts:
+            - name: tun
+              mountPath: /dev/net/tun
           resources:
             requests:
               cpu: 50m
               memory: 64Mi
             limits:
               memory: 128Mi
+      volumes:
+        - name: tun
+          hostPath:
+            path: /dev/net/tun
+            type: CharDevice
