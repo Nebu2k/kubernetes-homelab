@@ -27,13 +27,13 @@ Production-ready K3s cluster managed via GitOps using ArgoCD App-of-Apps pattern
 | 5 | Portainer, Teslamate |
 | 6 | Kube Prometheus Stack |
 | 7 | Unifi Poller, Home Assistant |
-| 8 | Uptime Kuma |
+| 8 | Uptime Kuma, Newt |
 | 9 | Homepage |
 | 10 | Cert Manager Config, Traefik Config, Metallb Config |
 | 12 | Portainer Config, Argocd Config |
 | 13 | Longhorn Config |
 | 14 | Kube Prometheus Stack Config |
-| 16 | Uptime Kuma Config, Private Services |
+| 16 | Uptime Kuma Config, Newt Config, Private Services |
 | 17 | Homepage Config |
 
 ## 📁 Repository Structure
@@ -57,6 +57,7 @@ homelab/
 │   ├── kube-prometheus-stack.yaml     # Wave 6
 │   ├── home-assistant.yaml            # Wave 7
 │   ├── unifi-poller.yaml              # Wave 7
+│   ├── newt.yaml                      # Wave 8
 │   ├── uptime-kuma.yaml               # Wave 8
 │   ├── homepage.yaml                  # Wave 9
 │   ├── cert-manager-config.yaml       # Wave 10
@@ -66,6 +67,7 @@ homelab/
 │   ├── portainer-config.yaml          # Wave 12
 │   ├── longhorn-config.yaml           # Wave 13
 │   ├── kube-prometheus-stack-config.yaml # Wave 14
+│   ├── newt-config.yaml               # Wave 16
 │   ├── private-services.yaml          # Wave 16
 │   ├── uptime-kuma-config.yaml        # Wave 16
 │   └── homepage-config.yaml           # Wave 17
@@ -81,6 +83,8 @@ homelab/
 │   ├── longhorn/
 │       └── values.yaml
 │   ├── metallb/
+│       └── values.yaml
+│   ├── newt/
 │       └── values.yaml
 │   ├── portainer/
 │       └── values.yaml
@@ -152,6 +156,11 @@ homelab/
     ├── metallb/
     │   ├── kustomization.yaml
     │   └── metallb-ip-pool.yaml
+    ├── newt/
+    │   ├── kustomization.yaml
+    │   ├── newt-auth-sealed.yaml
+    │   ├── newt-auth-unsealed.yaml
+    │   └── values.yaml
     ├── portainer/
     │   ├── ingress.yaml
     │   ├── kustomization.yaml
@@ -1027,6 +1036,7 @@ kubectl get secret -n monitoring grafana-admin-credentials \
 | Cert Manager | v1.19.1 | Cert Manager |
 | Uptime Kuma | 2.24.0 | Uptime Kuma |
 | Traefik | 37.4.0 | Traefik |
+| Newt | 0.1.0 | Newt |
 | Homepage | 2.1.0 | Homepage |
 | K3s | v1.33.5 | Lightweight Kubernetes |
 | Kube-VIP | v1.0.1 | Control plane HA |
@@ -1040,6 +1050,7 @@ kubectl get secret -n monitoring grafana-admin-credentials \
 - [Kured](https://kubereboot.github.io/charts)
 - [Longhorn](https://charts.longhorn.io)
 - [Metallb](https://metallb.github.io/metallb)
+- [Newt](https://charts.fossorial.io)
 - [Portainer](https://portainer.github.io/k8s)
 - [Reloader](https://stakater.github.io/stakater-charts)
 - [Sealed Secrets](https://bitnami-labs.github.io/sealed-secrets)
