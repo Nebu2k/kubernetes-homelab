@@ -17,6 +17,8 @@ spec:
       annotations:
         reloader.stakater.com/auto: "true"
     spec:
+      hostNetwork: true
+      dnsPolicy: ClusterFirstWithHostNet
       nodeSelector:
         node-role.kubernetes.io/worker: "worker"
       containers:
