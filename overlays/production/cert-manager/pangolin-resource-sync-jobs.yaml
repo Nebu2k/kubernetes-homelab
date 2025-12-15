@@ -48,11 +48,6 @@ spec:
                     secretKeyRef:
                       name: pangolin-api-credentials
                       key: org-id
-                - name: SITE_ID
-                  valueFrom:
-                    secretKeyRef:
-                      name: pangolin-api-credentials
-                      key: site-id
               volumeMounts:
                 - name: scripts
                   mountPath: /scripts
@@ -109,11 +104,6 @@ spec:
                 secretKeyRef:
                   name: pangolin-api-credentials
                   key: org-id
-            - name: SITE_ID
-              valueFrom:
-                secretKeyRef:
-                  name: pangolin-api-credentials
-                  key: site-id
           volumeMounts:
             - name: scripts
               mountPath: /scripts

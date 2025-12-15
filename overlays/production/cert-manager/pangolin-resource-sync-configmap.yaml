@@ -10,7 +10,6 @@ data:
   PANGOLIN_API_URL: "https://pangolin.elmstreet79.de"
   # ORG_ID and SITE_ID will be provided in the secret or can be hardcoded here
   # ORG_ID: "your-org-id"
-  # SITE_ID: "your-site-id"
 ---
 apiVersion: v1
 kind: ConfigMap
@@ -30,13 +29,36 @@ data:
     TARGET_IP="${TARGET_IP}"
     PANGOLIN_API_URL="${PANGOLIN_API_URL}"
     ORG_ID="${ORG_ID}"
-    SITE_ID="${SITE_ID}"
 
     echo "Syncing Pangolin resources for ${DOMAIN}..."
     echo "Target IP: ${TARGET_IP}"
     echo "API URL: ${PANGOLIN_API_URL}"
     echo "Organization: ${ORG_ID}"
-    echo "Site: ${SITE_ID}"
+    echo ""
+
+    # Get Site ID dynamically from Pangolin API
+    echo "Fetching Site ID for domain ${DOMAIN}..."
+    SITES_RESPONSE=$(curl -s -X GET "${PANGOLIN_API_URL}/v1/org/${ORG_ID}/sites" \
+      -H "Authorization: Bearer ${API_TOKEN}" \
+      -H "Content-Type: application/json")
+
+    if echo "${SITES_RESPONSE}" | jq -e '.error' > /dev/null 2>&1; then
+      echo "❌ Error fetching sites from Pangolin:"
+      echo "${SITES_RESPONSE}" | jq -r '.error // .message'
+      exit 1
+    fi
+
+    # Find the site matching our domain
+    SITE_ID=$(echo "${SITES_RESPONSE}" | jq -r ".sites[]? | select(.domain == \"${DOMAIN}\") | .id")
+    
+    if [ -z "${SITE_ID}" ]; then
+      echo "❌ Could not find site for domain ${DOMAIN}"
+      echo "Available sites:"
+      echo "${SITES_RESPONSE}" | jq -r '.sites[]? | "  - \(.domain) (ID: \(.id))"'
+      exit 1
+    fi
+    
+    echo "✓ Found Site ID: ${SITE_ID}"
     echo ""
 
     # Get service account token for Kubernetes API
