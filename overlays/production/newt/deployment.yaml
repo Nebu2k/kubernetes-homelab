@@ -30,6 +30,9 @@ spec:
               add:
                 - NET_ADMIN
                 - NET_RAW
+          volumeMounts:
+            - name: dev-net-tun
+              mountPath: /dev/net/tun
           env:
             - name: PANGOLIN_ENDPOINT
               value: "https://pangolin.elmstreet79.de"
@@ -51,3 +54,8 @@ spec:
               memory: 64Mi
             limits:
               memory: 128Mi
+      volumes:
+        - name: dev-net-tun
+          hostPath:
+            path: /dev/net/tun
+            type: CharDevice
