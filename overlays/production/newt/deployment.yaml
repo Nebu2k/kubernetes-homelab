@@ -23,6 +23,11 @@ spec:
         - name: newt
           image: fosrl/newt:latest
           imagePullPolicy: Always
+          securityContext:
+            capabilities:
+              add:
+                - NET_ADMIN
+                - NET_RAW
           env:
             - name: PANGOLIN_ENDPOINT
               value: "https://pangolin.elmstreet79.de"
