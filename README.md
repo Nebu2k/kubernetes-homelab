@@ -445,7 +445,7 @@ cd kubernetes-homelab
 
    ```bash
    vim overlays/production/metallb/metallb-ip-pool.yaml
-   # Change: 192.168.2.250-192.168.2.254
+   # Change: 192.168.2.250-192.168.2.253
    ```
 
 2. **Cert-Manager Email**:
