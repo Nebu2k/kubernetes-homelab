@@ -42,6 +42,19 @@ data:
       -H "Authorization: Bearer ${API_TOKEN}" \
       -H "Content-Type: application/json")
 
+    # Debug: Show raw response
+    echo "Raw API Response:"
+    echo "${SITES_RESPONSE}"
+    echo ""
+
+    # Check if response is valid JSON
+    if ! echo "${SITES_RESPONSE}" | jq empty > /dev/null 2>&1; then
+      echo "❌ Invalid JSON response from Pangolin API"
+      echo "Response: ${SITES_RESPONSE}"
+      exit 1
+    fi
+
+    # Check for API errors
     if echo "${SITES_RESPONSE}" | jq -e '.error' > /dev/null 2>&1; then
       echo "❌ Error fetching sites from Pangolin:"
       echo "${SITES_RESPONSE}" | jq -r '.error // .message'
