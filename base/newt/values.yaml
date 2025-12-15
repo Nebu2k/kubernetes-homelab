@@ -1,21 +1,5 @@
 # Newt (Pangolin Tunnel Client) Helm values
 # https://github.com/fossorial/charts/tree/main/charts/newt
 
-# Schedule only on worker nodes
-nodeSelector:
-  node-role.kubernetes.io/worker: "worker"
-
-# Enable reloader annotation
-podAnnotations:
-  reloader.stakater.com/auto: "true"
-
-# Resources
-resources:
-  requests:
-    cpu: 50m
-    memory: 64Mi
-  limits:
-    memory: 128Mi
-
 # Newt instances configuration will be provided via overlay
 newtInstances: []
