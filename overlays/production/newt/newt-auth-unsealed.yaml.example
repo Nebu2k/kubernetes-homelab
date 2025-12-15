@@ -1,0 +1,10 @@
+# Seal with: kubeseal --format=yaml --controller-namespace=kube-system < newt-auth-unsealed.yaml > newt-auth-sealed.yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: newt-auth
+  namespace: newt
+type: Opaque
+stringData:
+  id: "xxxxxxxxx"
+  secret: "xxxxxxxxxx"
