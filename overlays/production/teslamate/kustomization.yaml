@@ -6,6 +6,7 @@ namespace: teslamate
 resources:
   - namespace.yaml
   - database-pvc.yaml
+  - database-pdb.yaml
   - grafana-pvc.yaml
   - mosquitto-pvc.yaml
   - database-deployment.yaml

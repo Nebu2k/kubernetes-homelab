@@ -15,9 +15,14 @@ spec:
       labels:
         app: teslamate-database
     spec:
+      terminationGracePeriodSeconds: 60
       containers:
       - name: postgres
         image: postgres:18-bookworm
+        lifecycle:
+          preStop:
+            exec:
+              command: ["/bin/sh", "-c", "pg_ctl stop -D /var/lib/postgresql/data -m fast"]
         env:
         - name: POSTGRES_USER
           valueFrom:

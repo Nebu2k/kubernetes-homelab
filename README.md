@@ -192,6 +192,7 @@ homelab/
     │   └── wazuh-ingress.yaml
     ├── teslamate/
     │   ├── database-deployment.yaml
+    │   ├── database-pdb.yaml
     │   ├── database-pvc.yaml
     │   ├── grafana-deployment.yaml
     │   ├── grafana-ingress.yaml
