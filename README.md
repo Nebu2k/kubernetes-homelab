@@ -551,8 +551,36 @@ kubectl get applications -n argocd -w
 # Check if controller is running
 kubectl wait --for=condition=available --timeout=300s \
   deployment/sealed-secrets-controller -n kube-system
+```
 
-# Now seal your secrets
+**Option A: Download public certificate for offline sealing (Recommended)**
+
+This allows you to seal secrets even when not connected to the cluster:
+
+```bash
+# Download the public certificate (one-time setup)
+kubeseal --fetch-cert --controller-namespace=kube-system > sealed-secrets-pub-cert.pem
+
+# Now seal your secrets offline using the certificate
+kubeseal --cert sealed-secrets-pub-cert.pem --format=yaml \
+  < overlays/production/cert-manager/cloudflare-token-unsealed.yaml \
+  > overlays/production/cert-manager/cloudflare-token-sealed.yaml
+
+# Seal AdGuard credentials for DNS sync:
+kubeseal --cert sealed-secrets-pub-cert.pem --format=yaml \
+  < overlays/production/private-services/adguard-credentials-unsealed.yaml \
+  > overlays/production/private-services/adguard-credentials-sealed.yaml
+
+# If using Longhorn S3 backup:
+kubeseal --cert sealed-secrets-pub-cert.pem --format=yaml \
+  < overlays/production/longhorn/s3-secret-unsealed.yaml \
+  > overlays/production/longhorn/s3-secret-sealed.yaml
+```
+
+**Option B: Seal directly from cluster** (requires cluster access):
+
+```bash
+# Seal your secrets (must be connected to cluster)
 kubeseal --format=yaml --controller-namespace=kube-system \
   < overlays/production/cert-manager/cloudflare-token-unsealed.yaml \
   > overlays/production/cert-manager/cloudflare-token-sealed.yaml
@@ -566,7 +594,11 @@ kubeseal --format=yaml --controller-namespace=kube-system \
 kubeseal --format=yaml --controller-namespace=kube-system \
   < overlays/production/longhorn/s3-secret-unsealed.yaml \
   > overlays/production/longhorn/s3-secret-sealed.yaml
+```
 
+**Commit and deploy:**
+
+```bash
 # Commit and push
 git add overlays/production/*/kustomization.yaml
 git add overlays/production/*/*-sealed.yaml
@@ -576,6 +608,8 @@ git push
 # ArgoCD will auto-sync and apply the secrets
 kubectl get applications -n argocd -w
 ```
+
+⚠️ **Note:** The public certificate (`sealed-secrets-pub-cert.pem`) is cluster-specific. If you rebuild the cluster or reinstall Sealed Secrets, you'll need to fetch a new certificate. The certificate file is gitignored for security.
 
 ### Step 7.6: Configure Homepage Widgets (**on your laptop** - AFTER Grafana is ready)
 
@@ -592,8 +626,8 @@ cp overlays/production/homepage/adguard-credentials-unsealed.yaml.example \
 # Edit the file and replace placeholder values with your actual credentials
 vim overlays/production/homepage/adguard-credentials-unsealed.yaml
 
-# Seal the secret
-kubeseal --format=yaml --controller-namespace=kube-system \
+# Seal the secret (using offline certificate)
+kubeseal --cert sealed-secrets-pub-cert.pem --format=yaml \
   < overlays/production/homepage/adguard-credentials-unsealed.yaml \
   > overlays/production/homepage/adguard-credentials-sealed.yaml
 
@@ -605,8 +639,8 @@ cp overlays/production/homepage/argocd-token-secret-unsealed.yaml.example \
 # Edit the file and replace placeholder values with your actual credentials
 vim overlays/production/homepage/argocd-token-secret-unsealed.yaml
 
-# Seal the secret
-kubeseal --format=yaml --controller-namespace=kube-system \
+# Seal the secret (using offline certificate)
+kubeseal --cert sealed-secrets-pub-cert.pem --format=yaml \
   < overlays/production/homepage/argocd-token-secret-unsealed.yaml \
   > overlays/production/homepage/argocd-token-secret-sealed.yaml
 
@@ -618,8 +652,8 @@ cp overlays/production/homepage/grafana-credentials-unsealed.yaml.example \
 # Edit the file and replace placeholder values with your actual credentials
 vim overlays/production/homepage/grafana-credentials-unsealed.yaml
 
-# Seal the secret
-kubeseal --format=yaml --controller-namespace=kube-system \
+# Seal the secret (using offline certificate)
+kubeseal --cert sealed-secrets-pub-cert.pem --format=yaml \
   < overlays/production/homepage/grafana-credentials-unsealed.yaml \
   > overlays/production/homepage/grafana-credentials-sealed.yaml
 
@@ -631,8 +665,8 @@ cp overlays/production/homepage/portainer-token-unsealed.yaml.example \
 # Edit the file and replace placeholder values with your actual credentials
 vim overlays/production/homepage/portainer-token-unsealed.yaml
 
-# Seal the secret
-kubeseal --format=yaml --controller-namespace=kube-system \
+# Seal the secret (using offline certificate)
+kubeseal --cert sealed-secrets-pub-cert.pem --format=yaml \
   < overlays/production/homepage/portainer-token-unsealed.yaml \
   > overlays/production/homepage/portainer-token-sealed.yaml
 
@@ -644,8 +678,8 @@ cp overlays/production/homepage/proxmox-secret-unsealed.yaml.example \
 # Edit the file and replace placeholder values with your actual credentials
 vim overlays/production/homepage/proxmox-secret-unsealed.yaml
 
-# Seal the secret
-kubeseal --format=yaml --controller-namespace=kube-system \
+# Seal the secret (using offline certificate)
+kubeseal --cert sealed-secrets-pub-cert.pem --format=yaml \
   < overlays/production/homepage/proxmox-secret-unsealed.yaml \
   > overlays/production/homepage/proxmox-secret-sealed.yaml
 
@@ -657,8 +691,8 @@ cp overlays/production/homepage/unifi-token-unsealed.yaml.example \
 # Edit the file and replace placeholder values with your actual credentials
 vim overlays/production/homepage/unifi-token-unsealed.yaml
 
-# Seal the secret
-kubeseal --format=yaml --controller-namespace=kube-system \
+# Seal the secret (using offline certificate)
+kubeseal --cert sealed-secrets-pub-cert.pem --format=yaml \
   < overlays/production/homepage/unifi-token-unsealed.yaml \
   > overlays/production/homepage/unifi-token-sealed.yaml
 
@@ -886,8 +920,8 @@ kubectl get application traefik -n argocd -w
 # 1. Edit unsealed secret
 vim overlays/production/cert-manager/cloudflare-token-unsealed.yaml
 
-# 2. Re-seal
-kubeseal --format=yaml --controller-namespace=kube-system \
+# 2. Re-seal (using offline certificate)
+kubeseal --cert sealed-secrets-pub-cert.pem --format=yaml \
   < overlays/production/cert-manager/cloudflare-token-unsealed.yaml \
   > overlays/production/cert-manager/cloudflare-token-sealed.yaml
 
@@ -895,6 +929,15 @@ kubeseal --format=yaml --controller-namespace=kube-system \
 git add overlays/production/cert-manager/cloudflare-token-sealed.yaml
 git commit -m "Rotate Cloudflare token"
 git push
+```
+
+**Alternative: Seal directly from cluster** (if you don't have the certificate):
+
+```bash
+# Re-seal (requires cluster connection)
+kubeseal --format=yaml --controller-namespace=kube-system \
+  < overlays/production/cert-manager/cloudflare-token-unsealed.yaml \
+  > overlays/production/cert-manager/cloudflare-token-sealed.yaml
 ```
 
 ### Force Sync Application

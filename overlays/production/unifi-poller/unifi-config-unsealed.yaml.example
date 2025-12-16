@@ -1,5 +1,5 @@
-# UniFi Poller configuration secret
-# Seal with: kubeseal --format=yaml --controller-namespace=kube-system < unifi-config-unsealed.yaml > unifi-config-sealed.yaml
+# Seal with: kubeseal --cert sealed-secrets-pub-cert.pem --format=yaml < overlays/production/unifi-poller/unifi-config-unsealed.yaml > overlays/production/unifi-poller/unifi-config-sealed.yaml
+---
 apiVersion: v1
 kind: Secret
 metadata:

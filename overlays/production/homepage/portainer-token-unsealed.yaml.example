@@ -1,4 +1,5 @@
-# Seal with: kubeseal --format=yaml --controller-namespace=kube-system < portainer-token-unsealed.yaml > portainer-token-sealed.yaml
+# Seal with: kubeseal --cert sealed-secrets-pub-cert.pem --format=yaml < overlays/production/homepage/portainer-token-unsealed.yaml > overlays/production/homepage/portainer-token-sealed.yaml
+---
 apiVersion: v1
 kind: Secret
 metadata:

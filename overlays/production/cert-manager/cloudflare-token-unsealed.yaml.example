@@ -1,3 +1,5 @@
+# Seal with: kubeseal --cert sealed-secrets-pub-cert.pem --format=yaml < overlays/production/cert-manager/cloudflare-token-unsealed.yaml > overlays/production/cert-manager/cloudflare-token-sealed.yaml
+---
 apiVersion: v1
 kind: Secret
 metadata:

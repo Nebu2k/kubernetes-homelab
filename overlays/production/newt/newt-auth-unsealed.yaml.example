@@ -1,4 +1,5 @@
-# Seal with: kubeseal --format=yaml --controller-namespace=kube-system < newt-auth-unsealed.yaml > newt-auth-sealed.yaml
+# Seal with: kubeseal --cert sealed-secrets-pub-cert.pem --format=yaml < overlays/production/newt/newt-auth-unsealed.yaml > overlays/production/newt/newt-auth-sealed.yaml
+---
 apiVersion: v1
 kind: Secret
 metadata:

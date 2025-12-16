@@ -9,6 +9,7 @@
 *.swo
 *.tmp
 *.log
+sealed-secrets-pub-cert.pem
 
 # Ignore backup scripts with credentials
 scripts*/*
