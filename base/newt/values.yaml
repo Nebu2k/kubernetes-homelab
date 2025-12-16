@@ -1,5 +1,8 @@
 newtInstances:
   - name: "homelab"
+    pangolinEndpoint: "https://pangolin.elmstreet79.de"
+    id: "placeholder"
+    secret: "placeholder"
     auth:
       existingSecretName: "newt-auth"
       keys:
