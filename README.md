@@ -108,12 +108,7 @@ homelab/
     │   ├── cloudflare-token-sealed.yaml
     │   ├── cloudflare-token-unsealed.yaml
     │   ├── cluster-issuer.yaml
-    │   ├── kustomization.yaml
-    │   ├── pangolin-credentials-sealed.yaml
-    │   ├── pangolin-credentials-unsealed.yaml
-    │   ├── pangolin-resource-sync-configmap.yaml
-    │   ├── pangolin-resource-sync-jobs.yaml
-    │   └── pangolin-resource-sync-rbac.yaml
+    │   └── kustomization.yaml
     ├── coredns/
     │   ├── coredns-custom.yaml
     │   └── kustomization.yaml

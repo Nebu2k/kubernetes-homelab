@@ -7,7 +7,3 @@ resources:
   - cloudflare-dns-sync-configmap.yaml
   - cloudflare-dns-sync-rbac.yaml
   - cloudflare-dns-sync-jobs.yaml
-  - pangolin-credentials-sealed.yaml
-  - pangolin-resource-sync-configmap.yaml
-  - pangolin-resource-sync-rbac.yaml
-  - pangolin-resource-sync-jobs.yaml
