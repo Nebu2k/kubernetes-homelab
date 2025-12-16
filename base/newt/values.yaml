@@ -1,5 +1,6 @@
 newtInstances:
   - name: "homelab"
+    enabled: true  # Required for deployment template to render
     pangolinEndpoint: "https://pangolin.elmstreet79.de"
     id: "placeholder"
     secret: "placeholder"
