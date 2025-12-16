@@ -29,7 +29,7 @@ Production-ready K3s cluster managed via GitOps using ArgoCD App-of-Apps pattern
 | 7 | Unifi Poller, Home Assistant |
 | 8 | Uptime Kuma, Newt |
 | 9 | Homepage |
-| 10 | Cert Manager Config, Traefik Config, Metallb Config |
+| 10 | Cert Manager Config, Traefik Config, Metallb Config, Newt Config |
 | 12 | Portainer Config, Argocd Config |
 | 13 | Longhorn Config |
 | 14 | Kube Prometheus Stack Config |
@@ -62,6 +62,7 @@ homelab/
 │   ├── homepage.yaml                  # Wave 9
 │   ├── cert-manager-config.yaml       # Wave 10
 │   ├── metallb-config.yaml            # Wave 10
+│   ├── newt-config.yaml               # Wave 10
 │   ├── traefik-config.yaml            # Wave 10
 │   ├── argocd-config.yaml             # Wave 12
 │   ├── portainer-config.yaml          # Wave 12
@@ -82,6 +83,8 @@ homelab/
 │   ├── longhorn/
 │       └── values.yaml
 │   ├── metallb/
+│       └── values.yaml
+│   ├── newt/
 │       └── values.yaml
 │   ├── portainer/
 │       └── values.yaml
@@ -159,7 +162,6 @@ homelab/
     │   ├── kustomization.yaml
     │   └── metallb-ip-pool.yaml
     ├── newt/
-    │   ├── deployment.yaml
     │   ├── kustomization.yaml
     │   ├── newt-auth-sealed.yaml
     │   └── newt-auth-unsealed.yaml
@@ -1038,6 +1040,7 @@ kubectl get secret -n monitoring grafana-admin-credentials \
 | Cert Manager | v1.19.1 | Cert Manager |
 | Uptime Kuma | 2.24.0 | Uptime Kuma |
 | Traefik | 37.4.0 | Traefik |
+| Newt | 1.1.0 | Newt |
 | Homepage | 2.1.0 | Homepage |
 | K3s | v1.33.5 | Lightweight Kubernetes |
 | Kube-VIP | v1.0.1 | Control plane HA |
@@ -1051,6 +1054,7 @@ kubectl get secret -n monitoring grafana-admin-credentials \
 - [Kured](https://kubereboot.github.io/charts)
 - [Longhorn](https://charts.longhorn.io)
 - [Metallb](https://metallb.github.io/metallb)
+- [Newt](https://charts.fossorial.io)
 - [Portainer](https://portainer.github.io/k8s)
 - [Reloader](https://stakater.github.io/stakater-charts)
 - [Sealed Secrets](https://bitnami-labs.github.io/sealed-secrets)

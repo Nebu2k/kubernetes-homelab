@@ -6,5 +6,6 @@ metadata:
   namespace: newt
 type: Opaque
 stringData:
+  endpoint: "https://pangolin.elmstreet79.de"
   id: "xxxxxxxxx"
   secret: "xxxxxxxxxx"

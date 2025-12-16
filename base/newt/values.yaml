@@ -1,0 +1,20 @@
+newtInstances:
+  - name: "homelab"
+    auth:
+      existingSecretName: "newt-auth"
+      keys:
+        endpointKey: "endpoint"
+        idKey: "id"
+        secretKey: "secret"
+    hostNetwork: true
+    useNativeInterface: true
+    service:
+      enabled: false
+    nodeSelector:
+      node-role.kubernetes.io/worker: "worker"
+
+global:
+  nativeMode:
+    enabled: true
+  nodeSelector:
+    node-role.kubernetes.io/worker: "worker"
