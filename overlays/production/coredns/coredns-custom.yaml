@@ -10,5 +10,5 @@ data:
     elmstreet79.de:53 {
       errors
       cache 30
-      forward . 192.168.2.2:53 192.168.2.4:53
+      forward . 192.168.2.9:53 192.168.2.4:53
     }
