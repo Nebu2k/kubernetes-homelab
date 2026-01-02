@@ -118,7 +118,7 @@ spec:
       restartPolicy: OnFailure
       containers:
         - name: sync
-          image: alpine/curl:latest
+          image: curlimages/curl:latest
           command: ["/bin/sh", "/scripts/sync-dns.sh"]
           env:
             - name: ADGUARD_HOST
@@ -165,7 +165,7 @@ spec:
           restartPolicy: OnFailure
           containers:
             - name: sync
-              image: alpine/curl:latest
+              image: curlimages/curl:latest
               command: ["/bin/sh", "/scripts/sync-dns.sh"]
               env:
                 - name: ADGUARD_HOST
