@@ -29,7 +29,7 @@ Production-ready K3s cluster managed via GitOps using ArgoCD App-of-Apps pattern
 | 7 | Unifi Poller, Home Assistant |
 | 8 | Uptime Kuma, Newt |
 | 9 | Homepage |
-| 10 | Cert Manager Config, Traefik Config, Metallb Config, Newt Config |
+| 10 | Cert Manager Config, Metallb Config, Newt Config |
 | 12 | Portainer Config, Argocd Config |
 | 13 | Longhorn Config |
 | 14 | Kube Prometheus Stack Config |
@@ -63,7 +63,6 @@ homelab/
 │   ├── cert-manager-config.yaml       # Wave 10
 │   ├── metallb-config.yaml            # Wave 10
 │   ├── newt-config.yaml               # Wave 10
-│   ├── traefik-config.yaml            # Wave 10
 │   ├── argocd-config.yaml             # Wave 12
 │   ├── portainer-config.yaml          # Wave 12
 │   ├── longhorn-config.yaml           # Wave 13
@@ -183,8 +182,7 @@ homelab/
     │   ├── nextcloud-ingress.yaml
     │   ├── proxmox-ingress.yaml
     │   ├── servers-transport.yaml
-    │   ├── unifi-ingress.yaml
-    │   └── wazuh-ingress.yaml
+    │   └── unifi-ingress.yaml
     ├── teslamate/
     │   ├── database-deployment.yaml
     │   ├── database-pdb.yaml
@@ -200,9 +198,6 @@ homelab/
     │   ├── teslamate-ingress.yaml
     │   ├── teslamate-secret-sealed.yaml
     │   └── teslamate-secret-unsealed.yaml
-    ├── traefik/
-    │   ├── kustomization.yaml
-    │   └── traefik-dashboard-ingress-dns.yaml
     ├── unifi-poller/
     │   ├── deployment.yaml
     │   ├── kustomization.yaml

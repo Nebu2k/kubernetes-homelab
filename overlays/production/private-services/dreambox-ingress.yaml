@@ -32,6 +32,8 @@ kind: IngressRoute
 metadata:
   name: dreambox
   namespace: private-services
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
 spec:
   entryPoints:
     - websecure
@@ -45,29 +47,3 @@ spec:
           serversTransport: insecure-transport
   tls:
     secretName: dreambox-tls
----
-# Dummy Ingress for DNS sync and cert-manager
-apiVersion: networking.k8s.io/v1
-kind: Ingress
-metadata:
-  name: dreambox-dns
-  namespace: private-services
-  annotations:
-    cert-manager.io/cluster-issuer: letsencrypt-prod
-spec:
-  ingressClassName: traefik
-  tls:
-    - hosts:
-        - dreambox.elmstreet79.de
-      secretName: dreambox-tls
-  rules:
-    - host: dreambox.elmstreet79.de
-      http:
-        paths:
-          - path: /__dns_sync_only__
-            pathType: Exact
-            backend:
-              service:
-                name: dreambox-external
-                port:
-                  number: 443

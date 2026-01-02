@@ -47,6 +47,16 @@ ingressRoute:
     enabled: true
     matchRule: Host(`traefik.elmstreet79.de`)
     entryPoints: ["websecure"]
+    annotations:
+      cert-manager.io/cluster-issuer: internal-ca-issuer
+      gethomepage.dev/enabled: "true"
+      gethomepage.dev/name: "Traefik Dashboard"
+      gethomepage.dev/description: "Reverse Proxy & Load Balancer"
+      gethomepage.dev/group: "Applications - Intern"
+      gethomepage.dev/icon: "traefik.png"
+      gethomepage.dev/weight: "10"
+      gethomepage.dev/href: "https://traefik.elmstreet79.de"
+      gethomepage.dev/pod-selector: "app.kubernetes.io/name=traefik"
     tls:
       secretName: traefik-dashboard-tls
 
