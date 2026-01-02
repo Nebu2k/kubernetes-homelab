@@ -6,6 +6,7 @@ metadata:
   namespace: portainer
   annotations:
     cert-manager.io/cluster-issuer: letsencrypt-prod
+    cloudflare.io/proxied: "false"
     gethomepage.dev/enabled: "true"
     gethomepage.dev/name: "Portainer"
     gethomepage.dev/description: "Container Management"
