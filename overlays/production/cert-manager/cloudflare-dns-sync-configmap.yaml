@@ -130,7 +130,8 @@ data:
     UPDATED_COUNT=0
     SKIPPED_COUNT=0
     
-    echo "${ALL_DOMAINS}" | jq -c '.' | while read -r ingress_entry; do
+    # Use process substitution instead of pipe to avoid subshell
+    while IFS= read -r ingress_entry; do
       INGRESS_DOMAIN=$(echo "${ingress_entry}" | jq -r '.host')
       PROXIED=$(echo "${ingress_entry}" | jq -r '.proxied')
       
@@ -186,7 +187,7 @@ data:
           echo "${CREATE_RESULT}" | jq -r '.errors[].message'
         fi
       fi
-    done
+    done < <(echo "${ALL_DOMAINS}" | jq -c '.')
 
     echo ""
     echo "════════════════════════════════════════"

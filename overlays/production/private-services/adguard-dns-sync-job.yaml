@@ -70,6 +70,7 @@ data:
 
     # Remove rewrites that are no longer in Kubernetes
     echo "Checking for orphaned rewrites..."
+    REMOVED_COUNT=0
     for CURRENT_DOMAIN in ${CURRENT_REWRITES}; do
       if ! echo "${DOMAINS}" | grep -qx "${CURRENT_DOMAIN}"; then
         echo "✗ Removing orphaned ${CURRENT_DOMAIN}"
@@ -78,16 +79,24 @@ data:
           -H "Content-Type: application/json" \
           -d "{\"domain\":\"${CURRENT_DOMAIN}\",\"answer\":\"${INGRESS_IP}\"}" > /dev/null
         echo "✓ ${CURRENT_DOMAIN} removed"
+        REMOVED_COUNT=$((REMOVED_COUNT + 1))
       fi
     done
+    
+    if [ ${REMOVED_COUNT} -eq 0 ]; then
+      echo "No orphaned rewrites found"
+    fi
     echo ""
 
     # Add new rewrites
     echo "Adding/updating rewrites..."
+    ADDED_COUNT=0
+    SKIPPED_COUNT=0
     for DOMAIN in ${DOMAINS}; do
       if [ -n "${DOMAIN}" ]; then
         if echo "${CURRENT_REWRITES}" | grep -qx "${DOMAIN}"; then
           echo "✓ ${DOMAIN} already exists"
+          SKIPPED_COUNT=$((SKIPPED_COUNT + 1))
         else
           echo "→ Adding ${DOMAIN} -> ${INGRESS_IP}"
           curl -s -X POST "http://${ADGUARD_HOST}/control/rewrite/add" \
@@ -95,11 +104,19 @@ data:
             -H "Content-Type: application/json" \
             -d "{\"domain\":\"${DOMAIN}\",\"answer\":\"${INGRESS_IP}\"}" > /dev/null
           echo "✓ ${DOMAIN} added"
+          ADDED_COUNT=$((ADDED_COUNT + 1))
         fi
       fi
     done
 
-    echo "Sync complete!"
+    echo ""
+    echo "════════════════════════════════════════"
+    echo "📊 Sync Summary:"
+    echo "   ✓ Skipped (already exists): ${SKIPPED_COUNT}"
+    echo "   ➕ Added: ${ADDED_COUNT}"
+    echo "   ✗ Removed: ${REMOVED_COUNT}"
+    echo "════════════════════════════════════════"
+    echo "✅ AdGuard DNS sync complete!"
 ---
 # PostSync Hook: Runs after every ArgoCD sync
 apiVersion: batch/v1
