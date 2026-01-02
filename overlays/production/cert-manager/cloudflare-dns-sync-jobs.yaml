@@ -18,7 +18,7 @@ spec:
           restartPolicy: OnFailure
           containers:
             - name: sync
-              image: curlimages/curl:latest
+              image: alpine/curl:latest
               command: ["/bin/sh", "/scripts/sync-dns.sh"]
               env:
                 - name: DOMAIN
@@ -67,7 +67,7 @@ spec:
       restartPolicy: OnFailure
       containers:
         - name: sync
-          image: curlimages/curl:latest
+          image: alpine/curl:latest
           command: ["/bin/sh", "/scripts/sync-dns.sh"]
           env:
             - name: DOMAIN
