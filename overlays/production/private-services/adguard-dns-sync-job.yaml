@@ -45,9 +45,9 @@ data:
                .metadata.annotations[\"cert-manager.io/cluster-issuer\"] == \"letsencrypt-prod\") |
         select(.metadata.annotations[\"adguard-dns-sync/exclude\"] != \"true\") |
         select(.spec.tls.secretName != null) |
-        .spec.routes[].match | 
-        select(. != null) | 
-        scan(\"Host\\\\(\\\\\`([^\\\\\`]+)\\\\\`\\\\)\")[0] |
+        .spec.routes[]? | select(.match != null) | 
+        .match | 
+        capture(\"Host\\\\(\`(?<host>[^\`]+)\`\\\\)\").host | 
         select(endswith(\"${DOMAIN_SUFFIX}\"))" | \
       sort -u)
 

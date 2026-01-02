@@ -54,14 +54,12 @@ data:
       jq -r ".items[] | 
         select(.metadata.annotations[\"cert-manager.io/cluster-issuer\"] == \"letsencrypt-prod\") |
         select(.spec.tls.secretName != null) |
+        (.metadata.annotations[\"cloudflare.io/proxied\"] // \"true\") as \$proxied |
+        .spec.routes[]? | select(.match != null) | 
         {
-          routes: .spec.routes,
-          proxied: (.metadata.annotations[\"cloudflare.io/proxied\"] // \"true\")
+          host: (.match | capture(\"Host\\\\(\`(?<host>[^\`]+)\`\\\\)\").host),
+          proxied: \$proxied
         } |
-        .routes[].match | 
-        select(. != null) | 
-        scan(\"Host\\\\(\\\\\`([^\\\\\`]+)\\\\\`\\\\)\")[0] |
-        {host: ., proxied: \"true\"} |
         select(.host | endswith(\"${DOMAIN}\"))")
 
     # Combine both sources
