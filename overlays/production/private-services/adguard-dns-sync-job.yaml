@@ -43,6 +43,9 @@ data:
           namespace: $ns,
           service: .http.paths[0].backend.service.name
         }' 2>/dev/null || echo "")
+    
+    INGRESS_COUNT=$(echo "${INGRESS_DATA}" | grep -c . || echo 0)
+    echo "Found ${INGRESS_COUNT} standard Ingresses"
 
     # Query Traefik IngressRoutes with internal-ca-issuer or letsencrypt-prod annotation
     INGRESSROUTE_DATA=$(curl -s -k -H "Authorization: Bearer ${TOKEN}" \
@@ -53,22 +56,32 @@ data:
         select(.metadata.annotations["adguard-dns-sync/exclude"] != "true") |
         select(.spec.tls.secretName != null) |
         .metadata.namespace as $ns |
-        (.spec.routes[]?.services[]?.name // null) as $svc |
-        .spec.routes[]? | select(.match != null) |
-        .match | 
-        capture("Host\\\\(`(?<host>[^`]+)`\\\\)") |
+        .spec.routes[] |
+        select(.match != null) |
         {
           namespace: $ns,
-          service: $svc,
-          host: .host
+          service: (.services[0].name // null),
+          match: .match
+        } |
+        . + {
+          host: (.match | capture("Host\\\\(`(?<host>[^`]+)`\\\\)").host)
         } |
         select(.host | endswith("'"${DOMAIN_SUFFIX}"'"))' 2>/dev/null || echo "")
+    
+    INGRESSROUTE_COUNT=$(echo "${INGRESSROUTE_DATA}" | grep -c . || echo 0)
+    echo "Found ${INGRESSROUTE_COUNT} Traefik IngressRoutes"
+    
+    if [ "${INGRESSROUTE_COUNT}" -gt "0" ]; then
+      echo "IngressRoute samples:"
+      echo "${INGRESSROUTE_DATA}" | head -n 3
+    fi
 
     # Combine both sources
     ALL_INGRESS_DATA=$(printf '%s\n%s' "${INGRESS_DATA}" "${INGRESSROUTE_DATA}")
 
     # Build a map of domain -> IP by checking if service has LoadBalancer
     echo "Resolving target IPs for each domain..."
+    echo ""
     
     # Use temp file for domain-ip mapping
     TMP_MAP=$(mktemp)
@@ -86,20 +99,29 @@ data:
         continue
       fi
       
+      echo "DEBUG: Processing ${HOST}"
+      echo "  - Namespace: ${NAMESPACE}"
+      echo "  - Service: ${SERVICE}"
+      
       TARGET_IP="${DEFAULT_INGRESS_IP}"
       REASON="default, no service"
       
       if [ -n "${SERVICE}" ] && [ "${SERVICE}" != "null" ] && [ "${SERVICE}" != "empty" ]; then
+        echo "  - Querying service API..."
         # Get service details
         SVC_DATA=$(curl -s -k -H "Authorization: Bearer ${TOKEN}" \
-          "https://kubernetes.default.svc/api/v1/namespaces/${NAMESPACE}/services/${SERVICE}" 2>/dev/null)
+          "https://kubernetes.default.svc/api/v1/namespaces/${NAMESPACE}/services/${SERVICE}" 2>&1)
+        
+        echo "  - API Response length: $(echo "${SVC_DATA}" | wc -c)"
         
         if [ -n "${SVC_DATA}" ]; then
-          SVC_TYPE=$(echo "${SVC_DATA}" | jq -r '.spec.type // empty' 2>/dev/null)
+          SVC_TYPE=$(echo "${SVC_DATA}" | jq -r '.spec.type // "unknown"' 2>/dev/null)
+          echo "  - Service Type: ${SVC_TYPE}"
           
           if [ "${SVC_TYPE}" = "LoadBalancer" ]; then
             # Get LoadBalancer IP
             LB_IP=$(echo "${SVC_DATA}" | jq -r '.status.loadBalancer.ingress[0].ip // empty' 2>/dev/null)
+            echo "  - LB IP: ${LB_IP}"
             if [ -n "${LB_IP}" ] && [ "${LB_IP}" != "null" ] && [ "${LB_IP}" != "empty" ]; then
               TARGET_IP="${LB_IP}"
               REASON="LoadBalancer"
@@ -114,7 +136,8 @@ data:
         fi
       fi
       
-      echo "  ${HOST} -> ${TARGET_IP} (${REASON})"
+      echo "  → Result: ${HOST} -> ${TARGET_IP} (${REASON})"
+      echo ""
       
       # Store in temp file
       echo "${HOST}:${TARGET_IP}" >> "${TMP_MAP}"
