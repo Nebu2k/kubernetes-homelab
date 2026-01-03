@@ -115,87 +115,107 @@ data:
       sort -u)
 
     echo "Current AdGuard rewrites for ${DOMAIN_SUFFIX}:"
-    echo "${CURRENT_REWRITES}"
+    CURRENT_COUNT=$(echo "${CURRENT_REWRITES}" | grep -v '^$' | wc -l | tr -d ' ')
+    echo "Found ${CURRENT_COUNT} existing rewrites"
     echo ""
 
-    # Remove rewrites that are no longer in Kubernetes or have changed IP
+    # Step 1: Remove orphaned or changed rewrites
     echo "Checking for orphaned or changed rewrites..."
-    REMOVED_COUNT=0
+    REMOVED=0
+    
+    # Use a temp file to avoid subshell issues
+    TMP_REMOVED=$(mktemp)
     
     if [ -n "${CURRENT_REWRITES}" ]; then
-      echo "${CURRENT_REWRITES}" | while IFS= read -r CURRENT_ENTRY; do
-        if [ -z "${CURRENT_ENTRY}" ]; then
+      echo "${CURRENT_REWRITES}" | while IFS=: read -r CURRENT_DOMAIN CURRENT_IP; do
+        if [ -z "${CURRENT_DOMAIN}" ]; then
           continue
         fi
-        
-        CURRENT_DOMAIN=$(echo "${CURRENT_ENTRY}" | cut -d: -f1)
-        CURRENT_IP=$(echo "${CURRENT_ENTRY}" | cut -d: -f2-)
         
         # Check if domain still exists in Kubernetes
         DESIRED_ENTRY=$(echo "${DOMAIN_IP_MAP}" | grep "^${CURRENT_DOMAIN}:")
         
         if [ -z "${DESIRED_ENTRY}" ]; then
-          # Domain no longer exists
-          echo "✗ Removing orphaned ${CURRENT_DOMAIN} (${CURRENT_IP})"
-          curl -s -X POST "http://${ADGUARD_HOST}/control/rewrite/delete" \
+          # Domain no longer exists - remove it
+          echo "  ✗ Removing orphaned ${CURRENT_DOMAIN} (${CURRENT_IP})"
+          if curl -s -X POST "http://${ADGUARD_HOST}/control/rewrite/delete" \
             -u "${ADGUARD_USER}:${ADGUARD_PASS}" \
             -H "Content-Type: application/json" \
-            -d "{\"domain\":\"${CURRENT_DOMAIN}\",\"answer\":\"${CURRENT_IP}\"}" > /dev/null
-          echo "✓ ${CURRENT_DOMAIN} removed"
+            -d "{\"domain\":\"${CURRENT_DOMAIN}\",\"answer\":\"${CURRENT_IP}\"}" > /dev/null 2>&1; then
+            echo "    ✓ Removed"
+            echo "1" >> "${TMP_REMOVED}"
+          fi
         else
-          # Domain exists, check if IP changed
+          # Domain exists - check if IP changed
           DESIRED_IP=$(echo "${DESIRED_ENTRY}" | cut -d: -f2-)
           if [ "${CURRENT_IP}" != "${DESIRED_IP}" ]; then
-            echo "✗ Removing ${CURRENT_DOMAIN} (IP changed: ${CURRENT_IP} -> ${DESIRED_IP})"
-            curl -s -X POST "http://${ADGUARD_HOST}/control/rewrite/delete" \
+            echo "  ✗ Updating ${CURRENT_DOMAIN}: ${CURRENT_IP} -> ${DESIRED_IP}"
+            if curl -s -X POST "http://${ADGUARD_HOST}/control/rewrite/delete" \
               -u "${ADGUARD_USER}:${ADGUARD_PASS}" \
               -H "Content-Type: application/json" \
-              -d "{\"domain\":\"${CURRENT_DOMAIN}\",\"answer\":\"${CURRENT_IP}\"}" > /dev/null
-            echo "✓ ${CURRENT_DOMAIN} removed (will be re-added)"
+              -d "{\"domain\":\"${CURRENT_DOMAIN}\",\"answer\":\"${CURRENT_IP}\"}" > /dev/null 2>&1; then
+              echo "    ✓ Old entry removed"
+              echo "1" >> "${TMP_REMOVED}"
+            fi
           fi
         fi
       done
+      
+      REMOVED=$(wc -l < "${TMP_REMOVED}" | tr -d ' ')
+      rm -f "${TMP_REMOVED}"
+    fi
+    
+    if [ "${REMOVED}" = "0" ]; then
+      echo "  No changes needed"
     else
-      echo "No existing rewrites found"
+      echo "  Removed/updated: ${REMOVED}"
     fi
     echo ""
 
-    # Add new rewrites
+    # Step 2: Add new or updated rewrites
     echo "Adding/updating rewrites..."
-    ADDED_COUNT=0
-    SKIPPED_COUNT=0
+    TMP_ADDED=$(mktemp)
+    TMP_SKIPPED=$(mktemp)
     
     if [ -n "${DOMAIN_IP_MAP}" ]; then
-      echo "${DOMAIN_IP_MAP}" | while IFS= read -r ENTRY; do
-        if [ -z "${ENTRY}" ]; then
+      echo "${DOMAIN_IP_MAP}" | while IFS=: read -r DOMAIN TARGET_IP; do
+        if [ -z "${DOMAIN}" ] || [ -z "${TARGET_IP}" ]; then
           continue
         fi
         
-        DOMAIN=$(echo "${ENTRY}" | cut -d: -f1)
-        TARGET_IP=$(echo "${ENTRY}" | cut -d: -f2-)
-        
-        if [ -n "${DOMAIN}" ] && [ -n "${TARGET_IP}" ]; then
-          # Check if this exact entry already exists
-          if echo "${CURRENT_REWRITES}" | grep -qx "${ENTRY}"; then
-            echo "✓ ${DOMAIN} -> ${TARGET_IP} already exists"
+        # Check if this exact entry already exists
+        if echo "${CURRENT_REWRITES}" | grep -qxF "${DOMAIN}:${TARGET_IP}"; then
+          echo "  ✓ ${DOMAIN} -> ${TARGET_IP} (OK)"
+          echo "1" >> "${TMP_SKIPPED}"
+        else
+          echo "  → Adding ${DOMAIN} -> ${TARGET_IP}"
+          if curl -s -X POST "http://${ADGUARD_HOST}/control/rewrite/add" \
+            -u "${ADGUARD_USER}:${ADGUARD_PASS}" \
+            -H "Content-Type: application/json" \
+            -d "{\"domain\":\"${DOMAIN}\",\"answer\":\"${TARGET_IP}\"}" > /dev/null 2>&1; then
+            echo "    ✓ Added"
+            echo "1" >> "${TMP_ADDED}"
           else
-            echo "→ Adding ${DOMAIN} -> ${TARGET_IP}"
-            curl -s -X POST "http://${ADGUARD_HOST}/control/rewrite/add" \
-              -u "${ADGUARD_USER}:${ADGUARD_PASS}" \
-              -H "Content-Type: application/json" \
-              -d "{\"domain\":\"${DOMAIN}\",\"answer\":\"${TARGET_IP}\"}" > /dev/null
-            echo "✓ ${DOMAIN} added"
+            echo "    ✗ Failed"
           fi
         fi
       done
+      
+      ADDED=$(wc -l < "${TMP_ADDED}" | tr -d ' ')
+      SKIPPED=$(wc -l < "${TMP_SKIPPED}" | tr -d ' ')
+      rm -f "${TMP_ADDED}" "${TMP_SKIPPED}"
     else
-      echo "No domains to add"
+      ADDED=0
+      SKIPPED=0
+      echo "  No domains to sync"
     fi
 
     echo ""
     echo "════════════════════════════════════════"
     echo "📊 Sync Summary:"
-    echo "   Domains processed from Kubernetes"
+    echo "   ✓ Skipped (unchanged): ${SKIPPED}"
+    echo "   ➕ Added: ${ADDED}"
+    echo "   ✗ Removed/Updated: ${REMOVED}"
     echo "════════════════════════════════════════"
     echo "✅ AdGuard DNS sync complete!"
 ---
