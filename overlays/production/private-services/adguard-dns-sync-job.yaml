@@ -52,10 +52,8 @@ data:
         select(.spec.tls.secretName != null) |
         {
           namespace: .metadata.namespace,
-          service: .spec.routes[]?.services[]?.name
-        } |
-        . + {
-          host: (.spec.routes[]? | select(.match != null) | .match | capture(\"Host\\\\(\`(?<host>[^\`]+)\`\\\\)\").host)
+          service: (.spec.routes[]?.services[]?.name // null),
+          host: (.spec.routes[]? | select(.match != null) | .match | capture(\"Host\\\\\\\\(\\\\\`(?<host>[^\\\\\`]+)\\\\\`\\\\\\\\)\").host)
         } |
         select(.host | endswith(\"${DOMAIN_SUFFIX}\"))")
 
