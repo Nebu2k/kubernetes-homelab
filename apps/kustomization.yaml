@@ -27,4 +27,3 @@ resources:
   - private-services.yaml
   - home-assistant.yaml
   - teslamate.yaml
-  - test-webserver.yaml

@@ -35,7 +35,6 @@ Production-ready K3s cluster managed via GitOps using ArgoCD App-of-Apps pattern
 | 14 | Kube Prometheus Stack Config |
 | 16 | Uptime Kuma Config, Private Services |
 | 17 | Homepage Config |
-| 20 | Test Webserver |
 
 ## 📁 Repository Structure
 
@@ -70,8 +69,7 @@ homelab/
 │   ├── kube-prometheus-stack-config.yaml # Wave 14
 │   ├── private-services.yaml          # Wave 16
 │   ├── uptime-kuma-config.yaml        # Wave 16
-│   ├── homepage-config.yaml           # Wave 17
-│   └── test-webserver.yaml            # Wave 20
+│   └── homepage-config.yaml           # Wave 17
 ├── base/
 │   ├── cert-manager/
 │       └── values.yaml
@@ -200,13 +198,6 @@ homelab/
     │   ├── teslamate-ingress.yaml
     │   ├── teslamate-secret-sealed.yaml
     │   └── teslamate-secret-unsealed.yaml
-    ├── test-webserver/
-    │   ├── configmap.yaml
-    │   ├── deployment.yaml
-    │   ├── ingress.yaml
-    │   ├── kustomization.yaml
-    │   ├── namespace.yaml
-    │   └── service.yaml
     ├── unifi-poller/
     │   ├── deployment.yaml
     │   ├── kustomization.yaml
