@@ -1,0 +1,100 @@
+# n8n Workflow Automation Helm values
+# https://github.com/8gears/n8n-helm-chart
+# Chart version 2.0.1+ uses new structure with main/worker/webhook sections
+
+# Global settings
+image:
+  repository: n8nio/n8n
+  pullPolicy: IfNotPresent
+  # tag: "" # Uses appVersion from Chart.yaml
+
+# Ingress disabled (managed via overlay)
+ingress:
+  enabled: false
+
+# Main n8n instance configuration
+main:
+  # n8n application config (converted to environment variables)
+  config:
+    generic:
+      timezone: Europe/Berlin
+    executions:
+      # Keep execution data for 336 hours (14 days)
+      pruneDataMaxAge: 336
+    database:
+      type: postgresdb
+    db:
+      postgresdb:
+        host: n8n-postgresql
+        port: 5432
+        database: n8n
+        user: n8n
+  
+  # Secrets (like DB password, encryption key)
+  secret: {}
+    # Will use auto-generated PostgreSQL password
+  
+  # Reloader annotation for auto-restart on config changes
+  podAnnotations:
+    reloader.stakater.com/auto: "true"
+  
+  # Schedule only on worker nodes
+  nodeSelector:
+    node-role.kubernetes.io/worker: "worker"
+  
+  # Persistence for n8n data (workflows, credentials, etc.)
+  persistence:
+    enabled: true
+    type: dynamic
+    storageClass: "longhorn"
+    accessModes:
+      - ReadWriteOnce
+    size: 5Gi
+  
+  # Service
+  service:
+    type: ClusterIP
+    port: 80
+  
+  # Resources
+  resources:
+    requests:
+      memory: "256Mi"
+      cpu: "100m"
+    limits:
+      memory: "1Gi"
+      cpu: "1000m"
+
+# Worker configuration (disabled by default, enable for scaling)
+worker:
+  enabled: false
+
+# Webhook configuration (disabled by default, enable for dedicated webhook instances)
+webhook:
+  enabled: false
+
+# PostgreSQL subchart configuration
+postgresql:
+  enabled: true
+  auth:
+    username: n8n
+    database: n8n
+    # Password auto-generated
+  primary:
+    nodeSelector:
+      node-role.kubernetes.io/worker: "worker"
+    persistence:
+      enabled: true
+      storageClass: "longhorn"
+      size: 10Gi
+    resources:
+      requests:
+        memory: "256Mi"
+        cpu: "100m"
+      limits:
+        memory: "512Mi"
+        cpu: "500m"
+
+# Valkey/Redis (disabled, only needed for queue mode with workers)
+valkey:
+  enabled: false
