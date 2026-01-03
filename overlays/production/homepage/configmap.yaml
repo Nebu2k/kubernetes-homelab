@@ -121,15 +121,6 @@ data:
             username: {{HOMEPAGE_VAR_ADGUARD_USER}}
             password: {{HOMEPAGE_VAR_ADGUARD_PASS}}
 
-    - Monitoring:
-      - Wazuh:
-          href: https://wazuh.elmstreet79.de
-          description: Security Monitoring & SIEM
-          icon: mdi-shield-check
-          weight: 10
-          ping: 192.168.2.15
-
-
   bookmarks.yaml: |
     - Developer:
       - GitHub:

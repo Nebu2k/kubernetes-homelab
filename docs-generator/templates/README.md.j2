@@ -319,7 +319,19 @@ cd kubernetes-homelab
 
    ⚠️ **Note:** `*-unsealed.yaml` files are gitignored for security. Only `.example` templates are committed.
 
-5. **Cloudflare DNS Sync Configuration** (optional - adjust DynDNS target):
+5. **Traefik Dashboard Domain** (required if using different domain):
+
+   The Traefik dashboard is configured in the Helm values file:
+
+   ```bash
+   vim base/traefik/values.yaml
+   # Update line 45: matchRule: Host(`traefik.your-domain.com`)
+   # Update annotations with your domain
+   ```
+
+   ⚠️ **Note:** This is in `base/` not `overlays/` - shared across environments.
+
+6. **Cloudflare DNS Sync Configuration** (optional - adjust DynDNS target):
 
    If you want to change the DynDNS target for public DNS records:
 
