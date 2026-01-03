@@ -131,7 +131,10 @@ spec:
       interval: 30s
       rules:
         - alert: PodCrashLooping
-          expr: rate(kube_pod_container_status_restarts_total[15m]) > 0
+          expr: |
+            rate(kube_pod_container_status_restarts_total{job!~".*cronjob.*"}[15m]) > 0
+            and
+            kube_pod_owner{owner_kind!="Job"} > 0
           for: 5m
           labels:
             severity: warning
