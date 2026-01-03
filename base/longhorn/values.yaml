@@ -16,6 +16,8 @@ defaultSettings:
   defaultReplicaCount: "3"
   # RWX (ReadWriteMany) Support via NFS
   rwxVolumeFastFailover: "true"
+  # Automatic replica rebalancing across nodes
+  replicaAutoBalance: "best-effort"
 
 # Disable preUpgrade hook (causes issues with ArgoCD)
 preUpgradeChecker:
