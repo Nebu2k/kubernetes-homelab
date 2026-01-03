@@ -105,50 +105,49 @@ data:
         continue
       fi
       
-      echo "DEBUG: Processing ${HOST}"
-      echo "  - Namespace: ${NAMESPACE}"
-      echo "  - Service: ${SERVICE}"
-      
-      TARGET_IP="${DEFAULT_INGRESS_IP}"
-      REASON="default, no service"
-      
-      if [ -n "${SERVICE}" ] && [ "${SERVICE}" != "null" ] && [ "${SERVICE}" != "empty" ]; then
-        echo "  - Querying service API..."
-        # Get service details
-        SVC_DATA=$(curl -s -k -H "Authorization: Bearer ${TOKEN}" \
-          "https://kubernetes.default.svc/api/v1/namespaces/${NAMESPACE}/services/${SERVICE}")
-        
-        SVC_ERROR=$(echo "${SVC_DATA}" | jq -r '.kind // empty' 2>/dev/null)
-        echo "  - Response kind: ${SVC_ERROR}"
-        
-        if [ "${SVC_ERROR}" = "Service" ]; then
-          SVC_TYPE=$(echo "${SVC_DATA}" | jq -r '.spec.type' 2>/dev/null)
-          echo "  - Service Type: ${SVC_TYPE}"
-          
-          if [ "${SVC_TYPE}" = "LoadBalancer" ]; then
-            # Get LoadBalancer IP
-            LB_IP=$(echo "${SVC_DATA}" | jq -r '.status.loadBalancer.ingress[0].ip // empty' 2>/dev/null)
-            echo "  - LB IP: ${LB_IP}"
-            if [ -n "${LB_IP}" ] && [ "${LB_IP}" != "null" ] && [ "${LB_IP}" != "empty" ]; then
-              TARGET_IP="${LB_IP}"
-              REASON="LoadBalancer"
-            else
-              REASON="default, LB pending"
-            fi
-          else
-            REASON="default, service type: ${SVC_TYPE}"
-          fi
-        else
-          ERROR_MSG=$(echo "${SVC_DATA}" | jq -r '.message // "unknown error"' 2>/dev/null)
-          echo "  - Error: ${ERROR_MSG}"
-          REASON="default, service error: ${ERROR_MSG}"
-        fi
+      # Skip if already processed (avoid duplicates)
+      if grep -q "^${HOST}:" "${TMP_MAP}" 2>/dev/null; then
+        echo "  ${HOST} -> (skipped, duplicate)"
+        continue
       fi
       
-      echo "  → Result: ${HOST} -> ${TARGET_IP} (${REASON})"
-      echo ""
+      TARGET_IP="${DEFAULT_INGRESS_IP}"
+      REASON="default"
       
-      # Store in temp file
+      # Skip special Traefik internal services
+      if [ "${SERVICE}" = "api@internal" ] || [ -z "${SERVICE}" ] || [ "${SERVICE}" = "null" ]; then
+        echo "  ${HOST} -> ${TARGET_IP} (${REASON}, no k8s service)"
+        echo "${HOST}:${TARGET_IP}" >> "${TMP_MAP}"
+        continue
+      fi
+      
+      # Get service details
+      SVC_DATA=$(curl -s -k -H "Authorization: Bearer ${TOKEN}" \
+        "https://kubernetes.default.svc/api/v1/namespaces/${NAMESPACE}/services/${SERVICE}")
+      
+      SVC_KIND=$(echo "${SVC_DATA}" | jq -r '.kind // empty' 2>/dev/null)
+      
+      if [ "${SVC_KIND}" = "Service" ]; then
+        SVC_TYPE=$(echo "${SVC_DATA}" | jq -r '.spec.type' 2>/dev/null)
+        
+        if [ "${SVC_TYPE}" = "LoadBalancer" ]; then
+          # Get LoadBalancer IP
+          LB_IP=$(echo "${SVC_DATA}" | jq -r '.status.loadBalancer.ingress[0].ip // empty' 2>/dev/null)
+          if [ -n "${LB_IP}" ] && [ "${LB_IP}" != "null" ]; then
+            TARGET_IP="${LB_IP}"
+            REASON="LoadBalancer"
+          else
+            REASON="LB pending"
+          fi
+        else
+          REASON="${SVC_TYPE}"
+        fi
+      else
+        ERROR_MSG=$(echo "${SVC_DATA}" | jq -r '.message // "not found"' 2>/dev/null)
+        REASON="error: ${ERROR_MSG}"
+      fi
+      
+      echo "  ${HOST} -> ${TARGET_IP} (${REASON})"
       echo "${HOST}:${TARGET_IP}" >> "${TMP_MAP}"
     done
     
