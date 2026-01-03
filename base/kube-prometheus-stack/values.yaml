@@ -222,9 +222,9 @@ alertmanager:
         cpu: 200m
         memory: 256Mi
     
-    # Run on k3s-worker-1 to avoid Longhorn device mount issues on prodesk
+    # Run on worker nodes only
     nodeSelector:
-      kubernetes.io/hostname: k3s-worker-1
+      node-role.kubernetes.io/worker: worker
     
     storage:
       volumeClaimTemplate:
