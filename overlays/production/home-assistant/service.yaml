@@ -6,11 +6,16 @@ metadata:
   labels:
     app.kubernetes.io/name: home-assistant
 spec:
-  type: ClusterIP
+  type: LoadBalancer
+  loadBalancerIP: 192.168.2.251
   ports:
   - port: 8123
     targetPort: http
     protocol: TCP
     name: http
+  - port: 5683
+    targetPort: 5683
+    protocol: UDP
+    name: coiot
   selector:
     app.kubernetes.io/name: home-assistant
