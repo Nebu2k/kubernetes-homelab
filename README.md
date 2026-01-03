@@ -140,6 +140,8 @@ homelab/
     │   └── values.yaml
     ├── kube-prometheus-stack/
     │   ├── alertmanager-ingress.yaml
+    │   ├── aws-credentials-sealed.yaml
+    │   ├── aws-credentials-unsealed.yaml
     │   ├── grafana-ingress.yaml
     │   ├── kustomization.yaml
     │   ├── prometheus-ingress.yaml

@@ -8,3 +8,4 @@ resources:
   - prometheus-ingress.yaml
   - alertmanager-ingress.yaml
   - prometheus-rules.yaml
+  - aws-credentials-sealed.yaml
