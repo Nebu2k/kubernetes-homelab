@@ -1081,7 +1081,7 @@ kubectl get secret -n monitoring grafana-admin-credentials \
 | Sealed Secrets | 2.17.7 | Sealed Secrets |
 | Kured | 5.10.0 | Kured |
 | Metallb | 0.15.2 | Metallb |
-| Longhorn | 1.10.0 | Longhorn |
+| Longhorn | 1.10.1 | Longhorn |
 | Portainer | 2.33.5 | Portainer |
 | Cert Manager | v1.19.1 | Cert Manager |
 | Uptime Kuma | 2.24.0 | Uptime Kuma |
