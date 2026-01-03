@@ -1,0 +1,47 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: test-webserver-html
+  namespace: test-webserver
+data:
+  index.html: |
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <title>LoadBalancer Test</title>
+      <style>
+        body {
+          font-family: Arial, sans-serif;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          height: 100vh;
+          margin: 0;
+          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+          color: white;
+        }
+        .container {
+          text-align: center;
+        }
+        h1 {
+          font-size: 3em;
+          margin-bottom: 20px;
+        }
+        .info {
+          background: rgba(255,255,255,0.1);
+          padding: 20px;
+          border-radius: 10px;
+          margin-top: 20px;
+        }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <h1>🚀 LoadBalancer Test</h1>
+        <div class="info">
+          <p>LoadBalancer IP: 192.168.2.251</p>
+          <p>DNS Sync Test für Home Assistant</p>
+        </div>
+      </div>
+    </body>
+    </html>
