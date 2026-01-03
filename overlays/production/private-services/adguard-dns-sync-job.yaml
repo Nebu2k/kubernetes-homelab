@@ -95,8 +95,7 @@ data:
       fi
       
       # Store in map as "host:ip"
-      DOMAIN_IP_MAP="${DOMAIN_IP_MAP}${HOST}:${TARGET_IP}
-"
+      DOMAIN_IP_MAP="${DOMAIN_IP_MAP}${HOST}:${TARGET_IP}\n"
     done
 
     # Get unique domains for comparison
