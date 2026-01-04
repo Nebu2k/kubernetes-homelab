@@ -28,13 +28,13 @@ Production-ready K3s cluster managed via GitOps using ArgoCD App-of-Apps pattern
 | 6 | Kube Prometheus Stack |
 | 7 | Unifi Poller, Home Assistant |
 | 8 | Uptime Kuma, Newt |
-| 9 | Homepage |
+| 9 | N8n, Homepage |
 | 10 | Cert Manager Config, Metallb Config, Newt Config |
 | 12 | Portainer Config, Argocd Config |
 | 13 | Longhorn Config |
 | 14 | Kube Prometheus Stack Config |
 | 16 | Uptime Kuma Config, Private Services |
-| 17 | Homepage Config |
+| 17 | N8n Config, Homepage Config |
 
 ## 📁 Repository Structure
 
@@ -61,6 +61,7 @@ homelab/
 │   ├── newt.yaml                      # Wave 8
 │   ├── uptime-kuma.yaml               # Wave 8
 │   ├── homepage.yaml                  # Wave 9
+│   ├── n8n.yaml                       # Wave 9
 │   ├── cert-manager-config.yaml       # Wave 10
 │   ├── metallb-config.yaml            # Wave 10
 │   ├── newt-config.yaml               # Wave 10
@@ -70,7 +71,8 @@ homelab/
 │   ├── kube-prometheus-stack-config.yaml # Wave 14
 │   ├── private-services.yaml          # Wave 16
 │   ├── uptime-kuma-config.yaml        # Wave 16
-│   └── homepage-config.yaml           # Wave 17
+│   ├── homepage-config.yaml           # Wave 17
+│   └── n8n-config.yaml                # Wave 17
 ├── base/
 │   ├── cert-manager/
 │       └── values.yaml
@@ -83,6 +85,8 @@ homelab/
 │   ├── longhorn/
 │       └── values.yaml
 │   ├── metallb/
+│       └── values.yaml
+│   ├── n8n/
 │       └── values.yaml
 │   ├── newt/
 │       └── values.yaml
@@ -165,6 +169,9 @@ homelab/
     ├── metallb/
     │   ├── kustomization.yaml
     │   └── metallb-ip-pool.yaml
+    ├── n8n/
+    │   ├── ingress.yaml
+    │   └── kustomization.yaml
     ├── newt/
     │   ├── kustomization.yaml
     │   ├── newt-auth-sealed.yaml
@@ -1089,6 +1096,7 @@ kubectl get secret -n monitoring grafana-admin-credentials \
 | Reloader | 2.2.5 | Reloader |
 | Kube Prometheus Stack | 79.9.0 | Kube Prometheus Stack |
 | Sealed Secrets | 2.17.7 | Sealed Secrets |
+| N8n | 2.0.1 | N8n |
 | Kured | 5.10.0 | Kured |
 | Metallb | 0.15.2 | Metallb |
 | Longhorn | 1.10.1 | Longhorn |
@@ -1110,6 +1118,7 @@ kubectl get secret -n monitoring grafana-admin-credentials \
 - [Kured](https://kubereboot.github.io/charts)
 - [Longhorn](https://charts.longhorn.io)
 - [Metallb](https://metallb.github.io/metallb)
+- [N8N](oci://8gears.container-registry.com/library)
 - [Newt](https://charts.fossorial.io)
 - [Portainer](https://portainer.github.io/k8s)
 - [Reloader](https://stakater.github.io/stakater-charts)
