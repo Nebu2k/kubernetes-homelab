@@ -6,7 +6,7 @@
 image:
   repository: n8nio/n8n
   pullPolicy: IfNotPresent
-  # tag: "" # Uses appVersion from Chart.yaml
+  tag: "2.1.5"
 
 # Ingress disabled (managed via overlay)
 ingress:
