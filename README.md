@@ -1118,7 +1118,7 @@ kubectl get secret -n monitoring grafana-admin-credentials \
 - [Kured](https://kubereboot.github.io/charts)
 - [Longhorn](https://charts.longhorn.io)
 - [Metallb](https://metallb.github.io/metallb)
-- [N8N](oci://8gears.container-registry.com/library)
+- [N8N](oci://8gears.container-registry.com/library/n8n)
 - [Newt](https://charts.fossorial.io)
 - [Portainer](https://portainer.github.io/k8s)
 - [Reloader](https://stakater.github.io/stakater-charts)
