@@ -27,3 +27,4 @@ resources:
   - private-services.yaml
   - home-assistant.yaml
   - teslamate.yaml
+  - landing-page.yaml
