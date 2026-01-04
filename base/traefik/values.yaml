@@ -15,8 +15,7 @@ providers:
 
 # MetalLB LoadBalancer IP
 service:
-  annotations:
-    metallb.universe.tf/loadBalancerIPs: 192.168.2.250
+  loadBalancerIP: 192.168.2.250
   type: LoadBalancer
 
 # Prometheus metrics
