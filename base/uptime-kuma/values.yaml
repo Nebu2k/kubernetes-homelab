@@ -5,6 +5,16 @@
 podAnnotations:
   reloader.stakater.com/auto: "true"
 
+# DNS configuration to fix intermittent ENOTFOUND errors
+dnsConfig:
+  options:
+    - name: ndots
+      value: "1"
+    - name: timeout
+      value: "3"
+    - name: attempts
+      value: "3"
+
 # Schedule only on worker nodes
 nodeSelector:
   node-role.kubernetes.io/worker: "worker"
