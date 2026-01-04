@@ -12,13 +12,3 @@ data:
       cache 30
       forward . 192.168.2.9:53 192.168.2.4:53
     }
-  forward.override: |
-    # Override default forward to use AdGuard DNS directly instead of /etc/resolv.conf
-    # This prevents issues with systemd-resolved on nodes and ensures consistent DNS
-    forward . 192.168.2.9:53 192.168.2.4:53 {
-      max_concurrent 1000
-      expire 10s
-      policy sequential
-      health_check 5s
-    }
-    cache 300
