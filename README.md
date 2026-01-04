@@ -1100,7 +1100,7 @@ kubectl get secret -n monitoring grafana-admin-credentials \
 | Kured | 5.10.0 | Kured |
 | Metallb | 0.15.2 | Metallb |
 | Longhorn | 1.10.1 | Longhorn |
-| Portainer | 2.33.5 | Portainer |
+| Portainer | 2.33.6 | Portainer |
 | Cert Manager | v1.19.1 | Cert Manager |
 | Uptime Kuma | 2.24.0 | Uptime Kuma |
 | Traefik | 37.4.0 | Traefik |
