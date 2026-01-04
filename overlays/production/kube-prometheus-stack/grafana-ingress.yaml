@@ -4,7 +4,7 @@ metadata:
   name: grafana
   namespace: monitoring
   annotations:
-    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    cert-manager.io/cluster-issuer: "internal-ca-issuer"
     # Homepage integration
     gethomepage.dev/enabled: "true"
     gethomepage.dev/group: "Monitoring"

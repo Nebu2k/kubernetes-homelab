@@ -7,6 +7,10 @@ set -e
 
 echo "📝 Regenerating README.md (single point of truth)..."
 
+# Initialize conda for shell script
+eval "$(/opt/homebrew/bin/brew shellenv 2>/dev/null || true)"
+eval "$(conda shell.bash hook 2>/dev/null || /opt/homebrew/Caskroom/miniconda/base/bin/conda shell.bash hook 2>/dev/null || true)"
+
 # Check if conda environment exists
 if ! conda env list | grep -q "^jinja2 "; then
     echo "❌ Error: Conda environment 'jinja2' not found"

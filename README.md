@@ -24,7 +24,7 @@ Production-ready K3s cluster managed via GitOps using ArgoCD App-of-Apps pattern
 | 2 | Cert Manager |
 | 3 | Traefik |
 | 4 | Longhorn |
-| 5 | Portainer, Teslamate |
+| 5 | Landing Page, Portainer, Teslamate |
 | 6 | Kube Prometheus Stack |
 | 7 | Unifi Poller, Home Assistant |
 | 8 | Uptime Kuma, Newt |
@@ -52,6 +52,7 @@ homelab/
 │   ├── cert-manager.yaml              # Wave 2
 │   ├── traefik.yaml                   # Wave 3
 │   ├── longhorn.yaml                  # Wave 4
+│   ├── landing-page.yaml              # Wave 5
 │   ├── portainer.yaml                 # Wave 5
 │   ├── teslamate.yaml                 # Wave 5
 │   ├── kube-prometheus-stack.yaml     # Wave 6
@@ -144,10 +145,19 @@ homelab/
     │   └── values.yaml
     ├── kube-prometheus-stack/
     │   ├── alertmanager-ingress.yaml
+    │   ├── aws-credentials-sealed.yaml
+    │   ├── aws-credentials-unsealed.yaml
     │   ├── grafana-ingress.yaml
     │   ├── kustomization.yaml
     │   ├── prometheus-ingress.yaml
     │   └── prometheus-rules.yaml
+    ├── landing-page/
+    │   ├── configmap.yaml
+    │   ├── deployment.yaml
+    │   ├── ingress.yaml
+    │   ├── kustomization.yaml
+    │   ├── namespace.yaml
+    │   └── service.yaml
     ├── longhorn/
     │   ├── disable-local-path-default.yaml
     │   ├── ingress.yaml
