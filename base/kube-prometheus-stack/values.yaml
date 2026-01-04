@@ -159,6 +159,10 @@ alertmanager:
       repeat_interval: 4h
       receiver: 'sns-receiver'
       routes:
+        # Watchdog - silence (always firing, no notification needed)
+        - match:
+            alertname: Watchdog
+          receiver: 'null'
         # Critical alerts - immediate notification
         - match:
             severity: critical
@@ -171,6 +175,7 @@ alertmanager:
           group_wait: 30s
     
     receivers:
+      - name: 'null'  # No notifications (for Watchdog)
       - name: 'sns-receiver'
         sns_configs:
           - topic_arn: 'arn:aws:sns:eu-central-1:077448369105:homelab'  # TODO: Replace with your SNS Topic ARN
