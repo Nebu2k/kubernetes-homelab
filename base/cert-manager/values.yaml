@@ -10,6 +10,22 @@ global:
 nodeSelector:
   node-role.kubernetes.io/worker: "worker"
 
+# Use Cloudflare DNS servers for ACME DNS-01 challenges
+# This prevents CoreDNS from forwarding *.elmstreet79.de to AdGuard
+# which doesn't have the ACME challenge TXT records
+podDnsPolicy: "None"
+podDnsConfig:
+  nameservers:
+    - "1.1.1.1"  # Cloudflare DNS
+    - "1.0.0.1"  # Cloudflare DNS backup
+  searches:
+    - cert-manager.svc.cluster.local
+    - svc.cluster.local
+    - cluster.local
+  options:
+    - name: ndots
+      value: "5"
+
 # Apply to webhook and cainjector as well
 webhook:
   nodeSelector:
