@@ -27,6 +27,7 @@ BASE_DIR = REPO_ROOT / "base"
 class VersionChecker:
     def __init__(self):
         self.helm_results = []
+        self.kustomize_results = []
         
     def run_helm_repo_update(self) -> bool:
         """Update all Helm repositories."""
@@ -255,17 +256,17 @@ class VersionChecker:
         except Exception:
             return None, None
 
-    def get_latest_docker_tag(self, image_repo: str) -> Optional[str]:
-        """Get latest stable Docker image tag."""
+    def get_latest_docker_tag(self, image_repo: str, current_tag: str = None) -> Optional[str]:
+        """Get latest stable Docker image tag, respecting variant if specified."""
         # Determine registry type
         if image_repo.startswith('ghcr.io/'):
-            return self._get_ghcr_latest_tag(image_repo)
+            return self._get_ghcr_latest_tag(image_repo, current_tag)
         elif image_repo.startswith('quay.io/'):
-            return self._get_quay_latest_tag(image_repo)
+            return self._get_quay_latest_tag(image_repo, current_tag)
         else:
-            return self._get_dockerhub_latest_tag(image_repo)
+            return self._get_dockerhub_latest_tag(image_repo, current_tag)
 
-    def _get_dockerhub_latest_tag(self, image_repo: str) -> Optional[str]:
+    def _get_dockerhub_latest_tag(self, image_repo: str, current_tag: str = None) -> Optional[str]:
         """Get latest stable tag from Docker Hub."""
         try:
             # Parse repo
@@ -284,12 +285,12 @@ class VersionChecker:
             data = response.json()
             tags = [tag_info.get('name', '') for tag_info in data.get('results', [])]
             
-            return self._find_latest_stable_tag(tags)
+            return self._find_latest_stable_tag(tags, current_tag)
                 
         except Exception:
             return None
 
-    def _get_quay_latest_tag(self, image_repo: str) -> Optional[str]:
+    def _get_quay_latest_tag(self, image_repo: str, current_tag: str = None) -> Optional[str]:
         """Get latest stable tag from Quay.io."""
         try:
             parts = image_repo.replace('quay.io/', '').split('/')
@@ -308,12 +309,12 @@ class VersionChecker:
             data = response.json()
             tags = [tag_info.get('name', '') for tag_info in data.get('tags', [])]
             
-            return self._find_latest_stable_tag(tags)
+            return self._find_latest_stable_tag(tags, current_tag)
                 
         except Exception:
             return None
 
-    def _get_ghcr_latest_tag(self, image_repo: str) -> Optional[str]:
+    def _get_ghcr_latest_tag(self, image_repo: str, current_tag: str = None) -> Optional[str]:
         """Get latest stable tag from GitHub Container Registry."""
         try:
             parts = image_repo.replace('ghcr.io/', '').split('/')
@@ -336,7 +337,7 @@ class VersionChecker:
                                 tags.append(tag)
                     
                     if tags:
-                        return self._find_latest_stable_tag(tags)
+                        return self._find_latest_stable_tag(tags, current_tag)
             except Exception:
                 pass
             
@@ -345,8 +346,18 @@ class VersionChecker:
         except Exception:
             return None
 
-    def _find_latest_stable_tag(self, tags: List[str]) -> Optional[str]:
-        """Find the latest stable semantic version from a list of tags."""
+    def _find_latest_stable_tag(self, tags: List[str], current_tag: str = None) -> Optional[str]:
+        """Find the latest stable semantic version from a list of tags, respecting variant."""
+        # Detect variant from current tag (e.g., alpine, slim, etc.)
+        variant = None
+        if current_tag:
+            # Extract variant suffix (e.g., "alpine" from "1.27-alpine")
+            variant_patterns = ['alpine', 'slim', 'debian', 'ubuntu', 'windowsservercore']
+            for pattern in variant_patterns:
+                if pattern in current_tag.lower():
+                    variant = pattern
+                    break
+        
         stable_tags = []
         
         for tag in tags:
@@ -370,8 +381,25 @@ class VersionChecker:
             if re.search(r'-(alpha|beta|rc|dev|pre|test|snapshot)', tag, re.IGNORECASE):
                 continue
             
-            # Skip architecture/OS/variant tags (anywhere in string)
-            if re.search(r'(amd64|arm64|armv7|i386|ppc64le|s390x|alpine|debian|ubuntu|windowsservercore|nanoserver|slim|rootless|fips)', tag, re.IGNORECASE):
+            # If variant is specified, filter tags
+            if variant:
+                # Must contain the variant
+                if variant not in tag.lower():
+                    continue
+                # Skip specific Alpine Linux versions (alpine3.20, alpine3.23, etc.)
+                if variant == 'alpine' and re.search(r'alpine\d+\.\d+', tag, re.IGNORECASE):
+                    continue
+                # Skip other variants (except the one we want)
+                other_variants = [v for v in ['alpine', 'slim', 'debian', 'ubuntu', 'windowsservercore', 'trixie', 'perl'] if v != variant]
+                if any(v in tag.lower() for v in other_variants):
+                    continue
+            else:
+                # If no variant, skip ALL variant tags
+                if re.search(r'(alpine|debian|ubuntu|windowsservercore|nanoserver|slim|rootless|fips|trixie|perl)', tag, re.IGNORECASE):
+                    continue
+            
+            # Skip architecture/OS tags
+            if re.search(r'(amd64|arm64|armv7|i386|ppc64le|s390x)', tag, re.IGNORECASE):
                 continue
             
             # Skip SHA hashes
@@ -387,15 +415,21 @@ class VersionChecker:
         if not stable_tags:
             return None
         
+        # Filter out non-numeric versions if numeric versions exist
+        numeric_tags = [t for t in stable_tags if re.match(r'^v?\d', t)]
+        if numeric_tags:
+            stable_tags = numeric_tags
+        
         # Sort by semantic version
         try:
             sorted_tags = sorted(
                 stable_tags,
-                key=lambda t: version.parse(t.lstrip('v')),
+                key=lambda t: version.parse(t.lstrip('v').split('-')[0]),  # Parse version before variant suffix
                 reverse=True
             )
             return sorted_tags[0]
         except version.InvalidVersion:
+            # If parsing fails, return the first tag
             return stable_tags[0]
 
     def _check_single_helm_chart(self, app_file: Path) -> Optional[Dict]:
@@ -464,7 +498,9 @@ class VersionChecker:
             # Get latest available app version from Docker registry
             latest_app_version = None
             if chart_image_repo:
-                latest_app_version = self.get_latest_docker_tag(chart_image_repo)
+                # Pass manual tag for variant matching if available
+                tag_for_matching = manual_image_tag if manual_image_tag else None
+                latest_app_version = self.get_latest_docker_tag(chart_image_repo, tag_for_matching)
             
             status = "✅" if chart_update_available else "✗"
             print(f"{status}")
@@ -485,6 +521,81 @@ class VersionChecker:
             print(f"❌ Error: {e}")
             return None
 
+    def _get_running_image_tag(self, app_name: str, image_repo: str, latest_tag: str = None) -> Optional[str]:
+        """Check if running image differs from latest by comparing digests."""
+        try:
+            if not latest_tag:
+                return None
+                
+            # Get the running image digest
+            result = subprocess.run(
+                ["kubectl", "get", "pods", "-n", app_name, "-o", 
+                 "jsonpath={.items[0].status.containerStatuses[?(@.image contains '" + image_repo + "')].imageID}"],
+                capture_output=True,
+                text=True,
+                timeout=5
+            )
+            
+            if result.returncode != 0 or not result.stdout.strip():
+                return None
+            
+            image_id = result.stdout.strip()
+            
+            # Extract SHA256 hash from image ID
+            if '@sha256:' not in image_id:
+                return None
+            
+            running_digest = image_id.split('@sha256:')[1]
+            
+            # Get digest for latest_tag
+            latest_digest = self._get_image_digest(image_repo, latest_tag)
+            
+            if not latest_digest:
+                return None
+            
+            # If digests match, running version IS the latest
+            if running_digest == latest_digest:
+                return latest_tag
+            else:
+                # Different digest = older version
+                return f"outdated"
+            
+        except Exception:
+            return None
+    
+    def _get_image_digest(self, image_repo: str, tag: str) -> Optional[str]:
+        """Get the digest for a specific image tag."""
+        try:
+            # For Docker Hub
+            if not image_repo.startswith(('ghcr.io/', 'quay.io/')):
+                if '/' not in image_repo:
+                    registry_repo = f"library/{image_repo}"
+                else:
+                    parts = image_repo.split('/')
+                    if len(parts) == 2:
+                        registry_repo = image_repo
+                    else:
+                        registry_repo = '/'.join(parts[-2:])
+                
+                url = f"https://hub.docker.com/v2/repositories/{registry_repo}/tags/{tag}"
+                response = requests.get(url, timeout=10)
+                
+                if response.status_code == 200:
+                    data = response.json()
+                    images = data.get('images', [])
+                    if images and images[0].get('digest'):
+                        return images[0]['digest'].replace('sha256:', '')
+            
+            # For GHCR
+            elif image_repo.startswith('ghcr.io/'):
+                # GHCR doesn't provide easy digest lookup, skip for now
+                return None
+                
+            return None
+            
+        except Exception:
+            return None
+
     def check_helm_charts(self):
         """Check all Helm charts for updates (parallelized)."""
         print("📊 Checking Helm chart versions...\n")
@@ -501,6 +612,192 @@ class VersionChecker:
         
         # Sort by component name
         self.helm_results.sort(key=lambda x: x['component'])
+
+    def _check_single_kustomize_app(self, app_file: Path) -> Optional[Dict]:
+        """Check a single Kustomize-based app for updates."""
+        if app_file.name == "kustomization.yaml":
+            return None
+        
+        try:
+            with open(app_file, 'r') as f:
+                app = yaml.safe_load(f)
+            
+            if not app or app.get('kind') != 'Application':
+                return None
+            
+            app_name = app['metadata']['name']
+            spec = app['spec']
+            
+            # Check if this is a Kustomize app (no chart in source)
+            source = spec.get('source')
+            if not source:
+                # Try sources (multi-source)
+                sources = spec.get('sources', [])
+                for src in sources:
+                    if 'chart' not in src and 'path' in src:
+                        source = src
+                        break
+            
+            if not source or 'chart' in source:
+                # This is a Helm app, skip it
+                return None
+            
+            if 'path' not in source:
+                return None
+            
+            # This is a Kustomize app
+            path = source['path']
+            repo_url = source.get('repoURL', '')
+            
+            # Only check local repo
+            if 'kubernetes-homelab' not in repo_url:
+                return None
+            
+            print(f"  Checking {app_name} (kustomize)...", end=" ", flush=True)
+            
+            # Scan YAML files in the path for image references
+            app_path = REPO_ROOT / path
+            if not app_path.exists():
+                print("⚠️  (path not found)")
+                return None
+            
+            images = {}
+            for yaml_file in app_path.glob("*.yaml"):
+                if yaml_file.name == "kustomization.yaml":
+                    continue
+                
+                try:
+                    with open(yaml_file, 'r') as f:
+                        # Use safe_load_all to handle multi-document YAML files
+                        documents = list(yaml.safe_load_all(f))
+                        
+                        for content in documents:
+                            if not content:
+                                continue
+                            
+                            # Extract images from Deployment/StatefulSet/DaemonSet
+                            if content.get('kind') in ['Deployment', 'StatefulSet', 'DaemonSet']:
+                                containers = []
+                                
+                                # Get containers from spec.template.spec.containers
+                                spec = content.get('spec', {})
+                                template = spec.get('template', {})
+                                pod_spec = template.get('spec', {})
+                                
+                                containers.extend(pod_spec.get('containers', []))
+                                containers.extend(pod_spec.get('initContainers', []))
+                                
+                                found_match = False
+                                for container in containers:
+                                    image_full = container.get('image', '')
+                                    if image_full and ':' in image_full:
+                                        # Split image:tag
+                                        image_repo, image_tag = image_full.rsplit(':', 1)
+                                        
+                                        # Skip utility images
+                                        if image_repo in ['busybox', 'alpine']:
+                                            continue
+                                        
+                                        # Prioritize images matching the app name
+                                        deployment_name = content.get('metadata', {}).get('name', '')
+                                        if deployment_name == app_name or app_name in image_repo:
+                                            images = {image_repo: image_tag}
+                                            found_match = True
+                                            break
+                                        
+                                        # Otherwise collect all images
+                                        if image_repo not in images:
+                                            images[image_repo] = image_tag
+                                
+                                if found_match:
+                                    break
+                
+                except Exception as e:
+                    continue
+            
+            if not images:
+                print("⚠️  (no images found)")
+                return None
+            
+            # Check the first image
+            image_repo, current_tag = list(images.items())[0]
+            
+            # Get latest version (pass current_tag for variant matching)
+            latest_tag = self.get_latest_docker_tag(image_repo, current_tag)
+            
+            # Get running version from cluster (pass latest_tag to compare digests)
+            running_status = self._get_running_image_tag(app_name, image_repo, latest_tag) if latest_tag else None
+            
+            if latest_tag:
+                # Determine if update is available
+                update_available = False
+                restart_needed = False
+                
+                # If using latest/stable tags, check digest comparison
+                if current_tag in ['latest', 'stable']:
+                    if running_status == 'outdated':
+                        restart_needed = True
+                        running_tag = f'< {latest_tag}'
+                    elif running_status == latest_tag:
+                        restart_needed = False
+                        running_tag = latest_tag
+                    else:
+                        # Unable to determine
+                        running_tag = 'N/A'
+                else:
+                    # Normal version comparison
+                    running_tag = running_status if running_status and running_status != 'outdated' else 'N/A'
+                    try:
+                        current_ver = version.parse(str(current_tag).lstrip('v').split('-')[0])
+                        latest_ver = version.parse(str(latest_tag).lstrip('v').split('-')[0])
+                        update_available = latest_ver > current_ver
+                    except version.InvalidVersion:
+                        update_available = str(current_tag) != str(latest_tag)
+                
+                status = "✅" if (update_available or restart_needed) else "✗"
+                print(f"{status}")
+                
+                return {
+                    'component': app_name,
+                    'image_repo': image_repo,
+                    'current_tag': current_tag,
+                    'running_tag': running_tag,
+                    'latest_tag': latest_tag,
+                    'update_available': update_available,
+                    'restart_needed': restart_needed
+                }
+            else:
+                print("⚠️  (unable to fetch)")
+                return {
+                    'component': app_name,
+                    'image_repo': image_repo,
+                    'current_tag': current_tag,
+                    'running_tag': 'N/A',
+                    'latest_tag': 'N/A',
+                    'update_available': False,
+                    'restart_needed': False
+                }
+                
+        except Exception as e:
+            print(f"❌ Error: {e}")
+            return None
+
+    def check_kustomize_apps(self):
+        """Check all Kustomize-based apps for updates (parallelized)."""
+        print("\n📦 Checking Kustomize app versions...\n")
+        
+        app_files = [f for f in sorted(APPS_DIR.glob("*.yaml")) if f.name != "kustomization.yaml"]
+        
+        with ThreadPoolExecutor(max_workers=5) as executor:
+            futures = {executor.submit(self._check_single_kustomize_app, app_file): app_file for app_file in app_files}
+            
+            for future in as_completed(futures):
+                result = future.result()
+                if result:
+                    self.kustomize_results.append(result)
+        
+        # Sort by component name
+        self.kustomize_results.sort(key=lambda x: x['component'])
 
     def print_report(self):
         """Print report to console."""
@@ -569,8 +866,33 @@ class VersionChecker:
             
             print(f"{component:<20} {chart_current:<12} {chart_latest:<12} {app_ver:<12} {manual_tag:<12} {latest_app:<12} {status:<15}")
         
+        # Kustomize Apps
+        if self.kustomize_results:
+            print("\n📦 KUSTOMIZE APPS\n")
+            print(f"{'Component':<20} {'Image Repository':<50} {'Manifest':<12} {'Running':<12} {'Latest':<12} {'Status':<15}")
+            print("-" * 130)
+            
+            for result in self.kustomize_results:
+                component = result['component']
+                image_repo = result['image_repo']
+                current_tag = result['current_tag']
+                running_tag = result.get('running_tag', 'N/A')
+                latest_tag = result['latest_tag']
+                
+                # Determine status
+                statuses = []
+                if result.get('restart_needed'):
+                    statuses.append("🔄 Restart")
+                if result.get('update_available'):
+                    statuses.append("⚠️ Update")
+                
+                status = " ".join(statuses) if statuses else "✅ OK"
+                
+                print(f"{component:<20} {image_repo:<50} {current_tag:<12} {running_tag:<12} {latest_tag:<12} {status:<15}")
+        
         # Summary
         chart_updates = sum(1 for r in self.helm_results if r['chart_update_available'])
+        kustomize_updates = sum(1 for r in self.kustomize_results if r['update_available'])
         
         app_outdated_count = 0
         manual_outdated_count = 0
@@ -601,13 +923,27 @@ class VersionChecker:
                     except version.InvalidVersion:
                         pass
         
-        print("\n" + "="*120)
-        print(f"📈 SUMMARY: {chart_updates} chart updates available")
+        kustomize_restarts = sum(1 for r in self.kustomize_results if r.get('restart_needed'))
+        
+        print("\n" + "="*130)
+        summary_parts = []
+        if chart_updates > 0:
+            summary_parts.append(f"{chart_updates} chart updates")
+        if kustomize_updates > 0:
+            summary_parts.append(f"{kustomize_updates} YAML updates")
+        if kustomize_restarts > 0:
+            summary_parts.append(f"🔄 {kustomize_restarts} restarts needed")
+        
+        if summary_parts:
+            print(f"📈 SUMMARY: {', '.join(summary_parts)}")
+        else:
+            print(f"📈 SUMMARY: All components up to date! ✅")
+            
         if app_outdated_count > 0:
             print(f"⚠️  WARNING: {app_outdated_count} charts with outdated appVersion")
         if manual_outdated_count > 0:
             print(f"⚠️  WARNING: {manual_outdated_count} charts with outdated manual image tags")
-        print("="*120 + "\n")
+        print("="*130 + "\n")
 
     def write_markdown_report(self, output_file: Path):
         """Write report to Markdown file."""
@@ -674,14 +1010,42 @@ class VersionChecker:
                 
                 f.write(f"| {component} | {chart_current} | {chart_latest} | {app_ver} | {manual_tag} | {latest_app} | {status} |\n")
             
+            # Kustomize Apps
+            if self.kustomize_results:
+                f.write("\n## 📦 Kustomize Apps\n\n")
+                f.write("| Component | Image Repository | Manifest Tag | Running Tag | Latest | Status |\n")
+                f.write("|-----------|------------------|--------------|-------------|--------|--------|\n")
+                
+                for result in self.kustomize_results:
+                    component = result['component']
+                    image_repo = result['image_repo']
+                    current_tag = result['current_tag']
+                    running_tag = result.get('running_tag', 'N/A')
+                    latest_tag = result['latest_tag']
+                    
+                    # Determine status
+                    statuses = []
+                    if result.get('restart_needed'):
+                        statuses.append("🔄 Restart Needed")
+                    if result.get('update_available'):
+                        statuses.append("⚠️ Update YAML")
+                    
+                    status = "<br>".join(statuses) if statuses else "✅ Up to date"
+                    
+                    f.write(f"| {component} | {image_repo} | {current_tag} | {running_tag} | {latest_tag} | {status} |\n")
+            
             # Summary
             chart_updates = sum(1 for r in self.helm_results if r['chart_update_available'])
+            kustomize_updates = sum(1 for r in self.kustomize_results if r.get('update_available'))
+            kustomize_restarts = sum(1 for r in self.kustomize_results if r.get('restart_needed'))
             app_outdated_count = sum(1 for r in self.helm_results 
                                      if r.get('app_version') and r.get('latest_app_version') 
                                      and r.get('app_version') != 'N/A' and r.get('latest_app_version') != 'N/A')
             
             f.write(f"\n## 📈 Summary\n\n")
             f.write(f"- **Helm chart updates available:** {chart_updates}\n")
+            f.write(f"- **Kustomize YAML updates needed:** {kustomize_updates}\n")
+            f.write(f"- **🔄 Kustomize restarts needed:** {kustomize_restarts}\n")
             if app_outdated_count > 0:
                 f.write(f"- **⚠️ Charts with app version info:** {len([r for r in self.helm_results if r.get('latest_app_version') and r.get('latest_app_version') != 'N/A'])}\n")
         
@@ -696,8 +1060,8 @@ def main():
     parser.add_argument(
         '--format',
         choices=['console', 'md', 'markdown'],
-        default='console',
-        help='Output format (default: console)'
+        default='md',
+        help='Output format (default: md)'
     )
     parser.add_argument(
         '--output',
@@ -722,6 +1086,9 @@ def main():
     
     # Check Helm charts
     checker.check_helm_charts()
+    
+    # Check Kustomize apps
+    checker.check_kustomize_apps()
     
     # Print console report
     checker.print_report()
