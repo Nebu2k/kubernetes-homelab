@@ -111,6 +111,17 @@ data:
             username: {{HOMEPAGE_VAR_ADGUARD_USER}}
             password: {{HOMEPAGE_VAR_ADGUARD_PASS}}
 
+      - Traefik Dashboard:
+          href: https://traefik.elmstreet79.de
+          description: Reverse Proxy & Load Balancer
+          icon: traefik.png
+          weight: 70
+          widget:
+            type: kubernetes
+            namespace: traefik
+            app: traefik
+            podSelector: app.kubernetes.io/name=traefik
+
     - Media:
 
       - Plex:
