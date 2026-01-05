@@ -10,7 +10,7 @@ metadata:
     gethomepage.dev/description: "Uptime Monitoring"
     gethomepage.dev/group: "Monitoring"
     gethomepage.dev/icon: "uptime-kuma.png"
-    gethomepage.dev/weight: "50"
+    gethomepage.dev/weight: "30"
     gethomepage.dev/widget.type: "uptimekuma"
     gethomepage.dev/widget.url: "https://uptime.elmstreet79.de"
     gethomepage.dev/widget.slug: "homelab"

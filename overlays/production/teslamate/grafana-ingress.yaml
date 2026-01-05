@@ -10,7 +10,7 @@ metadata:
     gethomepage.dev/description: "Tesla Analytics Dashboards"
     gethomepage.dev/group: "Applications"
     gethomepage.dev/icon: "teslamate.png"
-    gethomepage.dev/weight: "26"
+    gethomepage.dev/weight: "11"
     gethomepage.dev/pod-selector: "app=teslamate-grafana"
 spec:
   ingressClassName: traefik

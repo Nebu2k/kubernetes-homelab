@@ -41,6 +41,29 @@ data:
   services.yaml: |
     # Services die manuell konfiguriert werden müssen, da nicht in Kubernetes gehostet
     
+    - Management:
+      - Container (Pi5):
+          href: https://portainer.elmstreet79.de
+          description: Portainer Docker Pi5
+          icon: docker.png
+          weight: 30
+          widget:
+            type: portainer
+            url: https://portainer.elmstreet79.de
+            env: 2
+            key: {{HOMEPAGE_VAR_PORTAINER_TOKEN}}
+
+      - Container (Pi4):
+          href: https://portainer.elmstreet79.de
+          description: Portainer Docker Pi4
+          icon: docker.png
+          weight: 40
+          widget:
+            type: portainer
+            url: https://portainer.elmstreet79.de
+            env: 4
+            key: {{HOMEPAGE_VAR_PORTAINER_TOKEN}}
+    
     - Infrastructure:
       - Proxmox:
           href: https://pve.elmstreet79.de
@@ -64,34 +87,11 @@ data:
             url: https://unifi.elmstreet79.de
             username: {{HOMEPAGE_VAR_UNIFI_USER}}
             password: {{HOMEPAGE_VAR_UNIFI_PASS}}
-        
-
-      - Container (Pi5):
-          href: https://portainer.elmstreet79.de
-          description: Portainer Docker Pi5
-          icon: docker.png
-          weight: 30
-          widget:
-            type: portainer
-            url: https://portainer.elmstreet79.de
-            env: 2
-            key: {{HOMEPAGE_VAR_PORTAINER_TOKEN}}
-
-      - Container (Pi4):
-          href: https://portainer.elmstreet79.de
-          description: Portainer Docker Pi4
-          icon: docker.png
-          weight: 40
-          widget:
-            type: portainer
-            url: https://portainer.elmstreet79.de
-            env: 4
-            key: {{HOMEPAGE_VAR_PORTAINER_TOKEN}}
 
       - Mac Mini:
           description: Mac Mini Server
           icon: apple.png
-          weight: 70
+          weight: 30
           ping: 192.168.2.4
           widget:
             type: glances
@@ -103,7 +103,7 @@ data:
           href: https://adguard-macmini.elmstreet79.de
           description: AdGuard DNS
           icon: adguard-home.png
-          weight: 80
+          weight: 41
           ping: 192.168.2.4
           widget:
             type: adguard

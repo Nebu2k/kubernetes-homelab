@@ -11,7 +11,7 @@ metadata:
     gethomepage.dev/name: "AlertManager"
     gethomepage.dev/icon: "alertmanager.png"
     gethomepage.dev/description: "Alert Management"
-    gethomepage.dev/weight: "21"
+    gethomepage.dev/weight: "22"
 spec:
   ingressClassName: traefik
   tls:
