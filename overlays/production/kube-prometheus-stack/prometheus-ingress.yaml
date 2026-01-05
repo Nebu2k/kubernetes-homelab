@@ -7,7 +7,7 @@ metadata:
     cert-manager.io/cluster-issuer: "internal-ca-issuer"
     # Homepage integration
     gethomepage.dev/enabled: "true"
-    gethomepage.dev/group: "Applications - Intern"
+    gethomepage.dev/group: "Monitoring"
     gethomepage.dev/name: "Prometheus"
     gethomepage.dev/icon: "prometheus.png"
     gethomepage.dev/description: "Metrics Database"

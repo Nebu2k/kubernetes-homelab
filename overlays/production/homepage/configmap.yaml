@@ -18,20 +18,20 @@ data:
         columns: 2
       Monitoring:
         style: row
-        columns: 2
-      DNS:
-        style: row
         columns: 3
       Smart Home:
         style: row
         columns: 2
-      Applications - Extern:
+      Automation:
+        style: row
+        columns: 2
+      Media:
+        style: row
+        columns: 2
+      Applications:
         style: row
         columns: 3
       Infrastructure:
-        style: row
-        columns: 2
-      Applications - Intern:
         style: row
         columns: 3
     providers:
@@ -99,7 +99,19 @@ data:
             metric: memory
             version: 4
 
-    - Applications - Extern:
+      - AdGuard Home (Mac Mini):
+          href: https://adguard-macmini.elmstreet79.de
+          description: AdGuard DNS
+          icon: adguard-home.png
+          weight: 80
+          ping: 192.168.2.4
+          widget:
+            type: adguard
+            url: https://adguard-macmini.elmstreet79.de
+            username: {{HOMEPAGE_VAR_ADGUARD_USER}}
+            password: {{HOMEPAGE_VAR_ADGUARD_PASS}}
+
+    - Applications:
 
       - Dreambox:
           href: https://dreambox.elmstreet79.de
@@ -107,17 +119,6 @@ data:
           icon: mdi-television-box
           weight: 30
           ping: 192.168.2.11
-
-    - DNS:
-      - AdGuard Home (Mac Mini):
-          href: https://adguard-macmini.elmstreet79.de
-          description: AdGuard DNS
-          icon: adguard-home.png
-          weight: 20
-          ping: 192.168.2.4
-          widget:
-            type: adguard
-            url: https://adguard-macmini.elmstreet79.de
             username: {{HOMEPAGE_VAR_ADGUARD_USER}}
             password: {{HOMEPAGE_VAR_ADGUARD_PASS}}
 

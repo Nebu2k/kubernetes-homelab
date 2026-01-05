@@ -32,6 +32,12 @@ metadata:
   namespace: private-services
   annotations:
     cert-manager.io/cluster-issuer: letsencrypt-prod
+    gethomepage.dev/enabled: "true"
+    gethomepage.dev/name: "Nextcloud"
+    gethomepage.dev/description: "Cloud Storage & Collaboration"
+    gethomepage.dev/group: "Media"
+    gethomepage.dev/icon: "nextcloud.png"
+    gethomepage.dev/weight: "20"
 spec:
   ingressClassName: traefik
   tls:
