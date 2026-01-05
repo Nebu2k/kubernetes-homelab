@@ -41,8 +41,11 @@ def get_sync_waves():
 
 
 def get_component_versions():
-    """Extract component versions from ArgoCD Applications."""
+    """Extract component versions from ArgoCD Applications.
+    Prefers app version (image.tag) over Helm chart version when available.
+    """
     versions = {}
+    base_dir = REPO_ROOT / "base"
     
     for app_file in APPS_DIR.glob("*.yaml"):
         if app_file.name == "kustomization.yaml":
@@ -71,15 +74,31 @@ def get_component_versions():
         if not source:
             continue
             
-        # Get version from targetRevision
-        version = source.get('targetRevision', 'latest')
+        # Get version from targetRevision (Helm chart version)
+        chart_version = source.get('targetRevision', 'latest')
         chart = source.get('chart', '')
         
-        if chart:
-            versions[app_name] = {
-                'chart': chart,
-                'version': version
-            }
+        if not chart:
+            continue
+        
+        # Try to get app version from values.yaml (image.tag)
+        app_version = None
+        values_file = base_dir / app_name / "values.yaml"
+        
+        if values_file.exists():
+            try:
+                with open(values_file, 'r') as f:
+                    values = yaml.safe_load(f)
+                    if values and 'image' in values:
+                        app_version = values['image'].get('tag')
+            except Exception:
+                pass
+        
+        # Use app version if available, otherwise use Helm chart version
+        versions[app_name] = {
+            'chart': chart,
+            'version': app_version if app_version else chart_version
+        }
     
     return versions
 
