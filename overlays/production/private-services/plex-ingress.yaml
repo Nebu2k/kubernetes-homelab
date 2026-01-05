@@ -19,14 +19,14 @@ spec:
   tls: {}
 
 ---
-# Standard Ingress für AdGuard DNS Sync (ohne cert-manager)
+# Standard Ingress für AdGuard DNS Sync + Cert-Manager
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: plex
   namespace: private-services
   annotations:
-    adguard-dns-sync/exclude: "false"  # AdGuard DNS Sync aktivieren
+    cert-manager.io/cluster-issuer: internal-ca-issuer
 spec:
   ingressClassName: traefik
   rules:
@@ -40,6 +40,10 @@ spec:
                 name: plex-external
                 port:
                   number: 32400
+  tls:
+    - hosts:
+        - plex.elmstreet79.de
+      secretName: plex-tls
 
 ---
 # Kubernetes Service (ClusterIP) → Externe IP
