@@ -15,7 +15,7 @@ data:
     layout:
       Management:
         style: row
-        columns: 2
+        columns: 3
       Monitoring:
         style: row
         columns: 3
@@ -30,7 +30,7 @@ data:
         columns: 2
       Applications:
         style: row
-        columns: 3
+        columns: 2
       Infrastructure:
         style: row
         columns: 3
