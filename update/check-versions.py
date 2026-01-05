@@ -6,6 +6,7 @@ Checks Helm charts and their application versions.
 
 import argparse
 import json
+import os
 import re
 import subprocess
 import sys
@@ -326,7 +327,13 @@ class VersionChecker:
             # Try GitHub releases API
             github_url = f"https://api.github.com/repos/{owner}/{package}/releases"
             try:
-                response = requests.get(github_url, timeout=10)
+                # Add GitHub token if available (to avoid rate limits)
+                headers = {}
+                github_token = os.environ.get('GITHUB_TOKEN')
+                if github_token:
+                    headers['Authorization'] = f'token {github_token}'
+                
+                response = requests.get(github_url, headers=headers, timeout=10)
                 if response.status_code == 200:
                     releases = response.json()
                     tags = []
@@ -521,81 +528,6 @@ class VersionChecker:
             print(f"❌ Error: {e}")
             return None
 
-    def _get_running_image_tag(self, app_name: str, image_repo: str, latest_tag: str = None) -> Optional[str]:
-        """Check if running image differs from latest by comparing digests."""
-        try:
-            if not latest_tag:
-                return None
-                
-            # Get the running image digest
-            result = subprocess.run(
-                ["kubectl", "get", "pods", "-n", app_name, "-o", 
-                 "jsonpath={.items[0].status.containerStatuses[?(@.image contains '" + image_repo + "')].imageID}"],
-                capture_output=True,
-                text=True,
-                timeout=5
-            )
-            
-            if result.returncode != 0 or not result.stdout.strip():
-                return None
-            
-            image_id = result.stdout.strip()
-            
-            # Extract SHA256 hash from image ID
-            if '@sha256:' not in image_id:
-                return None
-            
-            running_digest = image_id.split('@sha256:')[1]
-            
-            # Get digest for latest_tag
-            latest_digest = self._get_image_digest(image_repo, latest_tag)
-            
-            if not latest_digest:
-                return None
-            
-            # If digests match, running version IS the latest
-            if running_digest == latest_digest:
-                return latest_tag
-            else:
-                # Different digest = older version
-                return f"outdated"
-            
-        except Exception:
-            return None
-    
-    def _get_image_digest(self, image_repo: str, tag: str) -> Optional[str]:
-        """Get the digest for a specific image tag."""
-        try:
-            # For Docker Hub
-            if not image_repo.startswith(('ghcr.io/', 'quay.io/')):
-                if '/' not in image_repo:
-                    registry_repo = f"library/{image_repo}"
-                else:
-                    parts = image_repo.split('/')
-                    if len(parts) == 2:
-                        registry_repo = image_repo
-                    else:
-                        registry_repo = '/'.join(parts[-2:])
-                
-                url = f"https://hub.docker.com/v2/repositories/{registry_repo}/tags/{tag}"
-                response = requests.get(url, timeout=10)
-                
-                if response.status_code == 200:
-                    data = response.json()
-                    images = data.get('images', [])
-                    if images and images[0].get('digest'):
-                        return images[0]['digest'].replace('sha256:', '')
-            
-            # For GHCR
-            elif image_repo.startswith('ghcr.io/'):
-                # GHCR doesn't provide easy digest lookup, skip for now
-                return None
-                
-            return None
-            
-        except Exception:
-            return None
-
     def check_helm_charts(self):
         """Check all Helm charts for updates (parallelized)."""
         print("📊 Checking Helm chart versions...\n")
@@ -725,46 +657,24 @@ class VersionChecker:
             # Get latest version (pass current_tag for variant matching)
             latest_tag = self.get_latest_docker_tag(image_repo, current_tag)
             
-            # Get running version from cluster (pass latest_tag to compare digests)
-            running_status = self._get_running_image_tag(app_name, image_repo, latest_tag) if latest_tag else None
-            
             if latest_tag:
                 # Determine if update is available
-                update_available = False
-                restart_needed = False
+                try:
+                    current_ver = version.parse(str(current_tag).lstrip('v').split('-')[0])
+                    latest_ver = version.parse(str(latest_tag).lstrip('v').split('-')[0])
+                    update_available = latest_ver > current_ver
+                except version.InvalidVersion:
+                    update_available = str(current_tag) != str(latest_tag)
                 
-                # If using latest/stable tags, check digest comparison
-                if current_tag in ['latest', 'stable']:
-                    if running_status == 'outdated':
-                        restart_needed = True
-                        running_tag = f'< {latest_tag}'
-                    elif running_status == latest_tag:
-                        restart_needed = False
-                        running_tag = latest_tag
-                    else:
-                        # Unable to determine
-                        running_tag = 'N/A'
-                else:
-                    # Normal version comparison
-                    running_tag = running_status if running_status and running_status != 'outdated' else 'N/A'
-                    try:
-                        current_ver = version.parse(str(current_tag).lstrip('v').split('-')[0])
-                        latest_ver = version.parse(str(latest_tag).lstrip('v').split('-')[0])
-                        update_available = latest_ver > current_ver
-                    except version.InvalidVersion:
-                        update_available = str(current_tag) != str(latest_tag)
-                
-                status = "✅" if (update_available or restart_needed) else "✗"
+                status = "✅" if update_available else "✗"
                 print(f"{status}")
                 
                 return {
                     'component': app_name,
                     'image_repo': image_repo,
                     'current_tag': current_tag,
-                    'running_tag': running_tag,
                     'latest_tag': latest_tag,
-                    'update_available': update_available,
-                    'restart_needed': restart_needed
+                    'update_available': update_available
                 }
             else:
                 print("⚠️  (unable to fetch)")
@@ -772,10 +682,8 @@ class VersionChecker:
                     'component': app_name,
                     'image_repo': image_repo,
                     'current_tag': current_tag,
-                    'running_tag': 'N/A',
                     'latest_tag': 'N/A',
-                    'update_available': False,
-                    'restart_needed': False
+                    'update_available': False
                 }
                 
         except Exception as e:
@@ -869,26 +777,22 @@ class VersionChecker:
         # Kustomize Apps
         if self.kustomize_results:
             print("\n📦 KUSTOMIZE APPS\n")
-            print(f"{'Component':<20} {'Image Repository':<50} {'Manifest':<12} {'Running':<12} {'Latest':<12} {'Status':<15}")
-            print("-" * 130)
+            print(f"{'Component':<20} {'Image Repository':<50} {'Current':<15} {'Latest':<15} {'Status':<15}")
+            print("-" * 120)
             
             for result in self.kustomize_results:
                 component = result['component']
                 image_repo = result['image_repo']
                 current_tag = result['current_tag']
-                running_tag = result.get('running_tag', 'N/A')
                 latest_tag = result['latest_tag']
                 
                 # Determine status
-                statuses = []
-                if result.get('restart_needed'):
-                    statuses.append("🔄 Restart")
                 if result.get('update_available'):
-                    statuses.append("⚠️ Update")
+                    status = "⚠️ Update"
+                else:
+                    status = "✅ OK"
                 
-                status = " ".join(statuses) if statuses else "✅ OK"
-                
-                print(f"{component:<20} {image_repo:<50} {current_tag:<12} {running_tag:<12} {latest_tag:<12} {status:<15}")
+                print(f"{component:<20} {image_repo:<50} {current_tag:<15} {latest_tag:<15} {status:<15}")
         
         # Summary
         chart_updates = sum(1 for r in self.helm_results if r['chart_update_available'])
@@ -923,16 +827,12 @@ class VersionChecker:
                     except version.InvalidVersion:
                         pass
         
-        kustomize_restarts = sum(1 for r in self.kustomize_results if r.get('restart_needed'))
-        
-        print("\n" + "="*130)
+        print("\n" + "="*120)
         summary_parts = []
         if chart_updates > 0:
             summary_parts.append(f"{chart_updates} chart updates")
         if kustomize_updates > 0:
-            summary_parts.append(f"{kustomize_updates} YAML updates")
-        if kustomize_restarts > 0:
-            summary_parts.append(f"🔄 {kustomize_restarts} restarts needed")
+            summary_parts.append(f"{kustomize_updates} kustomize updates")
         
         if summary_parts:
             print(f"📈 SUMMARY: {', '.join(summary_parts)}")
@@ -943,7 +843,7 @@ class VersionChecker:
             print(f"⚠️  WARNING: {app_outdated_count} charts with outdated appVersion")
         if manual_outdated_count > 0:
             print(f"⚠️  WARNING: {manual_outdated_count} charts with outdated manual image tags")
-        print("="*130 + "\n")
+        print("="*120 + "\n")
 
     def write_markdown_report(self, output_file: Path):
         """Write report to Markdown file."""
@@ -1013,31 +913,22 @@ class VersionChecker:
             # Kustomize Apps
             if self.kustomize_results:
                 f.write("\n## 📦 Kustomize Apps\n\n")
-                f.write("| Component | Image Repository | Manifest Tag | Running Tag | Latest | Status |\n")
-                f.write("|-----------|------------------|--------------|-------------|--------|--------|\n")
+                f.write("| Component | Image Repository | Current | Latest | Status |\n")
+                f.write("|-----------|------------------|---------|--------|--------|\n")
                 
                 for result in self.kustomize_results:
                     component = result['component']
                     image_repo = result['image_repo']
                     current_tag = result['current_tag']
-                    running_tag = result.get('running_tag', 'N/A')
                     latest_tag = result['latest_tag']
                     
-                    # Determine status
-                    statuses = []
-                    if result.get('restart_needed'):
-                        statuses.append("🔄 Restart Needed")
-                    if result.get('update_available'):
-                        statuses.append("⚠️ Update YAML")
+                    status = "⚠️ Update Available" if result.get('update_available') else "✅ Up to date"
                     
-                    status = "<br>".join(statuses) if statuses else "✅ Up to date"
-                    
-                    f.write(f"| {component} | {image_repo} | {current_tag} | {running_tag} | {latest_tag} | {status} |\n")
+                    f.write(f"| {component} | {image_repo} | {current_tag} | {latest_tag} | {status} |\n")
             
             # Summary
             chart_updates = sum(1 for r in self.helm_results if r['chart_update_available'])
             kustomize_updates = sum(1 for r in self.kustomize_results if r.get('update_available'))
-            kustomize_restarts = sum(1 for r in self.kustomize_results if r.get('restart_needed'))
             app_outdated_count = sum(1 for r in self.helm_results 
                                      if r.get('app_version') and r.get('latest_app_version') 
                                      and r.get('app_version') != 'N/A' and r.get('latest_app_version') != 'N/A')
@@ -1045,7 +936,6 @@ class VersionChecker:
             f.write(f"\n## 📈 Summary\n\n")
             f.write(f"- **Helm chart updates available:** {chart_updates}\n")
             f.write(f"- **Kustomize YAML updates needed:** {kustomize_updates}\n")
-            f.write(f"- **🔄 Kustomize restarts needed:** {kustomize_restarts}\n")
             if app_outdated_count > 0:
                 f.write(f"- **⚠️ Charts with app version info:** {len([r for r in self.helm_results if r.get('latest_app_version') and r.get('latest_app_version') != 'N/A'])}\n")
         
