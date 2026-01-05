@@ -119,8 +119,6 @@ data:
           icon: mdi-television-box
           weight: 30
           ping: 192.168.2.11
-            username: {{HOMEPAGE_VAR_ADGUARD_USER}}
-            password: {{HOMEPAGE_VAR_ADGUARD_PASS}}
 
   bookmarks.yaml: |
     - Developer:
