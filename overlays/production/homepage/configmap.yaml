@@ -111,6 +111,22 @@ data:
             username: {{HOMEPAGE_VAR_ADGUARD_USER}}
             password: {{HOMEPAGE_VAR_ADGUARD_PASS}}
 
+    - Media:
+
+      - Plex:
+          href: https://plex.elmstreet79.de
+          description: Media Server
+          icon: plex.png
+          weight: 10
+          ping: 192.168.2.4
+
+      - Nextcloud:
+          href: https://nextcloud.elmstreet79.de
+          description: Cloud Storage & Collaboration
+          icon: nextcloud.png
+          weight: 20
+          ping: 192.168.2.12
+
     - Applications:
 
       - Dreambox:
