@@ -9,7 +9,7 @@ podAnnotations:
 dnsConfig:
   options:
     - name: ndots
-      value: "2"
+      value: "1"
     - name: timeout
       value: "3"
     - name: attempts
