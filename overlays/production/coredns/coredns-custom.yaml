@@ -9,6 +9,9 @@ data:
     # Forward internal elmstreet79.de queries to AdGuard Home
     elmstreet79.de:53 {
       errors
-      cache 30
+      cache 300
       forward . 192.168.2.9:53 192.168.2.4:53
     }
+  cache.override: |
+    # Increase global cache to reduce DNS queries and timeouts
+    cache 300

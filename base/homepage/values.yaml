@@ -5,6 +5,16 @@
 podAnnotations:
   reloader.stakater.com/auto: "true"
 
+# DNS configuration to fix intermittent ENOTFOUND errors
+dnsConfig:
+  options:
+    - name: ndots
+      value: "1"
+    - name: timeout
+      value: "3"
+    - name: attempts
+      value: "3"
+
 # Use latest homepage image
 image:
   repository: ghcr.io/gethomepage/homepage
