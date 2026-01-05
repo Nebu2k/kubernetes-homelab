@@ -26,7 +26,7 @@ metadata:
   name: plex
   namespace: private-services
   annotations:
-    cert-manager.io/cluster-issuer: internal-ca-issuer
+    cert-manager.io/cluster-issuer: letsencrypt-prod
 spec:
   ingressClassName: traefik
   rules:
