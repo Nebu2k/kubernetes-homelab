@@ -1094,17 +1094,17 @@ kubectl get secret -n monitoring grafana-admin-credentials \
 
 | Component | Version | Purpose |
 |-----------|---------|---------|
-| Reloader | 2.2.5 | Reloader |
-| Kube Prometheus Stack | 79.9.0 | Kube Prometheus Stack |
+| Reloader | 2.2.7 | Reloader |
+| Kube Prometheus Stack | 80.11.0 | Kube Prometheus Stack |
 | Sealed Secrets | 2.17.7 | Sealed Secrets |
 | N8n | 2.1.5 | N8n |
 | Kured | 5.10.0 | Kured |
-| Metallb | 0.15.2 | Metallb |
+| Metallb | 0.15.3 | Metallb |
 | Longhorn | 1.10.1 | Longhorn |
 | Portainer | 2.33.6 | Portainer |
-| Cert Manager | v1.19.1 | Cert Manager |
+| Cert Manager | v1.19.2 | Cert Manager |
 | Uptime Kuma | 2.24.0 | Uptime Kuma |
-| Traefik | 37.4.0 | Traefik |
+| Traefik | 38.0.1 | Traefik |
 | Newt | 1.1.0 | Newt |
 | Homepage | v1.8.0 | Homepage |
 | K3s | v1.33.5 | Lightweight Kubernetes |
