@@ -5,7 +5,7 @@ namespace: n8n
 
 resources:
   - namespace.yaml
-  - postgresql-secret.yaml
+  - postgresql-secret-sealed.yaml
   - pvc.yaml
   - postgresql-pvc.yaml
   - postgresql-statefulset.yaml

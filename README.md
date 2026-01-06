@@ -168,7 +168,8 @@ homelab/
     │   ├── kustomization.yaml
     │   ├── namespace.yaml
     │   ├── postgresql-pvc.yaml
-    │   ├── postgresql-secret.yaml
+    │   ├── postgresql-secret-sealed.yaml
+    │   ├── postgresql-secret-unsealed.yaml
     │   ├── postgresql-service.yaml
     │   ├── postgresql-statefulset.yaml
     │   ├── pvc.yaml
