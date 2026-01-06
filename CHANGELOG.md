@@ -1,3 +1,10 @@
+## [1.7.8](https://github.com/Nebu2k/kubernetes-homelab/compare/v1.7.7...v1.7.8) (2026-01-06)
+
+
+### 🐛 Bug Fixes
+
+* **n8n:** update DB_POSTGRESDB_PASSWORD to use secretKeyRef for improved security ([93efcdf](https://github.com/Nebu2k/kubernetes-homelab/commit/93efcdfa114adc79edb0d15ff73de4e2c2451ac7))
+
 ## [1.7.7](https://github.com/Nebu2k/kubernetes-homelab/compare/v1.7.6...v1.7.7) (2026-01-06)
 
 
