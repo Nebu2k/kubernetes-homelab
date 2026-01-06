@@ -1,0 +1,137 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: homepage
+  namespace: homepage
+  labels:
+    app.kubernetes.io/name: homepage
+spec:
+  replicas: 1
+  revisionHistoryLimit: 3
+  strategy:
+    type: RollingUpdate
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: homepage
+  template:
+    metadata:
+      annotations:
+        reloader.stakater.com/auto: "true"
+      labels:
+        app.kubernetes.io/name: homepage
+    spec:
+      serviceAccountName: homepage
+      automountServiceAccountToken: true
+      nodeSelector:
+        node-role.kubernetes.io/worker: "worker"
+      dnsConfig:
+        options:
+          - name: ndots
+            value: "1"
+          - name: timeout
+            value: "3"
+          - name: attempts
+            value: "3"
+      containers:
+      - name: homepage
+        image: ghcr.io/gethomepage/homepage:v1.8.0
+        imagePullPolicy: IfNotPresent
+        ports:
+        - name: http
+          containerPort: 3000
+          protocol: TCP
+        env:
+        - name: HOMEPAGE_ALLOWED_HOSTS
+          value: "home.elmstreet79.de"
+        - name: NODE_EXTRA_CA_CERTS
+          value: "/certs/ca.crt"
+        - name: HOMEPAGE_VAR_PROXMOX_USER
+          valueFrom:
+            secretKeyRef:
+              name: homepage-proxmox
+              key: username
+        - name: HOMEPAGE_VAR_PROXMOX_PASS
+          valueFrom:
+            secretKeyRef:
+              name: homepage-proxmox
+              key: password
+        - name: HOMEPAGE_VAR_ARGOCD_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: argocd-homepage-token
+              key: token
+        - name: HOMEPAGE_VAR_ADGUARD_USER
+          valueFrom:
+            secretKeyRef:
+              name: homepage-adguard
+              key: username
+        - name: HOMEPAGE_VAR_ADGUARD_PASS
+          valueFrom:
+            secretKeyRef:
+              name: homepage-adguard
+              key: password
+        - name: HOMEPAGE_VAR_PORTAINER_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: homepage-portainer
+              key: token
+        - name: HOMEPAGE_VAR_UNIFI_USER
+          valueFrom:
+            secretKeyRef:
+              name: homepage-unifi
+              key: username
+        - name: HOMEPAGE_VAR_UNIFI_PASS
+          valueFrom:
+            secretKeyRef:
+              name: homepage-unifi
+              key: password
+        - name: HOMEPAGE_VAR_GRAFANA_USER
+          valueFrom:
+            secretKeyRef:
+              name: homepage-grafana
+              key: username
+        - name: HOMEPAGE_VAR_GRAFANA_PASS
+          valueFrom:
+            secretKeyRef:
+              name: homepage-grafana
+              key: password
+        volumeMounts:
+        - name: config
+          mountPath: /app/config
+        - name: logs
+          mountPath: /app/config/logs
+        - name: internal-ca
+          mountPath: /certs
+          readOnly: true
+        livenessProbe:
+          httpGet:
+            path: /api/healthcheck
+            port: http
+          initialDelaySeconds: 10
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /api/healthcheck
+            port: http
+          initialDelaySeconds: 5
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        resources:
+          requests:
+            cpu: 50m
+            memory: 128Mi
+          limits:
+            memory: 256Mi
+      volumes:
+      - name: config
+        configMap:
+          name: homepage-config
+      - name: logs
+        emptyDir: {}
+      - name: internal-ca
+        secret:
+          secretName: internal-ca-secret
+          defaultMode: 292  # 0444 in decimal

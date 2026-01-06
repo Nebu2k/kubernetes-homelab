@@ -7,17 +7,10 @@ metadata:
     argocd.argoproj.io/sync-wave: "9"
 spec:
   project: default
-  sources:
-    - repoURL: https://jameswynn.github.io/helm-charts
-      chart: homepage
-      targetRevision: 2.1.0
-      helm:
-        valueFiles:
-          - $values/base/homepage/values.yaml
-          - $values/overlays/production/homepage/values.yaml
-    - repoURL: https://github.com/Nebu2k/kubernetes-homelab.git
-      targetRevision: main
-      ref: values
+  source:
+    repoURL: https://github.com/Nebu2k/kubernetes-homelab.git
+    targetRevision: main
+    path: overlays/production/homepage
   destination:
     server: https://kubernetes.default.svc
     namespace: homepage
@@ -25,5 +18,3 @@ spec:
     automated:
       prune: true
       selfHeal: true
-    syncOptions:
-      - CreateNamespace=true

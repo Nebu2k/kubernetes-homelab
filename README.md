@@ -34,7 +34,7 @@ Production-ready K3s cluster managed via GitOps using ArgoCD App-of-Apps pattern
 | 13 | Longhorn Config |
 | 14 | Kube Prometheus Stack Config |
 | 16 | Private Services |
-| 17 | N8n Config, Homepage Config |
+| 17 | N8n Config |
 
 ## 📁 Repository Structure
 
@@ -70,12 +70,9 @@ homelab/
 │   ├── longhorn-config.yaml           # Wave 13
 │   ├── kube-prometheus-stack-config.yaml # Wave 14
 │   ├── private-services.yaml          # Wave 16
-│   ├── homepage-config.yaml           # Wave 17
 │   └── n8n-config.yaml                # Wave 17
 ├── base/
 │   ├── cert-manager/
-│       └── values.yaml
-│   ├── homepage/
 │       └── values.yaml
 │   ├── kube-prometheus-stack/
 │       └── values.yaml
@@ -128,18 +125,23 @@ homelab/
     │   ├── adguard-credentials-unsealed.yaml
     │   ├── argocd-token-secret-sealed.yaml
     │   ├── argocd-token-secret-unsealed.yaml
+    │   ├── clusterrole.yaml
+    │   ├── clusterrolebinding.yaml
     │   ├── configmap.yaml
+    │   ├── deployment.yaml
     │   ├── grafana-credentials-sealed.yaml
     │   ├── grafana-credentials-unsealed.yaml
     │   ├── ingress.yaml
     │   ├── internal-ca-copy.yaml
     │   ├── kustomization.yaml
+    │   ├── namespace.yaml
     │   ├── portainer-token-sealed.yaml
     │   ├── portainer-token-unsealed.yaml
     │   ├── proxmox-secret-sealed.yaml
+    │   ├── service.yaml
+    │   ├── serviceaccount.yaml
     │   ├── unifi-token-sealed.yaml
-    │   ├── unifi-token-unsealed.yaml
-    │   └── values.yaml
+    │   └── unifi-token-unsealed.yaml
     ├── kube-prometheus-stack/
     │   ├── alertmanager-ingress.yaml
     │   ├── aws-credentials-sealed.yaml
@@ -1106,14 +1108,12 @@ kubectl get secret -n monitoring grafana-admin-credentials \
 | Cert Manager | v1.19.2 | Cert Manager |
 | Traefik | 38.0.1 | Traefik |
 | Newt | 1.1.0 | Newt |
-| Homepage | v1.8.0 | Homepage |
 | K3s | v1.33.5 | Lightweight Kubernetes |
 | Kube-VIP | v1.0.1 | Control plane HA |
 
 ## 📖 Documentation
 
 - [Cert Manager](https://charts.jetstack.io)
-- [Homepage](https://jameswynn.github.io/helm-charts)
 - [K3s](https://docs.k3s.io/)
 - [Kube Prometheus Stack](https://prometheus-community.github.io/helm-charts)
 - [Kured](https://kubereboot.github.io/charts)

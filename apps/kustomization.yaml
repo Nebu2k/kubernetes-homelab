@@ -21,7 +21,6 @@ resources:
   - newt.yaml
   - newt-config.yaml
   - homepage.yaml
-  - homepage-config.yaml
   - n8n.yaml
   - n8n-config.yaml
   - argocd-config.yaml
