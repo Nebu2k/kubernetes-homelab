@@ -141,7 +141,7 @@ homelab/
     ├── metallb/
     │   ├── kustomization.yaml
     │   ├── metallb-ip-pool.yaml
-    │   └── metallb-native.yaml
+    │   └── values.yaml
     ├── n8n/
     │   ├── deployment.yaml
     │   ├── ingress.yaml
@@ -1088,6 +1088,7 @@ kubectl get secret -n monitoring grafana-admin-credentials \
 | Kube Prometheus Stack | 80.11.0 | Kube Prometheus Stack |
 | Sealed Secrets | 2.17.7 | Sealed Secrets |
 | Kured | 5.10.0 | Kured |
+| Metallb | 0.15.3 | Metallb |
 | Longhorn | 1.10.1 | Longhorn |
 | Portainer | 2.33.6 | Portainer |
 | Cert Manager | v1.19.2 | Cert Manager |
@@ -1103,6 +1104,7 @@ kubectl get secret -n monitoring grafana-admin-credentials \
 - [Kube Prometheus Stack](https://prometheus-community.github.io/helm-charts)
 - [Kured](https://kubereboot.github.io/charts)
 - [Longhorn](https://charts.longhorn.io)
+- [Metallb](https://metallb.github.io/metallb)
 - [Newt](https://charts.fossorial.io)
 - [Portainer](https://portainer.github.io/k8s)
 - [Reloader](https://stakater.github.io/stakater-charts)

@@ -4,5 +4,4 @@ kind: Kustomization
 namespace: metallb-system
 
 resources:
-  - metallb-native.yaml
   - metallb-ip-pool.yaml

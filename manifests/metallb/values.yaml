@@ -1,0 +1,9 @@
+controller:
+  nodeSelector:
+    node-role.kubernetes.io/worker: "worker"
+
+speaker:
+  nodeSelector:
+    node-role.kubernetes.io/worker: "worker"
+  frr:
+    enabled: false
