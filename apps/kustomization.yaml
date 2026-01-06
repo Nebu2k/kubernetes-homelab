@@ -11,7 +11,6 @@ resources:
   - longhorn.yaml
   - longhorn-config.yaml
   - kube-prometheus-stack.yaml
-  - kube-prometheus-stack-config.yaml
   - unifi-poller.yaml
   - portainer.yaml
   - portainer-config.yaml

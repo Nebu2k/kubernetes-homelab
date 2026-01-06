@@ -13,10 +13,13 @@ spec:
       targetRevision: 80.11.0
       helm:
         valueFiles:
-          - $values/base/kube-prometheus-stack/values.yaml
+          - $values/overlays/production/kube-prometheus-stack/values.yaml
     - repoURL: https://github.com/Nebu2k/kubernetes-homelab
       targetRevision: main
       ref: values
+    - repoURL: https://github.com/Nebu2k/kubernetes-homelab
+      targetRevision: main
+      path: overlays/production/kube-prometheus-stack
   destination:
     server: https://kubernetes.default.svc
     namespace: monitoring

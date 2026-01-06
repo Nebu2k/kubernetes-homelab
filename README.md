@@ -32,7 +32,6 @@ Production-ready K3s cluster managed via GitOps using ArgoCD App-of-Apps pattern
 | 10 | Newt Config |
 | 12 | Portainer Config, Argocd Config |
 | 13 | Longhorn Config |
-| 14 | Kube Prometheus Stack Config |
 | 16 | Private Services |
 
 ## 📁 Repository Structure
@@ -65,11 +64,8 @@ homelab/
 │   ├── argocd-config.yaml             # Wave 12
 │   ├── portainer-config.yaml          # Wave 12
 │   ├── longhorn-config.yaml           # Wave 13
-│   ├── kube-prometheus-stack-config.yaml # Wave 14
 │   └── private-services.yaml          # Wave 16
 ├── base/
-│   ├── kube-prometheus-stack/
-│       └── values.yaml
 │   ├── kured/
 │       └── values.yaml
 │   ├── longhorn/
@@ -140,7 +136,8 @@ homelab/
     │   ├── grafana-ingress.yaml
     │   ├── kustomization.yaml
     │   ├── prometheus-ingress.yaml
-    │   └── prometheus-rules.yaml
+    │   ├── prometheus-rules.yaml
+    │   └── values.yaml
     ├── landing-page/
     │   ├── configmap.yaml
     │   ├── deployment.yaml
