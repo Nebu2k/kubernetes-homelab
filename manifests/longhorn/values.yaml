@@ -2,6 +2,9 @@
 persistence:
   defaultClass: true
   defaultClassReplicaCount: 3
+  defaultNodeSelector:
+    enable: true
+    selector: "storage"
   recurringJobSelector:
     enable: true
     jobList: '[{"name":"backup-daily","isGroup":false},{"name":"backup-weekly","isGroup":false},{"name":"snapshot-cleanup-daily","isGroup":false}]'
