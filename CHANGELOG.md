@@ -1,3 +1,10 @@
+## [1.7.10](https://github.com/Nebu2k/kubernetes-homelab/compare/v1.7.9...v1.7.10) (2026-01-06)
+
+
+### 🐛 Bug Fixes
+
+* **cert-manager:** remove cert-manager-config and update kustomization.yaml ([42177b2](https://github.com/Nebu2k/kubernetes-homelab/commit/42177b2bcc01bff81ed7a4ee434066b1f20c1e73))
+
 ## [1.7.9](https://github.com/Nebu2k/kubernetes-homelab/compare/v1.7.8...v1.7.9) (2026-01-06)
 
 
