@@ -1,3 +1,10 @@
+## [1.4.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v1.3.0...v1.4.0) (2026-01-06)
+
+
+### ✨ Features
+
+* refactor homepage deployment configuration and remove obsolete files ([2b1d395](https://github.com/Nebu2k/kubernetes-homelab/commit/2b1d3953317e5bb825499854d97612dcc593c6d0))
+
 ## [1.3.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v1.2.0...v1.3.0) (2026-01-06)
 
 
