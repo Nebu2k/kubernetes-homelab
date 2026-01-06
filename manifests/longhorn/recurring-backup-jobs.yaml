@@ -35,6 +35,6 @@ metadata:
 spec:
   cron: "0 4 * * *"
   task: "snapshot-cleanup"
-  retain: 1
+  retain: 0
   concurrency: 5
   labels: {}
