@@ -1,3 +1,19 @@
+## [2.0.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v1.8.0...v2.0.0) (2026-01-06)
+
+
+### ⚠ BREAKING CHANGES
+
+* combine overlays
+
+### ✨ Features
+
+* combine overlays ([f8e9e9b](https://github.com/Nebu2k/kubernetes-homelab/commit/f8e9e9b4020ae773b0fd2dfac39338b4a10f3743))
+
+
+### 🐛 Bug Fixes
+
+* remove base directory structure from README tree generation ([48bf3e1](https://github.com/Nebu2k/kubernetes-homelab/commit/48bf3e12c6b3de631c17be506006435c946707b3))
+
 ## [1.8.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v1.7.12...v1.8.0) (2026-01-06)
 
 
