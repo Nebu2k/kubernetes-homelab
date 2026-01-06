@@ -1,3 +1,10 @@
+## [1.7.11](https://github.com/Nebu2k/kubernetes-homelab/compare/v1.7.10...v1.7.11) (2026-01-06)
+
+
+### 🐛 Bug Fixes
+
+* **cert-manager:** update values file path and migrate configuration to production overlay ([a9d3889](https://github.com/Nebu2k/kubernetes-homelab/commit/a9d38892dca478c7327cb5bdd966e9b5813b68a4))
+
 ## [1.7.10](https://github.com/Nebu2k/kubernetes-homelab/compare/v1.7.9...v1.7.10) (2026-01-06)
 
 
