@@ -1,3 +1,10 @@
+## [1.4.4](https://github.com/Nebu2k/kubernetes-homelab/compare/v1.4.3...v1.4.4) (2026-01-06)
+
+
+### 🐛 Bug Fixes
+
+* remove redundant configMap definition in homepage deployment ([bb5683d](https://github.com/Nebu2k/kubernetes-homelab/commit/bb5683dc3a2d143cbc23d344f8cd78236748fc54))
+
 ## [1.4.3](https://github.com/Nebu2k/kubernetes-homelab/compare/v1.4.2...v1.4.3) (2026-01-06)
 
 
