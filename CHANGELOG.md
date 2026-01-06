@@ -1,3 +1,10 @@
+## [1.5.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v1.4.6...v1.5.0) (2026-01-06)
+
+
+### ✨ Features
+
+* Add metallb-system namespace with pod security labels ([22f5dfd](https://github.com/Nebu2k/kubernetes-homelab/commit/22f5dfd63e01547134e0555594395f7659506a0b))
+
 ## [1.4.6](https://github.com/Nebu2k/kubernetes-homelab/compare/v1.4.5...v1.4.6) (2026-01-06)
 
 
