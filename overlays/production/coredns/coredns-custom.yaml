@@ -5,12 +5,9 @@ metadata:
   name: coredns-custom
   namespace: kube-system
 data:
-  01-forward.override: |
-    # Override forward to use only Cloudflare DNS
+  forward.override: |
+    # Override forward to use only Cloudflare DNS (faster, more reliable)
     forward . 1.1.1.1
-  02-cache.override: |
-    # Override cache duration to 5 minutes
-    cache 300
   elmstreet79.server: |
     # Forward internal elmstreet79.de queries to AdGuard Home
     elmstreet79.de:53 {
