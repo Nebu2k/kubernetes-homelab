@@ -31,7 +31,6 @@ Production-ready K3s cluster managed via GitOps using ArgoCD App-of-Apps pattern
 | 9 | N8n, Homepage |
 | 10 | Newt Config |
 | 12 | Portainer Config, Argocd Config |
-| 13 | Longhorn Config |
 | 16 | Private Services |
 
 ## 📁 Repository Structure
@@ -63,12 +62,9 @@ homelab/
 │   ├── newt-config.yaml               # Wave 10
 │   ├── argocd-config.yaml             # Wave 12
 │   ├── portainer-config.yaml          # Wave 12
-│   ├── longhorn-config.yaml           # Wave 13
 │   └── private-services.yaml          # Wave 16
 ├── base/
 │   ├── kured/
-│       └── values.yaml
-│   ├── longhorn/
 │       └── values.yaml
 │   ├── newt/
 │       └── values.yaml
@@ -152,7 +148,8 @@ homelab/
     │   ├── recurring-backup-jobs.yaml
     │   ├── s3-secret-sealed.yaml
     │   ├── s3-secret-unsealed.yaml
-    │   └── servicemonitor.yaml
+    │   ├── servicemonitor.yaml
+    │   └── values.yaml
     ├── metallb/
     │   ├── kustomization.yaml
     │   ├── metallb-ip-pool.yaml

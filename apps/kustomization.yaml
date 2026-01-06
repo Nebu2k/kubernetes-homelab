@@ -9,7 +9,6 @@ resources:
   - cert-manager.yaml
   - traefik.yaml
   - longhorn.yaml
-  - longhorn-config.yaml
   - kube-prometheus-stack.yaml
   - unifi-poller.yaml
   - portainer.yaml
