@@ -4,6 +4,7 @@ Simple version checker for Kubernetes homelab components.
 Checks Helm charts and container images for updates.
 """
 
+import argparse
 import json
 import subprocess
 from pathlib import Path
@@ -109,16 +110,50 @@ def _get_quay_tag(image: str) -> Optional[str]:
         return None
 
 
+def _normalize_version(ver: str) -> str:
+    """Strip common version suffixes like -alpine, -slim, etc."""
+    suffixes = [
+        "-alpine", "-slim", "-debian", "-ubuntu", "-perl", "-python", "-node", "-ruby",
+        "-arm64", "-amd64", "-armv7", "-arm32v6",
+        "-distroless", "-bullseye", "-buster",
+    ]
+    ver_lower = ver.lower()
+    for suffix in suffixes:
+        if ver_lower.endswith(suffix.lower()):
+            return ver[:len(ver) - len(suffix)]
+    return ver
+
+
 def _filter_stable_tag(tags: list) -> Optional[str]:
     """Filter and return latest stable tag."""
+    # Debian/distro release codenames and other tags to exclude
+    exclude_patterns = [
+        "trixie", "bookworm", "bullseye", "buster", "stretch", "jessie",  # Debian
+        "jammy", "focal", "bionic", "xenial",  # Ubuntu
+        "alpine", "slim", "debian", "ubuntu",  # Base images
+        "perl", "python", "node", "ruby",  # Language base images
+        "edge", "base", "latest", "stable", "master",  # Generic tags
+        "builder", "build", "nightly", "next",  # Build tags
+        "beta", "rc", "alpha", "dev", "test", "pr-",  # Pre-release and test tags
+        "rootless", "distroless",  # Variant tags
+    ]
+    
     stable = []
     for tag in tags:
-        if tag in ["latest", "stable"]:
+        tag_lower = tag.lower()
+        
+        # Skip empty tags
+        if not tag:
             continue
-        if any(x in tag.lower() for x in ["alpha", "beta", "rc", "dev", "nightly", "test"]):
+        
+        # Skip if any exclude pattern matches
+        if any(pattern in tag_lower for pattern in exclude_patterns):
             continue
-        if any(x in tag.lower() for x in ["alpine", "slim", "debian", "ubuntu"]):
+        
+        # Skip tags with no version-like characters
+        if not any(c.isdigit() for c in tag):
             continue
+        
         stable.append(tag)
     
     if not stable:
@@ -170,7 +205,9 @@ def check_helm_apps():
         
         if latest:
             try:
-                is_outdated = version.parse(latest.lstrip("v")) > version.parse(current.lstrip("v"))
+                normalized_current = _normalize_version(current.lstrip("v"))
+                normalized_latest = _normalize_version(latest.lstrip("v"))
+                is_outdated = version.parse(normalized_latest) > version.parse(normalized_current)
             except version.InvalidVersion:
                 is_outdated = current != latest
             
@@ -251,7 +288,9 @@ def check_kustomize_apps():
                         
                         if latest_tag:
                             try:
-                                is_outdated = version.parse(latest_tag.lstrip("v")) > version.parse(current_tag.lstrip("v"))
+                                normalized_current = _normalize_version(current_tag.lstrip("v"))
+                                normalized_latest = _normalize_version(latest_tag.lstrip("v"))
+                                is_outdated = version.parse(normalized_latest) > version.parse(normalized_current)
                             except version.InvalidVersion:
                                 is_outdated = current_tag != latest_tag
                             
@@ -281,17 +320,24 @@ def check_kustomize_apps():
 
 def main():
     """Main entry point."""
-    print("🔄 Updating Helm repositories...\n")
-    if not run_command(["helm", "repo", "update"]):
-        print("❌ Failed to update Helm repos\n")
-        return
+    parser = argparse.ArgumentParser(description="Check versions of homelab components")
+    parser.add_argument("--skip-helm", action="store_true", help="Skip Helm chart checks, only check Kustomize apps")
+    args = parser.parse_args()
     
-    print("✅ Helm repos updated\n")
     print("=" * 110)
     print("📊 VERSION CHECK REPORT")
     print("=" * 110 + "\n")
     
-    helm_updates = check_helm_apps()
+    helm_updates = []
+    if not args.skip_helm:
+        print("🔄 Updating Helm repositories...\n")
+        if not run_command(["helm", "repo", "update"]):
+            print("❌ Failed to update Helm repos\n")
+            return
+        
+        print("✅ Helm repos updated\n")
+        helm_updates = check_helm_apps()
+    
     kustomize_updates = check_kustomize_apps()
     
     # Summary
@@ -299,7 +345,10 @@ def main():
     total = len(helm_updates) + len(kustomize_updates)
     
     if total > 0:
-        print(f"📈 {total} update(s) available: {len(helm_updates)} Helm, {len(kustomize_updates)} Kustomize")
+        if args.skip_helm:
+            print(f"📈 {total} update(s) available: {len(kustomize_updates)} Kustomize")
+        else:
+            print(f"📈 {total} update(s) available: {len(helm_updates)} Helm, {len(kustomize_updates)} Kustomize")
     else:
         print("📈 All components up to date! ✅")
     
