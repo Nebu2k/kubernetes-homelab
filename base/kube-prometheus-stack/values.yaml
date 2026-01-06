@@ -163,6 +163,10 @@ alertmanager:
         - match:
             alertname: Watchdog
           receiver: 'null'
+        # InfoInhibitor - silence (meta-alert for info-level inhibition)
+        - match:
+            alertname: InfoInhibitor
+          receiver: 'null'
         # Critical alerts - immediate notification
         - match:
             severity: critical
