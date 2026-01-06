@@ -151,4 +151,3 @@ spec:
         secret:
           secretName: internal-ca-secret
           defaultMode: 292  # 0444 in decimal
-          defaultMode: 292  # 0444 in decimal
