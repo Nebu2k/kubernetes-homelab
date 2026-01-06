@@ -1,3 +1,10 @@
+## [1.8.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v1.7.12...v1.8.0) (2026-01-06)
+
+
+### ✨ Features
+
+* **longhorn:** remove deprecated config and update values file structure ([08a5de4](https://github.com/Nebu2k/kubernetes-homelab/commit/08a5de4b266d50825d2e8354000f275a68585795))
+
 ## [1.7.12](https://github.com/Nebu2k/kubernetes-homelab/compare/v1.7.11...v1.7.12) (2026-01-06)
 
 
