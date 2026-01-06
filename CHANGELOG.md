@@ -1,3 +1,10 @@
+## [1.6.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v1.5.1...v1.6.0) (2026-01-06)
+
+
+### ✨ Features
+
+* **n8n:** restructure deployment with PostgreSQL backend and related resources ([c2e7bcc](https://github.com/Nebu2k/kubernetes-homelab/commit/c2e7bcc763ac7c25fffcb86eadd11bc9b1c90173))
+
 ## [1.5.1](https://github.com/Nebu2k/kubernetes-homelab/compare/v1.5.0...v1.5.1) (2026-01-06)
 
 
