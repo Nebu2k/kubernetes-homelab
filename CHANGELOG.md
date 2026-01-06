@@ -1,3 +1,10 @@
+## [1.7.5](https://github.com/Nebu2k/kubernetes-homelab/compare/v1.7.4...v1.7.5) (2026-01-06)
+
+
+### 🐛 Bug Fixes
+
+* **postgresql:** update PGDATA environment variable and adjust volume mount path ([b949ee6](https://github.com/Nebu2k/kubernetes-homelab/commit/b949ee677902b255f4596267eefe73bd25d69606))
+
 ## [1.7.4](https://github.com/Nebu2k/kubernetes-homelab/compare/v1.7.3...v1.7.4) (2026-01-06)
 
 
