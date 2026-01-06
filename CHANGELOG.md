@@ -1,3 +1,10 @@
+## [1.4.5](https://github.com/Nebu2k/kubernetes-homelab/compare/v1.4.4...v1.4.5) (2026-01-06)
+
+
+### 🐛 Bug Fixes
+
+* change git.inputValidation from 'always' to true ([7c12b9d](https://github.com/Nebu2k/kubernetes-homelab/commit/7c12b9d5dafa9ceaec66fc99b8acd5c30b847033))
+
 ## [1.4.4](https://github.com/Nebu2k/kubernetes-homelab/compare/v1.4.3...v1.4.4) (2026-01-06)
 
 
