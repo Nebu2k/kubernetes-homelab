@@ -7,16 +7,10 @@ metadata:
     argocd.argoproj.io/sync-wave: "8"
 spec:
   project: default
-  sources:
-    - repoURL: https://dirsigler.github.io/uptime-kuma-helm
-      chart: uptime-kuma
-      targetRevision: 2.24.0
-      helm:
-        valueFiles:
-          - $values/base/uptime-kuma/values.yaml
-    - repoURL: https://github.com/Nebu2k/kubernetes-homelab.git
-      targetRevision: main
-      ref: values
+  source:
+    repoURL: https://github.com/Nebu2k/kubernetes-homelab.git
+    targetRevision: main
+    path: overlays/production/uptime-kuma
   destination:
     server: https://kubernetes.default.svc
     namespace: uptime-kuma
@@ -24,5 +18,3 @@ spec:
     automated:
       prune: true
       selfHeal: true
-    syncOptions:
-      - CreateNamespace=true

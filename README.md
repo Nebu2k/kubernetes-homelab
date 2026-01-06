@@ -33,7 +33,7 @@ Production-ready K3s cluster managed via GitOps using ArgoCD App-of-Apps pattern
 | 12 | Portainer Config, Argocd Config |
 | 13 | Longhorn Config |
 | 14 | Kube Prometheus Stack Config |
-| 16 | Uptime Kuma Config, Private Services |
+| 16 | Private Services |
 | 17 | N8n Config, Homepage Config |
 
 ## 📁 Repository Structure
@@ -70,7 +70,6 @@ homelab/
 │   ├── longhorn-config.yaml           # Wave 13
 │   ├── kube-prometheus-stack-config.yaml # Wave 14
 │   ├── private-services.yaml          # Wave 16
-│   ├── uptime-kuma-config.yaml        # Wave 16
 │   ├── homepage-config.yaml           # Wave 17
 │   └── n8n-config.yaml                # Wave 17
 ├── base/
@@ -94,9 +93,7 @@ homelab/
 │       └── values.yaml
 │   ├── reloader/
 │       └── values.yaml
-│   ├── traefik/
-│       └── values.yaml
-│   └── uptime-kuma/
+│   └── traefik/
         └── values.yaml
 └── overlays/production/
     ├── argocd/
@@ -224,8 +221,12 @@ homelab/
     │   ├── unifi-config-sealed.yaml
     │   └── unifi-config-unsealed.yaml
     └── uptime-kuma/
+        ├── deployment.yaml
         ├── ingress.yaml
-        └── kustomization.yaml
+        ├── kustomization.yaml
+        ├── namespace.yaml
+        ├── pvc.yaml
+        └── service.yaml
 ```
 
 ## 🚀 Fresh Installation
@@ -1103,7 +1104,6 @@ kubectl get secret -n monitoring grafana-admin-credentials \
 | Longhorn | 1.10.1 | Longhorn |
 | Portainer | 2.33.6 | Portainer |
 | Cert Manager | v1.19.2 | Cert Manager |
-| Uptime Kuma | 2.24.0 | Uptime Kuma |
 | Traefik | 38.0.1 | Traefik |
 | Newt | 1.1.0 | Newt |
 | Homepage | v1.8.0 | Homepage |
@@ -1125,7 +1125,6 @@ kubectl get secret -n monitoring grafana-admin-credentials \
 - [Reloader](https://stakater.github.io/stakater-charts)
 - [Sealed Secrets](https://bitnami-labs.github.io/sealed-secrets)
 - [Traefik](https://traefik.github.io/charts)
-- [Uptime Kuma](https://dirsigler.github.io/uptime-kuma-helm)
 
 ## 📝 License
 

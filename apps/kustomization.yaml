@@ -18,7 +18,6 @@ resources:
   - portainer.yaml
   - portainer-config.yaml
   - uptime-kuma.yaml
-  - uptime-kuma-config.yaml
   - newt.yaml
   - newt-config.yaml
   - homepage.yaml
