@@ -1,3 +1,10 @@
+## [2.2.3](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.2.2...v2.2.3) (2026-01-06)
+
+
+### 🐛 Bug Fixes
+
+* update uptime-kuma image version and enhance version checking script ([35f3440](https://github.com/Nebu2k/kubernetes-homelab/commit/35f3440db6a7cedaa78e4be97268085984e09c3d))
+
 ## [2.2.2](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.2.1...v2.2.2) (2026-01-06)
 
 
