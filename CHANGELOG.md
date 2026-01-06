@@ -1,3 +1,10 @@
+## [1.7.2](https://github.com/Nebu2k/kubernetes-homelab/compare/v1.7.1...v1.7.2) (2026-01-06)
+
+
+### 🐛 Bug Fixes
+
+* **postgresql:** update PostgreSQL image to version 18-alpine ([216f81b](https://github.com/Nebu2k/kubernetes-homelab/commit/216f81b66ab9e24ba9b08715d1ca885d20a09416))
+
 ## [1.7.1](https://github.com/Nebu2k/kubernetes-homelab/compare/v1.7.0...v1.7.1) (2026-01-06)
 
 
