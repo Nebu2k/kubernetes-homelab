@@ -6,7 +6,6 @@ resources:
   - kured.yaml
   - coredns-config.yaml
   - metallb.yaml
-  - metallb-config.yaml
   - cert-manager.yaml
   - cert-manager-config.yaml
   - traefik.yaml

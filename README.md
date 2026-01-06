@@ -29,7 +29,7 @@ Production-ready K3s cluster managed via GitOps using ArgoCD App-of-Apps pattern
 | 7 | Unifi Poller, Home Assistant |
 | 8 | Uptime Kuma, Newt |
 | 9 | N8n, Homepage |
-| 10 | Cert Manager Config, Metallb Config, Newt Config |
+| 10 | Cert Manager Config, Newt Config |
 | 12 | Portainer Config, Argocd Config |
 | 13 | Longhorn Config |
 | 14 | Kube Prometheus Stack Config |
@@ -63,7 +63,6 @@ homelab/
 │   ├── homepage.yaml                  # Wave 9
 │   ├── n8n.yaml                       # Wave 9
 │   ├── cert-manager-config.yaml       # Wave 10
-│   ├── metallb-config.yaml            # Wave 10
 │   ├── newt-config.yaml               # Wave 10
 │   ├── argocd-config.yaml             # Wave 12
 │   ├── portainer-config.yaml          # Wave 12
@@ -79,8 +78,6 @@ homelab/
 │   ├── kured/
 │       └── values.yaml
 │   ├── longhorn/
-│       └── values.yaml
-│   ├── metallb/
 │       └── values.yaml
 │   ├── n8n/
 │       └── values.yaml
@@ -167,7 +164,9 @@ homelab/
     │   └── servicemonitor.yaml
     ├── metallb/
     │   ├── kustomization.yaml
-    │   └── metallb-ip-pool.yaml
+    │   ├── metallb-ip-pool.yaml
+    │   ├── metallb-native.yaml
+    │   └── namespace.yaml
     ├── n8n/
     │   ├── ingress.yaml
     │   └── kustomization.yaml
@@ -1102,7 +1101,6 @@ kubectl get secret -n monitoring grafana-admin-credentials \
 | Sealed Secrets | 2.17.7 | Sealed Secrets |
 | N8n | 2.1.5 | N8n |
 | Kured | 5.10.0 | Kured |
-| Metallb | 0.15.3 | Metallb |
 | Longhorn | 1.10.1 | Longhorn |
 | Portainer | 2.33.6 | Portainer |
 | Cert Manager | v1.19.2 | Cert Manager |
@@ -1118,7 +1116,6 @@ kubectl get secret -n monitoring grafana-admin-credentials \
 - [Kube Prometheus Stack](https://prometheus-community.github.io/helm-charts)
 - [Kured](https://kubereboot.github.io/charts)
 - [Longhorn](https://charts.longhorn.io)
-- [Metallb](https://metallb.github.io/metallb)
 - [N8N](oci://8gears.container-registry.com/library/n8n)
 - [Newt](https://charts.fossorial.io)
 - [Portainer](https://portainer.github.io/k8s)
