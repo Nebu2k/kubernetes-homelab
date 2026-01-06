@@ -1,3 +1,10 @@
+## [2.1.2](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.1.1...v2.1.2) (2026-01-06)
+
+
+### 🐛 Bug Fixes
+
+* update snapshot cleanup job to retain 0 snapshots ([7055f68](https://github.com/Nebu2k/kubernetes-homelab/commit/7055f68e4b9b8a75435b3cd008b3b2d737b13ce2))
+
 ## [2.1.1](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.1.0...v2.1.1) (2026-01-06)
 
 
