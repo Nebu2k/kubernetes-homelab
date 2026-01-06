@@ -1,3 +1,10 @@
+## [2.2.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.1.2...v2.2.0) (2026-01-06)
+
+
+### ✨ Features
+
+* add Longhorn node configuration and update StorageClass to require "storage" tag ([39ebcd9](https://github.com/Nebu2k/kubernetes-homelab/commit/39ebcd9461959ce3ec55d3feed85069a5f316ad5))
+
 ## [2.1.2](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.1.1...v2.1.2) (2026-01-06)
 
 
