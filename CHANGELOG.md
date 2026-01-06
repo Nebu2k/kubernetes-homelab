@@ -1,3 +1,10 @@
+## [1.7.12](https://github.com/Nebu2k/kubernetes-homelab/compare/v1.7.11...v1.7.12) (2026-01-06)
+
+
+### ♻️ Code Refactoring
+
+* **kube-prometheus-stack:** reorganize configuration and remove deprecated files ([27a302a](https://github.com/Nebu2k/kubernetes-homelab/commit/27a302a601c74f4b9fa5b13e94507f5edaab9a9a))
+
 ## [1.7.11](https://github.com/Nebu2k/kubernetes-homelab/compare/v1.7.10...v1.7.11) (2026-01-06)
 
 
