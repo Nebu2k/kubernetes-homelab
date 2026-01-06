@@ -77,7 +77,10 @@ spec:
         - name: DB_POSTGRESDB_USER
           value: "n8n"
         - name: DB_POSTGRESDB_PASSWORD
-          value: "n8n-postgres-password"
+          valueFrom:
+            secretKeyRef:
+              name: postgresql-secret
+              key: password
         volumeMounts:
         - name: data
           mountPath: /home/node/.n8n
