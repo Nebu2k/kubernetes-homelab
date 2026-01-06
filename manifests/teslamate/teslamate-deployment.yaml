@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
       - name: teslamate
-        image: teslamate/teslamate:latest
+        image: teslamate/teslamate:2.2
         env:
         - name: ENCRYPTION_KEY
           valueFrom:
