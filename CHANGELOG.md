@@ -1,3 +1,10 @@
+## [1.4.3](https://github.com/Nebu2k/kubernetes-homelab/compare/v1.4.2...v1.4.3) (2026-01-06)
+
+
+### 🐛 Bug Fixes
+
+* update readiness probe configuration and clean up volume definitions in homepage deployment ([9d4c12f](https://github.com/Nebu2k/kubernetes-homelab/commit/9d4c12f5124b8c3fd9f47078b6c34dc61a2ed800))
+
 ## [1.4.2](https://github.com/Nebu2k/kubernetes-homelab/compare/v1.4.1...v1.4.2) (2026-01-06)
 
 
