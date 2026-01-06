@@ -23,23 +23,23 @@ spec:
         node-role.kubernetes.io/worker: "worker"
       containers:
       - name: postgresql
-        image: bitnami/postgresql:17
+        image: postgres:17-alpine
         imagePullPolicy: IfNotPresent
         ports:
         - name: tcp-postgresql
           containerPort: 5432
         env:
-        - name: POSTGRESQL_USERNAME
+        - name: POSTGRES_USER
           value: n8n
-        - name: POSTGRESQL_DATABASE
+        - name: POSTGRES_DB
           value: n8n
-        - name: POSTGRESQL_PASSWORD
+        - name: POSTGRES_PASSWORD
           value: n8n-postgres-password
         - name: PGDATA
-          value: /bitnami/postgresql/data
+          value: /var/lib/postgresql/data/pgdata
         volumeMounts:
         - name: data
-          mountPath: /bitnami/postgresql
+          mountPath: /var/lib/postgresql/data
         resources:
           requests:
             memory: "256Mi"
