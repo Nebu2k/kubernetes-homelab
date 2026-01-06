@@ -1,3 +1,10 @@
+## [2.1.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.0.0...v2.1.0) (2026-01-06)
+
+
+### ✨ Features
+
+* metalllb to helm ([4585377](https://github.com/Nebu2k/kubernetes-homelab/commit/45853772bbd4a486c093e729ae786f7dd2148208))
+
 ## [2.0.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v1.8.0...v2.0.0) (2026-01-06)
 
 
