@@ -1,3 +1,11 @@
+## [1.4.2](https://github.com/Nebu2k/kubernetes-homelab/compare/v1.4.1...v1.4.2) (2026-01-06)
+
+
+### 🐛 Bug Fixes
+
+* add init container for configuration setup in homepage deployment ([c195e94](https://github.com/Nebu2k/kubernetes-homelab/commit/c195e949ac15678255a0c7cfe12fb4c4b0e23bc8))
+* update commit message guidelines for clarity on 'fix:' and 'feat:' usage ([3cd6512](https://github.com/Nebu2k/kubernetes-homelab/commit/3cd6512bd3bc608241960b46d3905b96fdb79869))
+
 ## [1.4.1](https://github.com/Nebu2k/kubernetes-homelab/compare/v1.4.0...v1.4.1) (2026-01-06)
 
 
