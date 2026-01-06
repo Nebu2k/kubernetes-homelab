@@ -165,8 +165,7 @@ homelab/
     ├── metallb/
     │   ├── kustomization.yaml
     │   ├── metallb-ip-pool.yaml
-    │   ├── metallb-native.yaml
-    │   └── namespace.yaml
+    │   └── metallb-native.yaml
     ├── n8n/
     │   ├── ingress.yaml
     │   └── kustomization.yaml
