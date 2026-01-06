@@ -1,3 +1,10 @@
+## [2.2.4](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.2.3...v2.2.4) (2026-01-06)
+
+
+### 🐛 Bug Fixes
+
+* update targetRevision for cert-manager and sealed-secrets charts ([da41357](https://github.com/Nebu2k/kubernetes-homelab/commit/da413577398cfc51a5183e39954862efcd90fc7e))
+
 ## [2.2.3](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.2.2...v2.2.3) (2026-01-06)
 
 
