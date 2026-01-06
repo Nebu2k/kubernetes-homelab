@@ -5,6 +5,28 @@ metadata:
   name: coredns-custom
   namespace: kube-system
 data:
+  default.override: |
+    # Override default DNS config with optimized settings
+    .:53 {
+        errors
+        health
+        ready
+        kubernetes cluster.local in-addr.arpa ip6.arpa {
+          pods insecure
+          fallthrough in-addr.arpa ip6.arpa
+        }
+        hosts /etc/coredns/NodeHosts {
+          ttl 60
+          reload 15s
+          fallthrough
+        }
+        prometheus :9153
+        forward . 1.1.1.1
+        cache 300
+        loop
+        reload
+        loadbalance
+    }
   elmstreet79.server: |
     # Forward internal elmstreet79.de queries to AdGuard Home
     elmstreet79.de:53 {
