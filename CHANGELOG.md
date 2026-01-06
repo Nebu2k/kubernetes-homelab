@@ -1,3 +1,10 @@
+## [2.2.1](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.2.0...v2.2.1) (2026-01-06)
+
+
+### 🐛 Bug Fixes
+
+* update Longhorn node configuration to disable scheduling on non-storage nodes and set default node selector for persistence ([764115d](https://github.com/Nebu2k/kubernetes-homelab/commit/764115dec8b7e8ae3c69d83e97824fcfafc3b3cb))
+
 ## [2.2.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.1.2...v2.2.0) (2026-01-06)
 
 
