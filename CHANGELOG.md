@@ -1,3 +1,10 @@
+## [1.7.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v1.6.0...v1.7.0) (2026-01-06)
+
+
+### ✨ Features
+
+* **n8n:** add init container for fixing permissions on n8n data directory ([845ad6f](https://github.com/Nebu2k/kubernetes-homelab/commit/845ad6ffc1c5e9e9d9c7af2660701fe0b0469fd3))
+
 ## [1.6.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v1.5.1...v1.6.0) (2026-01-06)
 
 
