@@ -1,3 +1,10 @@
+## [1.7.1](https://github.com/Nebu2k/kubernetes-homelab/compare/v1.7.0...v1.7.1) (2026-01-06)
+
+
+### 🐛 Bug Fixes
+
+* **postgresql:** update image and environment variables for PostgreSQL configuration ([08b6216](https://github.com/Nebu2k/kubernetes-homelab/commit/08b62169b336e6cb208a732b8ec41b820eca940c))
+
 ## [1.7.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v1.6.0...v1.7.0) (2026-01-06)
 
 
