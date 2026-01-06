@@ -1,3 +1,10 @@
+## [2.2.2](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.2.1...v2.2.2) (2026-01-06)
+
+
+### 🐛 Bug Fixes
+
+* update metallb targetRevision to 6.4.22 ([0ec4d08](https://github.com/Nebu2k/kubernetes-homelab/commit/0ec4d08f5c486380700e55ea097dbd159e9b4021))
+
 ## [2.2.1](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.2.0...v2.2.1) (2026-01-06)
 
 
