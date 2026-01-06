@@ -1,3 +1,10 @@
+## [1.7.4](https://github.com/Nebu2k/kubernetes-homelab/compare/v1.7.3...v1.7.4) (2026-01-06)
+
+
+### 🐛 Bug Fixes
+
+* **postgresql:** remove init container for data directory setup ([1e043e9](https://github.com/Nebu2k/kubernetes-homelab/commit/1e043e9677586400cad9319a28ea258276de1e95))
+
 ## [1.7.3](https://github.com/Nebu2k/kubernetes-homelab/compare/v1.7.2...v1.7.3) (2026-01-06)
 
 
