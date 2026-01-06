@@ -1089,7 +1089,7 @@ kubectl get secret -n monitoring grafana-admin-credentials \
 | Kube Prometheus Stack | 80.11.0 | Kube Prometheus Stack |
 | Sealed Secrets | 2.17.7 | Sealed Secrets |
 | Kured | 5.10.0 | Kured |
-| Metallb | 0.15.3 | Metallb |
+| Metallb | 6.4.22 | Metallb |
 | Longhorn | 1.10.1 | Longhorn |
 | Portainer | 2.33.6 | Portainer |
 | Cert Manager | v1.19.2 | Cert Manager |
