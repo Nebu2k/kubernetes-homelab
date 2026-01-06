@@ -126,11 +126,9 @@ spec:
           timeoutSeconds: 5
           failureThreshold: 3
         readinessProbe:
-          httpGet:-tmp
-        configMap:
-          name: homepage-config
-      - name: config
-        emptyDir: {}
+          httpGet:
+            path: /api/healthcheck
+            port: http
           initialDelaySeconds: 5
           periodSeconds: 10
           timeoutSeconds: 5
@@ -142,7 +140,11 @@ spec:
           limits:
             memory: 256Mi
       volumes:
+      - name: config-tmp
+        configMap:
+          name: homepage-config
       - name: config
+        emptyDir: {}
         configMap:
           name: homepage-config
       - name: logs
