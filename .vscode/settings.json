@@ -2,15 +2,23 @@
   // GitHub Copilot Commit Message Generation
   "github.copilot.chat.commitMessageGeneration.instructions": [
     {
+      "text": "CRITICAL: If the change fixes an error, bug, crash, or deployment failure, ALWAYS use 'fix:' type, NEVER 'feat:'",
+      "enabled": true
+    },
+    {
+      "text": "Use 'fix:' when: fixing errors (EROFS, permission denied, host validation), resolving crashes, fixing broken deployments, correcting configurations. Use 'feat:' ONLY when: adding completely new services, new monitoring capabilities, new integrations that didn't exist.",
+      "enabled": true
+    },
+    {
       "text": "Follow Conventional Commits specification (https://www.conventionalcommits.org/).",
       "enabled": true
     },
     {
-      "text": "Use format: <type>(<scope>): <subject>",
+      "text": "IMPORTANT: Use 'fix:' for bug fixes, error corrections, problem resolutions, fixing failed deployments, fixing crashes, fixing permission errors, fixing read-only issues. Use 'feat:' ONLY for completely new features or capabilities that didn't exist before.",
       "enabled": true
     },
     {
-      "text": "Types: feat (minor), fix (patch), docs, style, refactor, perf, test, build, ci, chore (no release)",
+      "text": "Examples of 'fix:': fixing EROFS errors, fixing host validation, fixing pod crashes, fixing missing permissions, fixing config issues. Examples of 'feat:': adding a new service, adding new monitoring, adding new integration.",
       "enabled": true
     },
     {
