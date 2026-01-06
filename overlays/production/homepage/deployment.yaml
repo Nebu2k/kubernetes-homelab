@@ -32,6 +32,20 @@ spec:
             value: "3"
           - name: attempts
             value: "3"
+      initContainers:
+      - name: copy-config
+        image: busybox:1.36
+        command:
+        - sh
+        - -c
+        - |
+          cp /tmp/config/* /app/config/ 2>/dev/null || true
+          chmod -R 755 /app/config
+        volumeMounts:
+        - name: config-tmp
+          mountPath: /tmp/config
+        - name: config
+          mountPath: /app/config
       containers:
       - name: homepage
         image: ghcr.io/gethomepage/homepage:v1.8.0
@@ -112,9 +126,11 @@ spec:
           timeoutSeconds: 5
           failureThreshold: 3
         readinessProbe:
-          httpGet:
-            path: /api/healthcheck
-            port: http
+          httpGet:-tmp
+        configMap:
+          name: homepage-config
+      - name: config
+        emptyDir: {}
           initialDelaySeconds: 5
           periodSeconds: 10
           timeoutSeconds: 5
