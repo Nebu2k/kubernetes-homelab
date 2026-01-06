@@ -1,3 +1,10 @@
+## [1.5.1](https://github.com/Nebu2k/kubernetes-homelab/compare/v1.5.0...v1.5.1) (2026-01-06)
+
+
+### 🐛 Bug Fixes
+
+* remove unused namespace resource from metallb kustomization ([79caba1](https://github.com/Nebu2k/kubernetes-homelab/commit/79caba13b2c9b7bb26004f02e584a1f3cedb0397))
+
 ## [1.5.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v1.4.6...v1.5.0) (2026-01-06)
 
 
