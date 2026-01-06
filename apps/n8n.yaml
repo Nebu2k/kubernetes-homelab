@@ -7,16 +7,10 @@ metadata:
     argocd.argoproj.io/sync-wave: "9"
 spec:
   project: default
-  sources:
-    - repoURL: oci://8gears.container-registry.com/library/n8n
-      chart: n8n
-      targetRevision: 2.0.1
-      helm:
-        valueFiles:
-          - $values/base/n8n/values.yaml
-    - repoURL: https://github.com/Nebu2k/kubernetes-homelab.git
-      targetRevision: main
-      ref: values
+  source:
+    repoURL: https://github.com/Nebu2k/kubernetes-homelab.git
+    targetRevision: main
+    path: overlays/production/n8n
   destination:
     server: https://kubernetes.default.svc
     namespace: n8n
@@ -24,5 +18,3 @@ spec:
     automated:
       prune: true
       selfHeal: true
-    syncOptions:
-      - CreateNamespace=true

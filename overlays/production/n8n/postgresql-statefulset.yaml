@@ -1,0 +1,53 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: n8n-postgresql
+  namespace: n8n
+  labels:
+    app.kubernetes.io/name: postgresql
+    app.kubernetes.io/component: primary
+spec:
+  serviceName: n8n-postgresql
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: postgresql
+      app.kubernetes.io/component: primary
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: postgresql
+        app.kubernetes.io/component: primary
+    spec:
+      nodeSelector:
+        node-role.kubernetes.io/worker: "worker"
+      containers:
+      - name: postgresql
+        image: bitnami/postgresql:17
+        imagePullPolicy: IfNotPresent
+        ports:
+        - name: tcp-postgresql
+          containerPort: 5432
+        env:
+        - name: POSTGRESQL_USERNAME
+          value: n8n
+        - name: POSTGRESQL_DATABASE
+          value: n8n
+        - name: POSTGRESQL_PASSWORD
+          value: n8n-postgres-password
+        - name: PGDATA
+          value: /bitnami/postgresql/data
+        volumeMounts:
+        - name: data
+          mountPath: /bitnami/postgresql
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "100m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+      volumes:
+      - name: data
+        persistentVolumeClaim:
+          claimName: n8n-postgresql-data

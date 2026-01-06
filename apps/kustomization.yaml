@@ -21,7 +21,6 @@ resources:
   - newt-config.yaml
   - homepage.yaml
   - n8n.yaml
-  - n8n-config.yaml
   - argocd-config.yaml
   - private-services.yaml
   - home-assistant.yaml

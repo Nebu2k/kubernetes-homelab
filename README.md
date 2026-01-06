@@ -34,7 +34,6 @@ Production-ready K3s cluster managed via GitOps using ArgoCD App-of-Apps pattern
 | 13 | Longhorn Config |
 | 14 | Kube Prometheus Stack Config |
 | 16 | Private Services |
-| 17 | N8n Config |
 
 ## 📁 Repository Structure
 
@@ -68,8 +67,7 @@ homelab/
 │   ├── portainer-config.yaml          # Wave 12
 │   ├── longhorn-config.yaml           # Wave 13
 │   ├── kube-prometheus-stack-config.yaml # Wave 14
-│   ├── private-services.yaml          # Wave 16
-│   └── n8n-config.yaml                # Wave 17
+│   └── private-services.yaml          # Wave 16
 ├── base/
 │   ├── cert-manager/
 │       └── values.yaml
@@ -78,8 +76,6 @@ homelab/
 │   ├── kured/
 │       └── values.yaml
 │   ├── longhorn/
-│       └── values.yaml
-│   ├── n8n/
 │       └── values.yaml
 │   ├── newt/
 │       └── values.yaml
@@ -167,8 +163,16 @@ homelab/
     │   ├── metallb-ip-pool.yaml
     │   └── metallb-native.yaml
     ├── n8n/
+    │   ├── deployment.yaml
     │   ├── ingress.yaml
-    │   └── kustomization.yaml
+    │   ├── kustomization.yaml
+    │   ├── namespace.yaml
+    │   ├── postgresql-pvc.yaml
+    │   ├── postgresql-secret.yaml
+    │   ├── postgresql-service.yaml
+    │   ├── postgresql-statefulset.yaml
+    │   ├── pvc.yaml
+    │   └── service.yaml
     ├── newt/
     │   ├── kustomization.yaml
     │   ├── newt-auth-sealed.yaml
@@ -1098,7 +1102,6 @@ kubectl get secret -n monitoring grafana-admin-credentials \
 | Reloader | 2.2.7 | Reloader |
 | Kube Prometheus Stack | 80.11.0 | Kube Prometheus Stack |
 | Sealed Secrets | 2.17.7 | Sealed Secrets |
-| N8n | 2.1.5 | N8n |
 | Kured | 5.10.0 | Kured |
 | Longhorn | 1.10.1 | Longhorn |
 | Portainer | 2.33.6 | Portainer |
@@ -1115,7 +1118,6 @@ kubectl get secret -n monitoring grafana-admin-credentials \
 - [Kube Prometheus Stack](https://prometheus-community.github.io/helm-charts)
 - [Kured](https://kubereboot.github.io/charts)
 - [Longhorn](https://charts.longhorn.io)
-- [N8N](oci://8gears.container-registry.com/library/n8n)
 - [Newt](https://charts.fossorial.io)
 - [Portainer](https://portainer.github.io/k8s)
 - [Reloader](https://stakater.github.io/stakater-charts)
