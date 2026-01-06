@@ -145,11 +145,10 @@ spec:
           name: homepage-config
       - name: config
         emptyDir: {}
-        configMap:
-          name: homepage-config
       - name: logs
         emptyDir: {}
       - name: internal-ca
         secret:
           secretName: internal-ca-secret
+          defaultMode: 292  # 0444 in decimal
           defaultMode: 292  # 0444 in decimal
