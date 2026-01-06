@@ -1,3 +1,10 @@
+## [1.7.6](https://github.com/Nebu2k/kubernetes-homelab/compare/v1.7.5...v1.7.6) (2026-01-06)
+
+
+### 🐛 Bug Fixes
+
+* **postgresql:** remove PGDATA environment variable from StatefulSet ([8fc7921](https://github.com/Nebu2k/kubernetes-homelab/commit/8fc7921c32abd5b8a866157d5301bd4366daa977))
+
 ## [1.7.5](https://github.com/Nebu2k/kubernetes-homelab/compare/v1.7.4...v1.7.5) (2026-01-06)
 
 
