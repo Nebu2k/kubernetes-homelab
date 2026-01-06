@@ -13,7 +13,7 @@ spec:
       targetRevision: v1.19.2
       helm:
         valueFiles:
-          - $values/base/cert-manager/values.yaml
+          - $values/overlays/production/cert-manager/values.yaml
     - repoURL: https://github.com/Nebu2k/kubernetes-homelab
       targetRevision: main
       ref: values

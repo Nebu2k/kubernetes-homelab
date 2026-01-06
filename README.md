@@ -68,8 +68,6 @@ homelab/
 │   ├── kube-prometheus-stack-config.yaml # Wave 14
 │   └── private-services.yaml          # Wave 16
 ├── base/
-│   ├── cert-manager/
-│       └── values.yaml
 │   ├── kube-prometheus-stack/
 │       └── values.yaml
 │   ├── kured/
@@ -98,7 +96,8 @@ homelab/
     │   ├── cloudflare-token-sealed.yaml
     │   ├── cloudflare-token-unsealed.yaml
     │   ├── cluster-issuer.yaml
-    │   └── kustomization.yaml
+    │   ├── kustomization.yaml
+    │   └── values.yaml
     ├── coredns/
     │   ├── coredns-custom.yaml
     │   └── kustomization.yaml
