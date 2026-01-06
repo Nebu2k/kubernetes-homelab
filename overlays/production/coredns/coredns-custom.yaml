@@ -5,6 +5,10 @@ metadata:
   name: coredns-custom
   namespace: kube-system
 data:
+  forward.override: |
+    forward . /etc/resolv.conf {
+      policy sequential
+    }
   elmstreet79.server: |
     # Forward internal elmstreet79.de queries to AdGuard Home
     elmstreet79.de:53 {
