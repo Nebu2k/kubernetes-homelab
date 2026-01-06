@@ -35,9 +35,11 @@ spec:
           value: n8n
         - name: POSTGRES_PASSWORD
           value: n8n-postgres-password
+        - name: PGDATA
+          value: /var/lib/postgresql/data/pgdata
         volumeMounts:
         - name: data
-          mountPath: /var/lib/postgresql/data
+          mountPath: /var/lib/postgresql
         resources:
           requests:
             memory: "256Mi"
