@@ -1,0 +1,83 @@
+---
+# Longhorn Node Configuration
+# Exclude low-storage nodes from replica scheduling
+
+# Mark storage-capable nodes
+apiVersion: longhorn.io/v1beta2
+kind: Node
+metadata:
+  name: k3s-worker-1
+  namespace: longhorn-system
+spec:
+  tags:
+    - storage
+  allowScheduling: true
+  evictionRequested: false
+
+---
+apiVersion: longhorn.io/v1beta2
+kind: Node
+metadata:
+  name: raspi4
+  namespace: longhorn-system
+spec:
+  tags:
+    - storage
+  allowScheduling: true
+  evictionRequested: false
+
+---
+apiVersion: longhorn.io/v1beta2
+kind: Node
+metadata:
+  name: raspi5
+  namespace: longhorn-system
+spec:
+  tags:
+    - storage
+  allowScheduling: true
+  evictionRequested: false
+
+---
+# Exclude low-storage nodes
+apiVersion: longhorn.io/v1beta2
+kind: Node
+metadata:
+  name: prodesk
+  namespace: longhorn-system
+spec:
+  tags: []  # No storage tag
+  allowScheduling: false  # Disable storage scheduling
+  evictionRequested: false
+
+---
+apiVersion: longhorn.io/v1beta2
+kind: Node
+metadata:
+  name: k3s-cp-1
+  namespace: longhorn-system
+spec:
+  tags: []  # No storage tag
+  allowScheduling: false  # Disable storage scheduling
+  evictionRequested: false
+
+---
+# Update default StorageClass to require "storage" tag
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: longhorn
+  annotations:
+    storageclass.kubernetes.io/is-default-class: "true"
+provisioner: driver.longhorn.io
+allowVolumeExpansion: true
+reclaimPolicy: Delete
+volumeBindingMode: Immediate
+parameters:
+  numberOfReplicas: "3"
+  staleReplicaTimeout: "2880"
+  fromBackup: ""
+  fsType: "ext4"
+  dataLocality: "disabled"
+  # Only schedule on nodes with "storage" tag
+  nodeSelector: "storage"

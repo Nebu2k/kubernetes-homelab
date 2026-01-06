@@ -7,3 +7,4 @@ resources:
   - recurring-backup-jobs.yaml
   - ingress.yaml
   - servicemonitor.yaml
+  - node-config.yaml

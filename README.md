@@ -133,6 +133,7 @@ homelab/
     │   ├── disable-local-path-default.yaml
     │   ├── ingress.yaml
     │   ├── kustomization.yaml
+    │   ├── node-config.yaml
     │   ├── recurring-backup-jobs.yaml
     │   ├── s3-secret-sealed.yaml
     │   ├── s3-secret-unsealed.yaml
