@@ -266,14 +266,14 @@ cd kubernetes-homelab
 1. **MetalLB IP Pool** (adjust to your network):
 
    ```bash
-   vim overlays/production/metallb/metallb-ip-pool.yaml
+   vim manifests/metallb/metallb-ip-pool.yaml
    # Change: 192.168.2.250-192.168.2.253
    ```
 
 2. **Cert-Manager Email**:
 
    ```bash
-   vim overlays/production/cert-manager/cluster-issuer.yaml
+   vim manifests/cert-manager/cluster-issuer.yaml
    # Change: certs@elmstreet79.de
    ```
 
@@ -281,11 +281,11 @@ cd kubernetes-homelab
 
    ```bash
    # Create from example
-   cp overlays/production/cert-manager/cloudflare-token-unsealed.yaml.example \
-      overlays/production/cert-manager/cloudflare-token-unsealed.yaml
+   cp manifests/cert-manager/cloudflare-token-unsealed.yaml.example \
+      manifests/cert-manager/cloudflare-token-unsealed.yaml
    
    # Add your Cloudflare API token
-   vim overlays/production/cert-manager/cloudflare-token-unsealed.yaml
+   vim manifests/cert-manager/cloudflare-token-unsealed.yaml
    # Change: api-token: "your-cloudflare-api-token-here"
    
    # Note: Sealing happens AFTER cluster bootstrap (Step 7+)
@@ -306,11 +306,11 @@ cd kubernetes-homelab
 
    ```bash
    # Create from example
-   cp overlays/production/longhorn/s3-secret-unsealed.yaml.example \
-      overlays/production/longhorn/s3-secret-unsealed.yaml
+   cp manifests/longhorn/s3-secret-unsealed.yaml.example \
+      manifests/longhorn/s3-secret-unsealed.yaml
    
    # Update MinIO/S3 credentials
-   vim overlays/production/longhorn/s3-secret-unsealed.yaml
+   vim manifests/longhorn/s3-secret-unsealed.yaml
    # Change: AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_ENDPOINTS
    
    # Note: Sealing happens AFTER cluster bootstrap (Step 7+)
@@ -324,19 +324,17 @@ cd kubernetes-homelab
    The Traefik dashboard is configured in the Helm values file:
 
    ```bash
-   vim base/traefik/values.yaml
+   vim manifests/traefik/values.yaml
    # Update line 45: matchRule: Host(`traefik.your-domain.com`)
    # Update annotations with your domain
    ```
-
-   ⚠️ **Note:** This is in `base/` not `overlays/` - shared across environments.
 
 6. **Cloudflare DNS Sync Configuration** (optional - adjust DynDNS target):
 
    If you want to change the DynDNS target for public DNS records:
 
    ```bash
-   vim overlays/production/cert-manager/cloudflare-dns-sync-configmap.yaml
+   vim manifests/cert-manager/cloudflare-dns-sync-configmap.yaml
    # Update TARGET to your DynDNS hostname (e.g., your-hostname.ipv64.net)
    # Update ZONE_ID to your Cloudflare Zone ID
    ```
@@ -388,18 +386,18 @@ kubeseal --fetch-cert --controller-namespace=kube-system > sealed-secrets-pub-ce
 
 # Now seal your secrets offline using the certificate
 kubeseal --cert sealed-secrets-pub-cert.pem --format=yaml \
-  < overlays/production/cert-manager/cloudflare-token-unsealed.yaml \
-  > overlays/production/cert-manager/cloudflare-token-sealed.yaml
+  < manifests/cert-manager/cloudflare-token-unsealed.yaml \
+  > manifests/cert-manager/cloudflare-token-sealed.yaml
 
 # Seal AdGuard credentials for DNS sync:
 kubeseal --cert sealed-secrets-pub-cert.pem --format=yaml \
-  < overlays/production/private-services/adguard-credentials-unsealed.yaml \
-  > overlays/production/private-services/adguard-credentials-sealed.yaml
+  < manifests/private-services/adguard-credentials-unsealed.yaml \
+  > manifests/private-services/adguard-credentials-sealed.yaml
 
 # If using Longhorn S3 backup:
 kubeseal --cert sealed-secrets-pub-cert.pem --format=yaml \
-  < overlays/production/longhorn/s3-secret-unsealed.yaml \
-  > overlays/production/longhorn/s3-secret-sealed.yaml
+  < manifests/longhorn/s3-secret-unsealed.yaml \
+  > manifests/longhorn/s3-secret-sealed.yaml
 ```
 
 **Option B: Seal directly from cluster** (requires cluster access):
@@ -407,26 +405,26 @@ kubeseal --cert sealed-secrets-pub-cert.pem --format=yaml \
 ```bash
 # Seal your secrets (must be connected to cluster)
 kubeseal --format=yaml --controller-namespace=kube-system \
-  < overlays/production/cert-manager/cloudflare-token-unsealed.yaml \
-  > overlays/production/cert-manager/cloudflare-token-sealed.yaml
+  < manifests/cert-manager/cloudflare-token-unsealed.yaml \
+  > manifests/cert-manager/cloudflare-token-sealed.yaml
 
 # Seal AdGuard credentials for DNS sync:
 kubeseal --format=yaml --controller-namespace=kube-system \
-  < overlays/production/private-services/adguard-credentials-unsealed.yaml \
-  > overlays/production/private-services/adguard-credentials-sealed.yaml
+  < manifests/private-services/adguard-credentials-unsealed.yaml \
+  > manifests/private-services/adguard-credentials-sealed.yaml
 
 # If using Longhorn S3 backup:
 kubeseal --format=yaml --controller-namespace=kube-system \
-  < overlays/production/longhorn/s3-secret-unsealed.yaml \
-  > overlays/production/longhorn/s3-secret-sealed.yaml
+  < manifests/longhorn/s3-secret-unsealed.yaml \
+  > manifests/longhorn/s3-secret-sealed.yaml
 ```
 
 **Commit and deploy:**
 
 ```bash
 # Commit and push
-git add overlays/production/*/kustomization.yaml
-git add overlays/production/*/*-sealed.yaml
+git add manifests/*/kustomization.yaml
+git add manifests/*/*-sealed.yaml
 git commit -m "🔐 Add sealed secrets"
 git push
 
@@ -445,20 +443,20 @@ kubectl get applications -n argocd -w
 ```bash
 {% for secret in homepage_secrets %}
 # {{ loop.index }}. {{ secret.base_name | replace('-', ' ') | title }}
-cp overlays/production/homepage/{{ secret.example_file }} \
-   overlays/production/homepage/{{ secret.unsealed_file }}
+cp manifests/homepage/{{ secret.example_file }} \
+   manifests/homepage/{{ secret.unsealed_file }}
 
 # Edit the file and replace placeholder values with your actual credentials
-vim overlays/production/homepage/{{ secret.unsealed_file }}
+vim manifests/homepage/{{ secret.unsealed_file }}
 
 # Seal the secret (using offline certificate)
 kubeseal --cert sealed-secrets-pub-cert.pem --format=yaml \
-  < overlays/production/homepage/{{ secret.unsealed_file }} \
-  > overlays/production/homepage/{{ secret.sealed_file }}
+  < manifests/homepage/{{ secret.unsealed_file }} \
+  > manifests/homepage/{{ secret.sealed_file }}
 
 {% endfor %}
 # Commit and push
-git add overlays/production/homepage/*-sealed.yaml
+git add manifests/homepage/*-sealed.yaml
 git commit -m "Add Homepage widget credentials"
 git push
 ```
@@ -663,10 +661,10 @@ helm search repo <chart-name> --versions | head -n 5
 helm search repo traefik/traefik --versions | head -n 5
 
 # Edit Helm values
-vim base/traefik/values.yaml
+vim manifests/traefik/values.yaml
 
 # Commit and push - ArgoCD auto-syncs
-git add base/traefik/values.yaml
+git add manifests/traefik/values.yaml
 git commit -m "Update Traefik to 2 replicas"
 git push
 
@@ -678,15 +676,15 @@ kubectl get application traefik -n argocd -w
 
 ```bash
 # 1. Edit unsealed secret
-vim overlays/production/cert-manager/cloudflare-token-unsealed.yaml
+vim manifests/cert-manager/cloudflare-token-unsealed.yaml
 
 # 2. Re-seal (using offline certificate)
 kubeseal --cert sealed-secrets-pub-cert.pem --format=yaml \
-  < overlays/production/cert-manager/cloudflare-token-unsealed.yaml \
-  > overlays/production/cert-manager/cloudflare-token-sealed.yaml
+  < manifests/cert-manager/cloudflare-token-unsealed.yaml \
+  > manifests/cert-manager/cloudflare-token-sealed.yaml
 
 # 3. Commit and push
-git add overlays/production/cert-manager/cloudflare-token-sealed.yaml
+git add manifests/cert-manager/cloudflare-token-sealed.yaml
 git commit -m "Rotate Cloudflare token"
 git push
 ```
@@ -696,8 +694,8 @@ git push
 ```bash
 # Re-seal (requires cluster connection)
 kubeseal --format=yaml --controller-namespace=kube-system \
-  < overlays/production/cert-manager/cloudflare-token-unsealed.yaml \
-  > overlays/production/cert-manager/cloudflare-token-sealed.yaml
+  < manifests/cert-manager/cloudflare-token-unsealed.yaml \
+  > manifests/cert-manager/cloudflare-token-sealed.yaml
 ```
 
 ### Force Sync Application
@@ -743,7 +741,7 @@ kubectl logs -n metallb-system -l app.kubernetes.io/component=speaker
 "error":"assigned IP not allowed by config"
 ```
 
-**Fix:** Ensure L2Advertisement exists in `overlays/production/metallb/metallb-ip-pool.yaml`
+**Fix:** Ensure L2Advertisement exists in `manifests/metallb/metallb-ip-pool.yaml`
 
 ### Certificates Not Ready
 

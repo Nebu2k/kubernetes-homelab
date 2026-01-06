@@ -14,7 +14,7 @@ spec:
       targetRevision: 38.0.1
       helm:
         valueFiles:
-          - $values/base/traefik/values.yaml
+          - $values/manifests/traefik/values.yaml
     - repoURL: https://github.com/Nebu2k/kubernetes-homelab
       targetRevision: main
       ref: values

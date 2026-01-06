@@ -13,10 +13,13 @@ spec:
       targetRevision: 2.33.6
       helm:
         valueFiles:
-          - $values/base/portainer/values.yaml
+          - $values/manifests/portainer/values.yaml
     - repoURL: https://github.com/Nebu2k/kubernetes-homelab
       targetRevision: main
       ref: values
+    - repoURL: https://github.com/Nebu2k/kubernetes-homelab
+      targetRevision: main
+      path: manifests/portainer
   destination:
     server: https://kubernetes.default.svc
     namespace: portainer

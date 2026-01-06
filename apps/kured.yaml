@@ -16,7 +16,7 @@ spec:
       targetRevision: 5.10.0
       helm:
         valueFiles:
-          - $values/base/kured/values.yaml
+          - $values/manifests/kured/values.yaml
     - repoURL: https://github.com/Nebu2k/kubernetes-homelab
       targetRevision: main
       ref: values

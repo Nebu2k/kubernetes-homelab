@@ -1,0 +1,10 @@
+# Seal with: kubeseal --cert sealed-secrets-pub-cert.pem --format=yaml < manifests/homepage/portainer-token-unsealed.yaml > manifests/homepage/portainer-token-sealed.yaml
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: homepage-portainer
+  namespace: homepage
+type: Opaque
+stringData:
+  token: "ptr_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"

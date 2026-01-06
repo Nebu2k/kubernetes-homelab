@@ -10,7 +10,7 @@ spec:
   source:
     repoURL: https://github.com/Nebu2k/kubernetes-homelab.git
     targetRevision: main
-    path: overlays/production/n8n
+    path: manifests/n8n
   destination:
     server: https://kubernetes.default.svc
     namespace: n8n

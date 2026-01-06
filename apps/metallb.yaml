@@ -10,7 +10,7 @@ spec:
   source:
     repoURL: https://github.com/Nebu2k/kubernetes-homelab.git
     targetRevision: main
-    path: overlays/production/metallb
+    path: manifests/metallb
   destination:
     server: https://kubernetes.default.svc
     namespace: metallb-system

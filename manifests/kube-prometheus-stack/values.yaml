@@ -72,7 +72,7 @@ grafana:
     storageClassName: longhorn
     size: 5Gi
   
-  # Ingress will be configured in overlays/production
+  # Ingress will be configured in manifests
   ingress:
     enabled: false
   

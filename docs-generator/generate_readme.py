@@ -12,7 +12,7 @@ from collections import defaultdict
 # Repository root
 REPO_ROOT = Path(__file__).parent.parent
 APPS_DIR = REPO_ROOT / "apps"
-OVERLAYS_DIR = REPO_ROOT / "overlays" / "production"
+MANIFESTS_DIR = REPO_ROOT / "manifests"
 TEMPLATE_DIR = Path(__file__).parent / "templates"
 OUTPUT_FILE = REPO_ROOT / "README.md"
 
@@ -197,37 +197,37 @@ def generate_tree_fallback():
             sub_prefix = "        └── " if is_last else "│       └── "
             lines.append(f"{sub_prefix}values.yaml")
     
-    # Overlays/production directory
-    lines.append("└── overlays/production/")
-    overlay_dirs = sorted([d for d in (REPO_ROOT / "overlays" / "production").iterdir() 
+    # Manifests directory
+    lines.append("└── manifests/")
+    manifest_dirs = sorted([d for d in (REPO_ROOT / "manifests").iterdir() 
                           if d.is_dir() and not d.name.startswith('.')])
     
-    for i, overlay_dir in enumerate(overlay_dirs):
-        is_last_dir = i == len(overlay_dirs) - 1
+    for i, manifest_dir in enumerate(manifest_dirs):
+        is_last_dir = i == len(manifest_dirs) - 1
         dir_prefix = "    └── " if is_last_dir else "    ├── "
-        lines.append(f"{dir_prefix}{overlay_dir.name}/")
+        lines.append(f"{dir_prefix}{manifest_dir.name}/")
         
-        # Add files in overlay
-        overlay_files = sorted([f for f in overlay_dir.glob("*.yaml") if not f.name.startswith('.')])
-        for j, overlay_file in enumerate(overlay_files):
-            is_last_file = j == len(overlay_files) - 1
+        # Add files in manifest
+        manifest_files = sorted([f for f in manifest_dir.glob("*.yaml") if not f.name.startswith('.')])
+        for j, manifest_file in enumerate(manifest_files):
+            is_last_file = j == len(manifest_files) - 1
             if is_last_dir:
                 file_prefix = "        └── " if is_last_file else "        ├── "
             else:
                 file_prefix = "    │   └── " if is_last_file else "    │   ├── "
             
-            lines.append(f"{file_prefix}{overlay_file.name}")
+            lines.append(f"{file_prefix}{manifest_file.name}")
     
     return "\n".join(lines)
 
 
 def get_homepage_widget_secrets():
     """
-    Find all *-unsealed.yaml.example files in homepage overlay
+    Find all *-unsealed.yaml.example files in homepage manifests
     and generate seal commands for them.
     Returns list of dictionaries with secret metadata.
     """
-    homepage_dir = OVERLAYS_DIR / "homepage"
+    homepage_dir = MANIFESTS_DIR / "homepage"
     secrets = []
     
     if not homepage_dir.exists():

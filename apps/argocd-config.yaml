@@ -10,7 +10,7 @@ spec:
   source:
     repoURL: https://github.com/Nebu2k/kubernetes-homelab
     targetRevision: main
-    path: overlays/production/argocd
+    path: manifests/argocd
   destination:
     server: https://kubernetes.default.svc
     namespace: argocd

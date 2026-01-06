@@ -1,0 +1,11 @@
+# Seal with: kubeseal --cert sealed-secrets-pub-cert.pem --format=yaml < manifests/homepage/unifi-token-unsealed.yaml > manifests/homepage/unifi-token-sealed.yaml
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: homepage-unifi
+  namespace: homepage
+type: Opaque
+stringData:
+  username: "admin"
+  password: "your-unifi-password-here"

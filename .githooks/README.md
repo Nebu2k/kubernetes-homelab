@@ -19,8 +19,8 @@ This configures Git to use hooks from this directory instead of `.git/hooks/`.
 Automatically regenerates `README.md` when relevant files change:
 
 - ArgoCD Application manifests (`apps/*.yaml`)
-- Helm values files (`base/*/values.yaml`)
-- Homepage widget example files (`overlays/production/homepage/*-unsealed.yaml.example`)
+- Helm values files (`manifests/*/values.yaml`)
+- Homepage widget example files (`manifests/homepage/*-unsealed.yaml.example`)
 - README template (`docs-generator/templates/README.md.j2`)
 - Generator script (`docs-generator/generate_readme.py`)
 

@@ -13,13 +13,13 @@ spec:
       targetRevision: 1.10.1
       helm:
         valueFiles:
-          - $values/overlays/production/longhorn/values.yaml
+          - $values/manifests/longhorn/values.yaml
     - repoURL: https://github.com/Nebu2k/kubernetes-homelab
       targetRevision: main
       ref: values
     - repoURL: https://github.com/Nebu2k/kubernetes-homelab
       targetRevision: main
-      path: overlays/production/longhorn
+      path: manifests/longhorn
   destination:
     server: https://kubernetes.default.svc
     namespace: longhorn-system
