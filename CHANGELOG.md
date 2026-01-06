@@ -1,3 +1,10 @@
+## [1.4.1](https://github.com/Nebu2k/kubernetes-homelab/compare/v1.4.0...v1.4.1) (2026-01-06)
+
+
+### 🐛 Bug Fixes
+
+* update HOMEPAGE_ALLOWED_HOSTS to allow all hosts ([4c9676e](https://github.com/Nebu2k/kubernetes-homelab/commit/4c9676e1fdea9bf0de6566f88cfce2e3e2ef30de))
+
 ## [1.4.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v1.3.0...v1.4.0) (2026-01-06)
 
 
