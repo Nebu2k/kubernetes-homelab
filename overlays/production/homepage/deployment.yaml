@@ -42,7 +42,7 @@ spec:
           protocol: TCP
         env:
         - name: HOMEPAGE_ALLOWED_HOSTS
-          value: "home.elmstreet79.de"
+          value: "*"
         - name: NODE_EXTRA_CA_CERTS
           value: "/certs/ca.crt"
         - name: HOMEPAGE_VAR_PROXMOX_USER
