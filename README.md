@@ -29,7 +29,7 @@ Production-ready K3s cluster managed via GitOps using ArgoCD App-of-Apps pattern
 | 7 | Unifi Poller, Home Assistant |
 | 8 | Uptime Kuma, Newt |
 | 9 | N8n, Homepage |
-| 10 | Cert Manager Config, Newt Config |
+| 10 | Newt Config |
 | 12 | Portainer Config, Argocd Config |
 | 13 | Longhorn Config |
 | 14 | Kube Prometheus Stack Config |
@@ -61,7 +61,6 @@ homelab/
 │   ├── uptime-kuma.yaml               # Wave 8
 │   ├── homepage.yaml                  # Wave 9
 │   ├── n8n.yaml                       # Wave 9
-│   ├── cert-manager-config.yaml       # Wave 10
 │   ├── newt-config.yaml               # Wave 10
 │   ├── argocd-config.yaml             # Wave 12
 │   ├── portainer-config.yaml          # Wave 12
