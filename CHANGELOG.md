@@ -1,3 +1,10 @@
+## [1.4.6](https://github.com/Nebu2k/kubernetes-homelab/compare/v1.4.5...v1.4.6) (2026-01-06)
+
+
+### 🐛 Bug Fixes
+
+* remove duplicate defaultMode definition in internal CA secret ([2f1ddc7](https://github.com/Nebu2k/kubernetes-homelab/commit/2f1ddc7dc7a1e2962d86939a4b7383b0301f7423))
+
 ## [1.4.5](https://github.com/Nebu2k/kubernetes-homelab/compare/v1.4.4...v1.4.5) (2026-01-06)
 
 
