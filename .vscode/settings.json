@@ -40,7 +40,7 @@
   ],
   
   // Git configuration
-  "git.inputValidation": "always",
+  "git.inputValidation": true,
   "git.inputValidationLength": 72,
   "git.inputValidationSubjectLength": 72
 }
