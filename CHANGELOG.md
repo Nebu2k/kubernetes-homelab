@@ -1,3 +1,10 @@
+## [1.3.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v1.2.0...v1.3.0) (2026-01-06)
+
+
+### ✨ Features
+
+* implement uptime-kuma deployment with necessary resources and configurations ([ada2242](https://github.com/Nebu2k/kubernetes-homelab/commit/ada22421880c3b73f8e6376d8b50f7e4e489ee89))
+
 ## [1.2.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v1.1.0...v1.2.0) (2026-01-06)
 
 
