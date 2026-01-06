@@ -1,3 +1,10 @@
+## [1.7.9](https://github.com/Nebu2k/kubernetes-homelab/compare/v1.7.8...v1.7.9) (2026-01-06)
+
+
+### 🐛 Bug Fixes
+
+* **n8n:** update secrets management for PostgreSQL and add encryption key ([e03cf1e](https://github.com/Nebu2k/kubernetes-homelab/commit/e03cf1eb2404ed326dfd61621db62facb5d253ad))
+
 ## [1.7.8](https://github.com/Nebu2k/kubernetes-homelab/compare/v1.7.7...v1.7.8) (2026-01-06)
 
 
