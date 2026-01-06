@@ -183,20 +183,6 @@ def generate_tree_fallback():
         prefix = "│   └── " if is_last else "│   ├── "
         lines.append(f"{prefix}{app_file.name:<30} {wave_comment}")
     
-    # Base directory
-    lines.append("├── base/")
-    base_dirs = sorted([d for d in (REPO_ROOT / "base").iterdir() if d.is_dir()])
-    for i, base_dir in enumerate(base_dirs):
-        is_last = i == len(base_dirs) - 1
-        prefix = "│   └── " if is_last else "│   ├── "
-        lines.append(f"{prefix}{base_dir.name}/")
-        
-        # Add values.yaml if exists
-        values_file = base_dir / "values.yaml"
-        if values_file.exists():
-            sub_prefix = "        └── " if is_last else "│       └── "
-            lines.append(f"{sub_prefix}values.yaml")
-    
     # Manifests directory
     lines.append("└── manifests/")
     manifest_dirs = sorted([d for d in (REPO_ROOT / "manifests").iterdir() 
