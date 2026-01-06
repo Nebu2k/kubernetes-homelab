@@ -1,3 +1,10 @@
+## [2.2.5](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.2.4...v2.2.5) (2026-01-06)
+
+
+### 🐛 Bug Fixes
+
+* update home-assistant and teslamate images to specific versions ([54bf03a](https://github.com/Nebu2k/kubernetes-homelab/commit/54bf03afa9cdf4aceae3eac8abe47999394c1ad4))
+
 ## [2.2.4](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.2.3...v2.2.4) (2026-01-06)
 
 
