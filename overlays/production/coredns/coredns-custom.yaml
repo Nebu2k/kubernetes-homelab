@@ -6,9 +6,7 @@ metadata:
   namespace: kube-system
 data:
   forward.override: |
-    forward . /etc/resolv.conf {
-      policy sequential
-    }
+    forward . 1.1.1.1
   elmstreet79.server: |
     # Forward internal elmstreet79.de queries to AdGuard Home
     elmstreet79.de:53 {
