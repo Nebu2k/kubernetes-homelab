@@ -10,6 +10,6 @@ spec:
     app: proxmox-exporter
   ports:
     - name: metrics
-      port: 9221
+      port: 9091
       targetPort: metrics
       protocol: TCP

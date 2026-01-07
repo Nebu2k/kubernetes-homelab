@@ -19,66 +19,33 @@ spec:
     spec:
       nodeSelector:
         node-role.kubernetes.io/worker: "worker"
-      initContainers:
-        - name: config-expander
-          image: busybox:stable
-          command:
-            - sh
-            - -c
-            - |
-              cat > /config/pve.yml <<EOF
-              default:
-                user: homepage@pve
-                token_name: exporter
-                token_value: ${PVE_PASSWORD}
-                verify_ssl: false
-              modules:
-                default:
-                  targets:
-                    - ${PVE_TARGET}
-              EOF
+      containers:
+        - name: pve-exporter
+          image: bigtcze/pve-exporter:latest
+          ports:
+            - name: metrics
+              containerPort: 9091
+              protocol: TCP
           env:
+            - name: PVE_HOST
+              valueFrom:
+                secretKeyRef:
+                  name: pve-api-credentials
+                  key: target
             - name: PVE_USER
               valueFrom:
                 secretKeyRef:
                   name: pve-api-credentials
                   key: username
-            - name: PVE_PASSWORD
+            - name: PVE_TOKEN_NAME
+              value: "exporter"
+            - name: PVE_TOKEN_VALUE
               valueFrom:
                 secretKeyRef:
                   name: pve-api-credentials
                   key: password
-            - name: PVE_TARGET
-              valueFrom:
-                secretKeyRef:
-                  name: pve-api-credentials
-                  key: target
-          volumeMounts:
-            - name: config
-              mountPath: /config
-      containers:
-        - name: pve-exporter
-          image: prompve/prometheus-pve-exporter:3.8
-          ports:
-            - name: metrics
-              containerPort: 9221
-              protocol: TCP
-          command:
-            - pve_exporter
-          args:
-            - --config.file
-            - /config/pve.yml
-            - --collector.status
-            - --collector.version
-            - --collector.node
-            - --collector.cluster
-            - --collector.resources
-            - --collector.config
-            - --collector.replication
-          volumeMounts:
-            - name: config
-              mountPath: /config
-              readOnly: true
+            - name: PVE_VERIFY_SSL
+              value: "false"
           resources:
             requests:
               memory: "64Mi"
@@ -98,6 +65,3 @@ spec:
               port: metrics
             initialDelaySeconds: 5
             periodSeconds: 10
-      volumes:
-        - name: config
-          emptyDir: {}
