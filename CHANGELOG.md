@@ -1,3 +1,10 @@
+## [2.7.19](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.7.18...v2.7.19) (2026-01-07)
+
+
+### 🐛 Bug Fixes
+
+* **grafana:** rename Proxmox dashboard data sources for clarity ([94cccfe](https://github.com/Nebu2k/kubernetes-homelab/commit/94cccfe85932d947f5e7d74a030e1ab932b7ce0a))
+
 ## [2.7.18](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.7.17...v2.7.18) (2026-01-07)
 
 
