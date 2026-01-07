@@ -1,3 +1,10 @@
+## [2.7.6](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.7.5...v2.7.6) (2026-01-07)
+
+
+### 🐛 Bug Fixes
+
+* **proxmox-exporter:** update deployment to include config-expander init container and adjust config file path ([8d28365](https://github.com/Nebu2k/kubernetes-homelab/commit/8d2836534d043e18bd67280462689591588054d4))
+
 ## [2.7.5](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.7.4...v2.7.5) (2026-01-07)
 
 
