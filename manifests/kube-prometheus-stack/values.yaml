@@ -84,23 +84,6 @@ grafana:
     limits:
       cpu: 500m
       memory: 512Mi
-
-  # Extra datasource alias required by Proxmox dashboards
-  additionalDataSources:
-    - name: PROXMOX-FLUX
-      type: prometheus
-      access: proxy
-      url: http://kube-prometheus-stack-prometheus.monitoring.svc.cluster.local:9090
-      jsonData:
-        timeInterval: 30s
-      isDefault: false
-    - name: DS_PROMETHEUS
-      type: prometheus
-      access: proxy
-      url: http://kube-prometheus-stack-prometheus.monitoring.svc.cluster.local:9090
-      jsonData:
-        timeInterval: 30s
-      isDefault: false
   
   # Pre-installed dashboards
   dashboardProviders:
@@ -159,15 +142,15 @@ grafana:
         gnetId: 11312
         revision: 9
         datasource: Prometheus
-      # Proxmox VE Cluster Dashboard
+      # Proxmox VE Cluster (updated, actively maintained)
       proxmox-cluster:
-        gnetId: 10347
-        revision: 5
+        gnetId: 10048
+        revision: 6
         datasource: Prometheus
-      # Proxmox VE VM/CT Overview
-      proxmox-vms:
-        gnetId: 15356
-        revision: 14
+      # Proxmox via Prometheus (community maintained)
+      proxmox-monitoring:
+        gnetId: 21072
+        revision: 1
         datasource: Prometheus
 
 # Alert Manager
