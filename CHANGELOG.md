@@ -1,3 +1,10 @@
+## [2.7.4](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.7.3...v2.7.4) (2026-01-07)
+
+
+### 🐛 Bug Fixes
+
+* **proxmox-exporter:** enhance deployment with config map and update environment variables ([4485e5a](https://github.com/Nebu2k/kubernetes-homelab/commit/4485e5a065e68a2cc231697f64e76f1ab3b616a2))
+
 ## [2.7.3](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.7.2...v2.7.3) (2026-01-07)
 
 
