@@ -74,6 +74,7 @@ spec:
             - --collector.cluster
             - --collector.resources
             - --collector.config
+            - --collector.replication
           volumeMounts:
             - name: config
               mountPath: /config
