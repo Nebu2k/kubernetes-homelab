@@ -1,3 +1,10 @@
+## [2.7.10](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.7.9...v2.7.10) (2026-01-07)
+
+
+### 🐛 Bug Fixes
+
+* **proxmox-exporter:** update configuration for user and token naming in deployment ([96ab9b0](https://github.com/Nebu2k/kubernetes-homelab/commit/96ab9b0554ab4d1fa2bb5fe26be49eee2ae17144))
+
 ## [2.7.9](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.7.8...v2.7.9) (2026-01-07)
 
 
