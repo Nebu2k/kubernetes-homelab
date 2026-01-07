@@ -1,3 +1,10 @@
+## [2.5.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.4.7...v2.5.0) (2026-01-07)
+
+
+### ✨ Features
+
+* add new fields for Nextcloud monitoring in configmap ([1cda24f](https://github.com/Nebu2k/kubernetes-homelab/commit/1cda24f2211eeccd3d0a726a12f36e6845729b10))
+
 ## [2.4.7](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.4.6...v2.4.7) (2026-01-07)
 
 
