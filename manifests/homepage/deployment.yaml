@@ -109,6 +109,16 @@ spec:
             secretKeyRef:
               name: homepage-grafana
               key: password
+        - name: HOMEPAGE_VAR_PLEX_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: homepage-plex
+              key: token
+        - name: HOMEPAGE_VAR_NEXTCLOUD_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: homepage-nextcloud
+              key: token
         volumeMounts:
         - name: config
           mountPath: /app/config

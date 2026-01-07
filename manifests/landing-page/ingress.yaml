@@ -5,6 +5,12 @@ metadata:
   namespace: landing-page
   annotations:
     cert-manager.io/cluster-issuer: letsencrypt-prod
+    gethomepage.dev/enabled: "true"
+    gethomepage.dev/name: "Landing Page"
+    gethomepage.dev/icon: "nginx.png"
+    gethomepage.dev/description: "Website"
+    gethomepage.dev/group: "Applications"
+    gethomepage.dev/weight: "40"
 spec:
   ingressClassName: traefik
   tls:

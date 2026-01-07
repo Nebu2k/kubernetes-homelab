@@ -1,0 +1,14 @@
+---
+apiVersion: bitnami.com/v1alpha1
+kind: SealedSecret
+metadata:
+  name: homepage-nextcloud
+  namespace: homepage
+spec:
+  encryptedData:
+    token: AgAs33YsZ3Rg1IbwgpexiCfODR4lWtPE2Um8KJuBxPlYITG9CdAYgAzA4ds9cgAD5aXBcT76I+sFoR5McVaTft0sqODTDQB7MenS2eFvt6/Ywsxw303DNM9NF6/mleCVSkhCfQ+Yf2TgmCvBp//ZTGw0xlmltn4cOwXSUml0lq1//umJmoHw168/HkCYgomKLIfiIspUPbjJw52wM+5BhzVKfwzNpeXj4XUJiokQqFAKNoccdNxmne899kwLroKznAC+Q4XAIw4/5+Ob64ZFulhBSSrmESMOlXVxytJU1eF+1m35hMS2Usc15ejDA36ZBX6/rVS6okCahKxCtmlJEdN5HHFA7vzZEo2t6U/7gHXbt7+3zNZzXQUjSlq53P2C2s1TVY8fhEpH0XBfKld00/sbP1eFwzdo/ihn6V1a6q/+17C/uaigHdladosHCx30ImOPY7VIG379WLAAqyB39yIPxmPS6VkB+EKgR052qqlvbDrFPWIka06wcQq29/YWw4vv+7/9t73xww3E8YZhCFMgdGVn3c9Xa5Wh0GPzScVUgnqt89SnGskrwk2Km86AsP8AyjESCgrt4szTXtC05IhsZLOvuz3cmbu4yyFrBj6UyzqK5N3zz8jQCEHDuwzCTnJP5XluZsWxqUw2u87wSmQD4Z6+1Wt/gSN4OHhZlisOakznKNQfINRU2/5OeXlD8eIjxSqzFu0rdCY+/b/+LfhmcI9iQqB4Nni6hT4EuA==
+  template:
+    metadata:
+      name: homepage-nextcloud
+      namespace: homepage
+    type: Opaque

@@ -1,0 +1,14 @@
+---
+apiVersion: bitnami.com/v1alpha1
+kind: SealedSecret
+metadata:
+  name: homepage-plex
+  namespace: homepage
+spec:
+  encryptedData:
+    token: AgBkBjyt71CtLSevJ+tRpqlMm5qLaJpvbpDBQZKpnbN+woO4Ol2QL5KRY4fSR1WKHG0QxVmjIboJslqS8Ezf8ysqRimchRgw+PUY1EpFoxHy7XFBgep/s8WUsbF6mO8tQffI47faRP8vRdAIz5NBgRE1TDJz4mkiA5mqtR8/DhG9v5q/ykDx2gAuBy7oR/vyp84SoLbmeCwJvk9erFeOFRANKXnAK3OuzsXE5F/Rl85e9D4E/NtDpfuFCAFFe9fQcR3fCuZyz3oWBG/QkXTBDlvU3yz6FTWyl8hwtMy8K1OX7QE+BXNJbaGj/q3UFBp+nSjwLbjCvFjGobP3Z7b5nM8BR0/XP7U9+Q3xV9ie+/qLg53nZslxbVDUDwwrKFne1BDBfx+0FoTHeGRUg1jHxsFrFAu27ML1RNjl8BhKZM8E53GIisbRKQ4KP7USzTrj9VsAg0PHkc6iFe2ymro3AWenlBT5uzwcpRmbSjVWvxnQr2oBvEjWBZ2kYxRpDAENrIa1eGFe9ZWqMSNaSSCasgB9zSWmLTXiahVMxMcStq8iNZ0qOM8v25Fx5PxRj+o5GKi8jNhuS0CJi/BD2jgAETBlprrlrttHh6VJUJhj0Hl72MOmEVH4ngjyaI79LSZlyupCCiJeN9Prs0hsP2SOYYVr+8IaHkntp8bSur28gIiTZgVKBONdvT3iOId+yQLgExZALv1nEkmaIKpFr5or1xKlDLkjaA==
+  template:
+    metadata:
+      name: homepage-plex
+      namespace: homepage
+    type: Opaque

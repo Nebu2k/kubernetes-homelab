@@ -1,0 +1,10 @@
+# Seal with: kubeseal --format=yaml < manifests/homepage/nextcloud-token-unsealed.yaml > manifests/homepage/nextcloud-token-sealed.yaml
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: homepage-nextcloud
+  namespace: homepage
+type: Opaque
+stringData:
+  token: "your_nextcloud_token_here"

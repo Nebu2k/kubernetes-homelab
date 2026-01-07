@@ -136,6 +136,10 @@ data:
           icon: plex.png
           weight: 10
           ping: 192.168.2.4
+          widget:
+            type: plex
+            url: https://plex.elmstreet79.de
+            key: {{HOMEPAGE_VAR_PLEX_TOKEN}}
 
       - Nextcloud:
           href: https://nextcloud.elmstreet79.de
@@ -143,6 +147,10 @@ data:
           icon: nextcloud.png
           weight: 20
           ping: 192.168.2.12
+          widget:
+            type: nextcloud
+            url: https://nextcloud.elmstreet79.de
+            key: {{HOMEPAGE_VAR_NEXTCLOUD_TOKEN}}
 
     - Applications:
 

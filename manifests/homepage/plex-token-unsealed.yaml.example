@@ -1,0 +1,10 @@
+# Seal with: kubeseal --format=yaml < manifests/homepage/plex-token-unsealed.yaml > manifests/homepage/plex-token-sealed.yaml
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: homepage-plex
+  namespace: homepage
+type: Opaque
+stringData:
+  token: "your_plex_token_here"
