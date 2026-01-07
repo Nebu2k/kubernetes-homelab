@@ -37,20 +37,26 @@ spec:
                 secretKeyRef:
                   name: pve-api-credentials
                   key: password
-            - name: PVE_VERIFY_SSL
-              value: "false"
-            - name: PVE_HOST
+            - name: PVE_TARGET
               valueFrom:
                 secretKeyRef:
                   name: pve-api-credentials
                   key: target
+          command:
+            - pve_exporter
           args:
+            - --config.file
+            - /etc/pve-exporter/pve.yml
             - --collector.status
             - --collector.version
             - --collector.node
             - --collector.cluster
             - --collector.resources
             - --collector.config
+          volumeMounts:
+            - name: config
+              mountPath: /etc/pve-exporter
+              readOnly: true
           resources:
             requests:
               memory: "64Mi"
@@ -70,3 +76,7 @@ spec:
               port: metrics
             initialDelaySeconds: 5
             periodSeconds: 10
+      volumes:
+        - name: config
+          configMap:
+            name: proxmox-exporter-config

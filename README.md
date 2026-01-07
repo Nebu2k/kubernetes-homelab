@@ -193,6 +193,7 @@ homelab/
     │   ├── servers-transport.yaml
     │   └── unifi-ingress.yaml
     ├── proxmox-exporter/
+    │   ├── configmap.yaml
     │   ├── deployment.yaml
     │   ├── kustomization.yaml
     │   ├── pve-api-credentials-sealed.yaml
