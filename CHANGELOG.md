@@ -1,3 +1,10 @@
+## [2.7.30](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.7.29...v2.7.30) (2026-01-07)
+
+
+### 🐛 Bug Fixes
+
+* **kube-prometheus-stack:** update targetRevision to 80.13.2 ([fc8e79e](https://github.com/Nebu2k/kubernetes-homelab/commit/fc8e79e5f836e1810b111346f783c385b340360a))
+
 ## [2.7.29](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.7.28...v2.7.29) (2026-01-07)
 
 
