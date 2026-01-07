@@ -1,3 +1,10 @@
+## [2.7.7](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.7.6...v2.7.7) (2026-01-07)
+
+
+### 🐛 Bug Fixes
+
+* **proxmox-exporter:** update config file to use token-based authentication ([15bedaf](https://github.com/Nebu2k/kubernetes-homelab/commit/15bedaf0100a6f8281a85238642c33444deb3c38))
+
 ## [2.7.6](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.7.5...v2.7.6) (2026-01-07)
 
 
