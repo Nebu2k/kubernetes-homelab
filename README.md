@@ -1129,10 +1129,10 @@ kubectl get secret -n monitoring grafana-admin-credentials \
 | Kube Prometheus Stack | 80.11.0 | Kube Prometheus Stack |
 | Sealed Secrets | 2.18.0 | Sealed Secrets |
 | Kured | 5.10.0 | Kured |
-| Metallb | 0.5.13 | Metallb |
+| Metallb | 0.15.3 | Metallb |
 | Longhorn | 1.10.1 | Longhorn |
 | Portainer | 2.33.6 | Portainer |
-| Cert Manager | 1.5.14 | Cert Manager |
+| Cert Manager | v1.19.2 | Cert Manager |
 | Traefik | 38.0.1 | Traefik |
 | Newt | 1.1.0 | Newt |
 | K3s | v1.33.5 | Lightweight Kubernetes |

@@ -28,15 +28,39 @@ def run_command(cmd: list) -> Optional[str]:
         return None
 
 
-def get_latest_helm_version(chart_name: str) -> Optional[str]:
-    """Get latest Helm chart version."""
+def get_latest_helm_version(chart_name: str, repo_url: Optional[str] = None) -> Optional[str]:
+    """Get latest Helm chart version from specific repository."""
     output = run_command(["helm", "search", "repo", chart_name, "-o", "json"])
     if not output:
         return None
     
     try:
         data = json.loads(output)
-        return data[0]["version"] if data else None
+        if not data:
+            return None
+        
+        # If repo URL is provided, filter results to match that repo
+        if repo_url:
+            # Normalize repo URL (remove trailing slash)
+            repo_url = repo_url.rstrip("/")
+            
+            # Find matching chart from the specific repo
+            for chart in data:
+                chart_repo = chart.get("name", "").split("/")[0] if "/" in chart.get("name", "") else ""
+                
+                # Get the repo URL for this chart
+                repo_list_output = run_command(["helm", "repo", "list", "-o", "json"])
+                if repo_list_output:
+                    try:
+                        repos = json.loads(repo_list_output)
+                        for repo in repos:
+                            if repo["name"] == chart_repo and repo["url"].rstrip("/") == repo_url:
+                                return chart["version"]
+                    except (json.JSONDecodeError, KeyError):
+                        pass
+        
+        # Fallback to first result if no repo match found
+        return data[0]["version"]
     except (json.JSONDecodeError, KeyError, IndexError):
         return None
 
@@ -200,9 +224,10 @@ def check_helm_apps():
         name = app["metadata"]["name"]
         chart = source["chart"]
         current = source.get("targetRevision", "unknown")
+        repo_url = source.get("repoURL")
         
         # Get latest version
-        latest = get_latest_helm_version(chart)
+        latest = get_latest_helm_version(chart, repo_url)
         
         if latest:
             try:
