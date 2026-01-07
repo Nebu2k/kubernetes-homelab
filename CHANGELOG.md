@@ -1,3 +1,10 @@
+## [2.7.15](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.7.14...v2.7.15) (2026-01-07)
+
+
+### 🐛 Bug Fixes
+
+* **servicemonitor:** add path to metrics endpoint for proxmox-exporter ([3630a28](https://github.com/Nebu2k/kubernetes-homelab/commit/3630a28e8947e4d14fe8d42af3f3df3faa3e0d34))
+
 ## [2.7.14](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.7.13...v2.7.14) (2026-01-07)
 
 
