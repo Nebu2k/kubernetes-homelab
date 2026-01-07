@@ -64,6 +64,12 @@ data:
             env: 4
             key: {{HOMEPAGE_VAR_PORTAINER_TOKEN}}
     
+      - AWS Console:
+          href: https://d-99675baf99.awsapps.com/start/#/console?account_id=077448369105&role_name=AdministratorAccess
+          description: AWS Account
+          icon:aws.png
+          weight: 20
+
     - Infrastructure:
       - Proxmox:
           href: https://pve.elmstreet79.de
