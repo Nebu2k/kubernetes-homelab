@@ -1,3 +1,10 @@
+## [2.7.3](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.7.2...v2.7.3) (2026-01-07)
+
+
+### 🐛 Bug Fixes
+
+* **grafana:** add additional data sources for Proxmox dashboards ([3cbc066](https://github.com/Nebu2k/kubernetes-homelab/commit/3cbc0669dfd94758c946bf4bc22698bb0d09db20))
+
 ## [2.7.2](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.7.1...v2.7.2) (2026-01-07)
 
 
