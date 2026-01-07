@@ -1,3 +1,10 @@
+## [2.7.29](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.7.28...v2.7.29) (2026-01-07)
+
+
+### 🐛 Bug Fixes
+
+* **prometheus:** add service labels for Lens auto-detection ([f4b5f2e](https://github.com/Nebu2k/kubernetes-homelab/commit/f4b5f2e2559b6cb02de08216b2b4ba59d891c7eb))
+
 ## [2.7.28](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.7.27...v2.7.28) (2026-01-07)
 
 
