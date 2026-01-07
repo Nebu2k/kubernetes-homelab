@@ -24,7 +24,7 @@ spec:
           image: ghcr.io/bigtcze/pve-exporter:1
           ports:
             - name: metrics
-              containerPort: 9091
+              containerPort: 9221
               protocol: TCP
           env:
             - name: PVE_HOST
@@ -32,20 +32,18 @@ spec:
                 secretKeyRef:
                   name: pve-api-credentials
                   key: target
-            - name: PVE_USER
+            - name: PVE_TOKEN_ID
               valueFrom:
                 secretKeyRef:
                   name: pve-api-credentials
                   key: username
-            - name: PVE_TOKEN_NAME
-              value: "exporter"
-            - name: PVE_TOKEN_VALUE
+            - name: PVE_TOKEN_SECRET
               valueFrom:
                 secretKeyRef:
                   name: pve-api-credentials
                   key: password
-            - name: PVE_VERIFY_SSL
-              value: "false"
+            - name: PVE_INSECURE_SKIP_VERIFY
+              value: "true"
           resources:
             requests:
               memory: "64Mi"
