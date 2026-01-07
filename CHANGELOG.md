@@ -1,3 +1,10 @@
+## [2.4.2](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.4.1...v2.4.2) (2026-01-07)
+
+
+### 🐛 Bug Fixes
+
+* add Nextcloud monitoring fields for CPU load, memory usage, active users, and number of files ([d7ed804](https://github.com/Nebu2k/kubernetes-homelab/commit/d7ed8041a3ba8846bc7064fc4ef20d15ac83ad07))
+
 ## [2.4.1](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.4.0...v2.4.1) (2026-01-07)
 
 
