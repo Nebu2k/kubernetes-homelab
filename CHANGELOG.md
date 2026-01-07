@@ -1,3 +1,10 @@
+## [2.7.20](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.7.19...v2.7.20) (2026-01-07)
+
+
+### 🐛 Bug Fixes
+
+* **grafana:** update Proxmox dashboard gnetId and remove unused dashboard configuration ([948fb2e](https://github.com/Nebu2k/kubernetes-homelab/commit/948fb2efe0088dfe05bf6052ba0cb035c2f005bd))
+
 ## [2.7.19](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.7.18...v2.7.19) (2026-01-07)
 
 
