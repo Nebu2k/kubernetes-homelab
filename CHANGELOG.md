@@ -1,3 +1,10 @@
+## [2.7.9](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.7.8...v2.7.9) (2026-01-07)
+
+
+### 🐛 Bug Fixes
+
+* **proxmox-exporter:** update Proxmox API credentials for consistency and clarity ([1663e76](https://github.com/Nebu2k/kubernetes-homelab/commit/1663e76321a514495ddbc0269256ba652ee1afbd))
+
 ## [2.7.8](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.7.7...v2.7.8) (2026-01-07)
 
 
