@@ -1,3 +1,10 @@
+## [2.4.7](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.4.6...v2.4.7) (2026-01-07)
+
+
+### 🐛 Bug Fixes
+
+* remove unnecessary fields from Nextcloud configuration ([017afd5](https://github.com/Nebu2k/kubernetes-homelab/commit/017afd561e3c2c6fb3e39ca3de70dd4a5c256dfa))
+
 ## [2.4.6](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.4.5...v2.4.6) (2026-01-07)
 
 
