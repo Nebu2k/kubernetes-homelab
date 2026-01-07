@@ -1,3 +1,10 @@
+## [2.7.28](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.7.27...v2.7.28) (2026-01-07)
+
+
+### 🐛 Bug Fixes
+
+* **proxmox-exporter:** update sealed secret credentials for Proxmox API ([8c5e93d](https://github.com/Nebu2k/kubernetes-homelab/commit/8c5e93dbb952a03a743107fc5d72c45d1b48c52c))
+
 ## [2.7.27](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.7.26...v2.7.27) (2026-01-07)
 
 
