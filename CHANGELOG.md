@@ -1,3 +1,10 @@
+## [2.7.23](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.7.22...v2.7.23) (2026-01-07)
+
+
+### 🐛 Bug Fixes
+
+* **proxmox-exporter:** update deployment configuration and service port to 9091 ([439b7b5](https://github.com/Nebu2k/kubernetes-homelab/commit/439b7b537998059200af51427641e1ca8312fba2))
+
 ## [2.7.22](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.7.21...v2.7.22) (2026-01-07)
 
 
