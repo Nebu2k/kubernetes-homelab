@@ -21,7 +21,7 @@ spec:
         node-role.kubernetes.io/worker: "worker"
       initContainers:
         - name: config-expander
-          image: busybox:1.36
+          image: busybox:stable
           command:
             - sh
             - -c
@@ -58,7 +58,7 @@ spec:
               mountPath: /config
       containers:
         - name: pve-exporter
-          image: prompve/prometheus-pve-exporter:3.4.4
+          image: prompve/prometheus-pve-exporter:3.8
           ports:
             - name: metrics
               containerPort: 9221

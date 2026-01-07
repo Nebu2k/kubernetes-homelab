@@ -17,7 +17,7 @@ spec:
     spec:
       initContainers:
       - name: fix-permissions
-        image: busybox:latest
+        image: busybox:stable
         command: ['sh', '-c', 'chown -R 472:472 /var/lib/grafana']
         volumeMounts:
         - name: data

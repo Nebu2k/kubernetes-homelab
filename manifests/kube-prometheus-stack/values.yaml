@@ -142,12 +142,12 @@ grafana:
         gnetId: 11312
         revision: 9
         datasource: Prometheus
-      # Proxmox VE Cluster (updated, actively maintained)
+      # Proxmox via Prometheus
       proxmox-cluster:
-        gnetId: 10048
-        revision: 6
+        gnetId: 10347
+        revision: 5
         datasource: Prometheus
-      # Proxmox via Prometheus (community maintained)
+      # Proxmox VE - pve-exporter
       proxmox-monitoring:
         gnetId: 21072
         revision: 1
