@@ -152,6 +152,11 @@ data:
             url: https://nextcloud.elmstreet79.de
             username: {{HOMEPAGE_VAR_NEXTCLOUD_USER}}
             password: {{HOMEPAGE_VAR_NEXTCLOUD_PASS}}
+            fields:
+              - freespace
+              - memoryusage
+              - activeusers
+              - numfiles
 
     - Applications:
 
