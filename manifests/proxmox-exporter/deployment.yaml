@@ -19,13 +19,23 @@ spec:
     spec:
       nodeSelector:
         node-role.kubernetes.io/worker: "worker"
-      containers:
-        - name: pve-exporter
-          image: prompve/prometheus-pve-exporter:3.4.4
-          ports:
-            - name: metrics
-              containerPort: 9221
-              protocol: TCP
+      initContainers:
+        - name: config-expander
+          image: busybox:1.36
+          command:
+            - sh
+            - -c
+            - |
+              cat > /config/pve.yml <<EOF
+              default:
+                user: ${PVE_USER}
+                password: ${PVE_PASSWORD}
+                verify_ssl: false
+              modules:
+                default:
+                  targets:
+                    - ${PVE_TARGET}
+              EOF
           env:
             - name: PVE_USER
               valueFrom:
@@ -42,11 +52,21 @@ spec:
                 secretKeyRef:
                   name: pve-api-credentials
                   key: target
+          volumeMounts:
+            - name: config
+              mountPath: /config
+      containers:
+        - name: pve-exporter
+          image: prompve/prometheus-pve-exporter:3.4.4
+          ports:
+            - name: metrics
+              containerPort: 9221
+              protocol: TCP
           command:
             - pve_exporter
           args:
             - --config.file
-            - /etc/pve-exporter/pve.yml
+            - /config/pve.yml
             - --collector.status
             - --collector.version
             - --collector.node
@@ -55,7 +75,7 @@ spec:
             - --collector.config
           volumeMounts:
             - name: config
-              mountPath: /etc/pve-exporter
+              mountPath: /config
               readOnly: true
           resources:
             requests:
@@ -78,5 +98,4 @@ spec:
             periodSeconds: 10
       volumes:
         - name: config
-          configMap:
-            name: proxmox-exporter-config
+          emptyDir: {}
