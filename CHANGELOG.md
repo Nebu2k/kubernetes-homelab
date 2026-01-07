@@ -1,3 +1,10 @@
+## [2.7.24](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.7.23...v2.7.24) (2026-01-07)
+
+
+### 🐛 Bug Fixes
+
+* **proxmox-exporter:** update container image to v1.10.1 ([d5cc771](https://github.com/Nebu2k/kubernetes-homelab/commit/d5cc7714e30dd7cd1ad4e8936fa86f9d130d2950))
+
 ## [2.7.23](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.7.22...v2.7.23) (2026-01-07)
 
 
