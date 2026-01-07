@@ -10,6 +10,7 @@ resources:
   - traefik.yaml
   - longhorn.yaml
   - kube-prometheus-stack.yaml
+  - proxmox-exporter.yaml
   - unifi-poller.yaml
   - portainer.yaml
   - uptime-kuma.yaml

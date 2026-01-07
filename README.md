@@ -29,6 +29,7 @@ Production-ready K3s cluster managed via GitOps using ArgoCD App-of-Apps pattern
 | 7 | Unifi Poller, Home Assistant |
 | 8 | Uptime Kuma, Newt |
 | 9 | N8n, Homepage |
+| 11 | Proxmox Exporter |
 | 12 | Argocd Config |
 | 16 | Private Services |
 
@@ -58,6 +59,7 @@ homelab/
 │   ├── uptime-kuma.yaml               # Wave 8
 │   ├── homepage.yaml                  # Wave 9
 │   ├── n8n.yaml                       # Wave 9
+│   ├── proxmox-exporter.yaml          # Wave 11
 │   ├── argocd-config.yaml             # Wave 12
 │   └── private-services.yaml          # Wave 16
 └── manifests/
@@ -190,6 +192,13 @@ homelab/
     │   ├── proxmox-ingress.yaml
     │   ├── servers-transport.yaml
     │   └── unifi-ingress.yaml
+    ├── proxmox-exporter/
+    │   ├── deployment.yaml
+    │   ├── kustomization.yaml
+    │   ├── pve-api-credentials-sealed.yaml
+    │   ├── pve-api-credentials-unsealed.yaml
+    │   ├── service.yaml
+    │   └── servicemonitor.yaml
     ├── reloader/
     │   └── values.yaml
     ├── teslamate/
