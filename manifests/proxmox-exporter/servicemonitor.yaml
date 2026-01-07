@@ -12,6 +12,7 @@ spec:
       app: proxmox-exporter
   endpoints:
     - port: metrics
+      path: /pve
       interval: 60s
       scrapeTimeout: 30s
       params:
