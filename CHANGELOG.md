@@ -1,3 +1,10 @@
+## [2.4.1](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.4.0...v2.4.1) (2026-01-07)
+
+
+### 🐛 Bug Fixes
+
+* update Nextcloud integration to use username and password instead of token ([36ee92e](https://github.com/Nebu2k/kubernetes-homelab/commit/36ee92e4983c501e40e64b54295b271d6c2d6a6b))
+
 ## [2.4.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.3.1...v2.4.0) (2026-01-07)
 
 
