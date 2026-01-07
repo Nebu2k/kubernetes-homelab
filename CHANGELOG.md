@@ -1,3 +1,10 @@
+## [2.3.1](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.3.0...v2.3.1) (2026-01-07)
+
+
+### 🐛 Bug Fixes
+
+* add description for AWS Console entry and format icon line ([e0a8863](https://github.com/Nebu2k/kubernetes-homelab/commit/e0a88638cf6e86424ec12e62f1c4a3f70e5c2f8d))
+
 ## [2.3.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.2.7...v2.3.0) (2026-01-07)
 
 
