@@ -1,3 +1,10 @@
+## [2.7.8](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.7.7...v2.7.8) (2026-01-07)
+
+
+### 🐛 Bug Fixes
+
+* **proxmox-exporter:** update sealed secret credentials for improved security ([3738a6a](https://github.com/Nebu2k/kubernetes-homelab/commit/3738a6a5ca1edea101c0425f8e78b271d406c8d4))
+
 ## [2.7.7](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.7.6...v2.7.7) (2026-01-07)
 
 
