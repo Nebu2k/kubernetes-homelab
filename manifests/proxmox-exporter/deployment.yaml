@@ -28,7 +28,8 @@ spec:
             - |
               cat > /config/pve.yml <<EOF
               default:
-                token_name: ${PVE_USER}
+                user: homepage@pve
+                token_name: exporter
                 token_value: ${PVE_PASSWORD}
                 verify_ssl: false
               modules:
