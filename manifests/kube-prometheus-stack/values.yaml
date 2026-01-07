@@ -145,7 +145,7 @@ grafana:
       # Proxmox via Prometheus
       proxmox-prometheus:
         gnetId: 24550
-        revision: 5
+        revision: 1
         datasource: Prometheus
 
 # Alert Manager
