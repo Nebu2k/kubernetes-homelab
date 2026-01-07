@@ -1,3 +1,10 @@
+## [2.7.26](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.7.25...v2.7.26) (2026-01-07)
+
+
+### 🐛 Bug Fixes
+
+* **proxmox-exporter:** update container port to 9221 in deployment and service ([fb5df24](https://github.com/Nebu2k/kubernetes-homelab/commit/fb5df24a4563c63b73179720f7aea7d66fbe2246))
+
 ## [2.7.25](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.7.24...v2.7.25) (2026-01-07)
 
 
