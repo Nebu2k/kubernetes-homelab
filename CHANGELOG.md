@@ -1,3 +1,15 @@
+## [2.3.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.2.7...v2.3.0) (2026-01-07)
+
+
+### ✨ Features
+
+* add AWS Console entry to services with description and icon ([d95d91e](https://github.com/Nebu2k/kubernetes-homelab/commit/d95d91ec97d5b1d4828407ba3bd3615be57198b6))
+
+
+### 🐛 Bug Fixes
+
+* update Management layout columns from 3 to 2 in configmap ([12917eb](https://github.com/Nebu2k/kubernetes-homelab/commit/12917eb5435284df7e1cb4a49ae6647074b9d6e6))
+
 ## [2.2.7](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.2.6...v2.2.7) (2026-01-07)
 
 
