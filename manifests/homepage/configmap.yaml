@@ -150,7 +150,8 @@ data:
           widget:
             type: nextcloud
             url: https://nextcloud.elmstreet79.de
-            key: {{HOMEPAGE_VAR_NEXTCLOUD_TOKEN}}
+            username: {{HOMEPAGE_VAR_NEXTCLOUD_USER}}
+            password: {{HOMEPAGE_VAR_NEXTCLOUD_PASS}}
 
     - Applications:
 

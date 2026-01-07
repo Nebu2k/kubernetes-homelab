@@ -7,4 +7,5 @@ metadata:
   namespace: homepage
 type: Opaque
 stringData:
-  token: "your_nextcloud_token_here"
+  username: "your_nextcloud_username_here"
+  password: "your_nextcloud_password_here"
