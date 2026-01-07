@@ -1,3 +1,10 @@
+## [2.4.6](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.4.5...v2.4.6) (2026-01-07)
+
+
+### 🐛 Bug Fixes
+
+* update monitored field from cpuload to freespace in Nextcloud configuration ([3cbd29f](https://github.com/Nebu2k/kubernetes-homelab/commit/3cbd29f352d0b8a3a95e9fdf17fadaac887cda1e))
+
 ## [2.4.5](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.4.4...v2.4.5) (2026-01-07)
 
 
