@@ -142,6 +142,16 @@ grafana:
         gnetId: 11312
         revision: 9
         datasource: Prometheus
+      # Proxmox VE Cluster Dashboard
+      proxmox-cluster:
+        gnetId: 10347
+        revision: 5
+        datasource: Prometheus
+      # Proxmox VE VM/CT Overview
+      proxmox-vms:
+        gnetId: 15356
+        revision: 14
+        datasource: Prometheus
 
 # Alert Manager
 alertmanager:
