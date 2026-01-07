@@ -1,3 +1,10 @@
+## [2.4.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.3.1...v2.4.0) (2026-01-07)
+
+
+### ✨ Features
+
+* add Plex and Nextcloud widgets with token management in homepage config ([6455b1d](https://github.com/Nebu2k/kubernetes-homelab/commit/6455b1dcccc4c91a9f42e1f9b8b9be2d2f5a8faa))
+
 ## [2.3.1](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.3.0...v2.3.1) (2026-01-07)
 
 
