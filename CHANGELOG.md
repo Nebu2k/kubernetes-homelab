@@ -1,3 +1,10 @@
+## [2.2.7](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.2.6...v2.2.7) (2026-01-07)
+
+
+### 🐛 Bug Fixes
+
+* update mosquitto image to specific version 2.0.22 ([ff46b2d](https://github.com/Nebu2k/kubernetes-homelab/commit/ff46b2dfa9da38363236375ef3c44c322930db3f))
+
 ## [2.2.6](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.2.5...v2.2.6) (2026-01-07)
 
 
