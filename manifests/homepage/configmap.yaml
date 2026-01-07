@@ -67,7 +67,7 @@ data:
       - AWS Console:
           href: https://d-99675baf99.awsapps.com/start/#/console?account_id=077448369105&role_name=AdministratorAccess
           description: AWS Account
-          icon:aws.png
+          icon: aws.png
           weight: 20
 
     - Infrastructure:
