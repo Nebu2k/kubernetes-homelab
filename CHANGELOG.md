@@ -1,3 +1,10 @@
+## [2.7.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.6.0...v2.7.0) (2026-01-07)
+
+
+### ✨ Features
+
+* add Proxmox exporter resources and configuration ([7ee8a57](https://github.com/Nebu2k/kubernetes-homelab/commit/7ee8a571b3bb281e46a7f5e9d023e9268c3a8ffc))
+
 ## [2.6.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.5.0...v2.6.0) (2026-01-07)
 
 
