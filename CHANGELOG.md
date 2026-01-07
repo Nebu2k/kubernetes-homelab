@@ -1,3 +1,10 @@
+## [2.7.14](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.7.13...v2.7.14) (2026-01-07)
+
+
+### 🐛 Bug Fixes
+
+* **charts:** update targetRevision for cert-manager and metallb Helm charts ([1e307a8](https://github.com/Nebu2k/kubernetes-homelab/commit/1e307a83a9b6834763ce17922a2f3bcf32742358))
+
 ## [2.7.13](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.7.12...v2.7.13) (2026-01-07)
 
 
