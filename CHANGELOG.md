@@ -1,3 +1,10 @@
+## [2.7.21](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.7.20...v2.7.21) (2026-01-07)
+
+
+### 🐛 Bug Fixes
+
+* **proxmox-exporter:** add replication collector to deployment configuration ([e212c3e](https://github.com/Nebu2k/kubernetes-homelab/commit/e212c3e154e5d00d420fbce3868046f61bc1c9f4))
+
 ## [2.7.20](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.7.19...v2.7.20) (2026-01-07)
 
 
