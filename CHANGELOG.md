@@ -1,3 +1,10 @@
+## [2.7.12](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.7.11...v2.7.12) (2026-01-07)
+
+
+### 🐛 Bug Fixes
+
+* **servicemonitor:** update target parameter for proxmox-exporter ([9d79ce1](https://github.com/Nebu2k/kubernetes-homelab/commit/9d79ce1edd074941b2c6aa97d3ba86bc46bb8c63))
+
 ## [2.7.11](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.7.10...v2.7.11) (2026-01-07)
 
 
