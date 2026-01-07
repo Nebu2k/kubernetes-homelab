@@ -1,3 +1,10 @@
+## [2.7.25](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.7.24...v2.7.25) (2026-01-07)
+
+
+### 🐛 Bug Fixes
+
+* **proxmox-exporter:** update container image to ghcr.io/bigtcze/pve-exporter:1 ([d52b4a2](https://github.com/Nebu2k/kubernetes-homelab/commit/d52b4a21505f740a766dc6628b5e4bc9bc28aeda))
+
 ## [2.7.24](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.7.23...v2.7.24) (2026-01-07)
 
 
