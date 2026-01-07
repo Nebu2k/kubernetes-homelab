@@ -1,3 +1,10 @@
+## [2.7.2](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.7.1...v2.7.2) (2026-01-07)
+
+
+### 🐛 Bug Fixes
+
+* add missing release label to proxmox-exporter ServiceMonitor ([e31fa5a](https://github.com/Nebu2k/kubernetes-homelab/commit/e31fa5a7969e694d73417f7c4c1d2ebecbdc7e99))
+
 ## [2.7.1](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.7.0...v2.7.1) (2026-01-07)
 
 
