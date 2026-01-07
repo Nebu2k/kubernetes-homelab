@@ -1,3 +1,10 @@
+## [2.2.6](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.2.5...v2.2.6) (2026-01-07)
+
+
+### 🐛 Bug Fixes
+
+* update container images to stable versions and improve version checking logic ([d98638e](https://github.com/Nebu2k/kubernetes-homelab/commit/d98638e8b932b4ea5c361906ad51000736d6fe86))
+
 ## [2.2.5](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.2.4...v2.2.5) (2026-01-06)
 
 
