@@ -1,3 +1,10 @@
+## [2.7.1](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.7.0...v2.7.1) (2026-01-07)
+
+
+### 🐛 Bug Fixes
+
+* add Proxmox VE dashboards to Grafana configuration ([2ada168](https://github.com/Nebu2k/kubernetes-homelab/commit/2ada16839287a580253ecc2acf1a3bc7836a8ed1))
+
 ## [2.7.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.6.0...v2.7.0) (2026-01-07)
 
 
