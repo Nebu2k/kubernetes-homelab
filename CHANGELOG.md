@@ -1,3 +1,10 @@
+## [2.7.18](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.7.17...v2.7.18) (2026-01-07)
+
+
+### 🐛 Bug Fixes
+
+* **grafana:** update Proxmox monitoring dashboard configuration ([afa06e6](https://github.com/Nebu2k/kubernetes-homelab/commit/afa06e6d949b5d26d29de70ee67467fb5c75c176))
+
 ## [2.7.17](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.7.16...v2.7.17) (2026-01-07)
 
 
