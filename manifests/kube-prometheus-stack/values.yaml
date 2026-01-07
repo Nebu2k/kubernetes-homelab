@@ -23,6 +23,11 @@ kubeEtcd:
 
 # Prometheus configuration
 prometheus:
+  # Service labels for Lens auto-detection
+  service:
+    labels:
+      app.kubernetes.io/name: prometheus
+  
   prometheusSpec:
     # Resource limits (conservative for Pi)
     resources:
