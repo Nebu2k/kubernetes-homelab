@@ -116,6 +116,7 @@ def _normalize_version(ver: str) -> str:
         "-alpine", "-slim", "-debian", "-ubuntu", "-perl", "-python", "-node", "-ruby",
         "-arm64", "-amd64", "-armv7", "-arm32v6",
         "-distroless", "-bullseye", "-buster",
+        "-uclibc", "-openssl", "-musl", "-glibc",
     ]
     ver_lower = ver.lower()
     for suffix in suffixes:
@@ -227,8 +228,8 @@ def check_helm_apps():
 def check_kustomize_apps():
     """Check Kustomize-based applications."""
     print("\n\n📦 Kustomize Apps\n")
-    print(f"{'Component':<25} {'Image':<40} {'Current':<15} {'Latest':<15} {'Status':<10}")
-    print("-" * 110)
+    print(f"{'Component':<25} {'Image':<50} {'Current':<15} {'Latest':<15} {'Status':<10}")
+    print("-" * 125)
     
     updates = []
     
@@ -264,7 +265,6 @@ def check_kustomize_apps():
             continue
         
         # Find container images
-        image_found = False
         for yaml_file in path.glob("*.yaml"):
             if yaml_file.name == "kustomization.yaml":
                 continue
@@ -274,14 +274,27 @@ def check_kustomize_apps():
                     if not doc or doc.get("kind") not in ["Deployment", "StatefulSet"]:
                         continue
                     
-                    containers = doc.get("spec", {}).get("template", {}).get("spec", {}).get("containers", [])
+                    pod_spec = doc.get("spec", {}).get("template", {}).get("spec", {})
                     
-                    for container in containers:
+                    # Check both regular containers and init containers
+                    all_containers = []
+                    all_containers.extend(pod_spec.get("containers", []))
+                    all_containers.extend(pod_spec.get("initContainers", []))
+                    
+                    for container in all_containers:
                         image_full = container.get("image", "")
                         if ":" not in image_full:
                             continue
                         
                         image, current_tag = image_full.rsplit(":", 1)
+                        
+                        # If using latest/stable, it's always up-to-date by definition
+                        if current_tag in ["latest", "stable"]:
+                            status = "🔄 Dynamic"
+                            # Truncate long image names with ellipsis
+                            image_display = image if len(image) <= 50 else image[:47] + "..."
+                            print(f"{name:<25} {image_display:<50} {current_tag:<15} {'N/A':<15} {status:<10}")
+                            continue
                         
                         # Get latest tag
                         latest_tag = get_latest_docker_tag(image)
@@ -302,18 +315,9 @@ def check_kustomize_apps():
                             latest_tag = "N/A"
                             status = "❌ Error"
                         
-                        # Truncate long image names
-                        image_short = image if len(image) <= 40 else "..." + image[-37:]
-                        
-                        print(f"{name:<25} {image_short:<40} {current_tag:<15} {latest_tag:<15} {status:<10}")
-                        image_found = True
-                        break
-                    
-                    if image_found:
-                        break
-            
-            if image_found:
-                break
+                        # Truncate long image names with ellipsis
+                        image_display = image if len(image) <= 50 else image[:47] + "..."
+                        print(f"{name:<25} {image_display:<50} {current_tag:<15} {latest_tag:<15} {status:<10}")
     
     return updates
 

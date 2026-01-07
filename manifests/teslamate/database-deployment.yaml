@@ -18,7 +18,7 @@ spec:
       terminationGracePeriodSeconds: 60
       containers:
       - name: postgres
-        image: postgres:18-bookworm
+        image: postgres:18.1
         lifecycle:
           preStop:
             exec:
