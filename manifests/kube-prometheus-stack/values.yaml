@@ -144,13 +144,8 @@ grafana:
         datasource: Prometheus
       # Proxmox via Prometheus
       proxmox-prometheus:
-        gnetId: 10347
+        gnetId: 24550
         revision: 5
-        datasource: Prometheus
-      # Proxmox VE - pve-exporter
-      proxmox-ve:
-        gnetId: 21072
-        revision: 1
         datasource: Prometheus
 
 # Alert Manager
