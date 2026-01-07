@@ -1,3 +1,10 @@
+## [2.4.5](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.4.4...v2.4.5) (2026-01-07)
+
+
+### 🐛 Bug Fixes
+
+* remove dnsConfig section from deployment manifests ([427a8c2](https://github.com/Nebu2k/kubernetes-homelab/commit/427a8c2fe14f7169c63bd10045c2f039c0dabc14))
+
 ## [2.4.4](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.4.3...v2.4.4) (2026-01-07)
 
 
