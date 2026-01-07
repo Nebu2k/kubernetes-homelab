@@ -1,3 +1,10 @@
+## [2.4.3](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.4.2...v2.4.3) (2026-01-07)
+
+
+### 🐛 Bug Fixes
+
+* correct podSelector annotation to pod-selector in ingress configuration ([cb5e2c1](https://github.com/Nebu2k/kubernetes-homelab/commit/cb5e2c186a51976db9c8635655bbe636ea5d9654))
+
 ## [2.4.2](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.4.1...v2.4.2) (2026-01-07)
 
 
