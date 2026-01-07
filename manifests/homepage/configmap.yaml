@@ -153,7 +153,7 @@ data:
             username: {{HOMEPAGE_VAR_NEXTCLOUD_USER}}
             password: {{HOMEPAGE_VAR_NEXTCLOUD_PASS}}
             fields:
-              - cpuload
+              - freespace
               - memoryusage
               - activeusers
               - numfiles
