@@ -1,3 +1,10 @@
+## [2.7.13](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.7.12...v2.7.13) (2026-01-07)
+
+
+### 🐛 Bug Fixes
+
+* **metallb, sealed-secrets:** update targetRevision for metallb and sealed-secrets charts ([a471321](https://github.com/Nebu2k/kubernetes-homelab/commit/a471321b12f284a7c11601acda30a8a38bad8a93))
+
 ## [2.7.12](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.7.11...v2.7.12) (2026-01-07)
 
 
