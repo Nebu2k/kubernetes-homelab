@@ -1,3 +1,10 @@
+## [2.6.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.5.0...v2.6.0) (2026-01-07)
+
+
+### ✨ Features
+
+* add NODE_OPTIONS environment variable for DNS resolution ([42acb7f](https://github.com/Nebu2k/kubernetes-homelab/commit/42acb7fa4b5bc71398f50635aff5ac107271f626))
+
 ## [2.5.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.4.7...v2.5.0) (2026-01-07)
 
 
