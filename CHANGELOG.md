@@ -1,3 +1,10 @@
+## [2.7.5](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.7.4...v2.7.5) (2026-01-07)
+
+
+### 🐛 Bug Fixes
+
+* **proxmox-exporter:** update pve-api-credentials with new encrypted data ([6c62a86](https://github.com/Nebu2k/kubernetes-homelab/commit/6c62a8651cbb20f49184fc484db1e9b8e8c137b7))
+
 ## [2.7.4](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.7.3...v2.7.4) (2026-01-07)
 
 
