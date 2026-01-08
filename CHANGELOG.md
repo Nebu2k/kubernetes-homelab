@@ -1,3 +1,10 @@
+## [2.11.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.10.0...v2.11.0) (2026-01-08)
+
+
+### ✨ Features
+
+* **deployment:** update image tags for n8n and proxmox-exporter ([d156981](https://github.com/Nebu2k/kubernetes-homelab/commit/d156981cd7f60d8ac4387877331522cc6c2e35eb))
+
 ## [2.10.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.9.0...v2.10.0) (2026-01-08)
 
 
