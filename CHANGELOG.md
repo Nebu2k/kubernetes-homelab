@@ -1,3 +1,10 @@
+## [2.13.1](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.13.0...v2.13.1) (2026-01-08)
+
+
+### 🐛 Bug Fixes
+
+* **minio:** add minio-middleware configuration and update resource references ([4941cdf](https://github.com/Nebu2k/kubernetes-homelab/commit/4941cdf6155ad852883bbbd322494ced7b029de9))
+
 ## [2.13.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.12.0...v2.13.0) (2026-01-08)
 
 
