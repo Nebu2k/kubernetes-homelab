@@ -1,3 +1,10 @@
+## [2.15.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.14.0...v2.15.0) (2026-01-08)
+
+
+### ✨ Features
+
+* **minio:** add pod selector annotation for MinIO console ([c11e65d](https://github.com/Nebu2k/kubernetes-homelab/commit/c11e65dd3d3c223af625c1e016e235e29953ada9))
+
 ## [2.14.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.13.1...v2.14.0) (2026-01-08)
 
 
