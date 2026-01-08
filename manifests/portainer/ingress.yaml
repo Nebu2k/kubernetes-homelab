@@ -24,8 +24,7 @@ spec:
           port: 9443
           scheme: https
           serversTransport: insecure-transport
-  tls:
-    secretName: portainer-tls
+  tls: {}
 
 ---
 # Standard Ingress für Cert-Manager

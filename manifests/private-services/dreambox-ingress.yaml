@@ -46,8 +46,7 @@ spec:
           port: 443
           scheme: https
           serversTransport: insecure-transport
-  tls:
-    secretName: dreambox-tls
+  tls: {}
 
 ---
 # Standard Ingress für Cert-Manager
