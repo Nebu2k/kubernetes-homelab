@@ -1,3 +1,10 @@
+## [2.13.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.12.0...v2.13.0) (2026-01-08)
+
+
+### ✨ Features
+
+* **minio:** add MinIO application with necessary resources and configurations ([3b9667b](https://github.com/Nebu2k/kubernetes-homelab/commit/3b9667b73e6f909588e63e6e164224f0c737d297))
+
 ## [2.12.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.11.2...v2.12.0) (2026-01-08)
 
 
