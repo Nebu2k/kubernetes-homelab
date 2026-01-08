@@ -1,3 +1,10 @@
+## [2.8.5](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.8.4...v2.8.5) (2026-01-08)
+
+
+### 🐛 Bug Fixes
+
+* **ingress:** remove standard Ingress configuration for Portainer ([6a49448](https://github.com/Nebu2k/kubernetes-homelab/commit/6a494484c2d2ee85e427ac3feadf1774ddcc8f7d))
+
 ## [2.8.4](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.8.3...v2.8.4) (2026-01-08)
 
 
