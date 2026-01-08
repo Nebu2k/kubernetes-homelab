@@ -1,3 +1,10 @@
+## [2.8.7](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.8.6...v2.8.7) (2026-01-08)
+
+
+### 🐛 Bug Fixes
+
+* **ingress:** optimize jq queries for fetching hostnames from Ingresses and IngressRoutes ([b380798](https://github.com/Nebu2k/kubernetes-homelab/commit/b380798887ecc93a6b61b2253bcce7056dedf7f2))
+
 ## [2.8.6](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.8.5...v2.8.6) (2026-01-08)
 
 
