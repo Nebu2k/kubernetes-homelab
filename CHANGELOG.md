@@ -1,3 +1,10 @@
+## [2.8.4](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.8.3...v2.8.4) (2026-01-08)
+
+
+### 🐛 Bug Fixes
+
+* **ingress:** remove standard Ingress configuration for Proxmox and UniFi ([0e9fdee](https://github.com/Nebu2k/kubernetes-homelab/commit/0e9fdeefb8c8d0591728c7aca80633fd92ed949d))
+
 ## [2.8.3](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.8.2...v2.8.3) (2026-01-08)
 
 
