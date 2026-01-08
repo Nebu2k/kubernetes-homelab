@@ -1,3 +1,10 @@
+## [2.7.32](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.7.31...v2.7.32) (2026-01-08)
+
+
+### 🐛 Bug Fixes
+
+* **unifi-poller:** add timeout and failureThreshold to liveness and readiness probes ([d9ae723](https://github.com/Nebu2k/kubernetes-homelab/commit/d9ae723cc3b51422abd748825b71a14a69d8857a))
+
 ## [2.7.31](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.7.30...v2.7.31) (2026-01-08)
 
 
