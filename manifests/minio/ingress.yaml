@@ -50,6 +50,7 @@ metadata:
     gethomepage.dev/icon: minio.png
     gethomepage.dev/href: https://minio-k8s.elmstreet79.de
     gethomepage.dev/weight: "60"
+    gethomepage.dev/pod-selector: "app=minio"
 spec:
   ingressClassName: traefik
   tls:
