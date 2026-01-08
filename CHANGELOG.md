@@ -1,3 +1,10 @@
+## [2.7.34](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.7.33...v2.7.34) (2026-01-08)
+
+
+### 🐛 Bug Fixes
+
+* **ingress:** add IngressRoute and standard Ingress for Portainer, Dreambox, Proxmox, and UniFi with TLS configuration ([0896cb8](https://github.com/Nebu2k/kubernetes-homelab/commit/0896cb88f7c1f51f57a8e1fe1aff5a962c22111a))
+
 ## [2.7.33](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.7.32...v2.7.33) (2026-01-08)
 
 
