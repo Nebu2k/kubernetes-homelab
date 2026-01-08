@@ -1,3 +1,10 @@
+## [2.8.8](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.8.7...v2.8.8) (2026-01-08)
+
+
+### 🐛 Bug Fixes
+
+* **ingress:** set TLS configurations for Portainer, Dreambox, Proxmox, and UniFi IngressRoutes ([d4c490a](https://github.com/Nebu2k/kubernetes-homelab/commit/d4c490a15aae5713f023e57a615c5e507f612974))
+
 ## [2.8.7](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.8.6...v2.8.7) (2026-01-08)
 
 
