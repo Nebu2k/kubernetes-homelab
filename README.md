@@ -27,7 +27,7 @@ Production-ready K3s cluster managed via GitOps using ArgoCD App-of-Apps pattern
 | 5 | Landing Page, Portainer, Teslamate |
 | 6 | Kube Prometheus Stack |
 | 7 | Unifi Poller, Home Assistant |
-| 8 | Uptime Kuma, Newt |
+| 8 | Uptime Kuma, Newt, Minio |
 | 9 | N8n, Homepage |
 | 11 | Proxmox Exporter |
 | 12 | Argocd Config |
@@ -55,6 +55,7 @@ homelab/
 │   ├── kube-prometheus-stack.yaml     # Wave 6
 │   ├── home-assistant.yaml            # Wave 7
 │   ├── unifi-poller.yaml              # Wave 7
+│   ├── minio.yaml                     # Wave 8
 │   ├── newt.yaml                      # Wave 8
 │   ├── uptime-kuma.yaml               # Wave 8
 │   ├── homepage.yaml                  # Wave 9
@@ -149,6 +150,15 @@ homelab/
     │   ├── kustomization.yaml
     │   ├── metallb-ip-pool.yaml
     │   └── values.yaml
+    ├── minio/
+    │   ├── credentials-sealed.yaml
+    │   ├── credentials-unsealed.yaml
+    │   ├── deployment.yaml
+    │   ├── ingress.yaml
+    │   ├── kustomization.yaml
+    │   ├── namespace.yaml
+    │   ├── pvc.yaml
+    │   └── service.yaml
     ├── n8n/
     │   ├── deployment.yaml
     │   ├── ingress.yaml
@@ -867,7 +877,6 @@ External Service → Kubernetes Service (ClusterIP) → Manual Endpoints → Ext
 AdGuard Home: http://adguard.elmstreet79.de → 192.168.2.2:8080
 Beszel Monitor: http://beszel.elmstreet79.de → 192.168.2.9:8090
 MinIO Console: http://minio.elmstreet79.de → 192.168.2.9:9393
-MinIO API: http://minio-api.elmstreet79.de → 192.168.2.9:9300
 Longhorn: http://longhorn.elmstreet79.de → Internal K8s service
 ```
 

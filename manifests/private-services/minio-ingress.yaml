@@ -1,30 +1,3 @@
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: minio-pi5-api
-  namespace: private-services
-spec:
-  type: ClusterIP
-  ports:
-    - name: api
-      port: 80
-      targetPort: 9300
-      protocol: TCP
----
-apiVersion: v1
-kind: Endpoints
-metadata:
-  name: minio-pi5-api
-  namespace: private-services
-subsets:
-  - addresses:
-      - ip: 192.168.2.9
-    ports:
-      - name: api
-        port: 9300
-        protocol: TCP
----
 apiVersion: v1
 kind: Service
 metadata:
@@ -50,32 +23,6 @@ subsets:
       - name: console
         port: 9393
         protocol: TCP
----
-apiVersion: networking.k8s.io/v1
-kind: Ingress
-metadata:
-  name: minio-pi5-api
-  namespace: private-services
-  annotations:
-    cert-manager.io/cluster-issuer: internal-ca-issuer
-    traefik.ingress.kubernetes.io/router.middlewares: private-services-minio-upload@kubernetescrd
-spec:
-  ingressClassName: traefik
-  tls:
-    - hosts:
-        - minio-api.elmstreet79.de
-      secretName: minio-pi5-api-tls
-  rules:
-    - host: minio-api.elmstreet79.de
-      http:
-        paths:
-          - path: /
-            pathType: Prefix
-            backend:
-              service:
-                name: minio-pi5-api
-                port:
-                  number: 80
 ---
 apiVersion: networking.k8s.io/v1
 kind: Ingress
