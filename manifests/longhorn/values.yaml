@@ -11,7 +11,7 @@ persistence:
 
 # Default backup store configuration  
 defaultBackupStore:
-  backupTarget: "s3://longhorn@local/"
+  backupTarget: "s3://homelab-longhorn-elmstreet79@eu-central-1/"
   backupTargetCredentialSecret: "longhorn-s3-secret"
 
 # Default settings
