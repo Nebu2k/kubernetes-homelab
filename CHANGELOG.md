@@ -1,3 +1,10 @@
+## [2.15.1](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.15.0...v2.15.1) (2026-01-08)
+
+
+### 🐛 Bug Fixes
+
+* **minio:** remove minio-middleware.yaml from kustomization resources ([ab7c450](https://github.com/Nebu2k/kubernetes-homelab/commit/ab7c450d183ee0f6962ded1d9a5d0374b074eb0d))
+
 ## [2.15.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.14.0...v2.15.0) (2026-01-08)
 
 
