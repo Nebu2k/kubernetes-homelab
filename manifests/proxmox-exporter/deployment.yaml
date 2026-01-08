@@ -21,7 +21,7 @@ spec:
         node-role.kubernetes.io/worker: "worker"
       containers:
         - name: pve-exporter
-          image: ghcr.io/bigtcze/pve-exporter:v1.10.1
+          image: ghcr.io/bigtcze/pve-exporter:1.10.1
           ports:
             - name: metrics
               containerPort: 9221
