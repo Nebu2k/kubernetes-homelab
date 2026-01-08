@@ -1,3 +1,10 @@
+## [2.11.2](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.11.1...v2.11.2) (2026-01-08)
+
+
+### 🐛 Bug Fixes
+
+* **deployment:** revert pve-exporter image tag to 1.0.8 ([0634b8d](https://github.com/Nebu2k/kubernetes-homelab/commit/0634b8dab580cdc5e903207adc43b16a8c073631))
+
 ## [2.11.1](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.11.0...v2.11.1) (2026-01-08)
 
 
