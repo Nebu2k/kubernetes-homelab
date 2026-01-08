@@ -1,3 +1,10 @@
+## [2.8.1](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.8.0...v2.8.1) (2026-01-08)
+
+
+### 🐛 Bug Fixes
+
+* **ingress:** remove secretName for TLS in Portainer, Dreambox, Proxmox, and UniFi configurations ([729a042](https://github.com/Nebu2k/kubernetes-homelab/commit/729a042ffd79c9efa75c396d9acae032bc8d4863))
+
 ## [2.8.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.7.34...v2.8.0) (2026-01-08)
 
 
