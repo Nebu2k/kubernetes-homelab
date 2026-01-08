@@ -47,4 +47,4 @@ spec:
           port: 443
           scheme: https
           serversTransport: insecure-transport
-  tls: {}
+  tls: dreambox-tls
