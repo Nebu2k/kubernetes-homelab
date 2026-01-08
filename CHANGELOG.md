@@ -1,3 +1,10 @@
+## [2.11.1](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.11.0...v2.11.1) (2026-01-08)
+
+
+### 🐛 Bug Fixes
+
+* **deployment:** correct image tag format for proxmox-exporter ([0767b75](https://github.com/Nebu2k/kubernetes-homelab/commit/0767b75d04f203020fb3d0f3733e00cfc810a7dd))
+
 ## [2.11.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.10.0...v2.11.0) (2026-01-08)
 
 
