@@ -36,6 +36,8 @@ spec:
           value: "3001"
         - name: NODE_OPTIONS
           value: "--dns-result-order=ipv4first"
+        - name: NODEJS_IP_FAMILY
+          value: "4"
         volumeMounts:
         - name: data
           mountPath: /app/data
