@@ -11,6 +11,28 @@
 * **ingress:** add TLS secret names for Portainer, Dreambox, Proxmox, and UniFi IngressRoutes ([bcb3697](https://github.com/Nebu2k/kubernetes-homelab/commit/bcb3697d3d6e7a68f87e996eca1cfa14ef95f568))
 * **ingress:** enable passthrough for TLS in Portainer, Dreambox, Proxmox, and UniFi configurations ([6df307e](https://github.com/Nebu2k/kubernetes-homelab/commit/6df307ee3ad3e6d6b5d49ad2e4d9ed5efac8c924))
 * **ingress:** remove secretName from tls configuration for Portainer, Dreambox, Proxmox, and UniFi ([4ecfe9a](https://github.com/Nebu2k/kubernetes-homelab/commit/4ecfe9ab592335c15b5be606e5bc24bd516e7ac2))
+* **ingress:** replace passthrough with secretName for TLS in Portainer, Dreambox, Proxmox, and UniFi configurations ([ebfb97b](https://github.com/Nebu2k/kubernetes-homelab/commit/ebfb97b47a22d1b1b3444679cf2081b7b4dfe4db))
+* **traefik:** disable cross-namespace access for Kubernetes CRD providers ([b36a8a2](https://github.com/Nebu2k/kubernetes-homelab/commit/b36a8a2923a27f30691c9142a3ee3ce5c40bfa7d))
+* **traefik:** enable cross-namespace access for Kubernetes CRD providers ([030e058](https://github.com/Nebu2k/kubernetes-homelab/commit/030e0589490ba7cee595175227a886fa421587fb))
+
+
+### ♻️ Code Refactoring
+
+* **ingress:** simplify domain fetching by removing Traefik IngressRoutes queries ([f9be0ae](https://github.com/Nebu2k/kubernetes-homelab/commit/f9be0aede5733985397f400b8aeada5d1cce1f50))
+
+## [2.8.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.7.34...v2.8.0) (2026-01-08)
+
+
+### ✨ Features
+
+* **traefik:** add kustomization.yaml for traefik resources and update application sources ([779014d](https://github.com/Nebu2k/kubernetes-homelab/commit/779014d026ee226aba57341d021c6ed440b56567))
+
+
+### 🐛 Bug Fixes
+
+* **ingress:** add TLS secret names for Portainer, Dreambox, Proxmox, and UniFi IngressRoutes ([bcb3697](https://github.com/Nebu2k/kubernetes-homelab/commit/bcb3697d3d6e7a68f87e996eca1cfa14ef95f568))
+* **ingress:** enable passthrough for TLS in Portainer, Dreambox, Proxmox, and UniFi configurations ([6df307e](https://github.com/Nebu2k/kubernetes-homelab/commit/6df307ee3ad3e6d6b5d49ad2e4d9ed5efac8c924))
+* **ingress:** remove secretName from tls configuration for Portainer, Dreambox, Proxmox, and UniFi ([4ecfe9a](https://github.com/Nebu2k/kubernetes-homelab/commit/4ecfe9ab592335c15b5be606e5bc24bd516e7ac2))
 * **traefik:** disable cross-namespace access for Kubernetes CRD providers ([b36a8a2](https://github.com/Nebu2k/kubernetes-homelab/commit/b36a8a2923a27f30691c9142a3ee3ce5c40bfa7d))
 * **traefik:** enable cross-namespace access for Kubernetes CRD providers ([030e058](https://github.com/Nebu2k/kubernetes-homelab/commit/030e0589490ba7cee595175227a886fa421587fb))
 
