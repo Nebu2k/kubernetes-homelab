@@ -25,13 +25,12 @@ subsets:
         port: 8006
         protocol: TCP
 ---
+# IngressRoute für Traefik (mit selbstsigniertem Cert vom Proxmox)
 apiVersion: traefik.io/v1alpha1
 kind: IngressRoute
 metadata:
   name: proxmox
   namespace: private-services
-  annotations:
-    cert-manager.io/cluster-issuer: internal-ca-issuer
 spec:
   entryPoints:
     - websecure
@@ -43,5 +42,31 @@ spec:
           port: 443
           scheme: https
           serversTransport: insecure-transport
+  tls: {}
+
+---
+# Standard Ingress für Cert-Manager
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: proxmox
+  namespace: private-services
+  annotations:
+    cert-manager.io/cluster-issuer: internal-ca-issuer
+spec:
+  ingressClassName: traefik
+  rules:
+    - host: pve.elmstreet79.de
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: proxmox
+                port:
+                  number: 443
   tls:
-    secretName: proxmox-tls
+    - hosts:
+        - pve.elmstreet79.de
+      secretName: proxmox-tls

@@ -1,11 +1,11 @@
 ---
+# IngressRoute für Traefik (mit selbstsigniertem Cert vom Portainer)
 apiVersion: traefik.io/v1alpha1
 kind: IngressRoute
 metadata:
   name: portainer
   namespace: portainer
   annotations:
-    cert-manager.io/cluster-issuer: internal-ca-issuer
     cloudflare.io/proxied: "false"
     gethomepage.dev/enabled: "true"
     gethomepage.dev/name: "Portainer"
@@ -24,5 +24,31 @@ spec:
           port: 9443
           scheme: https
           serversTransport: insecure-transport
+  tls: {}
+
+---
+# Standard Ingress für Cert-Manager
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: portainer
+  namespace: portainer
+  annotations:
+    cert-manager.io/cluster-issuer: internal-ca-issuer
+spec:
+  ingressClassName: traefik
+  rules:
+    - host: portainer.elmstreet79.de
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: portainer
+                port:
+                  number: 9443
   tls:
-    secretName: portainer-tls
+    - hosts:
+        - portainer.elmstreet79.de
+      secretName: portainer-tls
