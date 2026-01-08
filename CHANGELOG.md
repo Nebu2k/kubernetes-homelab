@@ -1,3 +1,10 @@
+## [2.12.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.11.2...v2.12.0) (2026-01-08)
+
+
+### ✨ Features
+
+* **check-versions:** enhance GHCR tag retrieval with OAuth support and improve version comparison logic ([ec2a108](https://github.com/Nebu2k/kubernetes-homelab/commit/ec2a108b1d6bbd2175b363868dc6e26a4b0e252d))
+
 ## [2.11.2](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.11.1...v2.11.2) (2026-01-08)
 
 
