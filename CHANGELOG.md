@@ -1,3 +1,10 @@
+## [2.15.4](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.15.3...v2.15.4) (2026-01-08)
+
+
+### 🐛 Bug Fixes
+
+* **minio:** add missing label for MinIO deployment ([8bb3ab4](https://github.com/Nebu2k/kubernetes-homelab/commit/8bb3ab481856e72e20fb2cb17445d0848999fb0d))
+
 ## [2.15.3](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.15.2...v2.15.3) (2026-01-08)
 
 
