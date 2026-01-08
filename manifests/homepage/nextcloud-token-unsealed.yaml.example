@@ -1,4 +1,4 @@
-# Seal with: kubeseal --format=yaml < manifests/homepage/nextcloud-token-unsealed.yaml > manifests/homepage/nextcloud-token-sealed.yaml
+#kubeseal --cert sealed-secrets-pub-cert.pem --format=yaml < manifests/homepage/nextcloud-token-unsealed.yaml > manifests/homepage/nextcloud-token-sealed.yaml
 ---
 apiVersion: v1
 kind: Secret

@@ -1,4 +1,4 @@
-# Seal with: kubeseal --cert sealed-secrets-pub-cert.pem --format=yaml < manifests/unifi-poller/unifi-config-unsealed.yaml > manifests/unifi-poller/unifi-config-sealed.yaml
+#kubeseal --cert sealed-secrets-pub-cert.pem --format=yaml < manifests/unifi-poller/unifi-config-unsealed.yaml > manifests/unifi-poller/unifi-config-sealed.yaml
 ---
 apiVersion: v1
 kind: Secret
