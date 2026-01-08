@@ -17,6 +17,7 @@ spec:
       annotations:
         reloader.stakater.com/auto: "true"
       labels:
+        app: minio
         app.kubernetes.io/name: minio
     spec:
       nodeSelector:
