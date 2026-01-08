@@ -6,6 +6,7 @@ Checks Helm charts and container images for updates.
 
 import argparse
 import json
+import os
 import subprocess
 from pathlib import Path
 from typing import Optional
@@ -17,6 +18,10 @@ from packaging import version
 REPO_ROOT = Path(__file__).parent.parent
 APPS_DIR = REPO_ROOT / "apps"
 MANIFESTS_DIR = REPO_ROOT / "manifests"
+
+# GitHub token from environment (optional but recommended for rate limits)
+GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
+DEBUG = os.getenv("DEBUG", "false").lower() in ["true", "1", "yes"]
 
 
 def run_command(cmd: list) -> Optional[str]:
@@ -100,8 +105,60 @@ def _get_ghcr_tag(image: str) -> Optional[str]:
             return None
         
         owner, repo = parts[0], parts[1]
+        
+        # Try GHCR V2 API first (requires auth)
+        if GITHUB_TOKEN:
+            # Step 1: Get OAuth token for GHCR
+            token_url = f"https://ghcr.io/token?scope=repository:{owner}/{repo}:pull"
+            auth_headers = {"Authorization": f"Bearer {GITHUB_TOKEN}"}
+            token_response = requests.get(token_url, headers=auth_headers, timeout=10)
+            
+            if token_response.status_code == 200:
+                ghcr_token = token_response.json().get("token")
+                if ghcr_token:
+                    # Step 2: Get tags with pagination support
+                    all_tags = []
+                    url = f"https://ghcr.io/v2/{owner}/{repo}/tags/list"
+                    params = {"n": 1000}  # Request up to 1000 tags
+                    headers = {"Authorization": f"Bearer {ghcr_token}"}
+                    
+                    while url:
+                        response = requests.get(url, headers=headers, params=params, timeout=10)
+                        
+                        if response.status_code == 200:
+                            tags = response.json().get("tags", []) or []
+                            all_tags.extend(tags)
+                            
+                            # Check for pagination (Link header)
+                            link_header = response.headers.get("Link")
+                            if link_header and 'rel="next"' in link_header:
+                                # Extract next URL from Link header
+                                import re
+                                match = re.search(r'<([^>]+)>;\s*rel="next"', link_header)
+                                if match:
+                                    url = match.group(1)
+                                    params = {}  # URL already contains params
+                                else:
+                                    break
+                            else:
+                                break
+                        else:
+                            if DEBUG:
+                                print(f"  [DEBUG] {image}: GHCR tags list failed ({response.status_code})")
+                            break
+                    
+                    if all_tags:
+                        result = _filter_stable_tag(all_tags)
+                        if DEBUG:
+                            print(f"  [DEBUG] {image}: GHCR API → {result} (from {len(all_tags)} total tags)")
+                        return result
+            elif DEBUG:
+                print(f"  [DEBUG] {image}: GHCR token request failed ({token_response.status_code}), falling back to GitHub Releases")
+        
+        # Fallback: GitHub Releases API (may not match container tags)
         url = f"https://api.github.com/repos/{owner}/{repo}/releases"
-        response = requests.get(url, timeout=10)
+        headers = {"Authorization": f"token {GITHUB_TOKEN}"} if GITHUB_TOKEN else {}
+        response = requests.get(url, headers=headers, timeout=10)
         response.raise_for_status()
         
         tags = []
@@ -111,8 +168,13 @@ def _get_ghcr_tag(image: str) -> Optional[str]:
                 if tag:
                     tags.append(tag)
         
-        return _filter_stable_tag(tags)
-    except Exception:
+        result = _filter_stable_tag(tags)
+        if DEBUG:
+            print(f"  [DEBUG] {image}: GitHub Releases API → {result} (from {len(tags)} releases)")
+        return result
+    except Exception as e:
+        if DEBUG:
+            print(f"  [DEBUG] {image}: Error → {str(e)}")
         return None
 
 
@@ -161,6 +223,9 @@ def _filter_stable_tag(tags: list) -> Optional[str]:
         "builder", "build", "nightly", "next",  # Build tags
         "beta", "rc", "alpha", "dev", "test", "pr-",  # Pre-release and test tags
         "rootless", "distroless",  # Variant tags
+        "sha-", "commit-",  # SHA/commit tags
+        "-arm64", "-amd64", "-armv7", "-armv8", "-arm32",  # Architecture tags
+        "-arm", "arm64v8", "amd64",  # More architecture variants
     ]
     
     stable = []
@@ -171,12 +236,20 @@ def _filter_stable_tag(tags: list) -> Optional[str]:
         if not tag:
             continue
         
+        # Skip SHA tags (sha-xxxxxx or just hex strings)
+        if tag.startswith("sha-") or (len(tag) == 7 and all(c in "0123456789abcdef" for c in tag.lower())):
+            continue
+        
         # Skip if any exclude pattern matches
         if any(pattern in tag_lower for pattern in exclude_patterns):
             continue
         
         # Skip tags with no version-like characters
         if not any(c.isdigit() for c in tag):
+            continue
+        
+        # Must start with digit or 'v' followed by digit (v1.2.3 or 1.2.3)
+        if not (tag[0].isdigit() or (tag.startswith("v") and len(tag) > 1 and tag[1].isdigit())):
             continue
         
         stable.append(tag)
@@ -186,6 +259,8 @@ def _filter_stable_tag(tags: list) -> Optional[str]:
     
     try:
         sorted_tags = sorted(stable, key=lambda t: version.parse(t.lstrip("v")), reverse=True)
+        if DEBUG:
+            print(f"    Top 5 after sorting: {sorted_tags[:5]}")
         return sorted_tags[0]
     except version.InvalidVersion:
         return stable[0]
@@ -233,14 +308,23 @@ def check_helm_apps():
             try:
                 normalized_current = _normalize_version(current.lstrip("v"))
                 normalized_latest = _normalize_version(latest.lstrip("v"))
-                is_outdated = version.parse(normalized_latest) > version.parse(normalized_current)
+                current_ver = version.parse(normalized_current)
+                latest_ver = version.parse(normalized_latest)
+                
+                if latest_ver > current_ver:
+                    status = "⚠️ Update"
+                    updates.append(name)
+                elif latest_ver < current_ver:
+                    status = "⚠️ Newer"
+                    updates.append(name)
+                else:
+                    status = "✅ OK"
             except version.InvalidVersion:
-                is_outdated = current != latest
-            
-            status = "⚠️ Update" if is_outdated else "✅ OK"
-            
-            if is_outdated:
-                updates.append(name)
+                if current != latest:
+                    status = "⚠️ Differs"
+                    updates.append(name)
+                else:
+                    status = "✅ OK"
         else:
             latest = "N/A"
             status = "❌ Error"
@@ -328,14 +412,23 @@ def check_kustomize_apps():
                             try:
                                 normalized_current = _normalize_version(current_tag.lstrip("v"))
                                 normalized_latest = _normalize_version(latest_tag.lstrip("v"))
-                                is_outdated = version.parse(normalized_latest) > version.parse(normalized_current)
+                                current_ver = version.parse(normalized_current)
+                                latest_ver = version.parse(normalized_latest)
+                                
+                                if latest_ver > current_ver:
+                                    status = "⚠️ Update"
+                                    updates.append(name)
+                                elif latest_ver < current_ver:
+                                    status = "⚠️ Newer"
+                                    updates.append(name)
+                                else:
+                                    status = "✅ OK"
                             except version.InvalidVersion:
-                                is_outdated = current_tag != latest_tag
-                            
-                            status = "⚠️ Update" if is_outdated else "✅ OK"
-                            
-                            if is_outdated:
-                                updates.append(name)
+                                if current_tag != latest_tag:
+                                    status = "⚠️ Differs"
+                                    updates.append(name)
+                                else:
+                                    status = "✅ OK"
                         else:
                             latest_tag = "N/A"
                             status = "❌ Error"
@@ -356,6 +449,12 @@ def main():
     print("=" * 110)
     print("📊 VERSION CHECK REPORT")
     print("=" * 110 + "\n")
+    
+    # Check for GitHub token
+    if not GITHUB_TOKEN:
+        print("⚠️  GITHUB_TOKEN not set - API rate limits may apply and GHCR lookups unavailable")
+        print("   Create token: https://github.com/settings/tokens (scopes: read:packages, public_repo)")
+        print("   Export: export GITHUB_TOKEN=ghp_xxxxx\n")
     
     helm_updates = []
     if not args.skip_helm:
