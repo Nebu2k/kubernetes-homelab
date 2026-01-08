@@ -156,7 +156,6 @@ homelab/
     │   ├── deployment.yaml
     │   ├── ingress.yaml
     │   ├── kustomization.yaml
-    │   ├── minio-middleware.yaml
     │   ├── namespace.yaml
     │   ├── pvc.yaml
     │   └── service.yaml
