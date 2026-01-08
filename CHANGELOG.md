@@ -1,3 +1,10 @@
+## [2.10.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.9.0...v2.10.0) (2026-01-08)
+
+
+### ✨ Features
+
+* **deployment:** add init container to disable IPv6 in uptime-kuma deployment ([6054e4b](https://github.com/Nebu2k/kubernetes-homelab/commit/6054e4b2c714feef93c027e68e1704a691ca02d4))
+
 ## [2.9.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.8.9...v2.9.0) (2026-01-08)
 
 
