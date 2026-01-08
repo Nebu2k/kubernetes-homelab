@@ -1,3 +1,10 @@
+## [2.9.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.8.9...v2.9.0) (2026-01-08)
+
+
+### ✨ Features
+
+* **manifests:** update kubeseal command comments in unsealed YAML examples ([9256d3d](https://github.com/Nebu2k/kubernetes-homelab/commit/9256d3de4a502a899fcde3305a8950d381ba236c))
+
 ## [2.8.9](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.8.8...v2.8.9) (2026-01-08)
 
 
