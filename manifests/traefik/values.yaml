@@ -9,7 +9,7 @@ nodeSelector:
 providers:
   kubernetesCRD:
     enabled: true
-    allowCrossNamespace: false
+    allowCrossNamespace: true
   kubernetesIngress:
     enabled: true
 
