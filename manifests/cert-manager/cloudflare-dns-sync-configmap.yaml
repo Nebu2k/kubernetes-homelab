@@ -34,11 +34,11 @@ data:
     # Get service account token
     TOKEN=$(cat /var/run/secrets/kubernetes.io/serviceaccount/token)
 
-    # Get all hostnames from standard Ingresses
-    echo "Fetching public ingresses (with letsencrypt-prod)..."
+    # Get all hostnames from Kubernetes Ingresses and Traefik IngressRoutes
+    echo "Fetching public routes (Ingress + IngressRoute, with letsencrypt-prod)..."
 
     # Query standard Ingresses
-    ALL_DOMAINS=$(curl -s -k -H "Authorization: Bearer ${TOKEN}" \
+    INGRESS_DOMAINS=$(curl -s -k -H "Authorization: Bearer ${TOKEN}" \
       "https://kubernetes.default.svc/apis/networking.k8s.io/v1/ingresses?limit=500" | \
       jq -r ".items[] | 
         select(.metadata.annotations[\"cert-manager.io/cluster-issuer\"] == \"letsencrypt-prod\") | 
@@ -46,7 +46,28 @@ data:
           host: .spec.rules[]?.host,
           proxied: (.metadata.annotations[\"cloudflare.io/proxied\"] // \"true\")
         } | 
-        select(.host != null and (.host | endswith(\"${DOMAIN}\")))")
+        select(.host != null and (.host | endswith(\"${DOMAIN}\")))" 2>/dev/null || echo "")
+
+    # Query Traefik IngressRoutes (CRD). Opt-in via the same annotation used for Ingresses.
+    # Extract Host(`...`) from route match rules.
+    INGRESSROUTE_DOMAINS=$(curl -s -k -H "Authorization: Bearer ${TOKEN}" \
+      "https://kubernetes.default.svc/apis/traefik.io/v1alpha1/ingressroutes?limit=500" | \
+      jq -r ".items[] |
+        select(.metadata.annotations[\"cert-manager.io/cluster-issuer\"] == \"letsencrypt-prod\") |
+        {
+          proxied: (.metadata.annotations[\"cloudflare.io/proxied\"] // \"true\")
+        } as $meta |
+        (.spec.routes // [])[]? as $route |
+        ($route.match // \"\") as $match |
+        (try ($match | capture(\"Host\\\\(`(?<host>[^`]+)`\\\\)\")) catch null) as $cap |
+        select($cap != null) |
+        {
+          host: $cap.host,
+          proxied: $meta.proxied
+        } |
+        select(.host != null and (.host | endswith(\"${DOMAIN}\")))" 2>/dev/null || echo "")
+
+    ALL_DOMAINS=$( (echo "${INGRESS_DOMAINS}"; echo "${INGRESSROUTE_DOMAINS}") | sed '/^$/d' )
 
     echo "Found public domains:"
     echo "${ALL_DOMAINS}" | jq -r '.host' | sort -u

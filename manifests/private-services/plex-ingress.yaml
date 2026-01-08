@@ -5,6 +5,8 @@ kind: IngressRoute
 metadata:
   name: plex
   namespace: private-services
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
 spec:
   entryPoints:
     - websecure
