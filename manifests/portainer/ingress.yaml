@@ -24,4 +24,5 @@ spec:
           port: 9443
           scheme: https
           serversTransport: insecure-transport
-  tls: portainer-tls
+  tls:
+    secretName: portainer-tls
