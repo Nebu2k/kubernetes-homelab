@@ -1,3 +1,10 @@
+## [2.8.6](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.8.5...v2.8.6) (2026-01-08)
+
+
+### 🐛 Bug Fixes
+
+* **ingress:** update scripts to fetch hostnames from Kubernetes Ingresses and Traefik IngressRoutes ([7d5d2e4](https://github.com/Nebu2k/kubernetes-homelab/commit/7d5d2e450b70030277ab305a5ec7674c1b74d6e0))
+
 ## [2.8.5](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.8.4...v2.8.5) (2026-01-08)
 
 
