@@ -43,7 +43,7 @@ spec:
           scheme: https
           serversTransport: insecure-transport
   tls:
-    passthrough: true
+    secretName: proxmox-tls
 
 ---
 # Standard Ingress für Cert-Manager

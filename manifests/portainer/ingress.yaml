@@ -25,7 +25,7 @@ spec:
           scheme: https
           serversTransport: insecure-transport
   tls:
-    passthrough: true
+    secretName: portainer-tls
 
 ---
 # Standard Ingress für Cert-Manager
