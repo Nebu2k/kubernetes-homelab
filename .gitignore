@@ -4,12 +4,14 @@
 *.secrets.yaml
 *-unsealed.yaml
 *-private.yaml
+*.pem
+*.crt
+*.key
 *.bak
 *.swp
 *.swo
 *.tmp
 *.log
-sealed-secrets-pub-cert.pem
 
 # Ignore backup scripts with credentials
 scripts*/*
