@@ -44,7 +44,7 @@ metadata:
   annotations:
     cert-manager.io/cluster-issuer: letsencrypt-prod
     gethomepage.dev/enabled: "true"
-    gethomepage.dev/name: MinIO Console
+    gethomepage.dev/name: MinIO Console K8s
     gethomepage.dev/description: S3 Management Console
     gethomepage.dev/group: Infrastructure
     gethomepage.dev/icon: minio.png
