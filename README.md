@@ -1136,7 +1136,7 @@ kubectl get secret -n monitoring grafana-admin-credentials \
 | Longhorn | 1.10.1 | Longhorn |
 | Portainer | 2.33.6 | Portainer |
 | Cert Manager | v1.19.2 | Cert Manager |
-| Traefik | 38.0.1 | Traefik |
+| Traefik | 38.0.2 | Traefik |
 | Newt | 1.1.0 | Newt |
 | K3s | v1.33.5 | Lightweight Kubernetes |
 | Kube-VIP | v1.0.1 | Control plane HA |
