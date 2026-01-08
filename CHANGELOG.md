@@ -5,6 +5,18 @@
 
 * **traefik:** add kustomization.yaml for traefik resources and update application sources ([779014d](https://github.com/Nebu2k/kubernetes-homelab/commit/779014d026ee226aba57341d021c6ed440b56567))
 
+
+### 🐛 Bug Fixes
+
+* **ingress:** add TLS secret names for Portainer, Dreambox, Proxmox, and UniFi IngressRoutes ([bcb3697](https://github.com/Nebu2k/kubernetes-homelab/commit/bcb3697d3d6e7a68f87e996eca1cfa14ef95f568))
+
+## [2.8.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.7.34...v2.8.0) (2026-01-08)
+
+
+### ✨ Features
+
+* **traefik:** add kustomization.yaml for traefik resources and update application sources ([779014d](https://github.com/Nebu2k/kubernetes-homelab/commit/779014d026ee226aba57341d021c6ed440b56567))
+
 ## [2.7.34](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.7.33...v2.7.34) (2026-01-08)
 
 
