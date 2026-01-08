@@ -1,3 +1,10 @@
+## [2.15.3](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.15.2...v2.15.3) (2026-01-08)
+
+
+### 🐛 Bug Fixes
+
+* **minio:** update name annotation for MinIO Console to include 'K8s' ([67e287c](https://github.com/Nebu2k/kubernetes-homelab/commit/67e287c9747f74a151b2c74159254f6a754ae807))
+
 ## [2.15.2](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.15.1...v2.15.2) (2026-01-08)
 
 
