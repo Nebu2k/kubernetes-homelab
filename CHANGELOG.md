@@ -1,3 +1,10 @@
+## [2.14.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.13.1...v2.14.0) (2026-01-08)
+
+
+### ✨ Features
+
+* **longhorn:** update S3 backup target to use aws ([fe491da](https://github.com/Nebu2k/kubernetes-homelab/commit/fe491daabbfa59c6fb69f38a4f1c73ea43e71fa5))
+
 ## [2.13.1](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.13.0...v2.13.1) (2026-01-08)
 
 
