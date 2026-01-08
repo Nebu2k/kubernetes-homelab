@@ -1,3 +1,10 @@
+## [2.7.33](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.7.32...v2.7.33) (2026-01-08)
+
+
+### 🐛 Bug Fixes
+
+* **uptime-kuma:** add NODEJS_IP_FAMILY environment variable ([99bc598](https://github.com/Nebu2k/kubernetes-homelab/commit/99bc5981fbae058822819345e82775d79c2f5eb4))
+
 ## [2.7.32](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.7.31...v2.7.32) (2026-01-08)
 
 
