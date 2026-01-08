@@ -1,3 +1,10 @@
+## [2.8.2](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.8.1...v2.8.2) (2026-01-08)
+
+
+### 🐛 Bug Fixes
+
+* **ingress:** add Traefik annotations for HTTPS and insecure transport in Dreambox, Proxmox, and UniFi configurations ([de32319](https://github.com/Nebu2k/kubernetes-homelab/commit/de32319990377debd72679de4ba8b4574dfea5a2))
+
 ## [2.8.1](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.8.0...v2.8.1) (2026-01-08)
 
 
