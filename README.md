@@ -219,6 +219,7 @@ homelab/
     │   └── teslamate-secret-unsealed.yaml
     ├── traefik/
     │   ├── certificate.yaml
+    │   ├── ingress.yaml
     │   ├── kustomization.yaml
     │   └── values.yaml
     ├── unifi-poller/

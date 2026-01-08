@@ -24,12 +24,12 @@ data:
     # Get service account token
     TOKEN=$(cat /var/run/secrets/kubernetes.io/serviceaccount/token)
 
-    # Get all hostnames from both standard Ingresses and Traefik IngressRoutes
+    # Get all hostnames from standard Ingresses
     echo "Fetching internal ingresses (with internal-ca-issuer or letsencrypt-prod)..."
 
     # Query standard Ingresses with internal-ca-issuer or letsencrypt-prod
     # Store as JSON objects with host, namespace, and service name
-    INGRESS_DATA=$(curl -s -k -H "Authorization: Bearer ${TOKEN}" \
+    ALL_INGRESS_DATA=$(curl -s -k -H "Authorization: Bearer ${TOKEN}" \
       "https://kubernetes.default.svc/apis/networking.k8s.io/v1/ingresses?limit=500" | \
       jq -c '.items[] | 
         select(.metadata.annotations["cert-manager.io/cluster-issuer"] == "internal-ca-issuer" or 
@@ -44,41 +44,8 @@ data:
           service: .http.paths[0].backend.service.name
         }' 2>/dev/null || echo "")
     
-    INGRESS_COUNT=$(echo "${INGRESS_DATA}" | grep -c . || echo 0)
+    INGRESS_COUNT=$(echo "${ALL_INGRESS_DATA}" | grep -c . || echo 0)
     echo "Found ${INGRESS_COUNT} standard Ingresses"
-
-    # Query Traefik IngressRoutes with internal-ca-issuer or letsencrypt-prod annotation
-    INGRESSROUTE_RAW=$(curl -s -k -H "Authorization: Bearer ${TOKEN}" \
-      "https://kubernetes.default.svc/apis/traefik.io/v1alpha1/ingressroutes?limit=500")
-    
-    INGRESSROUTE_DATA=$(echo "${INGRESSROUTE_RAW}" | \
-      jq -c '.items[]? | 
-        select(.metadata.annotations["cert-manager.io/cluster-issuer"] == "internal-ca-issuer" or 
-               .metadata.annotations["cert-manager.io/cluster-issuer"] == "letsencrypt-prod") |
-        select(.metadata.annotations["adguard-dns-sync/exclude"] != "true") |
-        select(.spec.tls.secretName != null) |
-        .metadata.namespace as $ns |
-        .spec.routes[]? |
-        select(.match != null) |
-        {
-          namespace: $ns,
-          service: (.services[0].name // null),
-          match: .match
-        } |
-        .match as $m |
-        ($m | test("Host\\(`[^`]+`\\)")) as $has_host |
-        if $has_host then
-          . + {host: ($m | capture("Host\\(`(?<host>[^`]+)`\\)").host)}
-        else
-          empty
-        end |
-        select(.host | endswith("'"${DOMAIN_SUFFIX}"'"))' 2>/dev/null || echo "")
-    
-    INGRESSROUTE_COUNT=$(echo "${INGRESSROUTE_DATA}" | grep -cv '^$' || echo 0)
-    echo "Found ${INGRESSROUTE_COUNT} Traefik IngressRoutes"
-
-    # Combine both sources
-    ALL_INGRESS_DATA=$(printf '%s\n%s' "${INGRESS_DATA}" "${INGRESSROUTE_DATA}")
 
     # Build a map of domain -> IP by checking if service has LoadBalancer
     echo "Resolving target IPs for each domain..."
