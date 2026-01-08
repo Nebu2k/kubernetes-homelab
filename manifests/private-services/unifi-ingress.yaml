@@ -42,7 +42,8 @@ spec:
           port: 443
           scheme: https
           serversTransport: insecure-transport
-  tls: {}
+  tls:
+    secretName: unifi-tls
 
 ---
 # Standard Ingress für Cert-Manager
