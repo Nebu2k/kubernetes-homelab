@@ -1,3 +1,10 @@
+## [2.8.3](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.8.2...v2.8.3) (2026-01-08)
+
+
+### ♻️ Code Refactoring
+
+* **ingress:** remove standard Ingress configuration for Dreambox ([f86f22b](https://github.com/Nebu2k/kubernetes-homelab/commit/f86f22b83a0c903da40430fa23fd0138e418c668))
+
 ## [2.8.2](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.8.1...v2.8.2) (2026-01-08)
 
 
