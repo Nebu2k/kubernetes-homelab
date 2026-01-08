@@ -42,8 +42,7 @@ spec:
           port: 443
           scheme: https
           serversTransport: insecure-transport
-  tls:
-    secretName: proxmox-tls
+  tls: {}
 
 ---
 # Standard Ingress für Cert-Manager
