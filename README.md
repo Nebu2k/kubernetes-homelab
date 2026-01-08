@@ -156,6 +156,7 @@ homelab/
     │   ├── deployment.yaml
     │   ├── ingress.yaml
     │   ├── kustomization.yaml
+    │   ├── minio-middleware.yaml
     │   ├── namespace.yaml
     │   ├── pvc.yaml
     │   └── service.yaml
@@ -196,7 +197,6 @@ homelab/
     │   ├── internal-cluster-issuer.yaml
     │   ├── kustomization.yaml
     │   ├── minio-ingress.yaml
-    │   ├── minio-middleware.yaml
     │   ├── nextcloud-ingress.yaml
     │   ├── plex-ingress.yaml
     │   ├── proxmox-ingress.yaml
