@@ -19,3 +19,5 @@ resources:
   - adguard-dns-sync-rbac.yaml
   - adguard-dns-sync-job.yaml
   - adguard-sync-ingress.yaml
+  - blocky-dns-sync-rbac.yaml
+  - blocky-dns-sync-job.yaml

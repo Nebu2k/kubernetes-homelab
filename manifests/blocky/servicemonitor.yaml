@@ -1,0 +1,35 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: blocky-metrics
+  namespace: blocky
+  labels:
+    app.kubernetes.io/name: blocky
+    app.kubernetes.io/component: metrics
+spec:
+  type: ClusterIP
+  ports:
+  - name: metrics
+    port: 4000
+    targetPort: http
+    protocol: TCP
+  selector:
+    app.kubernetes.io/name: blocky
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: blocky
+  namespace: blocky
+  labels:
+    app.kubernetes.io/name: blocky
+    release: kube-prometheus-stack
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: metrics
+  endpoints:
+  - port: metrics
+    path: /metrics
+    interval: 30s

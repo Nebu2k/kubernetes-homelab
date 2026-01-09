@@ -1,0 +1,313 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: blocky-dns-sync
+  namespace: private-services
+data:
+  sync-dns.sh: |
+    #!/bin/sh
+    set -e
+
+    # Install required tools
+    apk add --no-cache jq curl > /dev/null 2>&1
+
+    DEFAULT_INGRESS_IP="${DEFAULT_INGRESS_IP}"
+    DOMAIN_SUFFIX="${DOMAIN_SUFFIX}"
+    BLOCKY_NAMESPACE="${BLOCKY_NAMESPACE}"
+    BLOCKY_CONFIGMAP="${BLOCKY_CONFIGMAP}"
+    BLOCKY_DEPLOYMENT="${BLOCKY_DEPLOYMENT}"
+
+    echo "╔════════════════════════════════════════════════════════╗"
+    echo "║  Blocky DNS Sync Job                                   ║"
+    echo "╚════════════════════════════════════════════════════════╝"
+    echo ""
+    echo "Target: ${BLOCKY_NAMESPACE}/${BLOCKY_CONFIGMAP}"
+    echo "Default IP: ${DEFAULT_INGRESS_IP} (Traefik)"
+    echo "Domain: *.${DOMAIN_SUFFIX}"
+    echo ""
+
+    # Get service account token
+    TOKEN=$(cat /var/run/secrets/kubernetes.io/serviceaccount/token)
+    K8S_API="https://kubernetes.default.svc"
+
+    # Fetch Ingresses and IngressRoutes (same as AdGuard sync)
+    echo "Fetching routes from Kubernetes..."
+
+    INGRESS_DATA=$(curl -s -k -H "Authorization: Bearer ${TOKEN}" \
+      "${K8S_API}/apis/networking.k8s.io/v1/ingresses?limit=500" | \
+      jq -c '.items[] |
+        select(.metadata.annotations["cert-manager.io/cluster-issuer"] == "internal-ca-issuer" or
+               .metadata.annotations["cert-manager.io/cluster-issuer"] == "letsencrypt-prod") |
+        select(.metadata.annotations["blocky-dns-sync/exclude"] != "true") |
+        .metadata.namespace as $ns |
+        .spec.rules[] |
+        select(.host != null and (.host | endswith("'""${DOMAIN_SUFFIX}""'"))) |
+        {
+          host: .host,
+          namespace: $ns,
+          service: .http.paths[0].backend.service.name
+        }' 2>/dev/null || echo "")
+
+    INGRESSROUTE_DATA=$(curl -s -k -H "Authorization: Bearer ${TOKEN}" \
+      "${K8S_API}/apis/traefik.io/v1alpha1/ingressroutes?limit=500" | \
+      jq -c '.items[] |
+        select(.metadata.annotations["blocky-dns-sync/exclude"] != "true") |
+        .metadata.namespace as $ns |
+        (.spec.routes // [])[]? as $route |
+        ($route.match // "") as $match |
+        (try ($match | capture("Host\\(`(?<host>[^`]+)`\\)")) catch null) as $cap |
+        select($cap != null) |
+        ($cap.host // empty) as $host |
+        select($host != null and ($host | endswith("'""${DOMAIN_SUFFIX}""'"))) |
+        {
+          host: $host,
+          namespace: $ns,
+          service: ($route.services[0].name // "null")
+        }' 2>/dev/null || echo "")
+
+    ALL_INGRESS_DATA=$( (echo "${INGRESS_DATA}"; echo "${INGRESSROUTE_DATA}") | sed '/^$/d' )
+
+    INGRESS_COUNT=$(echo "${INGRESS_DATA}" | grep -c . || echo 0)
+    INGRESSROUTE_COUNT=$(echo "${INGRESSROUTE_DATA}" | grep -c . || echo 0)
+    TOTAL_COUNT=$(echo "${ALL_INGRESS_DATA}" | grep -c . || echo 0)
+
+    echo "Found ${TOTAL_COUNT} routes (${INGRESS_COUNT} Ingress, ${INGRESSROUTE_COUNT} IngressRoute)"
+    echo ""
+
+    # Build domain-IP mapping
+    echo "Resolving target IPs..."
+    TMP_MAP=$(mktemp)
+
+    echo "${ALL_INGRESS_DATA}" | while IFS= read -r LINE; do
+      if [ -z "${LINE}" ]; then
+        continue
+      fi
+
+      HOST=$(echo "${LINE}" | jq -r '.host // empty' 2>/dev/null)
+      NAMESPACE=$(echo "${LINE}" | jq -r '.namespace // empty' 2>/dev/null)
+      SERVICE=$(echo "${LINE}" | jq -r '.service // empty' 2>/dev/null)
+
+      if [ -z "${HOST}" ]; then
+        continue
+      fi
+
+      # Skip duplicates
+      if grep -q "^${HOST}:" "${TMP_MAP}" 2>/dev/null; then
+        echo "  ${HOST} -> (skipped, duplicate)"
+        continue
+      fi
+
+      TARGET_IP="${DEFAULT_INGRESS_IP}"
+      REASON="default"
+
+      # Skip special services
+      if [ "${SERVICE}" = "api@internal" ] || [ -z "${SERVICE}" ] || [ "${SERVICE}" = "null" ]; then
+        echo "  ${HOST} -> ${TARGET_IP} (${REASON})"
+        echo "${HOST}:${TARGET_IP}" >> "${TMP_MAP}"
+        continue
+      fi
+
+      # Check if service is LoadBalancer
+      SVC_DATA=$(curl -s -k -H "Authorization: Bearer ${TOKEN}" \
+        "${K8S_API}/api/v1/namespaces/${NAMESPACE}/services/${SERVICE}")
+
+      SVC_KIND=$(echo "${SVC_DATA}" | jq -r '.kind // empty' 2>/dev/null)
+
+      if [ "${SVC_KIND}" = "Service" ]; then
+        SVC_TYPE=$(echo "${SVC_DATA}" | jq -r '.spec.type' 2>/dev/null)
+
+        if [ "${SVC_TYPE}" = "LoadBalancer" ]; then
+          LB_IP=$(echo "${SVC_DATA}" | jq -r '.status.loadBalancer.ingress[0].ip // empty' 2>/dev/null)
+          if [ -n "${LB_IP}" ] && [ "${LB_IP}" != "null" ]; then
+            TARGET_IP="${LB_IP}"
+            REASON="LoadBalancer"
+          fi
+        fi
+      fi
+
+      echo "  ${HOST} -> ${TARGET_IP} (${REASON})"
+      echo "${HOST}:${TARGET_IP}" >> "${TMP_MAP}"
+    done
+
+    # Generate zone file
+    echo ""
+    echo "Generating Blocky zone file..."
+
+    ZONE_FILE=$(mktemp)
+    cat > "${ZONE_FILE}" << 'ZONE_HEADER'
+; Custom DNS entries for elmstreet79.de
+; Auto-generated by blocky-dns-sync-job
+; DO NOT EDIT MANUALLY
+
+$ORIGIN elmstreet79.de.
+$TTL 300
+
+ZONE_HEADER
+
+    # Add A records
+    RECORD_COUNT=0
+    if [ -s "${TMP_MAP}" ]; then
+      cat "${TMP_MAP}" | while IFS=: read -r DOMAIN TARGET_IP; do
+        if [ -z "${DOMAIN}" ] || [ -z "${TARGET_IP}" ]; then
+          continue
+        fi
+
+        # Extract subdomain (remove .elmstreet79.de)
+        SUBDOMAIN=$(echo "${DOMAIN}" | sed "s/\.${DOMAIN_SUFFIX}$//")
+
+        # Add record
+        printf "%-20s IN A    %s\n" "${SUBDOMAIN}" "${TARGET_IP}" >> "${ZONE_FILE}"
+        RECORD_COUNT=$((RECORD_COUNT + 1))
+      done
+    fi
+
+    echo "Generated ${RECORD_COUNT} DNS records"
+    echo ""
+
+    # Display zone file
+    echo "--- Zone File Preview ---"
+    cat "${ZONE_FILE}"
+    echo "-------------------------"
+    echo ""
+
+    # Update ConfigMap
+    echo "Updating Blocky ConfigMap..."
+
+    ZONE_CONTENT=$(cat "${ZONE_FILE}" | jq -sRr @json | sed 's/^"//;s/"$//')
+
+    PATCH_JSON=$(cat <<EOF
+{
+  "data": {
+    "custom-dns.zone": ${ZONE_CONTENT}
+  }
+}
+EOF
+)
+
+    UPDATE_RESULT=$(curl -s -k -X PATCH \
+      -H "Authorization: Bearer ${TOKEN}" \
+      -H "Content-Type: application/merge-patch+json" \
+      "${K8S_API}/api/v1/namespaces/${BLOCKY_NAMESPACE}/configmaps/${BLOCKY_CONFIGMAP}" \
+      -d "${PATCH_JSON}")
+
+    if echo "${UPDATE_RESULT}" | jq -e '.kind == "ConfigMap"' > /dev/null 2>&1; then
+      echo "✓ ConfigMap updated successfully"
+    else
+      echo "✗ Failed to update ConfigMap"
+      echo "${UPDATE_RESULT}" | jq '.' || echo "${UPDATE_RESULT}"
+      rm -f "${TMP_MAP}" "${ZONE_FILE}"
+      exit 1
+    fi
+
+    # Restart Blocky deployment (rolling restart)
+    echo ""
+    echo "Triggering Blocky rolling restart..."
+
+    RESTART_PATCH='{"spec":{"template":{"metadata":{"annotations":{"kubectl.kubernetes.io/restartedAt":"'$(date +%Y-%m-%dT%H:%M:%S%z)'"}}}}}'
+
+    RESTART_RESULT=$(curl -s -k -X PATCH \
+      -H "Authorization: Bearer ${TOKEN}" \
+      -H "Content-Type: application/strategic-merge-patch+json" \
+      "${K8S_API}/apis/apps/v1/namespaces/${BLOCKY_NAMESPACE}/deployments/${BLOCKY_DEPLOYMENT}" \
+      -d "${RESTART_PATCH}")
+
+    if echo "${RESTART_RESULT}" | jq -e '.kind == "Deployment"' > /dev/null 2>&1; then
+      echo "✓ Blocky deployment restart triggered"
+    else
+      echo "⚠ Warning: Failed to restart deployment (may require manual restart)"
+    fi
+
+    # Cleanup
+    rm -f "${TMP_MAP}" "${ZONE_FILE}"
+
+    echo ""
+    echo "╔════════════════════════════════════════════════════════╗"
+    echo "║  Blocky DNS Sync Complete                              ║"
+    echo "╚════════════════════════════════════════════════════════╝"
+    echo ""
+    echo "Summary:"
+    echo "  Routes synced: ${TOTAL_COUNT}"
+    echo "  DNS records: ${RECORD_COUNT}"
+    echo "  ConfigMap: ${BLOCKY_NAMESPACE}/${BLOCKY_CONFIGMAP}"
+    echo ""
+---
+# PostSync Hook: Runs after every ArgoCD sync
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: blocky-dns-sync-postsync
+  namespace: private-services
+  annotations:
+    argocd.argoproj.io/hook: PostSync
+    argocd.argoproj.io/hook-delete-policy: BeforeHookCreation
+spec:
+  ttlSecondsAfterFinished: 300
+  template:
+    spec:
+      serviceAccountName: blocky-dns-sync
+      restartPolicy: OnFailure
+      containers:
+        - name: sync
+          image: alpine/curl:latest
+          command: ["/bin/sh", "/scripts/sync-dns.sh"]
+          env:
+            - name: DEFAULT_INGRESS_IP
+              value: "192.168.2.250"
+            - name: DOMAIN_SUFFIX
+              value: "elmstreet79.de"
+            - name: BLOCKY_NAMESPACE
+              value: "blocky"
+            - name: BLOCKY_CONFIGMAP
+              value: "blocky-custom-dns"
+            - name: BLOCKY_DEPLOYMENT
+              value: "blocky"
+          volumeMounts:
+            - name: scripts
+              mountPath: /scripts
+      volumes:
+        - name: scripts
+          configMap:
+            name: blocky-dns-sync
+            defaultMode: 0755
+---
+# CronJob: Runs every 5 minutes
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: blocky-dns-sync
+  namespace: private-services
+spec:
+  schedule: "*/5 * * * *"
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      ttlSecondsAfterFinished: 3600
+      template:
+        spec:
+          serviceAccountName: blocky-dns-sync
+          restartPolicy: OnFailure
+          containers:
+            - name: sync
+              image: alpine/curl:latest
+              command: ["/bin/sh", "/scripts/sync-dns.sh"]
+              env:
+                - name: DEFAULT_INGRESS_IP
+                  value: "192.168.2.250"
+                - name: DOMAIN_SUFFIX
+                  value: "elmstreet79.de"
+                - name: BLOCKY_NAMESPACE
+                  value: "blocky"
+                - name: BLOCKY_CONFIGMAP
+                  value: "blocky-custom-dns"
+                - name: BLOCKY_DEPLOYMENT
+                  value: "blocky"
+              volumeMounts:
+                - name: scripts
+                  mountPath: /scripts
+          volumes:
+            - name: scripts
+              configMap:
+                name: blocky-dns-sync
+                defaultMode: 0755

@@ -23,7 +23,7 @@ Production-ready K3s cluster managed via GitOps using ArgoCD App-of-Apps pattern
 | 1 | Reloader, Kured, Metallb |
 | 2 | Cert Manager |
 | 3 | Traefik |
-| 4 | Longhorn |
+| 4 | Blocky, Longhorn |
 | 5 | Landing Page, Portainer, Teslamate |
 | 6 | Kube Prometheus Stack |
 | 7 | Unifi Poller, Home Assistant |
@@ -48,6 +48,7 @@ homelab/
 │   ├── reloader.yaml                  # Wave 1
 │   ├── cert-manager.yaml              # Wave 2
 │   ├── traefik.yaml                   # Wave 3
+│   ├── blocky.yaml                    # Wave 4
 │   ├── longhorn.yaml                  # Wave 4
 │   ├── landing-page.yaml              # Wave 5
 │   ├── portainer.yaml                 # Wave 5
@@ -70,6 +71,21 @@ homelab/
     │   ├── argocd-server-patch.yaml
     │   ├── ingress.yaml
     │   └── kustomization.yaml
+    ├── blocky/
+    │   ├── blocky-configmap.yaml
+    │   ├── blocky-custom-dns-configmap.yaml
+    │   ├── blocky-deployment.yaml
+    │   ├── blocky-ingress.yaml
+    │   ├── blocky-service-tcp.yaml
+    │   ├── blocky-service-udp.yaml
+    │   ├── certificate.yaml
+    │   ├── grafana-dashboard.yaml
+    │   ├── kustomization.yaml
+    │   ├── namespace.yaml
+    │   ├── redis-deployment.yaml
+    │   ├── redis-pvc.yaml
+    │   ├── redis-service.yaml
+    │   └── servicemonitor.yaml
     ├── cert-manager/
     │   ├── cloudflare-dns-sync-configmap.yaml
     │   ├── cloudflare-dns-sync-jobs.yaml
@@ -190,6 +206,8 @@ homelab/
     │   ├── adguard-macmini-ingress.yaml
     │   ├── adguard-sync-ingress.yaml
     │   ├── beszel-ingress.yaml
+    │   ├── blocky-dns-sync-job.yaml
+    │   ├── blocky-dns-sync-rbac.yaml
     │   ├── dreambox-ingress.yaml
     │   ├── fr24-ingress.yaml
     │   ├── glances-macmini-ingress.yaml

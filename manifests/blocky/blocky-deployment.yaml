@@ -1,0 +1,94 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: blocky
+  namespace: blocky
+  labels:
+    app.kubernetes.io/name: blocky
+spec:
+  replicas: 3
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+      maxSurge: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: blocky
+  template:
+    metadata:
+      annotations:
+        reloader.stakater.com/auto: "true"
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "4000"
+        prometheus.io/path: "/metrics"
+      labels:
+        app.kubernetes.io/name: blocky
+    spec:
+      # Anti-affinity for HA across nodes (NO node selector - can run on Raspis)
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            podAffinityTerm:
+              labelSelector:
+                matchLabels:
+                  app.kubernetes.io/name: blocky
+              topologyKey: kubernetes.io/hostname
+      containers:
+      - name: blocky
+        image: ghcr.io/0xerr0r/blocky:v0.24
+        imagePullPolicy: IfNotPresent
+        ports:
+        - name: dns-tcp
+          containerPort: 53
+          protocol: TCP
+        - name: dns-udp
+          containerPort: 53
+          protocol: UDP
+        - name: http
+          containerPort: 4000
+          protocol: TCP
+        env:
+        - name: TZ
+          value: "Europe/Berlin"
+        volumeMounts:
+        - name: config
+          mountPath: /app/config.yml
+          subPath: config.yml
+          readOnly: true
+        - name: custom-dns
+          mountPath: /etc/blocky/custom-dns.zone
+          subPath: custom-dns.zone
+          readOnly: true
+        livenessProbe:
+          httpGet:
+            path: /api/health
+            port: http
+          initialDelaySeconds: 30
+          periodSeconds: 30
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /api/health
+            port: http
+          initialDelaySeconds: 10
+          periodSeconds: 10
+          timeoutSeconds: 3
+          failureThreshold: 3
+        resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
+          limits:
+            cpu: 1000m
+            memory: 512Mi
+      volumes:
+      - name: config
+        configMap:
+          name: blocky-config
+      - name: custom-dns
+        configMap:
+          name: blocky-custom-dns
