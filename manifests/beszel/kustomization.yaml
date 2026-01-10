@@ -1,0 +1,18 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: beszel
+
+resources:
+  - namespace.yaml
+  - pvc.yaml
+  - secret.yaml
+  - deployment.yaml
+  - service.yaml
+  - ingress.yaml
+  # Uncomment the line below to deploy agents after configuring the SSH key
+  # - agent-daemonset.yaml
+
+commonLabels:
+  app.kubernetes.io/name: beszel
+  app.kubernetes.io/component: monitoring
