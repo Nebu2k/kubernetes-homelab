@@ -12,6 +12,7 @@ resources:
   - kube-prometheus-stack.yaml
   - proxmox-exporter.yaml
   - unifi-poller.yaml
+  - beszel.yaml
   - portainer.yaml
   - uptime-kuma.yaml
   - homepage.yaml

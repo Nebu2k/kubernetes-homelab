@@ -1,0 +1,56 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: beszel-agent
+  namespace: beszel
+  labels:
+    app: beszel-agent
+spec:
+  selector:
+    matchLabels:
+      app: beszel-agent
+  template:
+    metadata:
+      labels:
+        app: beszel-agent
+    spec:
+      hostNetwork: true  # Required for accurate physical network metrics
+      containers:
+      - name: beszel-agent
+        image: henrygd/beszel-agent:latest
+        imagePullPolicy: Always
+        ports:
+        - name: agent
+          containerPort: 45876
+          protocol: TCP
+          hostPort: 45876
+        env:
+        - name: PORT
+          value: "45876"
+        # IMPORTANT: After deploying the hub, get the SSH public key from the hub's web UI
+        # (Settings -> Systems -> Add System -> Copy the public key)
+        # Then update the KEY value below and re-apply this manifest
+        - name: KEY
+          value: "REPLACE_WITH_SSH_PUBLIC_KEY_FROM_HUB"
+          # Example: "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIExampleKeyDataHere"
+        resources:
+          requests:
+            cpu: 50m
+            memory: 64Mi
+          limits:
+            cpu: 200m
+            memory: 128Mi
+        securityContext:
+          privileged: false
+          capabilities:
+            add:
+            - NET_ADMIN  # May be needed for network metrics
+          readOnlyRootFilesystem: false
+      # Tolerations allow the DaemonSet to run on all nodes, including control-plane nodes
+      tolerations:
+      - key: node-role.kubernetes.io/control-plane
+        operator: Exists
+        effect: NoSchedule
+      - key: node-role.kubernetes.io/master
+        operator: Exists
+        effect: NoSchedule
