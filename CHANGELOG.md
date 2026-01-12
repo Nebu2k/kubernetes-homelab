@@ -1,3 +1,10 @@
+## [2.15.9](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.15.8...v2.15.9) (2026-01-12)
+
+
+### 🐛 Bug Fixes
+
+* **ingress:** update cluster-issuer annotation for minio-console to internal-ca-issuer ([496b13b](https://github.com/Nebu2k/kubernetes-homelab/commit/496b13b19c827c362ea40c146f9a3a71e6f2d450))
+
 ## [2.15.8](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.15.7...v2.15.8) (2026-01-12)
 
 
