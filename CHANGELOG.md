@@ -1,3 +1,10 @@
+## [2.15.8](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.15.7...v2.15.8) (2026-01-12)
+
+
+### 🐛 Bug Fixes
+
+* **kustomization:** remove newt.yaml from resources ([7894f6b](https://github.com/Nebu2k/kubernetes-homelab/commit/7894f6bf690e7296da81bc0c9940a05867714ced))
+
 ## [2.15.7](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.15.6...v2.15.7) (2026-01-12)
 
 
