@@ -1,3 +1,10 @@
+## [2.15.6](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.15.5...v2.15.6) (2026-01-12)
+
+
+### 🐛 Bug Fixes
+
+* **minio:** update MinIO image to a specific release version ([a079e31](https://github.com/Nebu2k/kubernetes-homelab/commit/a079e319eeeb796eb7b621ad007ce08112996365))
+
 ## [2.15.5](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.15.4...v2.15.5) (2026-01-12)
 
 
