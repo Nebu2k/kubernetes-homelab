@@ -1,3 +1,10 @@
+## [2.15.7](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.15.6...v2.15.7) (2026-01-12)
+
+
+### 🐛 Bug Fixes
+
+* **readme:** add ArgoCD version to the documentation ([a64fb3a](https://github.com/Nebu2k/kubernetes-homelab/commit/a64fb3a2f372787058d1c92e7d6f2a696fa64fc3))
+
 ## [2.15.6](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.15.5...v2.15.6) (2026-01-12)
 
 
