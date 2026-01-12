@@ -14,7 +14,6 @@ resources:
   - unifi-poller.yaml
   - portainer.yaml
   - uptime-kuma.yaml
-  - newt.yaml
   - homepage.yaml
   - n8n.yaml
   - minio.yaml
