@@ -1157,6 +1157,7 @@ kubectl get secret -n monitoring grafana-admin-credentials \
 | Homepage | v1.8.0 | Homepage |
 | K3s | v1.33.5 | Lightweight Kubernetes |
 | Kube-VIP | v1.0.1 | Control plane HA |
+| ArgoCD | v3.2.3 | Continuous Delivery |
 
 ## 📖 Documentation
 
