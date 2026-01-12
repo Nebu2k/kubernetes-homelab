@@ -1,3 +1,10 @@
+## [2.15.5](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.15.4...v2.15.5) (2026-01-12)
+
+
+### 🐛 Bug Fixes
+
+* **generate_readme:** enhance component version extraction for Helm charts and direct manifests ([b90af73](https://github.com/Nebu2k/kubernetes-homelab/commit/b90af731d571425f4842f1a6ecdabc6b3ec05341))
+
 ## [2.15.4](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.15.3...v2.15.4) (2026-01-08)
 
 
