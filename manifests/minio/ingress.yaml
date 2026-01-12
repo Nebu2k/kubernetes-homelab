@@ -42,7 +42,7 @@ metadata:
   name: minio-console
   namespace: minio
   annotations:
-    cert-manager.io/cluster-issuer: letsencrypt-prod
+    cert-manager.io/cluster-issuer: internal-ca-issuer
     gethomepage.dev/enabled: "true"
     gethomepage.dev/name: MinIO Console K8s
     gethomepage.dev/description: S3 Management Console
