@@ -42,24 +42,24 @@ def get_sync_waves():
 
 def get_component_versions():
     """Extract component versions from ArgoCD Applications.
-    Prefers app version (image.tag) over Helm chart version when available.
+    Supports both Helm charts and direct manifest deployments.
     """
     versions = {}
     base_dir = REPO_ROOT / "base"
-    
+
     for app_file in APPS_DIR.glob("*.yaml"):
         if app_file.name == "kustomization.yaml":
             continue
-            
+
         with open(app_file, 'r') as f:
             app = yaml.safe_load(f)
-            
+
         if not app or app.get('kind') != 'Application':
             continue
-            
+
         app_name = app['metadata']['name']
         spec = app['spec']
-        
+
         # Handle both 'source' (singular) and 'sources' (plural)
         source = None
         if 'source' in spec:
@@ -70,76 +70,109 @@ def get_component_versions():
                 if 'chart' in src:
                     source = src
                     break
-        
+
         if not source:
             continue
-            
-        # Get version from targetRevision (Helm chart version)
-        chart_version = source.get('targetRevision', 'latest')
+
         chart = source.get('chart', '')
-        
-        if not chart:
-            continue
-        
-        # Try to get app version from values.yaml (image.tag)
-        app_version = None
-        values_file = base_dir / app_name / "values.yaml"
-        
-        if values_file.exists():
-            try:
-                with open(values_file, 'r') as f:
-                    values = yaml.safe_load(f)
-                    if values and 'image' in values:
-                        app_version = values['image'].get('tag')
-            except Exception:
-                pass
-        
-        # Use app version if available, otherwise use Helm chart version
-        versions[app_name] = {
-            'chart': chart,
-            'version': app_version if app_version else chart_version
-        }
-    
+
+        # Case 1: Helm Chart
+        if chart:
+            chart_version = source.get('targetRevision', 'latest')
+
+            # Try to get app version from values.yaml (image.tag)
+            app_version = None
+            values_file = base_dir / app_name / "values.yaml"
+
+            if values_file.exists():
+                try:
+                    with open(values_file, 'r') as f:
+                        values = yaml.safe_load(f)
+                        if values and 'image' in values:
+                            app_version = values['image'].get('tag')
+                except Exception:
+                    pass
+
+            # Use app version if available, otherwise use Helm chart version
+            versions[app_name] = {
+                'chart': chart,
+                'version': app_version if app_version else chart_version
+            }
+
+        # Case 2: Direct Manifest (no Helm chart)
+        else:
+            # Extract version from deployment.yaml in manifests directory
+            manifest_dir = MANIFESTS_DIR / app_name
+            deployment_file = manifest_dir / "deployment.yaml"
+
+            app_version = 'latest'
+            if deployment_file.exists():
+                try:
+                    with open(deployment_file, 'r') as f:
+                        deployment = yaml.safe_load(f)
+                        if deployment and deployment.get('kind') == 'Deployment':
+                            containers = deployment.get('spec', {}).get('template', {}).get('spec', {}).get('containers', [])
+                            if containers:
+                                # Get image from first container
+                                image = containers[0].get('image', '')
+                                if ':' in image:
+                                    app_version = image.split(':')[-1]
+                except Exception:
+                    pass
+
+            versions[app_name] = {
+                'chart': app_name,  # Use app name as chart name
+                'version': app_version
+            }
+
     return versions
 
 
 def get_documentation_links():
-    """Extract documentation links from Helm chart repositories - fully automated."""
+    """Extract documentation links from Helm chart repositories and manifests."""
     docs = {}
-    
+
     # Extract unique charts from applications
     for app_file in APPS_DIR.glob("*.yaml"):
         if app_file.name == "kustomization.yaml":
             continue
-            
+
         try:
             with open(app_file, 'r') as f:
                 app = yaml.safe_load(f)
-                
+
             if not app or app.get('kind') != 'Application':
                 continue
-                
+
+            app_name = app['metadata']['name']
             spec = app['spec']
             sources = spec.get('sources', [spec.get('source')] if 'source' in spec else [])
-            
+
+            helm_chart_found = False
             for source in sources:
                 if not source:
                     continue
-                    
+
                 repo_url = source.get('repoURL', '')
                 chart = source.get('chart', '')
-                
+
                 if chart and repo_url and not repo_url.startswith('https://github.com/Nebu2k'):
                     # Use chart name as display name, repo URL as link
                     doc_name = chart.replace('-', ' ').title()
                     docs[doc_name] = repo_url
-                    
+                    helm_chart_found = True
+
+            # For apps without Helm charts, link to the manifest directory
+            if not helm_chart_found:
+                doc_name = app_name.replace('-', ' ').title()
+                docs[doc_name] = f'manifests/{app_name}'
+
         except Exception as e:
             continue
-    
+
     # Add always-present core components
     docs['K3s'] = 'https://docs.k3s.io/'
-    
+
     # Sort by name
     return dict(sorted(docs.items()))
 

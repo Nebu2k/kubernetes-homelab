@@ -1139,29 +1139,53 @@ kubectl get secret -n monitoring grafana-admin-credentials \
 | Reloader | 2.2.7 | Reloader |
 | Kube Prometheus Stack | 80.13.2 | Kube Prometheus Stack |
 | Sealed Secrets | 2.18.0 | Sealed Secrets |
+| Proxmox Exporter | 1.0.8 | Proxmox Exporter |
+| N8n | 2.3.1 | N8n |
+| Landing Page | 1.29.4-alpine | Landing Page |
 | Kured | 5.10.0 | Kured |
 | Metallb | 0.15.3 | Metallb |
+| Argocd Config | latest | Argocd Config |
 | Longhorn | 1.10.1 | Longhorn |
+| Coredns Config | latest | Coredns Config |
+| Unifi Poller | v2.21.0 | Unifi Poller |
 | Portainer | 2.33.6 | Portainer |
 | Cert Manager | v1.19.2 | Cert Manager |
+| Uptime Kuma | 2.0.2 | Uptime Kuma |
 | Traefik | 38.0.2 | Traefik |
 | Newt | 1.1.0 | Newt |
+| Teslamate | latest | Teslamate |
+| Minio | latest | Minio |
+| Home Assistant | stable | Home Assistant |
+| Homepage | v1.8.0 | Homepage |
+| Private Services | latest | Private Services |
 | K3s | v1.33.5 | Lightweight Kubernetes |
 | Kube-VIP | v1.0.1 | Control plane HA |
 
 ## 📖 Documentation
 
+- [Argocd Config](manifests/argocd-config)
 - [Cert Manager](https://charts.jetstack.io)
+- [Coredns Config](manifests/coredns-config)
+- [Home Assistant](manifests/home-assistant)
+- [Homepage](manifests/homepage)
 - [K3s](https://docs.k3s.io/)
 - [Kube Prometheus Stack](https://prometheus-community.github.io/helm-charts)
 - [Kured](https://kubereboot.github.io/charts)
+- [Landing Page](manifests/landing-page)
 - [Longhorn](https://charts.longhorn.io)
 - [Metallb](https://metallb.github.io/metallb)
+- [Minio](manifests/minio)
+- [N8N](manifests/n8n)
 - [Newt](https://charts.fossorial.io)
 - [Portainer](https://portainer.github.io/k8s)
+- [Private Services](manifests/private-services)
+- [Proxmox Exporter](manifests/proxmox-exporter)
 - [Reloader](https://stakater.github.io/stakater-charts)
 - [Sealed Secrets](https://bitnami-labs.github.io/sealed-secrets)
+- [Teslamate](manifests/teslamate)
 - [Traefik](https://traefik.github.io/charts)
+- [Unifi Poller](manifests/unifi-poller)
+- [Uptime Kuma](manifests/uptime-kuma)
 
 ## 📝 License
 
