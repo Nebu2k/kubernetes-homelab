@@ -1144,9 +1144,7 @@ kubectl get secret -n monitoring grafana-admin-credentials \
 | Landing Page | 1.29.4-alpine | Landing Page |
 | Kured | 5.10.0 | Kured |
 | Metallb | 0.15.3 | Metallb |
-| Argocd Config | latest | Argocd Config |
 | Longhorn | 1.10.1 | Longhorn |
-| Coredns Config | latest | Coredns Config |
 | Unifi Poller | v2.21.0 | Unifi Poller |
 | Portainer | 2.33.6 | Portainer |
 | Cert Manager | v1.19.2 | Cert Manager |
@@ -1154,38 +1152,34 @@ kubectl get secret -n monitoring grafana-admin-credentials \
 | Traefik | 38.0.2 | Traefik |
 | Newt | 1.1.0 | Newt |
 | Teslamate | latest | Teslamate |
-| Minio | latest | Minio |
+| Minio | RELEASE.2025-09-07T16-13-09Z | Minio |
 | Home Assistant | stable | Home Assistant |
 | Homepage | v1.8.0 | Homepage |
-| Private Services | latest | Private Services |
 | K3s | v1.33.5 | Lightweight Kubernetes |
 | Kube-VIP | v1.0.1 | Control plane HA |
 
 ## 📖 Documentation
 
-- [Argocd Config](manifests/argocd-config)
 - [Cert Manager](https://charts.jetstack.io)
-- [Coredns Config](manifests/coredns-config)
-- [Home Assistant](manifests/home-assistant)
-- [Homepage](manifests/homepage)
+- [Home Assistant](https://www.home-assistant.io/docs/)
+- [Homepage](https://gethomepage.dev/latest/)
 - [K3s](https://docs.k3s.io/)
 - [Kube Prometheus Stack](https://prometheus-community.github.io/helm-charts)
 - [Kured](https://kubereboot.github.io/charts)
-- [Landing Page](manifests/landing-page)
+- [Landing Page](https://github.com/nginx/nginx)
 - [Longhorn](https://charts.longhorn.io)
 - [Metallb](https://metallb.github.io/metallb)
-- [Minio](manifests/minio)
-- [N8N](manifests/n8n)
+- [Minio](https://min.io/docs/minio/kubernetes/upstream/)
+- [N8N](https://docs.n8n.io/)
 - [Newt](https://charts.fossorial.io)
 - [Portainer](https://portainer.github.io/k8s)
-- [Private Services](manifests/private-services)
-- [Proxmox Exporter](manifests/proxmox-exporter)
+- [Proxmox Exporter](https://github.com/prometheus-pve/prometheus-pve-exporter)
 - [Reloader](https://stakater.github.io/stakater-charts)
 - [Sealed Secrets](https://bitnami-labs.github.io/sealed-secrets)
-- [Teslamate](manifests/teslamate)
+- [Teslamate](https://docs.teslamate.org/)
 - [Traefik](https://traefik.github.io/charts)
-- [Unifi Poller](manifests/unifi-poller)
-- [Uptime Kuma](manifests/uptime-kuma)
+- [Unifi Poller](https://unpoller.com/)
+- [Uptime Kuma](https://github.com/louislam/uptime-kuma/wiki)
 
 ## 📝 License
 

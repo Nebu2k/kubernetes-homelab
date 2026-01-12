@@ -103,34 +103,74 @@ def get_component_versions():
         else:
             # Extract version from deployment.yaml in manifests directory
             manifest_dir = MANIFESTS_DIR / app_name
-            deployment_file = manifest_dir / "deployment.yaml"
 
-            app_version = 'latest'
-            if deployment_file.exists():
-                try:
-                    with open(deployment_file, 'r') as f:
-                        deployment = yaml.safe_load(f)
-                        if deployment and deployment.get('kind') == 'Deployment':
-                            containers = deployment.get('spec', {}).get('template', {}).get('spec', {}).get('containers', [])
-                            if containers:
-                                # Get image from first container
-                                image = containers[0].get('image', '')
-                                if ':' in image:
-                                    app_version = image.split(':')[-1]
-                except Exception:
-                    pass
+            # Try multiple possible deployment file names
+            deployment_files = [
+                manifest_dir / "deployment.yaml",
+                manifest_dir / f"{app_name}-deployment.yaml",
+            ]
 
-            versions[app_name] = {
-                'chart': app_name,  # Use app name as chart name
-                'version': app_version
-            }
+            deployment_file = None
+            for df in deployment_files:
+                if df.exists():
+                    deployment_file = df
+                    break
+
+            # Skip if no deployment file exists (config-only apps)
+            if not deployment_file:
+                continue
+
+            app_version = None
+            try:
+                with open(deployment_file, 'r') as f:
+                    # Handle multi-document YAML files (separated by ---)
+                    docs = list(yaml.safe_load_all(f))
+
+                    # Find the Deployment document
+                    deployment = None
+                    for doc in docs:
+                        if doc and doc.get('kind') == 'Deployment':
+                            deployment = doc
+                            break
+
+                    if deployment:
+                        containers = deployment.get('spec', {}).get('template', {}).get('spec', {}).get('containers', [])
+                        if containers:
+                            # Get image from first container (skip init containers)
+                            image = containers[0].get('image', '')
+                            if ':' in image:
+                                app_version = image.split(':')[-1]
+                            else:
+                                app_version = 'latest'  # If no tag specified, assume latest
+            except Exception:
+                pass
+
+            # Only add if we found a version
+            if app_version:
+                versions[app_name] = {
+                    'chart': app_name,  # Use app name as chart name
+                    'version': app_version
+                }
 
     return versions
 
 
 def get_documentation_links():
-    """Extract documentation links from Helm chart repositories and manifests."""
+    """Extract documentation links from Helm chart repositories and add official docs for custom apps."""
     docs = {}
+
+    # Official documentation URLs for custom deployed apps
+    OFFICIAL_DOCS = {
+        'home-assistant': 'https://www.home-assistant.io/docs/',
+        'homepage': 'https://gethomepage.dev/latest/',
+        'uptime-kuma': 'https://github.com/louislam/uptime-kuma/wiki',
+        'n8n': 'https://docs.n8n.io/',
+        'minio': 'https://min.io/docs/minio/kubernetes/upstream/',
+        'teslamate': 'https://docs.teslamate.org/',
+        'landing-page': 'https://github.com/nginx/nginx',
+        'proxmox-exporter': 'https://github.com/prometheus-pve/prometheus-pve-exporter',
+        'unifi-poller': 'https://unpoller.com/',
+    }
 
     # Extract unique charts from applications
     for app_file in APPS_DIR.glob("*.yaml"):
@@ -162,10 +202,10 @@ def get_documentation_links():
                     docs[doc_name] = repo_url
                     helm_chart_found = True
 
-            # For apps without Helm charts, link to the manifest directory
-            if not helm_chart_found:
+            # For apps without Helm charts, use official documentation if available
+            if not helm_chart_found and app_name in OFFICIAL_DOCS:
                 doc_name = app_name.replace('-', ' ').title()
-                docs[doc_name] = f'manifests/{app_name}'
+                docs[doc_name] = OFFICIAL_DOCS[app_name]
 
         except Exception as e:
             continue
