@@ -114,6 +114,7 @@ homelab/
     │   ├── portainer-token-sealed.yaml
     │   ├── portainer-token-unsealed.yaml
     │   ├── proxmox-secret-sealed.yaml
+    │   ├── proxmox-secret-unsealed.yaml
     │   ├── service.yaml
     │   ├── serviceaccount.yaml
     │   ├── unifi-token-sealed.yaml
