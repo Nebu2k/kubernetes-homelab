@@ -6,11 +6,12 @@ resources:
   - servers-transport.yaml
   - nextcloud-ingress.yaml
   - dreambox-ingress.yaml
-  - adguard-ingress.yaml
+  - adguard-pi5-ingress.yaml
+  - adguard-macmini-ingress.yaml
+  - adguard-pve-ingress.yaml
   - beszel-ingress.yaml
   - minio-ingress.yaml
   - proxmox-ingress.yaml
-  - adguard-macmini-ingress.yaml
   - fr24-ingress.yaml
   - glances-macmini-ingress.yaml
   - unifi-ingress.yaml
