@@ -1,3 +1,10 @@
+## [2.19.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.18.0...v2.19.0) (2026-01-13)
+
+
+### ✨ Features
+
+* **adguard:** update weights and add pod selector for AdGuard services ([6ce7e47](https://github.com/Nebu2k/kubernetes-homelab/commit/6ce7e4767ddc7d7e51752dcad1118895a1694b3c))
+
 ## [2.18.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.17.3...v2.18.0) (2026-01-13)
 
 
