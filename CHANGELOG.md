@@ -1,3 +1,10 @@
+## [2.16.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.15.10...v2.16.0) (2026-01-13)
+
+
+### ✨ Features
+
+* **adguard:** add AdGuard Home sync configuration and deployment resources ([957fcab](https://github.com/Nebu2k/kubernetes-homelab/commit/957fcabcd93b1d5854243680702963854bc9b94d))
+
 ## [2.15.10](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.15.9...v2.15.10) (2026-01-13)
 
 
