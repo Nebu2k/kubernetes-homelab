@@ -15,6 +15,8 @@ spec:
       labels:
         app: teslamate-mosquitto
     spec:
+      nodeSelector:
+        node-role.kubernetes.io/worker: "worker"
       containers:
       - name: mosquitto
         image: eclipse-mosquitto:2.0.22
