@@ -1,3 +1,10 @@
+## [2.17.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.16.8...v2.17.0) (2026-01-13)
+
+
+### ✨ Features
+
+* **adguard:** add ingress configurations for adguard-pi5 and adguard-pve services ([6926764](https://github.com/Nebu2k/kubernetes-homelab/commit/69267643944b229fbe4066c6bcaaeba42b448996))
+
 ## [2.16.8](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.16.7...v2.16.8) (2026-01-13)
 
 
