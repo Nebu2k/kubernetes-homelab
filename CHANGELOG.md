@@ -1,3 +1,10 @@
+## [2.17.1](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.17.0...v2.17.1) (2026-01-13)
+
+
+### 🐛 Bug Fixes
+
+* **coredns:** update forward addresses in coredns-custom.yaml ([d849d6c](https://github.com/Nebu2k/kubernetes-homelab/commit/d849d6c0f5a346ba6be6fe22b225ff82a434eb3b))
+
 ## [2.17.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.16.8...v2.17.0) (2026-01-13)
 
 
