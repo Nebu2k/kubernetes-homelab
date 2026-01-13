@@ -1,3 +1,10 @@
+## [2.16.8](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.16.7...v2.16.8) (2026-01-13)
+
+
+### 🐛 Bug Fixes
+
+* **kustomization:** remove adguard-sync-ingress.yaml from resources ([54e70fd](https://github.com/Nebu2k/kubernetes-homelab/commit/54e70fd655a42e88eb220b4904254c351b7e5bd4))
+
 ## [2.16.7](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.16.6...v2.16.7) (2026-01-13)
 
 
