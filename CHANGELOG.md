@@ -1,3 +1,10 @@
+## [2.16.7](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.16.6...v2.16.7) (2026-01-13)
+
+
+### 🐛 Bug Fixes
+
+* **adguard:** update origin instance details and add additional replica configuration in adguardhome-sync ([b5dfbde](https://github.com/Nebu2k/kubernetes-homelab/commit/b5dfbde70fdf94d8b1849dd5814b79cc3597a713))
+
 ## [2.16.6](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.16.5...v2.16.6) (2026-01-13)
 
 
