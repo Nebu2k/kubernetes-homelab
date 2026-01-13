@@ -1,3 +1,10 @@
+## [2.15.10](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.15.9...v2.15.10) (2026-01-13)
+
+
+### 🐛 Bug Fixes
+
+* **kuma:** DNS resolver ([346c335](https://github.com/Nebu2k/kubernetes-homelab/commit/346c3351848230000f659a67aac09020dcc49629))
+
 ## [2.15.9](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.15.8...v2.15.9) (2026-01-12)
 
 
