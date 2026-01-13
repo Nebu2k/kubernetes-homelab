@@ -22,14 +22,9 @@ spec:
     spec:
       nodeSelector:
         node-role.kubernetes.io/worker: "worker"
-      containers:
-        - name: adguardhome-sync
-          image: ghcr.io/bakito/adguardhome-sync:latest
-          imagePullPolicy: Always
-          ports:
-            - name: http
-              containerPort: 8080
-              protocol: TCP
+      initContainers:
+        - name: config-envsubst
+          image: bhgedigital/envsubst:latest
           env:
             - name: ADGUARD_USERNAME
               valueFrom:
@@ -41,6 +36,25 @@ spec:
                 secretKeyRef:
                   name: adguardhome-sync-credentials
                   key: password
+          command:
+            - sh
+            - -c
+            - |
+              envsubst < /config-template/adguardhome-sync.yaml > /config/adguardhome-sync.yaml
+          volumeMounts:
+            - name: config-template
+              mountPath: /config-template
+              readOnly: true
+            - name: config
+              mountPath: /config
+      containers:
+        - name: adguardhome-sync
+          image: ghcr.io/bakito/adguardhome-sync:latest
+          imagePullPolicy: Always
+          ports:
+            - name: http
+              containerPort: 8080
+              protocol: TCP
           volumeMounts:
             - name: config
               mountPath: /config
@@ -69,9 +83,11 @@ spec:
             initialDelaySeconds: 10
             periodSeconds: 10
       volumes:
-        - name: config
+        - name: config-template
           configMap:
             name: adguardhome-sync-config
+        - name: config
+          emptyDir: {}
 ---
 apiVersion: v1
 kind: Service
