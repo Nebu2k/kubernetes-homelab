@@ -11,7 +11,8 @@ metadata:
     gethomepage.dev/name: AdGuard Sync (k8s)
     gethomepage.dev/icon: adguard-home-sync.png
     gethomepage.dev/description: AdGuard Configuration Sync
-    gethomepage.dev/weight: "42"
+    gethomepage.dev/weight: "44"
+    gethomepage.dev/pod-selector: "app=adguardhome-sync"
 spec:
   ingressClassName: traefik
   tls:

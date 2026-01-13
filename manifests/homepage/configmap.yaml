@@ -109,8 +109,20 @@ data:
           href: https://adguard-macmini.elmstreet79.de
           description: AdGuard DNS
           icon: adguard-home.png
-          weight: 41
+          weight: 42
           ping: 192.168.2.4
+          widget:
+            type: adguard
+            url: https://adguard-macmini.elmstreet79.de
+            username: {{HOMEPAGE_VAR_ADGUARD_USER}}
+            password: {{HOMEPAGE_VAR_ADGUARD_PASS}}
+
+      - AdGuard Home (Proxmox):
+          href: https://adguard.elmstreet79.de
+          description: AdGuard DNS
+          icon: adguard-home.png
+          weight: 41
+          ping: 192.168.2.16
           widget:
             type: adguard
             url: https://adguard-macmini.elmstreet79.de
