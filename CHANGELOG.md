@@ -1,3 +1,10 @@
+## [2.17.3](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.17.2...v2.17.3) (2026-01-13)
+
+
+### 🐛 Bug Fixes
+
+* **adguard:** update credentials in adguard-credentials-sealed.yaml ([bb58521](https://github.com/Nebu2k/kubernetes-homelab/commit/bb58521bacf8cc177b2979555a98196d956fcfef))
+
 ## [2.17.2](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.17.1...v2.17.2) (2026-01-13)
 
 
