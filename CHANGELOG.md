@@ -1,3 +1,10 @@
+## [2.16.1](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.16.0...v2.16.1) (2026-01-13)
+
+
+### 🐛 Bug Fixes
+
+* **adguard:** update command to use args for adguardhome-sync ([bf27e85](https://github.com/Nebu2k/kubernetes-homelab/commit/bf27e859d79878d857035f89759a9f967aaa098a))
+
 ## [2.16.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.15.10...v2.16.0) (2026-01-13)
 
 
