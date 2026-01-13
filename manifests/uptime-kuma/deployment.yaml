@@ -21,64 +21,61 @@ spec:
     spec:
       nodeSelector:
         node-role.kubernetes.io/worker: "worker"
-      initContainers:
-      - name: disable-ipv6
-        image: busybox:stable
-        command:
-        - sh
-        - -c
-        - |
-          sysctl -w net.ipv6.conf.all.disable_ipv6=1
-          sysctl -w net.ipv6.conf.default.disable_ipv6=1
-        securityContext:
-          privileged: true
+      dnsPolicy: None
+      dnsConfig:
+        nameservers:
+          - 1.1.1.1
+          - 8.8.8.8
+        options:
+          - name: ndots
+            value: "1"
+
       containers:
-      - name: uptime-kuma
-        image: louislam/uptime-kuma:2.0.2
-        imagePullPolicy: IfNotPresent
-        ports:
-        - name: http
-          containerPort: 3001
-          protocol: TCP
-        env:
-        - name: TZ
-          value: "Europe/Berlin"
-        - name: UPTIME_KUMA_PORT
-          value: "3001"
-        - name: NODE_OPTIONS
-          value: "--dns-result-order=ipv4first"
-        - name: NODEJS_IP_FAMILY
-          value: "4"
-        - name: NODE_IPV6
-          value: "0"
-        volumeMounts:
-        - name: data
-          mountPath: /app/data
-        livenessProbe:
-          httpGet:
-            path: /
-            port: http
-          initialDelaySeconds: 60
-          periodSeconds: 10
-          timeoutSeconds: 5
-          failureThreshold: 3
-        readinessProbe:
-          httpGet:
-            path: /
-            port: http
-          initialDelaySeconds: 30
-          periodSeconds: 10
-          timeoutSeconds: 5
-          failureThreshold: 3
-        resources:
-          requests:
-            cpu: 100m
-            memory: 128Mi
-          limits:
-            memory: 512Mi
-        securityContext:
-          runAsNonRoot: false
+        - name: uptime-kuma
+          image: louislam/uptime-kuma:2.0.2
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 3001
+              protocol: TCP
+          env:
+            - name: TZ
+              value: "Europe/Berlin"
+            - name: UPTIME_KUMA_PORT
+              value: "3001"
+            - name: NODE_OPTIONS
+              value: "--dns-result-order=ipv4first"
+
+          volumeMounts:
+            - name: data
+              mountPath: /app/data
+
+          livenessProbe:
+            httpGet:
+              path: /
+              port: http
+            initialDelaySeconds: 60
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+
+          readinessProbe:
+            httpGet:
+              path: /
+              port: http
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              memory: 512Mi
+
       volumes:
-      - name: data
-        persistentVolumeClaim:
-          claimName: uptime-kuma-data
+        - name: data
+          persistentVolumeClaim:
+            claimName: uptime-kuma-data
