@@ -1,3 +1,10 @@
+## [2.20.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.19.0...v2.20.0) (2026-01-13)
+
+
+### ✨ Features
+
+* **teslamate:** add nodeSelector to deployments for worker nodes ([033df71](https://github.com/Nebu2k/kubernetes-homelab/commit/033df71d57e44c91a0a80014540d6e23980b6aa3))
+
 ## [2.19.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.18.0...v2.19.0) (2026-01-13)
 
 
