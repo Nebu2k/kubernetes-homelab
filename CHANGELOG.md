@@ -1,3 +1,10 @@
+## [2.18.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.17.3...v2.18.0) (2026-01-13)
+
+
+### ✨ Features
+
+* **sealed-secrets:** Update all + script to automate ([f358ff9](https://github.com/Nebu2k/kubernetes-homelab/commit/f358ff9a654387c8aa2ae10de72a94bd1019f6ff))
+
 ## [2.17.3](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.17.2...v2.17.3) (2026-01-13)
 
 
