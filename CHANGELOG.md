@@ -1,3 +1,10 @@
+## [2.16.4](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.16.3...v2.16.4) (2026-01-13)
+
+
+### 🐛 Bug Fixes
+
+* **adguard:** update credentials in sealed secret for adguardhome-sync ([3440ccf](https://github.com/Nebu2k/kubernetes-homelab/commit/3440ccf84bf25623d76e5ffb872d81ecaa8e4d23))
+
 ## [2.16.3](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.16.2...v2.16.3) (2026-01-13)
 
 
