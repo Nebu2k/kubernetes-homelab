@@ -1,3 +1,10 @@
+## [2.17.2](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.17.1...v2.17.2) (2026-01-13)
+
+
+### 🐛 Bug Fixes
+
+* **adguard:** update ADGUARD_HOST IP address in dns sync job ([2592ee0](https://github.com/Nebu2k/kubernetes-homelab/commit/2592ee013e77ae3af3eed4fd54684cb2aa438d3a))
+
 ## [2.17.1](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.17.0...v2.17.1) (2026-01-13)
 
 
