@@ -1,3 +1,10 @@
+## [2.16.6](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.16.5...v2.16.6) (2026-01-13)
+
+
+### 🐛 Bug Fixes
+
+* **adguard:** refactor initContainers and update volume mounts in adguardhome-sync deployment ([e0c874a](https://github.com/Nebu2k/kubernetes-homelab/commit/e0c874ad4a9afda76a9f8c4b0b082d792b1fcbb6))
+
 ## [2.16.5](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.16.4...v2.16.5) (2026-01-13)
 
 
