@@ -18,9 +18,9 @@ data:
     # Bei Fehlern fortfahren statt abzubrechen
     continueOnError: false
 
-    # Origin = Primary Instance auf macmini
+    # Origin = Primary Instance auf raspi5
     origin:
-      url: http://192.168.2.4:80
+      url: http://192.168.2.9:8080
       username: ${ADGUARD_USERNAME}
       password: ${ADGUARD_PASSWORD}
 
@@ -28,6 +28,10 @@ data:
     replicas:
       # adguard3 auf proxmox
       - url: http://192.168.2.16:80
+        username: ${ADGUARD_USERNAME}
+        password: ${ADGUARD_PASSWORD}
+     # adguard2 auf macmini
+      - url: http://192.168.2.4:80
         username: ${ADGUARD_USERNAME}
         password: ${ADGUARD_PASSWORD}
 
