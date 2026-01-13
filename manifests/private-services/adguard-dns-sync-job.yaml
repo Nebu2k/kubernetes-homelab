@@ -282,7 +282,7 @@ spec:
           command: ["/bin/sh", "/scripts/sync-dns.sh"]
           env:
             - name: ADGUARD_HOST
-              value: "192.168.2.9:8080"
+              value: "192.168.2.4:80"
             - name: DEFAULT_INGRESS_IP
               value: "192.168.2.250"
             - name: DOMAIN_SUFFIX
@@ -329,7 +329,7 @@ spec:
               command: ["/bin/sh", "/scripts/sync-dns.sh"]
               env:
                 - name: ADGUARD_HOST
-                  value: "192.168.2.9:8080"
+                  value: "192.168.2.4:80"
                 - name: DEFAULT_INGRESS_IP
                   value: "192.168.2.250"
                 - name: DOMAIN_SUFFIX
