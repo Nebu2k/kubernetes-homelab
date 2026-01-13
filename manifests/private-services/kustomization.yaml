@@ -18,7 +18,6 @@ resources:
   - adguard-credentials-sealed.yaml
   - adguard-dns-sync-rbac.yaml
   - adguard-dns-sync-job.yaml
-  - adguard-sync-ingress.yaml
   - adguardhome-sync-config.yaml
   - adguardhome-sync-credentials-sealed.yaml
   - adguardhome-sync-deployment.yaml

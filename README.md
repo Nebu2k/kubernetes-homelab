@@ -188,7 +188,6 @@ homelab/
     │   ├── adguard-dns-sync-rbac.yaml
     │   ├── adguard-ingress.yaml
     │   ├── adguard-macmini-ingress.yaml
-    │   ├── adguard-sync-ingress.yaml
     │   ├── adguardhome-sync-config.yaml
     │   ├── adguardhome-sync-credentials-sealed.yaml
     │   ├── adguardhome-sync-credentials-unsealed.yaml
