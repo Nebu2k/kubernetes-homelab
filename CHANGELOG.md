@@ -1,3 +1,10 @@
+## [2.25.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.24.2...v2.25.0) (2026-01-14)
+
+
+### ✨ Features
+
+* **beszel:** add SealedSecret for homepage-beszel and update ingress annotations ([e79a33e](https://github.com/Nebu2k/kubernetes-homelab/commit/e79a33e3863581cf315e8d4595f3f87f9b7493c7))
+
 ## [2.24.2](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.24.1...v2.24.2) (2026-01-14)
 
 
