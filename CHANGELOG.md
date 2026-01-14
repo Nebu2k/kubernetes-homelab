@@ -1,3 +1,10 @@
+## [2.23.3](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.23.2...v2.23.3) (2026-01-14)
+
+
+### 🐛 Bug Fixes
+
+* **beszel:** update HUB_URL environment variable to use internal service address ([04c56fd](https://github.com/Nebu2k/kubernetes-homelab/commit/04c56fdcb5861209637126146c66aadf4473592d))
+
 ## [2.23.2](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.23.1...v2.23.2) (2026-01-14)
 
 
