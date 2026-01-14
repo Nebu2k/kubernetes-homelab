@@ -1,3 +1,10 @@
+## [2.25.5](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.25.4...v2.25.5) (2026-01-14)
+
+
+### 🐛 Bug Fixes
+
+* update Beszel (Kubernetes) entry in configmap with new weight and remove duplicate ([210add7](https://github.com/Nebu2k/kubernetes-homelab/commit/210add7936237dfbc83100fd7876724eb33f137f))
+
 ## [2.25.4](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.25.3...v2.25.4) (2026-01-14)
 
 
