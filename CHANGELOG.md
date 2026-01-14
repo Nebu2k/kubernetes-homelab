@@ -1,3 +1,10 @@
+## [2.25.7](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.25.6...v2.25.7) (2026-01-14)
+
+
+### 🐛 Bug Fixes
+
+* add annotation to Longhorn volumeClaimTemplate for recurring job ([0d85900](https://github.com/Nebu2k/kubernetes-homelab/commit/0d8590054886e5b37b5d162508db5b6b7e9b4016))
+
 ## [2.25.6](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.25.5...v2.25.6) (2026-01-14)
 
 
