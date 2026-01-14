@@ -79,6 +79,7 @@ homelab/
     │   ├── kustomization.yaml
     │   ├── namespace.yaml
     │   ├── pvc.yaml
+    │   ├── secret-sealed.yaml
     │   ├── secret-unsealed.yaml
     │   └── service.yaml
     ├── cert-manager/

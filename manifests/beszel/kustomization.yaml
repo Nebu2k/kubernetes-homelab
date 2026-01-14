@@ -9,9 +9,8 @@ resources:
   - deployment.yaml
   - service.yaml
   - ingress.yaml
-  # Uncomment the line below to deploy agents after configuring the SSH key
-  # - secret-sealed.yaml
-  # - agent-daemonset.yaml
+  - secret-sealed.yaml
+  - agent-daemonset.yaml
 
 commonLabels:
   app.kubernetes.io/name: beszel

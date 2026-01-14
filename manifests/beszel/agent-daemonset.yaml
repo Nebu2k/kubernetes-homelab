@@ -27,10 +27,6 @@ spec:
         env:
         - name: PORT
           value: "45876"
-        # SSH public key is read from sealed secret
-        # After deploying the hub, get the SSH public key from the hub's web UI
-        # (Settings -> Systems -> Add System -> Copy the public key)
-        # Update secret-unsealed.yaml, seal it, and apply the sealed secret
         - name: KEY
           valueFrom:
             secretKeyRef:
