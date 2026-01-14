@@ -1,3 +1,10 @@
+## [2.20.1](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.20.0...v2.20.1) (2026-01-14)
+
+
+### 🐛 Bug Fixes
+
+* **adguard:** update AdGuard URL in configmap ([503cc5b](https://github.com/Nebu2k/kubernetes-homelab/commit/503cc5b91cb76bb017cb1609ae4570fecd00a89e))
+
 ## [2.20.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.19.0...v2.20.0) (2026-01-13)
 
 
