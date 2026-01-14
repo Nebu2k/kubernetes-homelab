@@ -1,3 +1,10 @@
+## [2.26.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.25.7...v2.26.0) (2026-01-14)
+
+
+### ✨ Features
+
+* update minio ingress configuration and remove obsolete minio-ingress.yaml ([2679e30](https://github.com/Nebu2k/kubernetes-homelab/commit/2679e309584f6b0350cc814a25504631cf128fc7))
+
 ## [2.25.7](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.25.6...v2.25.7) (2026-01-14)
 
 
