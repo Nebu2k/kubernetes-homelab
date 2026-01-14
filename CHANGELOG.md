@@ -1,3 +1,10 @@
+## [2.23.1](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.23.0...v2.23.1) (2026-01-14)
+
+
+### 🐛 Bug Fixes
+
+* **beszel:** add HUB_URL environment variable to agent daemonset ([08d461a](https://github.com/Nebu2k/kubernetes-homelab/commit/08d461aac50ef5febd217e05f534703d59058e9f))
+
 ## [2.23.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.22.1...v2.23.0) (2026-01-14)
 
 
