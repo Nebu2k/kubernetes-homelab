@@ -79,7 +79,7 @@ homelab/
     │   ├── kustomization.yaml
     │   ├── namespace.yaml
     │   ├── pvc.yaml
-    │   ├── secret.yaml
+    │   ├── secret-unsealed.yaml
     │   └── service.yaml
     ├── cert-manager/
     │   ├── cloudflare-dns-sync-configmap.yaml

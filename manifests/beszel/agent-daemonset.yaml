@@ -34,7 +34,7 @@ spec:
         - name: KEY
           valueFrom:
             secretKeyRef:
-              name: beszel-s3-credentials
+              name: beszel-agent-ssh
               key: SSH_PUBLIC_KEY
         resources:
           requests:

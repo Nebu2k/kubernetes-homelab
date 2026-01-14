@@ -22,3 +22,6 @@ resources:
   - home-assistant.yaml
   - teslamate.yaml
   - landing-page.yaml
+  - beszel.yaml
+---
+

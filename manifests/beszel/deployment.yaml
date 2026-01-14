@@ -28,33 +28,6 @@ spec:
         - name: http
           containerPort: 8090
           protocol: TCP
-        env:
-        # S3 backup configuration
-        - name: S3_ENDPOINT
-          valueFrom:
-            secretKeyRef:
-              name: beszel-s3-credentials
-              key: S3_ENDPOINT
-        - name: S3_BUCKET
-          valueFrom:
-            secretKeyRef:
-              name: beszel-s3-credentials
-              key: S3_BUCKET
-        - name: S3_ACCESS_KEY
-          valueFrom:
-            secretKeyRef:
-              name: beszel-s3-credentials
-              key: S3_ACCESS_KEY
-        - name: S3_SECRET_KEY
-          valueFrom:
-            secretKeyRef:
-              name: beszel-s3-credentials
-              key: S3_SECRET_KEY
-        - name: S3_REGION
-          valueFrom:
-            secretKeyRef:
-              name: beszel-s3-credentials
-              key: S3_REGION
         volumeMounts:
         - name: beszel-data
           mountPath: /beszel_data
