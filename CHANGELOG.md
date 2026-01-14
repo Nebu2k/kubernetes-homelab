@@ -1,3 +1,10 @@
+## [2.24.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.23.4...v2.24.0) (2026-01-14)
+
+
+### ✨ Features
+
+* **beszel:** add SMTP configuration for email notifications ([f665daa](https://github.com/Nebu2k/kubernetes-homelab/commit/f665daad1706e2e5e968f5de2f277924e8198af0))
+
 ## [2.23.4](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.23.3...v2.23.4) (2026-01-14)
 
 
