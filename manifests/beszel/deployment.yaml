@@ -17,9 +17,12 @@ spec:
       labels:
         app: beszel-hub
     spec:
+      nodeSelector:
+        node-role.kubernetes.io/worker: "worker"
+      terminationGracePeriodSeconds: 60
       containers:
       - name: beszel
-        image: henrygd/beszel:latest
+        image: henrygd/beszel:0.18
         imagePullPolicy: Always
         ports:
         - name: http

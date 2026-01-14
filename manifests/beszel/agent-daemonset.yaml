@@ -17,7 +17,7 @@ spec:
       hostNetwork: true  # Required for accurate physical network metrics
       containers:
       - name: beszel-agent
-        image: henrygd/beszel-agent:latest
+        image: henrygd/beszel-agent:0.18
         imagePullPolicy: Always
         ports:
         - name: agent
@@ -27,12 +27,15 @@ spec:
         env:
         - name: PORT
           value: "45876"
-        # IMPORTANT: After deploying the hub, get the SSH public key from the hub's web UI
+        # SSH public key is read from sealed secret
+        # After deploying the hub, get the SSH public key from the hub's web UI
         # (Settings -> Systems -> Add System -> Copy the public key)
-        # Then update the KEY value below and re-apply this manifest
+        # Update secret-unsealed.yaml, seal it, and apply the sealed secret
         - name: KEY
-          value: "REPLACE_WITH_SSH_PUBLIC_KEY_FROM_HUB"
-          # Example: "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIExampleKeyDataHere"
+          valueFrom:
+            secretKeyRef:
+              name: beszel-s3-credentials
+              key: SSH_PUBLIC_KEY
         resources:
           requests:
             cpu: 50m
@@ -44,7 +47,7 @@ spec:
           privileged: false
           capabilities:
             add:
-            - NET_ADMIN  # May be needed for network metrics
+            - NET_ADMIN
           readOnlyRootFilesystem: false
       # Tolerations allow the DaemonSet to run on all nodes, including control-plane nodes
       tolerations:

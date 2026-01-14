@@ -10,5 +10,4 @@ spec:
     - ReadWriteOnce
   resources:
     requests:
-      storage: 20Gi
-  # storageClassName: ""  # Uncomment and specify if you want a specific storage class
+      storage: 5Gi
