@@ -1,3 +1,10 @@
+## [2.23.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.22.1...v2.23.0) (2026-01-14)
+
+
+### ✨ Features
+
+* **beszel:** add SealedSecret for SSH public key and update kustomization ([27676d7](https://github.com/Nebu2k/kubernetes-homelab/commit/27676d7d91b4326a43ac2cd33f77a585a2119184))
+
 ## [2.22.1](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.22.0...v2.22.1) (2026-01-14)
 
 
