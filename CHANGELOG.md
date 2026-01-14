@@ -1,3 +1,10 @@
+## [2.23.4](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.23.3...v2.23.4) (2026-01-14)
+
+
+### 🐛 Bug Fixes
+
+* **beszel:** add dnsPolicy to agent daemonset for cluster DNS resolution ([e239761](https://github.com/Nebu2k/kubernetes-homelab/commit/e2397618e8255a51582f468ade5251253ccc0d65))
+
 ## [2.23.3](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.23.2...v2.23.3) (2026-01-14)
 
 
