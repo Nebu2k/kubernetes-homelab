@@ -1,3 +1,10 @@
+## [2.24.2](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.24.1...v2.24.2) (2026-01-14)
+
+
+### ♻️ Code Refactoring
+
+* **beszel:** remove SMTP configuration from deployment and secrets ([674e408](https://github.com/Nebu2k/kubernetes-homelab/commit/674e408366f3eb868bc0d4407daf9fb522b435b5))
+
 ## [2.24.1](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.24.0...v2.24.1) (2026-01-14)
 
 
