@@ -15,6 +15,7 @@ spec:
         app: beszel-agent
     spec:
       hostNetwork: true  # Required for accurate physical network metrics
+      dnsPolicy: ClusterFirstWithHostNet  # Use cluster DNS despite hostNetwork
       containers:
       - name: beszel-agent
         image: henrygd/beszel-agent:0.18
