@@ -21,3 +21,4 @@ resources:
   - grafana-credentials-sealed.yaml
   - plex-token-sealed.yaml
   - nextcloud-token-sealed.yaml
+  - beszel-secret-sealed.yaml
