@@ -1,3 +1,10 @@
+## [2.25.6](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.25.5...v2.25.6) (2026-01-14)
+
+
+### 🐛 Bug Fixes
+
+* update Beszel references in configmap and ingress to use the correct host ([9f30aac](https://github.com/Nebu2k/kubernetes-homelab/commit/9f30aacaf12c457a215ef70ec2b05cc314ed6a60))
+
 ## [2.25.5](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.25.4...v2.25.5) (2026-01-14)
 
 
