@@ -28,7 +28,7 @@ spec:
         - name: PORT
           value: "45876"
         - name: HUB_URL
-          value: "https://beszel-k8s.elmstreet79.de"
+          value: "http://beszel-hub.beszel.svc.cluster.local:8090"
         - name: TOKEN
           valueFrom:
             secretKeyRef:
