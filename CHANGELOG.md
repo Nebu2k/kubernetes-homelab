@@ -1,3 +1,10 @@
+## [2.25.3](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.25.2...v2.25.3) (2026-01-14)
+
+
+### 🐛 Bug Fixes
+
+* **homepage:** update Beszel widget configuration in configmap ([30ea5f4](https://github.com/Nebu2k/kubernetes-homelab/commit/30ea5f43b8d1aabeb2581484b65fea39840eafa7))
+
 ## [2.25.2](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.25.1...v2.25.2) (2026-01-14)
 
 
