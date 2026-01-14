@@ -29,6 +29,7 @@ Production-ready K3s cluster managed via GitOps using ArgoCD App-of-Apps pattern
 | 7 | Unifi Poller, Home Assistant |
 | 8 | Uptime Kuma, Newt, Minio |
 | 9 | N8n, Homepage |
+| 10 | Beszel |
 | 11 | Proxmox Exporter |
 | 12 | Argocd Config |
 | 16 | Private Services |
@@ -60,6 +61,7 @@ homelab/
 │   ├── uptime-kuma.yaml               # Wave 8
 │   ├── homepage.yaml                  # Wave 9
 │   ├── n8n.yaml                       # Wave 9
+│   ├── beszel.yaml                    # Wave 10
 │   ├── proxmox-exporter.yaml          # Wave 11
 │   ├── argocd-config.yaml             # Wave 12
 │   └── private-services.yaml          # Wave 16
@@ -70,6 +72,15 @@ homelab/
     │   ├── argocd-server-patch.yaml
     │   ├── ingress.yaml
     │   └── kustomization.yaml
+    ├── beszel/
+    │   ├── agent-daemonset.yaml
+    │   ├── deployment.yaml
+    │   ├── ingress.yaml
+    │   ├── kustomization.yaml
+    │   ├── namespace.yaml
+    │   ├── pvc.yaml
+    │   ├── secret.yaml
+    │   └── service.yaml
     ├── cert-manager/
     │   ├── cloudflare-dns-sync-configmap.yaml
     │   ├── cloudflare-dns-sync-jobs.yaml
@@ -195,7 +206,6 @@ homelab/
     │   ├── adguardhome-sync-credentials-unsealed.yaml
     │   ├── adguardhome-sync-deployment.yaml
     │   ├── adguardhome-sync-web-ingress.yaml
-    │   ├── beszel-ingress.yaml
     │   ├── dreambox-ingress.yaml
     │   ├── fr24-ingress.yaml
     │   ├── glances-macmini-ingress.yaml
@@ -1161,6 +1171,7 @@ kubectl get secret -n monitoring grafana-admin-credentials \
 | Minio | RELEASE.2025-09-07T16-13-09Z | Minio |
 | Home Assistant | stable | Home Assistant |
 | Homepage | v1.8.0 | Homepage |
+| Beszel | 0.18 | Beszel |
 | K3s | v1.33.5 | Lightweight Kubernetes |
 | Kube-VIP | v1.0.1 | Control plane HA |
 | ArgoCD | v3.2.3 | Continuous Delivery |

@@ -1,25 +1,27 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: n8n
+  name: beszel
   namespace: argocd
   annotations:
-    argocd.argoproj.io/sync-wave: "9"
+    argocd.argoproj.io/sync-wave: "10"
   finalizers:
     - resources-finalizer.argocd.argoproj.io
 spec:
   project: default
   source:
-    repoURL: https://github.com/Nebu2k/kubernetes-homelab.git
+    repoURL: https://github.com/Nebu2k/kubernetes-homelab
     targetRevision: main
-    path: manifests/n8n
+    path: manifests/beszel
   destination:
     server: https://kubernetes.default.svc
-    namespace: n8n
+    namespace: beszel
   syncPolicy:
     automated:
       prune: true
       selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
     retry:
       limit: 5
       backoff:

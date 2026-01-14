@@ -1,0 +1,87 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: beszel-hub
+  namespace: beszel
+  labels:
+    app: beszel-hub
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate  # Use Recreate since we have a RWO volume
+  selector:
+    matchLabels:
+      app: beszel-hub
+  template:
+    metadata:
+      labels:
+        app: beszel-hub
+    spec:
+      nodeSelector:
+        node-role.kubernetes.io/worker: "worker"
+      terminationGracePeriodSeconds: 60
+      containers:
+      - name: beszel
+        image: henrygd/beszel:0.18
+        imagePullPolicy: Always
+        ports:
+        - name: http
+          containerPort: 8090
+          protocol: TCP
+        env:
+        # S3 backup configuration
+        - name: S3_ENDPOINT
+          valueFrom:
+            secretKeyRef:
+              name: beszel-s3-credentials
+              key: S3_ENDPOINT
+        - name: S3_BUCKET
+          valueFrom:
+            secretKeyRef:
+              name: beszel-s3-credentials
+              key: S3_BUCKET
+        - name: S3_ACCESS_KEY
+          valueFrom:
+            secretKeyRef:
+              name: beszel-s3-credentials
+              key: S3_ACCESS_KEY
+        - name: S3_SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              name: beszel-s3-credentials
+              key: S3_SECRET_KEY
+        - name: S3_REGION
+          valueFrom:
+            secretKeyRef:
+              name: beszel-s3-credentials
+              key: S3_REGION
+        volumeMounts:
+        - name: beszel-data
+          mountPath: /beszel_data
+        resources:
+          requests:
+            cpu: 100m
+            memory: 256Mi
+          limits:
+            cpu: 500m
+            memory: 512Mi
+        livenessProbe:
+          httpGet:
+            path: /
+            port: http
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /
+            port: http
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 3
+      volumes:
+      - name: beszel-data
+        persistentVolumeClaim:
+          claimName: beszel-data
