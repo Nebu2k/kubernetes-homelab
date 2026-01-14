@@ -1,3 +1,10 @@
+## [2.22.1](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.22.0...v2.22.1) (2026-01-14)
+
+
+### 🐛 Bug Fixes
+
+* **kustomization:** remove Beszel ingress from kustomization.yaml ([a346743](https://github.com/Nebu2k/kubernetes-homelab/commit/a3467437d29ae4ece9b398647bacd093609fdb6f))
+
 ## [2.22.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.21.0...v2.22.0) (2026-01-14)
 
 
