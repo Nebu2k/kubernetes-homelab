@@ -7,6 +7,18 @@ metadata:
     app: beszel-hub
   annotations:
     cert-manager.io/cluster-issuer: internal-ca-issuer
+    gethomepage.dev/enabled: "true"
+    gethomepage.dev/group: Monitoring
+    gethomepage.dev/name: Beszel K8s
+    gethomepage.dev/icon: beszel.png
+    gethomepage.dev/description: System Monitor
+    gethomepage.dev/weight: "41"
+    gethomepage.dev/pod-selector: "app=beszel-hub"
+    gethomepage.dev/widget.type: beszel
+    gethomepage.dev/widget.url: https://beszel-k8s.elmstreet79.de
+    gethomepage.dev/widget.username: "{{HOMEPAGE_VAR_BESZEL_USERNAME}}"
+    gethomepage.dev/widget.password: "{{HOMEPAGE_VAR_BESZEL_PASSWORD}}"
+    gethomepage.dev/widget.version: "2"
 spec:
   ingressClassName: traefik
   tls:

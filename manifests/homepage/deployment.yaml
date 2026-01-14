@@ -116,6 +116,16 @@ spec:
             secretKeyRef:
               name: homepage-nextcloud
               key: password
+        - name: HOMEPAGE_VAR_BESZEL_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: homepage-beszel
+              key: username
+        - name: HOMEPAGE_VAR_BESZEL_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: homepage-beszel
+              key: password
         volumeMounts:
         - name: config
           mountPath: /app/config

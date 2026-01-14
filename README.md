@@ -109,6 +109,8 @@ homelab/
     │   ├── adguard-credentials-unsealed.yaml
     │   ├── argocd-token-secret-sealed.yaml
     │   ├── argocd-token-secret-unsealed.yaml
+    │   ├── beszel-secret-sealed.yaml
+    │   ├── beszel-secret-unsealed.yaml
     │   ├── clusterrole.yaml
     │   ├── clusterrolebinding.yaml
     │   ├── configmap.yaml
@@ -704,7 +706,20 @@ kubeseal --cert sealed-secrets-pub-cert.pem --format=yaml \
   > manifests/homepage/argocd-token-secret-sealed.yaml
 
 
-# 3. Grafana Credentials
+# 3. Beszel Secret
+cp manifests/homepage/beszel-secret-unsealed.yaml.example \
+   manifests/homepage/beszel-secret-unsealed.yaml
+
+# Edit the file and replace placeholder values with your actual credentials
+vim manifests/homepage/beszel-secret-unsealed.yaml
+
+# Seal the secret (using offline certificate)
+kubeseal --cert sealed-secrets-pub-cert.pem --format=yaml \
+  < manifests/homepage/beszel-secret-unsealed.yaml \
+  > manifests/homepage/beszel-secret-sealed.yaml
+
+
+# 4. Grafana Credentials
 cp manifests/homepage/grafana-credentials-unsealed.yaml.example \
    manifests/homepage/grafana-credentials-unsealed.yaml
 
@@ -717,7 +732,7 @@ kubeseal --cert sealed-secrets-pub-cert.pem --format=yaml \
   > manifests/homepage/grafana-credentials-sealed.yaml
 
 
-# 4. Nextcloud Token
+# 5. Nextcloud Token
 cp manifests/homepage/nextcloud-token-unsealed.yaml.example \
    manifests/homepage/nextcloud-token-unsealed.yaml
 
@@ -730,7 +745,7 @@ kubeseal --cert sealed-secrets-pub-cert.pem --format=yaml \
   > manifests/homepage/nextcloud-token-sealed.yaml
 
 
-# 5. Plex Token
+# 6. Plex Token
 cp manifests/homepage/plex-token-unsealed.yaml.example \
    manifests/homepage/plex-token-unsealed.yaml
 
@@ -743,7 +758,7 @@ kubeseal --cert sealed-secrets-pub-cert.pem --format=yaml \
   > manifests/homepage/plex-token-sealed.yaml
 
 
-# 6. Portainer Token
+# 7. Portainer Token
 cp manifests/homepage/portainer-token-unsealed.yaml.example \
    manifests/homepage/portainer-token-unsealed.yaml
 
@@ -756,7 +771,7 @@ kubeseal --cert sealed-secrets-pub-cert.pem --format=yaml \
   > manifests/homepage/portainer-token-sealed.yaml
 
 
-# 7. Proxmox Secret
+# 8. Proxmox Secret
 cp manifests/homepage/proxmox-secret-unsealed.yaml.example \
    manifests/homepage/proxmox-secret-unsealed.yaml
 
@@ -769,7 +784,7 @@ kubeseal --cert sealed-secrets-pub-cert.pem --format=yaml \
   > manifests/homepage/proxmox-secret-sealed.yaml
 
 
-# 8. Unifi Token
+# 9. Unifi Token
 cp manifests/homepage/unifi-token-unsealed.yaml.example \
    manifests/homepage/unifi-token-unsealed.yaml
 
