@@ -19,7 +19,7 @@ spec:
       containers:
       - name: beszel-agent
         image: henrygd/beszel-agent:0.18
-        imagePullPolicy: Always
+        imagePullPolicy: IfNotPresent
         ports:
         - name: agent
           containerPort: 45876
