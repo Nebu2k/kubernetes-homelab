@@ -1,3 +1,10 @@
+## [2.25.1](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.25.0...v2.25.1) (2026-01-14)
+
+
+### 🐛 Bug Fixes
+
+* **kustomization:** add beszel-secret-sealed.yaml to resources ([f07a880](https://github.com/Nebu2k/kubernetes-homelab/commit/f07a8805ead6511884f23d26b739d8ae8c88df21))
+
 ## [2.25.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.24.2...v2.25.0) (2026-01-14)
 
 
