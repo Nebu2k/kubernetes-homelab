@@ -206,7 +206,6 @@ homelab/
     │   ├── adguardhome-sync-credentials-unsealed.yaml
     │   ├── adguardhome-sync-deployment.yaml
     │   ├── adguardhome-sync-web-ingress.yaml
-    │   ├── beszel-ingress.yaml
     │   ├── dreambox-ingress.yaml
     │   ├── fr24-ingress.yaml
     │   ├── glances-macmini-ingress.yaml
