@@ -1,3 +1,11 @@
+## [2.25.2](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.25.1...v2.25.2) (2026-01-14)
+
+
+### 🐛 Bug Fixes
+
+* **ingress:** add pod-selector annotation to beszel-hub metadata ([f1b9a46](https://github.com/Nebu2k/kubernetes-homelab/commit/f1b9a46f56fe22d9d286c2afb926002d4e7a693b))
+* **ingress:** remove pod-selector annotation from beszel-hub metadata ([43d117b](https://github.com/Nebu2k/kubernetes-homelab/commit/43d117b6cdb1787f5a6ef0167a57f0ab90d5c5e2))
+
 ## [2.25.1](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.25.0...v2.25.1) (2026-01-14)
 
 
