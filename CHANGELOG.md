@@ -1,3 +1,10 @@
+## [2.25.4](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.25.3...v2.25.4) (2026-01-14)
+
+
+### 🐛 Bug Fixes
+
+* change imagePullPolicy to IfNotPresent for beszel-agent, beszel, and adguardhome-sync deployments ([9dfa33a](https://github.com/Nebu2k/kubernetes-homelab/commit/9dfa33a1ee881a96ad671fece9e3573bf275d096))
+
 ## [2.25.3](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.25.2...v2.25.3) (2026-01-14)
 
 
