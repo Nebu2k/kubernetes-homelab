@@ -13,6 +13,7 @@ metadata:
     gethomepage.dev/icon: beszel.png
     gethomepage.dev/description: System Monitor
     gethomepage.dev/weight: "41"
+    gethomepage.dev/pod-selector: "app=beszel-hub"
     gethomepage.dev/widget.type: beszel
     gethomepage.dev/widget.url: https://beszel-k8s.elmstreet79.de
     gethomepage.dev/widget.username: "{{HOMEPAGE_VAR_BESZEL_USERNAME}}"
