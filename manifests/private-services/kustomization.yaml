@@ -9,7 +9,6 @@ resources:
   - adguard-pi5-ingress.yaml
   - adguard-macmini-ingress.yaml
   - adguard-pve-ingress.yaml
-  - beszel-ingress.yaml
   - minio-ingress.yaml
   - proxmox-ingress.yaml
   - fr24-ingress.yaml
