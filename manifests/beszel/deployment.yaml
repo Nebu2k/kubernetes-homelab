@@ -28,6 +28,27 @@ spec:
         - name: http
           containerPort: 8090
           protocol: TCP
+        env:
+        # SMTP configuration for email notifications
+        - name: SMTP_HOST
+          valueFrom:
+            secretKeyRef:
+              name: beszel-smtp
+              key: SMTP_HOST
+        - name: SMTP_PORT
+          value: "587"  # 587 for TLS, 465 for SSL
+        - name: SMTP_USER
+          valueFrom:
+            secretKeyRef:
+              name: beszel-smtp
+              key: SMTP_USER
+        - name: SMTP_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: beszel-smtp
+              key: SMTP_PASSWORD
+        - name: SMTP_FROM
+          value: "beszel@elmstreet79.de"  # Replace with sender address
         volumeMounts:
         - name: beszel-data
           mountPath: /beszel_data
