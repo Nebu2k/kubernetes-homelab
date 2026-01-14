@@ -48,17 +48,17 @@ metadata:
     gethomepage.dev/description: S3 Management Console
     gethomepage.dev/group: Infrastructure
     gethomepage.dev/icon: minio.png
-    gethomepage.dev/href: https://minio-k8s.elmstreet79.de
+    gethomepage.dev/href: https://minio.elmstreet79.de
     gethomepage.dev/weight: "60"
     gethomepage.dev/pod-selector: "app=minio"
 spec:
   ingressClassName: traefik
   tls:
     - hosts:
-        - minio-k8s.elmstreet79.de
+        - minio.elmstreet79.de
       secretName: minio-console-tls
   rules:
-    - host: minio-k8s.elmstreet79.de
+    - host: minio.elmstreet79.de
       http:
         paths:
           - path: /

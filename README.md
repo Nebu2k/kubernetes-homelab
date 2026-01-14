@@ -214,7 +214,6 @@ homelab/
     │   ├── glances-macmini-ingress.yaml
     │   ├── internal-cluster-issuer.yaml
     │   ├── kustomization.yaml
-    │   ├── minio-ingress.yaml
     │   ├── nextcloud-ingress.yaml
     │   ├── plex-ingress.yaml
     │   ├── proxmox-ingress.yaml
