@@ -27,6 +27,8 @@ spec:
         env:
         - name: PORT
           value: "45876"
+        - name: HUB_URL
+          value: "https://beszel-k8s.elmstreet79.de"
         - name: KEY
           valueFrom:
             secretKeyRef:
