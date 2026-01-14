@@ -1,3 +1,10 @@
+## [2.22.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.21.0...v2.22.0) (2026-01-14)
+
+
+### ✨ Features
+
+* **kustomization:** add Beszel resource to kustomization.yaml ([c452a2f](https://github.com/Nebu2k/kubernetes-homelab/commit/c452a2f6247f696d76366b69864656a8cec7469f))
+
 ## [2.21.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.20.1...v2.21.0) (2026-01-14)
 
 
