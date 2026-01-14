@@ -1,3 +1,14 @@
+## [2.21.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.20.1...v2.21.0) (2026-01-14)
+
+
+### ✨ Features
+
+* **argocd:** add finalizers and retry configuration to application manifests ([7ce2042](https://github.com/Nebu2k/kubernetes-homelab/commit/7ce20425c2262dc84ac9bdf91301a6aea5fe26c5))
+* **beszel:** add Beszel monitoring system with deployment manifests and configuration ([55815f0](https://github.com/Nebu2k/kubernetes-homelab/commit/55815f0bb88738d4eca197db22df0f4aa50e6576))
+* **beszel:** add Beszel monitoring system with deployment manifests and configuration ([55293b0](https://github.com/Nebu2k/kubernetes-homelab/commit/55293b0b6c54d54a49f0742ac578a1578c66eaef))
+* **beszel:** remove Beszel ingress and service definitions from manifests ([3a0777d](https://github.com/Nebu2k/kubernetes-homelab/commit/3a0777d880141cdd31fef5a8ada3be47746eb75e))
+* **beszel:** update Beszel deployment manifests and configuration, including version pinning and SSH key management ([6c74c51](https://github.com/Nebu2k/kubernetes-homelab/commit/6c74c51bc121d9477b383c200253d5d0c0523b55))
+
 ## [2.20.1](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.20.0...v2.20.1) (2026-01-14)
 
 
