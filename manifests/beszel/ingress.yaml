@@ -11,10 +11,10 @@ spec:
   ingressClassName: traefik
   tls:
   - hosts:
-    - beszel-k8s.elmstreet79.de
+    - beszel.elmstreet79.de
     secretName: beszel-hub-tls
   rules:
-  - host: beszel-k8s.elmstreet79.de
+  - host: beszel.elmstreet79.de
     http:
       paths:
       - path: /
