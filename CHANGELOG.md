@@ -1,3 +1,10 @@
+## [2.24.1](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.24.0...v2.24.1) (2026-01-14)
+
+
+### 🐛 Bug Fixes
+
+* **deployment:** add missing annotations for reloader ([d34e152](https://github.com/Nebu2k/kubernetes-homelab/commit/d34e15263fd579611456e0a691ee544b9161d943))
+
 ## [2.24.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.23.4...v2.24.0) (2026-01-14)
 
 
