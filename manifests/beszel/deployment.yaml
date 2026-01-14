@@ -16,6 +16,8 @@ spec:
     metadata:
       labels:
         app: beszel-hub
+      annotations:
+        reloader.stakater.com/auto: "true"
     spec:
       nodeSelector:
         node-role.kubernetes.io/worker: "worker"
