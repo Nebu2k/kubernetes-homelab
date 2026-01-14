@@ -1,3 +1,10 @@
+## [2.23.2](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.23.1...v2.23.2) (2026-01-14)
+
+
+### 🐛 Bug Fixes
+
+* **beszel:** add TOKEN environment variable and update SealedSecret with TOKEN ([9721c68](https://github.com/Nebu2k/kubernetes-homelab/commit/9721c684ca857dec678a1865d1c02a628c594425))
+
 ## [2.23.1](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.23.0...v2.23.1) (2026-01-14)
 
 
