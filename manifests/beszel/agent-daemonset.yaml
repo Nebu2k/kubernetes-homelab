@@ -29,6 +29,11 @@ spec:
           value: "45876"
         - name: HUB_URL
           value: "https://beszel-k8s.elmstreet79.de"
+        - name: TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: beszel-agent-ssh
+              key: TOKEN
         - name: KEY
           valueFrom:
             secretKeyRef:
