@@ -1,3 +1,10 @@
+## [2.29.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.28.0...v2.29.0) (2026-01-15)
+
+
+### ✨ Features
+
+* add additional environment variables for n8n configuration ([dc0a30e](https://github.com/Nebu2k/kubernetes-homelab/commit/dc0a30e942fe76e49c8e348f5444100fae198bbd))
+
 ## [2.28.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.27.4...v2.28.0) (2026-01-15)
 
 
