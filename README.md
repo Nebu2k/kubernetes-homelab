@@ -32,6 +32,7 @@ Production-ready K3s cluster managed via GitOps using ArgoCD App-of-Apps pattern
 | 10 | Beszel |
 | 11 | Proxmox Exporter |
 | 12 | Argocd Config |
+| 15 | Fr24 |
 | 16 | Private Services |
 
 ## 📁 Repository Structure
@@ -64,6 +65,7 @@ homelab/
 │   ├── beszel.yaml                    # Wave 10
 │   ├── proxmox-exporter.yaml          # Wave 11
 │   ├── argocd-config.yaml             # Wave 12
+│   ├── fr24.yaml                      # Wave 15
 │   └── private-services.yaml          # Wave 16
 └── manifests/
     ├── argocd/
@@ -94,6 +96,14 @@ homelab/
     ├── coredns/
     │   ├── coredns-custom.yaml
     │   └── kustomization.yaml
+    ├── fr24/
+    │   ├── deployment.yaml
+    │   ├── fr24-secret-sealed.yaml
+    │   ├── fr24-secret-unsealed.yaml
+    │   ├── ingress.yaml
+    │   ├── kustomization.yaml
+    │   ├── namespace.yaml
+    │   └── service.yaml
     ├── home-assistant/
     │   ├── configmap-configuration.yaml
     │   ├── deployment.yaml
@@ -1179,6 +1189,7 @@ kubectl get secret -n monitoring grafana-admin-credentials \
 | Cert Manager | v1.19.2 | Cert Manager |
 | Uptime Kuma | 2.0.2 | Uptime Kuma |
 | Traefik | 38.0.2 | Traefik |
+| Fr24 | latest | Fr24 |
 | Newt | 1.1.0 | Newt |
 | Teslamate | latest | Teslamate |
 | Minio | RELEASE.2025-09-07T16-13-09Z | Minio |

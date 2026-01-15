@@ -23,5 +23,6 @@ resources:
   - teslamate.yaml
   - landing-page.yaml
   - beszel.yaml
+  - fr24.yaml
 ---
 
