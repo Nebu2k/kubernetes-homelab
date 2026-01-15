@@ -1,3 +1,10 @@
+## [2.29.2](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.29.1...v2.29.2) (2026-01-15)
+
+
+### 🐛 Bug Fixes
+
+* remove N8N_RUNNERS_ENABLED environment variable from deployment configuration ([83879d7](https://github.com/Nebu2k/kubernetes-homelab/commit/83879d7dee72c89f5f4dec3b27150121b9f85acf))
+
 ## [2.29.1](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.29.0...v2.29.1) (2026-01-15)
 
 
