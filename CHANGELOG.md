@@ -1,3 +1,10 @@
+## [2.27.4](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.27.3...v2.27.4) (2026-01-15)
+
+
+### 🐛 Bug Fixes
+
+* add N8N_PROXY_HOPS environment variable to n8n deployment ([a67807c](https://github.com/Nebu2k/kubernetes-homelab/commit/a67807c8c2b00c6ce04d3abbdfafdf681a4de250))
+
 ## [2.27.3](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.27.2...v2.27.3) (2026-01-15)
 
 
