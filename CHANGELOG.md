@@ -1,3 +1,10 @@
+## [2.27.2](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.27.1...v2.27.2) (2026-01-15)
+
+
+### 🐛 Bug Fixes
+
+* update fr24 ingress configuration and remove deprecated resources ([9320258](https://github.com/Nebu2k/kubernetes-homelab/commit/9320258ccb9c50d81d9f169772b8dbea77e191f2))
+
 ## [2.27.1](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.27.0...v2.27.1) (2026-01-15)
 
 
