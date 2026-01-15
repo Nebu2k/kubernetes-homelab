@@ -10,16 +10,17 @@ metadata:
     gethomepage.dev/description: "Flight Tracking Feeder"
     gethomepage.dev/group: "Applications"
     gethomepage.dev/icon: "mdi-airplane"
-    gethomepage.dev/href: "https://fr24-k8s.elmstreet79.de"
+    gethomepage.dev/href: "https://fr24.elmstreet79.de"
     gethomepage.dev/weight: "20"
+    gethomepage.dev/pod-selector: "app=fr24feed"
 spec:
   ingressClassName: traefik
   tls:
   - hosts:
-    - fr24-k8s.elmstreet79.de
+    - fr24.elmstreet79.de
     secretName: fr24-tls
   rules:
-  - host: fr24-k8s.elmstreet79.de
+  - host: fr24.elmstreet79.de
     http:
       paths:
       - path: /

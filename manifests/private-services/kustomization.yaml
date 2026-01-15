@@ -10,7 +10,6 @@ resources:
   - adguard-macmini-ingress.yaml
   - adguard-pve-ingress.yaml
   - proxmox-ingress.yaml
-  - fr24-ingress.yaml
   - glances-macmini-ingress.yaml
   - unifi-ingress.yaml
   - plex-ingress.yaml

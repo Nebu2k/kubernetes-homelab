@@ -220,7 +220,6 @@ homelab/
     │   ├── adguardhome-sync-deployment.yaml
     │   ├── adguardhome-sync-web-ingress.yaml
     │   ├── dreambox-ingress.yaml
-    │   ├── fr24-ingress.yaml
     │   ├── glances-macmini-ingress.yaml
     │   ├── internal-cluster-issuer.yaml
     │   ├── kustomization.yaml
