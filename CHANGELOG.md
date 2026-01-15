@@ -1,3 +1,10 @@
+## [2.27.3](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.27.2...v2.27.3) (2026-01-15)
+
+
+### 🐛 Bug Fixes
+
+* update beszel and n8n images to latest versions ([1b8f94d](https://github.com/Nebu2k/kubernetes-homelab/commit/1b8f94dac9a0d4ab56c4b87e5f82e72c8c4d5130))
+
 ## [2.27.2](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.27.1...v2.27.2) (2026-01-15)
 
 
