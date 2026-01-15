@@ -1178,7 +1178,7 @@ kubectl get secret -n monitoring grafana-admin-credentials \
 | Kube Prometheus Stack | 80.13.2 | Kube Prometheus Stack |
 | Sealed Secrets | 2.18.0 | Sealed Secrets |
 | Proxmox Exporter | 1.0.8 | Proxmox Exporter |
-| N8n | 2.3.1 | N8n |
+| N8n | 2.4.3 | N8n |
 | Landing Page | 1.29.4-alpine | Landing Page |
 | Kured | 5.10.0 | Kured |
 | Metallb | 0.15.3 | Metallb |
@@ -1194,7 +1194,7 @@ kubectl get secret -n monitoring grafana-admin-credentials \
 | Minio | RELEASE.2025-09-07T16-13-09Z | Minio |
 | Home Assistant | stable | Home Assistant |
 | Homepage | v1.8.0 | Homepage |
-| Beszel | 0.18 | Beszel |
+| Beszel | 0.18.2 | Beszel |
 | K3s | v1.33.5 | Lightweight Kubernetes |
 | Kube-VIP | v1.0.1 | Control plane HA |
 | ArgoCD | v3.2.3 | Continuous Delivery |
