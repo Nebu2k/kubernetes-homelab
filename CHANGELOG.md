@@ -1,3 +1,10 @@
+## [2.28.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.27.4...v2.28.0) (2026-01-15)
+
+
+### ✨ Features
+
+* add example unsealed PostgreSQL secret for n8n deployment ([c060912](https://github.com/Nebu2k/kubernetes-homelab/commit/c0609129dd4ac7882358f1f1bc48147fa76c785c))
+
 ## [2.27.4](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.27.3...v2.27.4) (2026-01-15)
 
 
