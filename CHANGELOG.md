@@ -1,3 +1,10 @@
+## [2.27.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.26.0...v2.27.0) (2026-01-15)
+
+
+### ✨ Features
+
+* add fr24 application resources including deployment, service, ingress, and secrets ([6b98df4](https://github.com/Nebu2k/kubernetes-homelab/commit/6b98df4f1abcbdc406714d78805d4cecfc3d53ab))
+
 ## [2.26.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.25.7...v2.26.0) (2026-01-14)
 
 
