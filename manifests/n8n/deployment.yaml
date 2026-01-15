@@ -52,6 +52,8 @@ spec:
           value: "n8n.elmstreet79.de"
         - name: WEBHOOK_URL
           value: "https://n8n.elmstreet79.de/"
+        - name: N8N_PROXY_HOPS
+          value: "1"
         - name: N8N_METRICS
           value: "false"
         - name: EXECUTIONS_DATA_PRUNE
