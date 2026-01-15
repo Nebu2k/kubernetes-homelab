@@ -1,3 +1,10 @@
+## [2.27.1](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.27.0...v2.27.1) (2026-01-15)
+
+
+### 🐛 Bug Fixes
+
+* update repoURL in fr24 application configuration ([1903978](https://github.com/Nebu2k/kubernetes-homelab/commit/1903978709a28a99e356ffa7a50504a461c97ce3))
+
 ## [2.27.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.26.0...v2.27.0) (2026-01-15)
 
 
