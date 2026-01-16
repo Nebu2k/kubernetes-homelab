@@ -28,7 +28,7 @@ Production-ready K3s cluster managed via GitOps using ArgoCD App-of-Apps pattern
 | 6 | Kube Prometheus Stack |
 | 7 | Unifi Poller, Home Assistant |
 | 8 | Uptime Kuma, Newt, Minio |
-| 9 | N8n, Homepage |
+| 9 | N8n, Paperless Ngx, Homepage |
 | 10 | Beszel |
 | 11 | Proxmox Exporter |
 | 12 | Argocd Config |
@@ -62,6 +62,7 @@ homelab/
 │   ├── uptime-kuma.yaml               # Wave 8
 │   ├── homepage.yaml                  # Wave 9
 │   ├── n8n.yaml                       # Wave 9
+│   ├── paperless-ngx.yaml             # Wave 9
 │   ├── beszel.yaml                    # Wave 10
 │   ├── proxmox-exporter.yaml          # Wave 11
 │   ├── argocd-config.yaml             # Wave 12
@@ -202,7 +203,15 @@ homelab/
     │   ├── newt-auth-unsealed.yaml
     │   └── values.yaml
     ├── paperless-ngx/
-    │   └── paperless-secrets-unsealed.yaml
+    │   ├── db-pvc.yaml
+    │   ├── deployment.yaml
+    │   ├── ingress.yaml
+    │   ├── kustomization.yaml
+    │   ├── namespace.yaml
+    │   ├── postgresql.yaml
+    │   ├── pvc.yaml
+    │   ├── redis.yaml
+    │   └── service.yaml
     ├── portainer/
     │   ├── ingress.yaml
     │   ├── kustomization.yaml
@@ -1187,6 +1196,7 @@ kubectl get secret -n monitoring grafana-admin-credentials \
 | Longhorn | 1.10.1 | Longhorn |
 | Unifi Poller | v2.21.0 | Unifi Poller |
 | Portainer | 2.33.6 | Portainer |
+| Paperless Ngx | 2.20.4 | Paperless Ngx |
 | Cert Manager | v1.19.2 | Cert Manager |
 | Uptime Kuma | 2.0.2 | Uptime Kuma |
 | Traefik | 38.0.2 | Traefik |
