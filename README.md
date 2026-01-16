@@ -208,8 +208,11 @@ homelab/
     │   ├── ingress.yaml
     │   ├── kustomization.yaml
     │   ├── namespace.yaml
+<<<<<<< HEAD
     │   ├── paperless-secrets-sealed.yaml
     │   ├── paperless-secrets-unsealed.yaml
+=======
+>>>>>>> 87e004c (feat: add paperless-ngx application with necessary resources and configurations)
     │   ├── postgresql.yaml
     │   ├── pvc.yaml
     │   ├── redis.yaml
