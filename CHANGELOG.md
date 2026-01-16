@@ -1,3 +1,10 @@
+## [2.33.1](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.33.0...v2.33.1) (2026-01-16)
+
+
+### 🐛 Bug Fixes
+
+* update PostgreSQL and Redis images to latest versions ([4807bea](https://github.com/Nebu2k/kubernetes-homelab/commit/4807bead4ba06a51e97ae83142c8e691a54f5a24))
+
 ## [2.33.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.32.2...v2.33.0) (2026-01-16)
 
 
