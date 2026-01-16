@@ -12,12 +12,14 @@ spec:
   selector:
     matchLabels:
       app.kubernetes.io/name: paperless-ngx
+      app: paperless-ngx
   template:
     metadata:
       annotations:
         reloader.stakater.com/auto: "true"
       labels:
         app.kubernetes.io/name: paperless-ngx
+        app: paperless-ngx
     spec:
       nodeSelector:
         node-role.kubernetes.io/worker: "worker"
