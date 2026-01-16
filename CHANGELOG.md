@@ -1,3 +1,12 @@
+## [2.32.1](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.32.0...v2.32.1) (2026-01-16)
+
+
+### 🐛 Bug Fixes
+
+* exclude unsealed.yaml files without .example extension in README generation ([0643a97](https://github.com/Nebu2k/kubernetes-homelab/commit/0643a9733020ee439562d93c73192860972bfcac))
+* update PAPERLESS_ALLOWED_HOSTS to allow all hosts ([c8f5046](https://github.com/Nebu2k/kubernetes-homelab/commit/c8f50464048015062582185bfda942372616ad35))
+* update PAPERLESS_FILENAME_FORMAT to use correct templating syntax ([ac2efe3](https://github.com/Nebu2k/kubernetes-homelab/commit/ac2efe31114f79738e309f398f36aa8b11442636))
+
 ## [2.31.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.30.0...v2.31.0) (2026-01-16)
 
 
