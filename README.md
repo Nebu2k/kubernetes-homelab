@@ -208,6 +208,8 @@ homelab/
     │   ├── ingress.yaml
     │   ├── kustomization.yaml
     │   ├── namespace.yaml
+    │   ├── paperless-secrets-sealed.yaml
+    │   ├── paperless-secrets-unsealed.yaml
     │   ├── postgresql.yaml
     │   ├── pvc.yaml
     │   ├── redis.yaml
