@@ -1,3 +1,10 @@
+## [2.33.4](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.33.3...v2.33.4) (2026-01-16)
+
+
+### 🐛 Bug Fixes
+
+* update n8n image to version 2.4.4 ([e9831f6](https://github.com/Nebu2k/kubernetes-homelab/commit/e9831f628b28b306520c9cbcb57cd439f6591923))
+
 ## [2.33.3](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.33.2...v2.33.3) (2026-01-16)
 
 
