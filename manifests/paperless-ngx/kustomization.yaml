@@ -11,3 +11,4 @@ resources:
   - service.yaml
   - ingress.yaml
   - paperless-secrets-sealed.yaml
+  - smb-credentials-sealed.yaml 

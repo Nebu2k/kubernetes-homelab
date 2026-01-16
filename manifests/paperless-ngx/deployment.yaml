@@ -42,6 +42,68 @@ spec:
         - name: consume
           mountPath: /usr/src/paperless/consume
       containers:
+      # Sidecar: Sync files from SMB share to consume folder
+      - name: smb-sync
+        image: alpine:latest
+        command:
+        - sh
+        - -c
+        - |
+          apk add --no-cache samba-client rsync
+          
+          while true; do
+            echo "$(date): Syncing from SMB share..."
+            
+            # Mount SMB share temporarily
+            mkdir -p /mnt/scanner
+            mount -t cifs "//${SMB_SERVER}/${SMB_SHARE}" /mnt/scanner \
+              -o username="${SMB_USER}",password="${SMB_PASS}",vers=3.0,uid=1000,gid=1000
+            
+            if [ $? -eq 0 ]; then
+              # Copy files to consume folder
+              rsync -av --remove-source-files /mnt/scanner/ /consume/
+              
+              # Remove empty directories
+              find /mnt/scanner -type d -empty -delete
+              
+              # Unmount
+              umount /mnt/scanner
+              echo "$(date): Sync completed"
+            else
+              echo "$(date): Failed to mount SMB share"
+            fi
+            
+            # Wait 2 minutes before next sync
+            sleep 120
+          done
+        env:
+        - name: SMB_SERVER
+          value: "192.168.2.6"  # Replace with your NAS IP
+        - name: SMB_SHARE
+          value: "scans"  # Replace with your SMB share name
+        - name: SMB_USER
+          valueFrom:
+            secretKeyRef:
+              name: smb-credentials
+              key: username
+        - name: SMB_PASS
+          valueFrom:
+            secretKeyRef:
+              name: smb-credentials
+              key: password
+        volumeMounts:
+        - name: consume
+          mountPath: /consume
+        securityContext:
+          privileged: true  # Required for CIFS mount
+        resources:
+          requests:
+            cpu: 10m
+            memory: 32Mi
+          limits:
+            cpu: 100m
+            memory: 128Mi
+      
       - name: paperless-ngx
         image: ghcr.io/paperless-ngx/paperless-ngx:2.20.4
         imagePullPolicy: IfNotPresent
@@ -115,13 +177,15 @@ spec:
         
         # Features
         - name: PAPERLESS_CONSUMER_POLLING
-          value: "60"
+          value: "30"
         - name: PAPERLESS_CONSUMER_DELETE_DUPLICATES
           value: "true"
         - name: PAPERLESS_CONSUMER_RECURSIVE
           value: "true"
         - name: PAPERLESS_CONSUMER_SUBDIRS_AS_TAGS
           value: "true"
+        - name: PAPERLESS_CONSUMER_IGNORE_PATTERN
+          value: ".DS_Store,._.*, desktop.ini, @eaDir"
         - name: PAPERLESS_OCR_SKIP_ARCHIVE_FILE
           value: "never"
         - name: PAPERLESS_FILENAME_FORMAT

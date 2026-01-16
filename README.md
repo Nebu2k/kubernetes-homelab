@@ -212,7 +212,9 @@ homelab/
     │   ├── postgresql.yaml
     │   ├── pvc.yaml
     │   ├── redis.yaml
-    │   └── service.yaml
+    │   ├── service.yaml
+    │   ├── smb-credentials-sealed.yaml
+    │   └── smb-credentials-unsealed.yaml.example
     ├── portainer/
     │   ├── ingress.yaml
     │   ├── kustomization.yaml
@@ -1197,7 +1199,7 @@ kubectl get secret -n monitoring grafana-admin-credentials \
 | Longhorn | 1.10.1 | Longhorn |
 | Unifi Poller | v2.21.0 | Unifi Poller |
 | Portainer | 2.33.6 | Portainer |
-| Paperless Ngx | 2.20.4 | Paperless Ngx |
+| Paperless Ngx | latest | Paperless Ngx |
 | Cert Manager | v1.19.2 | Cert Manager |
 | Uptime Kuma | 2.0.2 | Uptime Kuma |
 | Traefik | 38.0.2 | Traefik |
