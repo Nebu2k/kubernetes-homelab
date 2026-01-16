@@ -1,3 +1,10 @@
+## [2.33.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.32.2...v2.33.0) (2026-01-16)
+
+
+### ✨ Features
+
+* add SMB sync sidecar and sealed secret for credentials ([c0c0412](https://github.com/Nebu2k/kubernetes-homelab/commit/c0c0412e74d5c077eb1a43d49d5e0bf7f9473811))
+
 ## [2.32.2](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.32.1...v2.32.2) (2026-01-16)
 
 
