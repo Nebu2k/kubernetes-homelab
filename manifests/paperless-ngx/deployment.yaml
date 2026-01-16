@@ -57,13 +57,13 @@ spec:
         - name: PAPERLESS_URL
           value: "https://paperless.elmstreet79.de"
         - name: PAPERLESS_ALLOWED_HOSTS
-          value: "*"
+          value: "*https://paperless.elmstreet79.de"
         - name: PAPERLESS_CORS_ALLOWED_HOSTS
           value: "https://paperless.elmstreet79.de"
         - name: PAPERLESS_CSRF_TRUSTED_ORIGINS
           value: "https://paperless.elmstreet79.de"
         - name: PAPERLESS_TRUSTED_PROXIES
-          value: "10.0.0.0/8"
+          value: "traefik"
         - name: PAPERLESS_USE_X_FORWARD_HOST
           value: "true"
         - name: PAPERLESS_USE_X_FORWARD_PORT
