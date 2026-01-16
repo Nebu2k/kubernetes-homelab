@@ -1,3 +1,10 @@
+## [2.32.2](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.32.1...v2.32.2) (2026-01-16)
+
+
+### 🐛 Bug Fixes
+
+* add recurring-job annotation to home-assistant PVC ([4aa0169](https://github.com/Nebu2k/kubernetes-homelab/commit/4aa0169ff3443e8b2e5d19556d8a66ab4308adaa))
+
 ## [2.32.1](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.32.0...v2.32.1) (2026-01-16)
 
 
