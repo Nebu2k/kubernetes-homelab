@@ -24,6 +24,14 @@ spec:
       automountServiceAccountToken: true
       nodeSelector:
         node-role.kubernetes.io/worker: "worker"
+      dnsConfig:
+        options:
+        - name: ndots
+          value: "1"
+        - name: timeout
+          value: "2"
+        - name: attempts
+          value: "3"
       initContainers:
       - name: copy-config
         image: busybox:stable

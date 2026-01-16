@@ -201,6 +201,8 @@ homelab/
     │   ├── newt-auth-sealed.yaml
     │   ├── newt-auth-unsealed.yaml
     │   └── values.yaml
+    ├── paperless-ngx/
+    │   └── paperless-secrets-unsealed.yaml
     ├── portainer/
     │   ├── ingress.yaml
     │   ├── kustomization.yaml
