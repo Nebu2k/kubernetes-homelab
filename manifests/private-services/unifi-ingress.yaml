@@ -44,3 +44,49 @@ spec:
           serversTransport: insecure-transport
   tls:
     secretName: unifi-tls
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: unifi-nas
+  namespace: private-services
+spec:
+  type: ClusterIP
+  ports:
+    - name: https
+      port: 443
+      targetPort: 443
+      protocol: TCP
+---
+apiVersion: v1
+kind: Endpoints
+metadata:
+  name: unifi-nas
+  namespace: private-services
+subsets:
+  - addresses:
+      - ip: 192.168.2.6
+    ports:
+      - name: https
+        port: 443
+        protocol: TCP
+---
+# IngressRoute für Traefik (Unifi NAS)
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: unifi-nas
+  namespace: private-services
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - match: Host(`nas.elmstreet79.de`)
+      kind: Rule
+      services:
+        - name: unifi-nas
+          port: 443
+          scheme: https
+          serversTransport: insecure-transport
+  tls:
+    secretName: unifi-nas-tls
