@@ -24,5 +24,6 @@ resources:
   - landing-page.yaml
   - beszel.yaml
   - fr24.yaml
+  - paperless-ngx.yaml
 ---
 

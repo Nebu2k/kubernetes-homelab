@@ -1,0 +1,178 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: paperless-ngx
+  namespace: paperless-ngx
+  labels:
+    app.kubernetes.io/name: paperless-ngx
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: paperless-ngx
+  template:
+    metadata:
+      annotations:
+        reloader.stakater.com/auto: "true"
+      labels:
+        app.kubernetes.io/name: paperless-ngx
+    spec:
+      nodeSelector:
+        node-role.kubernetes.io/worker: "worker"
+      initContainers:
+      - name: fix-permissions
+        image: busybox:stable
+        command:
+        - sh
+        - -c
+        - |
+          chown -R 1000:1000 /usr/src/paperless/data /usr/src/paperless/media /usr/src/paperless/export /usr/src/paperless/consume
+          chmod -R 755 /usr/src/paperless/data /usr/src/paperless/media /usr/src/paperless/export /usr/src/paperless/consume
+        volumeMounts:
+        - name: data
+          mountPath: /usr/src/paperless/data
+        - name: media
+          mountPath: /usr/src/paperless/media
+        - name: export
+          mountPath: /usr/src/paperless/export
+        - name: consume
+          mountPath: /usr/src/paperless/consume
+      containers:
+      - name: paperless-ngx
+        image: ghcr.io/paperless-ngx/paperless-ngx:2.20.4
+        imagePullPolicy: IfNotPresent
+        ports:
+        - name: http
+          containerPort: 8000
+          protocol: TCP
+        env:
+        - name: PAPERLESS_TIME_ZONE
+          value: "Europe/Berlin"
+        - name: PAPERLESS_OCR_LANGUAGE
+          value: "deu+eng"
+        - name: PAPERLESS_OCR_LANGUAGES
+          value: "deu eng"
+        - name: PAPERLESS_URL
+          value: "https://paperless.elmstreet79.de"
+        - name: PAPERLESS_ALLOWED_HOSTS
+          value: "*"
+        - name: PAPERLESS_CORS_ALLOWED_HOSTS
+          value: "https://paperless.elmstreet79.de"
+        - name: PAPERLESS_CSRF_TRUSTED_ORIGINS
+          value: "https://paperless.elmstreet79.de"
+        - name: PAPERLESS_TRUSTED_PROXIES
+          value: "10.0.0.0/8"
+        - name: PAPERLESS_USE_X_FORWARD_HOST
+          value: "true"
+        - name: PAPERLESS_USE_X_FORWARD_PORT
+          value: "true"
+        
+        # Redis
+        - name: PAPERLESS_REDIS
+          value: "redis://redis:6379"
+        
+        # PostgreSQL
+        - name: PAPERLESS_DBHOST
+          value: "postgresql"
+        - name: PAPERLESS_DBPORT
+          value: "5432"
+        - name: PAPERLESS_DBNAME
+          valueFrom:
+            secretKeyRef:
+              name: postgresql-secrets
+              key: POSTGRES_DB
+        - name: PAPERLESS_DBUSER
+          valueFrom:
+            secretKeyRef:
+              name: postgresql-secrets
+              key: POSTGRES_USER
+        - name: PAPERLESS_DBPASS
+          valueFrom:
+            secretKeyRef:
+              name: postgresql-secrets
+              key: POSTGRES_PASSWORD
+        
+        # Admin credentials
+        - name: PAPERLESS_ADMIN_USER
+          valueFrom:
+            secretKeyRef:
+              name: paperless-secrets
+              key: PAPERLESS_ADMIN_USER
+        - name: PAPERLESS_ADMIN_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: paperless-secrets
+              key: PAPERLESS_ADMIN_PASSWORD
+        - name: PAPERLESS_SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              name: paperless-secrets
+              key: PAPERLESS_SECRET_KEY
+        
+        # Features
+        - name: PAPERLESS_CONSUMER_POLLING
+          value: "60"
+        - name: PAPERLESS_CONSUMER_DELETE_DUPLICATES
+          value: "true"
+        - name: PAPERLESS_CONSUMER_RECURSIVE
+          value: "true"
+        - name: PAPERLESS_CONSUMER_SUBDIRS_AS_TAGS
+          value: "true"
+        - name: PAPERLESS_OCR_SKIP_ARCHIVE_FILE
+          value: "never"
+        - name: PAPERLESS_FILENAME_FORMAT
+          value: "{created_year}/{correspondent}/{created}-{title}"
+        - name: PAPERLESS_TIKA_ENABLED
+          value: "false"
+        - name: PAPERLESS_ENABLE_HTTP_REMOTE_USER
+          value: "false"
+        
+        volumeMounts:
+        - name: data
+          mountPath: /usr/src/paperless/data
+        - name: media
+          mountPath: /usr/src/paperless/media
+        - name: export
+          mountPath: /usr/src/paperless/export
+        - name: consume
+          mountPath: /usr/src/paperless/consume
+        
+        resources:
+          requests:
+            cpu: 200m
+            memory: 1Gi
+          limits:
+            cpu: 2000m
+            memory: 2Gi
+        
+        livenessProbe:
+          httpGet:
+            path: /
+            port: http
+          initialDelaySeconds: 60
+          periodSeconds: 30
+          timeoutSeconds: 10
+        
+        readinessProbe:
+          httpGet:
+            path: /
+            port: http
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+      
+      volumes:
+      - name: data
+        persistentVolumeClaim:
+          claimName: paperless-data
+      - name: media
+        persistentVolumeClaim:
+          claimName: paperless-media
+      - name: export
+        persistentVolumeClaim:
+          claimName: paperless-export
+      - name: consume
+        persistentVolumeClaim:
+          claimName: paperless-consume
