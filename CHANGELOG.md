@@ -1,3 +1,10 @@
+## [2.33.2](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.33.1...v2.33.2) (2026-01-16)
+
+
+### 🐛 Bug Fixes
+
+* update MinIO image to latest-cicd and adjust PostgreSQL PGDATA path ([e1d66b7](https://github.com/Nebu2k/kubernetes-homelab/commit/e1d66b7982c2aa80f7d95214031f0d301fb8c768))
+
 ## [2.33.1](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.33.0...v2.33.1) (2026-01-16)
 
 
