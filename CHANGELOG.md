@@ -1,3 +1,10 @@
+## [2.30.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.29.3...v2.30.0) (2026-01-16)
+
+
+### ✨ Features
+
+* add unifi-nas service and IngressRoute configuration ([8a4ac4c](https://github.com/Nebu2k/kubernetes-homelab/commit/8a4ac4c46d950dc2342759cc39b63e5311f40403))
+
 ## [2.29.3](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.29.2...v2.29.3) (2026-01-16)
 
 
