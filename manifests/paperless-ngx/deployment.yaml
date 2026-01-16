@@ -59,7 +59,7 @@ spec:
         - name: PAPERLESS_URL
           value: "https://paperless.elmstreet79.de"
         - name: PAPERLESS_ALLOWED_HOSTS
-          value: "*https://paperless.elmstreet79.de"
+          value: "*"
         - name: PAPERLESS_CORS_ALLOWED_HOSTS
           value: "https://paperless.elmstreet79.de"
         - name: PAPERLESS_CSRF_TRUSTED_ORIGINS
