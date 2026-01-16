@@ -83,14 +83,14 @@ homelab/
     │   ├── namespace.yaml
     │   ├── pvc.yaml
     │   ├── secret-sealed.yaml
-    │   ├── secret-unsealed.yaml
+    │   ├── secret-unsealed.yaml.example
     │   └── service.yaml
     ├── cert-manager/
     │   ├── cloudflare-dns-sync-configmap.yaml
     │   ├── cloudflare-dns-sync-jobs.yaml
     │   ├── cloudflare-dns-sync-rbac.yaml
     │   ├── cloudflare-token-sealed.yaml
-    │   ├── cloudflare-token-unsealed.yaml
+    │   ├── cloudflare-token-unsealed.yaml.example
     │   ├── cluster-issuer.yaml
     │   ├── kustomization.yaml
     │   └── values.yaml
@@ -100,7 +100,7 @@ homelab/
     ├── fr24/
     │   ├── deployment.yaml
     │   ├── fr24-secret-sealed.yaml
-    │   ├── fr24-secret-unsealed.yaml
+    │   ├── fr24-secret-unsealed.yaml.example
     │   ├── ingress.yaml
     │   ├── kustomization.yaml
     │   ├── namespace.yaml
@@ -117,37 +117,37 @@ homelab/
     │   └── service.yaml
     ├── homepage/
     │   ├── adguard-credentials-sealed.yaml
-    │   ├── adguard-credentials-unsealed.yaml
+    │   ├── adguard-credentials-unsealed.yaml.example
     │   ├── argocd-token-secret-sealed.yaml
-    │   ├── argocd-token-secret-unsealed.yaml
+    │   ├── argocd-token-secret-unsealed.yaml.example
     │   ├── beszel-secret-sealed.yaml
-    │   ├── beszel-secret-unsealed.yaml
+    │   ├── beszel-secret-unsealed.yaml.example
     │   ├── clusterrole.yaml
     │   ├── clusterrolebinding.yaml
     │   ├── configmap.yaml
     │   ├── deployment.yaml
     │   ├── grafana-credentials-sealed.yaml
-    │   ├── grafana-credentials-unsealed.yaml
+    │   ├── grafana-credentials-unsealed.yaml.example
     │   ├── ingress.yaml
     │   ├── internal-ca-copy.yaml
     │   ├── kustomization.yaml
     │   ├── namespace.yaml
     │   ├── nextcloud-token-sealed.yaml
-    │   ├── nextcloud-token-unsealed.yaml
+    │   ├── nextcloud-token-unsealed.yaml.example
     │   ├── plex-token-sealed.yaml
-    │   ├── plex-token-unsealed.yaml
+    │   ├── plex-token-unsealed.yaml.example
     │   ├── portainer-token-sealed.yaml
-    │   ├── portainer-token-unsealed.yaml
+    │   ├── portainer-token-unsealed.yaml.example
     │   ├── proxmox-secret-sealed.yaml
-    │   ├── proxmox-secret-unsealed.yaml
+    │   ├── proxmox-secret-unsealed.yaml.example
     │   ├── service.yaml
     │   ├── serviceaccount.yaml
     │   ├── unifi-token-sealed.yaml
-    │   └── unifi-token-unsealed.yaml
+    │   └── unifi-token-unsealed.yaml.example
     ├── kube-prometheus-stack/
     │   ├── alertmanager-ingress.yaml
     │   ├── aws-credentials-sealed.yaml
-    │   ├── aws-credentials-unsealed.yaml
+    │   ├── aws-credentials-unsealed.yaml.example
     │   ├── grafana-ingress.yaml
     │   ├── kustomization.yaml
     │   ├── prometheus-ingress.yaml
@@ -169,7 +169,7 @@ homelab/
     │   ├── node-config.yaml
     │   ├── recurring-backup-jobs.yaml
     │   ├── s3-secret-sealed.yaml
-    │   ├── s3-secret-unsealed.yaml
+    │   ├── s3-secret-unsealed.yaml.example
     │   ├── servicemonitor.yaml
     │   └── values.yaml
     ├── metallb/
@@ -178,7 +178,6 @@ homelab/
     │   └── values.yaml
     ├── minio/
     │   ├── credentials-sealed.yaml
-    │   ├── credentials-unsealed.yaml
     │   ├── deployment.yaml
     │   ├── ingress.yaml
     │   ├── kustomization.yaml
@@ -192,7 +191,7 @@ homelab/
     │   ├── namespace.yaml
     │   ├── postgresql-pvc.yaml
     │   ├── postgresql-secret-sealed.yaml
-    │   ├── postgresql-secret-unsealed.yaml
+    │   ├── postgresql-secret-unsealed.yaml.example
     │   ├── postgresql-service.yaml
     │   ├── postgresql-statefulset.yaml
     │   ├── pvc.yaml
@@ -200,7 +199,7 @@ homelab/
     ├── newt/
     │   ├── kustomization.yaml
     │   ├── newt-auth-sealed.yaml
-    │   ├── newt-auth-unsealed.yaml
+    │   ├── newt-auth-unsealed.yaml.example
     │   └── values.yaml
     ├── paperless-ngx/
     │   ├── db-pvc.yaml
@@ -209,7 +208,7 @@ homelab/
     │   ├── kustomization.yaml
     │   ├── namespace.yaml
     │   ├── paperless-secrets-sealed.yaml
-    │   ├── paperless-secrets-unsealed.yaml
+    │   ├── paperless-secrets-unsealed.yaml.example
     │   ├── postgresql.yaml
     │   ├── pvc.yaml
     │   ├── redis.yaml
@@ -221,7 +220,7 @@ homelab/
     │   └── values.yaml
     ├── private-services/
     │   ├── adguard-credentials-sealed.yaml
-    │   ├── adguard-credentials-unsealed.yaml
+    │   ├── adguard-credentials-unsealed.yaml.example
     │   ├── adguard-dns-sync-job.yaml
     │   ├── adguard-dns-sync-rbac.yaml
     │   ├── adguard-macmini-ingress.yaml
@@ -229,7 +228,6 @@ homelab/
     │   ├── adguard-pve-ingress.yaml
     │   ├── adguardhome-sync-config.yaml
     │   ├── adguardhome-sync-credentials-sealed.yaml
-    │   ├── adguardhome-sync-credentials-unsealed.yaml
     │   ├── adguardhome-sync-deployment.yaml
     │   ├── adguardhome-sync-web-ingress.yaml
     │   ├── certificates.yaml
@@ -247,7 +245,7 @@ homelab/
     │   ├── deployment.yaml
     │   ├── kustomization.yaml
     │   ├── pve-api-credentials-sealed.yaml
-    │   ├── pve-api-credentials-unsealed.yaml
+    │   ├── pve-api-credentials-unsealed.yaml.example
     │   ├── service.yaml
     │   └── servicemonitor.yaml
     ├── reloader/
@@ -266,7 +264,7 @@ homelab/
     │   ├── teslamate-deployment.yaml
     │   ├── teslamate-ingress.yaml
     │   ├── teslamate-secret-sealed.yaml
-    │   └── teslamate-secret-unsealed.yaml
+    │   └── teslamate-secret-unsealed.yaml.example
     ├── traefik/
     │   ├── certificate.yaml
     │   ├── ingress.yaml
@@ -278,7 +276,7 @@ homelab/
     │   ├── service.yaml
     │   ├── servicemonitor.yaml
     │   ├── unifi-config-sealed.yaml
-    │   └── unifi-config-unsealed.yaml
+    │   └── unifi-config-unsealed.yaml.example
     └── uptime-kuma/
         ├── deployment.yaml
         ├── ingress.yaml

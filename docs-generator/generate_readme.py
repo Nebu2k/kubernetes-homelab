@@ -266,8 +266,12 @@ def generate_tree_fallback():
         dir_prefix = "    └── " if is_last_dir else "    ├── "
         lines.append(f"{dir_prefix}{manifest_dir.name}/")
         
-        # Add files in manifest
-        manifest_files = sorted([f for f in manifest_dir.glob("*.yaml") if not f.name.startswith('.')])
+        # Add files in manifest (exclude *-unsealed.yaml without .example extension)
+        all_files = sorted([f for f in manifest_dir.glob("*.yaml*") if not f.name.startswith('.')])
+        # Filter out unsealed.yaml files that don't have .example extension
+        manifest_files = [f for f in all_files 
+                         if not (f.name.endswith('-unsealed.yaml') and not f.name.endswith('.example'))]
+        
         for j, manifest_file in enumerate(manifest_files):
             is_last_file = j == len(manifest_files) - 1
             if is_last_dir:
