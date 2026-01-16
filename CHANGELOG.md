@@ -1,3 +1,10 @@
+## [2.33.3](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.33.2...v2.33.3) (2026-01-16)
+
+
+### 🐛 Bug Fixes
+
+* adjust PostgreSQL volume mount path and remove PGDATA environment variable ([9e45393](https://github.com/Nebu2k/kubernetes-homelab/commit/9e453932a5929066eec5e39c4ad45ac3a00435ee))
+
 ## [2.33.2](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.33.1...v2.33.2) (2026-01-16)
 
 
