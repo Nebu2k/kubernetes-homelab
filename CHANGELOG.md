@@ -1,23 +1,3 @@
-## [2.32.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.31.0...v2.32.0) (2026-01-16)
-
-
-### ✨ Features
-
-* add paperless-ngx application with necessary resources and configurations ([f9da8bf](https://github.com/Nebu2k/kubernetes-homelab/commit/f9da8bfe1878ce85cd1b5eadf3d9c15f681bdda8))
-* add paperless-ngx application with necessary resources and configurations ([b1ccc12](https://github.com/Nebu2k/kubernetes-homelab/commit/b1ccc12be5adb5f1fe83eaf5acb41a60012470f1))
-* add paperless-ngx application with necessary resources and configurations ([db0144b](https://github.com/Nebu2k/kubernetes-homelab/commit/db0144b5245e2ae5c4bef6c4acae5f67c4734aab))
-* add paperless-ngx application with necessary resources and configurations ([87e004c](https://github.com/Nebu2k/kubernetes-homelab/commit/87e004c76256e2de681d1c8c9386751e47bcbbec))
-
-
-### 🐛 Bug Fixes
-
-* add missing app label to paperless-ngx deployment ([6814751](https://github.com/Nebu2k/kubernetes-homelab/commit/681475122de867bfd9991d6e3564ec2f9c43008f))
-* add sealed secrets for paperless-ngx application ([36bf0c2](https://github.com/Nebu2k/kubernetes-homelab/commit/36bf0c265bf0a0873edc1af48d6915e53786b4f2))
-* add sealed secrets for paperless-ngx application ([ef4c0b7](https://github.com/Nebu2k/kubernetes-homelab/commit/ef4c0b75eee0d40e5eb6aee7b323c8f534dbb571))
-* add sealed secrets for paperless-ngx application ([1f1252c](https://github.com/Nebu2k/kubernetes-homelab/commit/1f1252c915280898050c62dcb4a10203f9297def))
-* add sealed secrets for paperless-ngx application ([8dea034](https://github.com/Nebu2k/kubernetes-homelab/commit/8dea034e32717246fb83e4d6f37d2beb4964ae65))
-* update environment variables for paperless-ngx deployment ([40fa3b4](https://github.com/Nebu2k/kubernetes-homelab/commit/40fa3b4da01070ad4148997634d6ef6b21d0c033))
-
 ## [2.31.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.30.0...v2.31.0) (2026-01-16)
 
 
