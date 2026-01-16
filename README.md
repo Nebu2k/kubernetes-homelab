@@ -1206,7 +1206,7 @@ kubectl get secret -n monitoring grafana-admin-credentials \
 | Fr24 | latest | Fr24 |
 | Newt | 1.1.0 | Newt |
 | Teslamate | latest | Teslamate |
-| Minio | RELEASE.2025-09-07T16-13-09Z | Minio |
+| Minio | latest-cicd | Minio |
 | Home Assistant | stable | Home Assistant |
 | Homepage | v1.8.0 | Homepage |
 | Beszel | 0.18.2 | Beszel |

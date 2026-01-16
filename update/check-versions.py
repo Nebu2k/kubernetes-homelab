@@ -252,18 +252,36 @@ def _filter_stable_tag(tags: list) -> Optional[str]:
         if not (tag[0].isdigit() or (tag.startswith("v") and len(tag) > 1 and tag[1].isdigit())):
             continue
         
+        # Skip tags with hyphens followed by text (e.g., 11691-document-filter)
+        # These are usually PR/branch tags, not versions
+        if '-' in tag and not all(part.replace('.', '').replace('v', '').isdigit() for part in tag.split('-')):
+            continue
+        
         stable.append(tag)
     
     if not stable:
         return None
     
-    try:
-        sorted_tags = sorted(stable, key=lambda t: version.parse(t.lstrip("v")), reverse=True)
-        if DEBUG:
-            print(f"    Top 5 after sorting: {sorted_tags[:5]}")
-        return sorted_tags[0]
-    except version.InvalidVersion:
-        return stable[0]
+    # Filter to only valid semantic versions
+    valid_versions = []
+    for tag in stable:
+        try:
+            parsed = version.parse(tag.lstrip("v"))
+            valid_versions.append((tag, parsed))
+        except version.InvalidVersion:
+            if DEBUG:
+                print(f"    Skipping invalid version: {tag}")
+            continue
+    
+    if not valid_versions:
+        return stable[0] if stable else None
+    
+    # Sort by parsed version
+    valid_versions.sort(key=lambda x: x[1], reverse=True)
+    if DEBUG:
+        print(f"    Top 5 after sorting: {[v[0] for v in valid_versions[:5]]}")
+    
+    return valid_versions[0][0]
 
 
 def check_helm_apps():
