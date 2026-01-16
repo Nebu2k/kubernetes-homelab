@@ -1,3 +1,10 @@
+## [2.31.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.30.0...v2.31.0) (2026-01-16)
+
+
+### ✨ Features
+
+* add certificates for Unifi Controller, Unifi NAS, Proxmox, and Portainer ([d42ee45](https://github.com/Nebu2k/kubernetes-homelab/commit/d42ee4500415ca37a496d51b69609732c37058ed))
+
 ## [2.30.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.29.3...v2.30.0) (2026-01-16)
 
 
