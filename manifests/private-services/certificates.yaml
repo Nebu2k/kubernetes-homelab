@@ -1,0 +1,56 @@
+---
+# Zertifikat für Unifi Controller (intern)
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: unifi-tls
+  namespace: private-services
+spec:
+  secretName: unifi-tls
+  issuerRef:
+    name: internal-ca-issuer
+    kind: ClusterIssuer
+  dnsNames:
+    - unifi.elmstreet79.de
+---
+# Zertifikat für Unifi NAS (intern)
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: unifi-nas-tls
+  namespace: private-services
+spec:
+  secretName: unifi-nas-tls
+  issuerRef:
+    name: internal-ca-issuer
+    kind: ClusterIssuer
+  dnsNames:
+    - nas.elmstreet79.de
+---
+# Zertifikat für Proxmox (intern)
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: proxmox-tls
+  namespace: private-services
+spec:
+  secretName: proxmox-tls
+  issuerRef:
+    name: internal-ca-issuer
+    kind: ClusterIssuer
+  dnsNames:
+    - pve.elmstreet79.de
+---
+# Zertifikat für Portainer (intern)
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: portainer-tls
+  namespace: portainer
+spec:
+  secretName: portainer-tls
+  issuerRef:
+    name: internal-ca-issuer
+    kind: ClusterIssuer
+  dnsNames:
+    - portainer.elmstreet79.de

@@ -221,6 +221,7 @@ homelab/
     │   ├── adguardhome-sync-credentials-unsealed.yaml
     │   ├── adguardhome-sync-deployment.yaml
     │   ├── adguardhome-sync-web-ingress.yaml
+    │   ├── certificates.yaml
     │   ├── dreambox-ingress.yaml
     │   ├── glances-macmini-ingress.yaml
     │   ├── internal-cluster-issuer.yaml

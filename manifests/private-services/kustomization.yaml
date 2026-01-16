@@ -4,6 +4,7 @@ namespace: private-services
 resources:
   - internal-cluster-issuer.yaml
   - servers-transport.yaml
+  - certificates.yaml
   - nextcloud-ingress.yaml
   - dreambox-ingress.yaml
   - adguard-pi5-ingress.yaml
