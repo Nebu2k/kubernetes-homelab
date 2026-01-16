@@ -125,7 +125,7 @@ spec:
         - name: PAPERLESS_OCR_SKIP_ARCHIVE_FILE
           value: "never"
         - name: PAPERLESS_FILENAME_FORMAT
-          value: "{created_year}/{correspondent}/{created}-{title}"
+          value: "{{ created_year }}/{{ correspondent }}/{{ created }}-{{ title }}"
         - name: PAPERLESS_TIKA_ENABLED
           value: "false"
         - name: PAPERLESS_ENABLE_HTTP_REMOTE_USER
