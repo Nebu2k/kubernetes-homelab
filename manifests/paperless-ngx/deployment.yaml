@@ -238,38 +238,24 @@ spec:
         - |
           set -eu
           
-          echo "S3 Backup Sidecar started - monitoring /export directory"
+          echo "S3 Backup Sidecar started - monitoring /export/current directory"
+          echo "S3 Versioning enabled - only changed files will create new versions"
           
           while true; do
-            # Wait for export directory to have content
-            if [ -n "$(find /export -mindepth 1 -maxdepth 1 -type d -name 'backup-*' 2>/dev/null)" ]; then
-              echo "$(date): Found backup directories, syncing to S3..."
+            # Check if current export exists
+            if [ -d "/export/current" ] && [ -n "$(ls -A /export/current 2>/dev/null)" ]; then
+              echo "$(date): Found backup in /export/current, syncing to S3..."
               
-              # Sync all backup-* directories to S3 with versioning
-              for backup_dir in /export/backup-*; do
-                if [ -d "$backup_dir" ]; then
-                  dir_name=$(basename "$backup_dir")
-                  
-                  if aws s3 sync "$backup_dir" "s3://${S3_BUCKET_NAME}/paperless-backup/${dir_name}/" \
-                    --region "${S3_REGION}" \
-                    --storage-class STANDARD_IA \
-                    --no-progress; then
-                    
-                    echo "$(date): Successfully synced $dir_name to S3"
-                    
-                    # Verify backup exists in S3 before deletion
-                    if aws s3 ls "s3://${S3_BUCKET_NAME}/paperless-backup/${dir_name}/" --region "${S3_REGION}" > /dev/null 2>&1; then
-                      echo "$(date): Verified $dir_name exists in S3 - removing local copy"
-                      rm -rf "$backup_dir"
-                      echo "$(date): Cleaned up local backup $dir_name"
-                    else
-                      echo "$(date): WARNING: Cannot verify $dir_name in S3 - keeping local copy"
-                    fi
-                  else
-                    echo "$(date): ERROR: Failed to sync $dir_name"
-                  fi
-                fi
-              done
+              if aws s3 sync "/export/current" "s3://${S3_BUCKET_NAME}/paperless-backup/" \
+                --region "${S3_REGION}" \
+                --storage-class STANDARD_IA \
+                --no-progress; then
+                
+                echo "$(date): Successfully synced to S3"
+                echo "$(date): S3 Versioning automatically handles changed files - unchanged files not re-uploaded"
+              else
+                echo "$(date): ERROR: Failed to sync to S3"
+              fi
             fi
             
             # Check every hour (backup runs once daily at 02:00)

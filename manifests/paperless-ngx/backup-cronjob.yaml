@@ -44,15 +44,14 @@ spec:
               mv kubectl /usr/local/bin/
 
               echo "=== Triggering Paperless-ngx Document Export ==="
-              TIMESTAMP=$(date +%Y-%m-%d-%H%M%S)
-              EXPORT_DIR="/usr/src/paperless/export/backup-${TIMESTAMP}"
+              EXPORT_DIR="/usr/src/paperless/export/current"
 
               # Trigger export in Paperless pod (S3 sidecar will handle upload)
               echo "Running document export in Paperless pod..."
               if kubectl exec -n paperless-ngx deployment/paperless-ngx -c paperless-ngx -- \
-                bash -c "mkdir -p ${EXPORT_DIR} && python /usr/src/paperless/src/manage.py document_exporter ${EXPORT_DIR}"; then
+                bash -c "rm -rf ${EXPORT_DIR} && mkdir -p ${EXPORT_DIR} && python /usr/src/paperless/src/manage.py document_exporter ${EXPORT_DIR}"; then
                 echo "Export completed successfully!"
-                echo "S3 backup sidecar will automatically sync to S3 within 1 hour"
+                echo "S3 backup sidecar will sync changed files to S3 within 1 hour (S3 Versioning handles history)"
               else
                 echo "ERROR: Export failed!"
                 exit 1
