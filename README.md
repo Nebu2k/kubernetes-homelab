@@ -1208,7 +1208,7 @@ kubectl get secret -n monitoring grafana-admin-credentials \
 | Traefik | 38.0.2 | Traefik |
 | Fr24 | latest-build-825 | Fr24 |
 | Newt | 1.1.0 | Newt |
-| Teslamate | v2.2.0 | Teslamate |
+| Teslamate | 2.2.0 | Teslamate |
 | Minio | RELEASE.2025-09-07T16-13-09Z | Minio |
 | Home Assistant | 2026.1.2 | Home Assistant |
 | Homepage | v1.8.0 | Homepage |
