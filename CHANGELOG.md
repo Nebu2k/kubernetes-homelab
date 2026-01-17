@@ -1,3 +1,10 @@
+## [2.37.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.36.0...v2.37.0) (2026-01-17)
+
+
+### ✨ Features
+
+* remove adguard-pi5 ingress configuration from kustomization ([b239e33](https://github.com/Nebu2k/kubernetes-homelab/commit/b239e333d8804e157fda9341b8b6270a4a91ee1f))
+
 ## [2.36.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.35.0...v2.36.0) (2026-01-17)
 
 
