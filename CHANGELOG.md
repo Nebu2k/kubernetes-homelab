@@ -1,3 +1,10 @@
+## [2.35.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.34.9...v2.35.0) (2026-01-17)
+
+
+### ✨ Features
+
+* add Role and RoleBinding for ca-copier to access internal CA secret ([d149b95](https://github.com/Nebu2k/kubernetes-homelab/commit/d149b95879888ad48fb295a587e58c4e2acb5ce4))
+
 ## [2.34.9](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.34.8...v2.34.9) (2026-01-17)
 
 
