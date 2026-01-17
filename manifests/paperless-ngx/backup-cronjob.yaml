@@ -23,10 +23,10 @@ spec:
           - name: backup-trigger
             image: rancher/kubectl:v1.35.0
             command:
-            - /bin/bash
+            - /bin/sh
             - -c
             - |
-              set -euxo pipefail
+              set -eux
 
               echo "=== Triggering Paperless-ngx Document Export ==="
               TIMESTAMP=$(date +%Y-%m-%d-%H%M%S)
