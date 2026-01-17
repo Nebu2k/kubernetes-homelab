@@ -1,3 +1,10 @@
+## [2.34.7](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.34.6...v2.34.7) (2026-01-17)
+
+
+### 🐛 Bug Fixes
+
+* update AWS credentials in s3-backup-credentials-sealed.yaml ([2b3c62c](https://github.com/Nebu2k/kubernetes-homelab/commit/2b3c62c39bad2069f13e8e4cf55c3cf9436cb1aa))
+
 ## [2.34.6](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.34.5...v2.34.6) (2026-01-17)
 
 
