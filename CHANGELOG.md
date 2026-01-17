@@ -1,3 +1,10 @@
+## [2.34.5](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.34.4...v2.34.5) (2026-01-17)
+
+
+### 🐛 Bug Fixes
+
+* enhance kubectl installation to support multiple architectures ([f542c40](https://github.com/Nebu2k/kubernetes-homelab/commit/f542c4094819aba7bdafdf2355ddc629a0139552))
+
 ## [2.34.4](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.34.3...v2.34.4) (2026-01-17)
 
 
