@@ -1,7 +1,7 @@
 apiVersion: batch/v1
 kind: CronJob
 metadata:
-  name: paperless-backup-s3
+  name: paperless-backup-trigger
   namespace: paperless-ngx
   labels:
     app.kubernetes.io/name: paperless-backup
@@ -20,7 +20,7 @@ spec:
           serviceAccountName: paperless-backup-sa
           restartPolicy: OnFailure
           containers:
-          - name: backup-orchestrator
+          - name: backup-trigger
             image: rancher/kubectl:v1.35.0
             command:
             - /bin/bash
@@ -28,85 +28,29 @@ spec:
             - |
               set -euxo pipefail
 
-              # For production, use custom image with aws-cli pre-installed
-              echo "Installing AWS CLI..."
-              apt-get update -qq && apt-get install -y -qq awscli > /dev/null 2>&1
-
-              echo "=== Paperless-ngx S3 Backup Started ==="
+              echo "=== Triggering Paperless-ngx Document Export ==="
               TIMESTAMP=$(date +%Y-%m-%d-%H%M%S)
-              REMOTE_EXPORT_DIR="/export/backup-${TIMESTAMP}"
-              LOCAL_STAGING_DIR="/tmp/staging"
+              EXPORT_DIR="/usr/src/paperless/export/backup-${TIMESTAMP}"
 
-              # Step 1: Export documents inside running Paperless pod
-              echo "Step 1: Running document export in Paperless pod..."
+              # Trigger export in Paperless pod (S3 sidecar will handle upload)
+              echo "Running document export in Paperless pod..."
               kubectl exec -n paperless-ngx deployment/paperless-ngx -c paperless-ngx -- \
-                bash -c "mkdir -p ${REMOTE_EXPORT_DIR} && python /usr/src/paperless/src/manage.py document_exporter ${REMOTE_EXPORT_DIR}"
-
-              # Step 2: Find the paperless pod name
-              PAPERLESS_POD=$(kubectl get pods -n paperless-ngx -l app.kubernetes.io/name=paperless-ngx,app=paperless-ngx -o jsonpath='{.items[0].metadata.name}')
-              if [ -z "$PAPERLESS_POD" ]; then
-                echo "ERROR: Paperless pod not found!"
-                exit 1
-              fi
-              echo "Found pod: ${PAPERLESS_POD}"
-
-              # Step 3: Copy exported files from paperless pod to this pod
-              echo "Step 3: Copying files from ${PAPERLESS_POD}:${REMOTE_EXPORT_DIR} to ${LOCAL_STAGING_DIR}..."
-              mkdir -p "${LOCAL_STAGING_DIR}"
-              kubectl cp "paperless-ngx/${PAPERLESS_POD}:${REMOTE_EXPORT_DIR}/." "${LOCAL_STAGING_DIR}" -c paperless-ngx
-
-              # Step 4: Upload to S3 using /latest/ path (S3 Versioning handles history)
-              echo "Step 4: Uploading to S3..."
-              S3_PATH="s3://${S3_BUCKET_NAME}/paperless-backup/latest/"
-              echo "Note: S3 Versioning enabled - only changed files will use additional storage"
-              
-              aws s3 sync "${LOCAL_STAGING_DIR}" "${S3_PATH}" \
-                --region "${S3_REGION}" \
-                --storage-class STANDARD_IA \
-                --delete \
-                --no-progress
+                bash -c "mkdir -p ${EXPORT_DIR} && python /usr/src/paperless/src/manage.py document_exporter ${EXPORT_DIR}"
 
               if [ $? -eq 0 ]; then
-                echo "Upload successful!"
+                echo "Export completed successfully!"
+                echo "S3 backup sidecar will automatically sync to S3 within 5 minutes"
               else
-                echo "ERROR: Upload failed!"
+                echo "ERROR: Export failed!"
                 exit 1
               fi
-
-              # Step 5: Cleanup old exports in paperless pod (keeps last 2)
-              echo "Step 5: Cleaning up old exports in paperless pod..."
-              kubectl exec -n paperless-ngx deployment/paperless-ngx -c paperless-ngx -- \
-                bash -c "ls -td /export/backup-* 2>/dev/null | tail -n +3 | xargs -r rm -rf"
-
-              echo "Backup completed successfully!"
-            env:
-            - name: AWS_ACCESS_KEY_ID
-              valueFrom:
-                secretKeyRef:
-                  name: s3-backup-credentials
-                  key: AWS_ACCESS_KEY_ID
-            - name: AWS_SECRET_ACCESS_KEY
-              valueFrom:
-                secretKeyRef:
-                  name: s3-backup-credentials
-                  key: AWS_SECRET_ACCESS_KEY
-            - name: S3_BUCKET_NAME
-              valueFrom:
-                secretKeyRef:
-                  name: s3-backup-credentials
-                  key: S3_BUCKET_NAME
-            - name: S3_REGION
-              valueFrom:
-                secretKeyRef:
-                  name: s3-backup-credentials
-                  key: S3_REGION
             resources:
               requests:
-                cpu: 100m
-                memory: 256Mi
+                cpu: 50m
+                memory: 128Mi
               limits:
-                cpu: 500m
-                memory: 512Mi
+                cpu: 200m
+                memory: 256Mi
 ---
 apiVersion: v1
 kind: ServiceAccount
@@ -122,10 +66,13 @@ metadata:
 rules:
 - apiGroups: ["apps"]
   resources: ["deployments"]
+  verbs: ["get"]
+- apiGroups: [""]
+  resources: ["pods"]
   verbs: ["get", "list"]
 - apiGroups: [""]
-  resources: ["pods", "pods/exec"]
-  verbs: ["get", "list", "create"]
+  resources: ["pods/exec"]
+  verbs: ["create"]
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding

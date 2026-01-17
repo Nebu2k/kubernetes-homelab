@@ -1,4 +1,4 @@
-#kubeseal --cert sealed-secrets-pub-cert.pem --format=yaml < manifests/cert-manager/cloudflare-token-unsealed.yaml > manifests/cert-manager/cloudflare-token-sealed.yaml
+# kubeseal --cert sealed-secrets-pub-cert.pem --format=yaml < manifests/cert-manager/cloudflare-token-unsealed.yaml > manifests/cert-manager/cloudflare-token-sealed.yaml
 ---
 apiVersion: v1
 kind: Secret

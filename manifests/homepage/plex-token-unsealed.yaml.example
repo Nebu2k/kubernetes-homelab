@@ -1,4 +1,4 @@
-#kubeseal --cert sealed-secrets-pub-cert.pem --format=yaml < manifests/homepage/plex-token-unsealed.yaml > manifests/homepage/plex-token-sealed.yaml
+# kubeseal --cert sealed-secrets-pub-cert.pem --format=yaml < manifests/homepage/plex-token-unsealed.yaml > manifests/homepage/plex-token-sealed.yaml
 ---
 apiVersion: v1
 kind: Secret
