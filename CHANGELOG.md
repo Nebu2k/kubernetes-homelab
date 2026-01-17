@@ -1,3 +1,10 @@
+## [2.36.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.35.0...v2.36.0) (2026-01-17)
+
+
+### ✨ Features
+
+* enhance kubectl installation script to support multiple architectures ([0555c84](https://github.com/Nebu2k/kubernetes-homelab/commit/0555c8472b32341106ca89414b49b8e193593b58))
+
 ## [2.35.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.34.9...v2.35.0) (2026-01-17)
 
 
