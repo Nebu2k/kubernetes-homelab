@@ -21,61 +21,64 @@ spec:
           restartPolicy: OnFailure
           containers:
           - name: backup-orchestrator
-            image: bitnami/kubectl:latest
+            image: rancher/kubectl:v1.35.0
             command:
             - /bin/bash
             - -c
             - |
-              set -e
-              
+              set -euxo pipefail
+
+              # For production, use custom image with aws-cli pre-installed
+              echo "Installing AWS CLI..."
+              apt-get update -qq && apt-get install -y -qq awscli > /dev/null 2>&1
+
               echo "=== Paperless-ngx S3 Backup Started ==="
-              EXPORT_DIR="/export/backup-$(date +%Y-%m-%d-%H%M%S)"
-              
+              TIMESTAMP=$(date +%Y-%m-%d-%H%M%S)
+              REMOTE_EXPORT_DIR="/export/backup-${TIMESTAMP}"
+              LOCAL_STAGING_DIR="/tmp/staging"
+
               # Step 1: Export documents inside running Paperless pod
               echo "Step 1: Running document export in Paperless pod..."
               kubectl exec -n paperless-ngx deployment/paperless-ngx -c paperless-ngx -- \
-                bash -c "mkdir -p ${EXPORT_DIR} && python /usr/src/paperless/src/manage.py document_exporter ${EXPORT_DIR} && echo 'Export completed' && ls -lh ${EXPORT_DIR}"
-              
-              if [ $? -ne 0 ]; then
-                echo "ERROR: Export failed!"
+                bash -c "mkdir -p ${REMOTE_EXPORT_DIR} && python /usr/src/paperless/src/manage.py document_exporter ${REMOTE_EXPORT_DIR}"
+
+              # Step 2: Find the paperless pod name
+              PAPERLESS_POD=$(kubectl get pods -n paperless-ngx -l app.kubernetes.io/name=paperless-ngx,app=paperless-ngx -o jsonpath='{.items[0].metadata.name}')
+              if [ -z "$PAPERLESS_POD" ]; then
+                echo "ERROR: Paperless pod not found!"
                 exit 1
               fi
-              
-              # Step 2: Upload to S3 from Paperless pod
-              echo "Step 2: Uploading to S3..."
+              echo "Found pod: ${PAPERLESS_POD}"
+
+              # Step 3: Copy exported files from paperless pod to this pod
+              echo "Step 3: Copying files from ${PAPERLESS_POD}:${REMOTE_EXPORT_DIR} to ${LOCAL_STAGING_DIR}..."
+              mkdir -p "${LOCAL_STAGING_DIR}"
+              kubectl cp "paperless-ngx/${PAPERLESS_POD}:${REMOTE_EXPORT_DIR}/." "${LOCAL_STAGING_DIR}" -c paperless-ngx
+
+              # Step 4: Upload to S3 using /latest/ path (S3 Versioning handles history)
+              echo "Step 4: Uploading to S3..."
               S3_PATH="s3://${S3_BUCKET_NAME}/paperless-backup/latest/"
+              echo "Note: S3 Versioning enabled - only changed files will use additional storage"
               
+              aws s3 sync "${LOCAL_STAGING_DIR}" "${S3_PATH}" \
+                --region "${S3_REGION}" \
+                --storage-class STANDARD_IA \
+                --delete \
+                --no-progress
+
+              if [ $? -eq 0 ]; then
+                echo "Upload successful!"
+              else
+                echo "ERROR: Upload failed!"
+                exit 1
+              fi
+
+              # Step 5: Cleanup old exports in paperless pod (keeps last 2)
+              echo "Step 5: Cleaning up old exports in paperless pod..."
               kubectl exec -n paperless-ngx deployment/paperless-ngx -c paperless-ngx -- \
-                bash -c "
-                  export AWS_ACCESS_KEY_ID='${AWS_ACCESS_KEY_ID}'
-                  export AWS_SECRET_ACCESS_KEY='${AWS_SECRET_ACCESS_KEY}'
-                  
-                  # Install aws-cli if not present
-                  if ! command -v aws &> /dev/null; then
-                    echo 'Installing AWS CLI...'
-                    apt-get update -qq && apt-get install -y -qq awscli > /dev/null 2>&1
-                  fi
-                  
-                  echo 'Uploading to ${S3_PATH}...'
-                  aws s3 sync ${EXPORT_DIR} ${S3_PATH} \
-                    --region ${S3_REGION} \
-                    --storage-class STANDARD_IA \
-                    --delete \
-                    --no-progress
-                  
-                  if [ \$? -eq 0 ]; then
-                    echo 'Upload successful!'
-                    
-                    # Cleanup old exports (keep last 2)
-                    echo 'Cleaning up old exports...'
-                    ls -td /export/backup-* 2>/dev/null | tail -n +3 | xargs -r rm -rf
-                    
-                    echo 'Backup completed successfully!'
-                  else
-                    echo 'ERROR: Upload failed!'
-                    exit 1
-                  fi
-                "
+                bash -c "ls -td /export/backup-* 2>/dev/null | tail -n +3 | xargs -r rm -rf"
+
+              echo "Backup completed successfully!"
             env:
             - name: AWS_ACCESS_KEY_ID
               valueFrom:
@@ -99,11 +102,11 @@ spec:
                   key: S3_REGION
             resources:
               requests:
-                cpu: 50m
-                memory: 64Mi
+                cpu: 100m
+                memory: 256Mi
               limits:
-                cpu: 200m
-                memory: 128Mi
+                cpu: 500m
+                memory: 512Mi
 ---
 apiVersion: v1
 kind: ServiceAccount
