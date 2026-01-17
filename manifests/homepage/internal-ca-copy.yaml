@@ -19,11 +19,17 @@ spec:
           restartPolicy: OnFailure
           containers:
             - name: copy-ca
-              image: rancher/kubectl:v1.35.0
+              image: alpine:3.23
               command:
-                - /bin/bash
+                - /bin/sh
                 - -c
                 - |
+                  # Install kubectl
+                  apk add --no-cache curl
+                  curl -sLO "https://dl.k8s.io/release/v1.35.0/bin/linux/amd64/kubectl"
+                  chmod +x kubectl
+                  mv kubectl /usr/local/bin/
+                  
                   # Get CA certificate from cert-manager namespace
                   kubectl get secret internal-ca-secret -n cert-manager -o jsonpath='{.data.ca\.crt}' > /tmp/ca.crt
                   

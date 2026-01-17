@@ -21,12 +21,18 @@ spec:
           restartPolicy: OnFailure
           containers:
           - name: backup-trigger
-            image: rancher/kubectl:v1.35.0
+            image: alpine:3.23
             command:
             - /bin/sh
             - -c
             - |
               set -eux
+              
+              # Install kubectl
+              apk add --no-cache curl
+              curl -sLO "https://dl.k8s.io/release/v1.35.0/bin/linux/amd64/kubectl"
+              chmod +x kubectl
+              mv kubectl /usr/local/bin/
 
               echo "=== Triggering Paperless-ngx Document Export ==="
               TIMESTAMP=$(date +%Y-%m-%d-%H%M%S)
