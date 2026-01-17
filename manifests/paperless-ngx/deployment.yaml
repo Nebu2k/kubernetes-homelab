@@ -233,10 +233,10 @@ spec:
       - name: s3-backup-sync
         image: amazon/aws-cli:2.22.17
         command:
-        - /bin/bash
+        - /bin/sh
         - -c
         - |
-          set -euo pipefail
+          set -eu
           
           echo "S3 Backup Sidecar started - monitoring /export directory"
           
