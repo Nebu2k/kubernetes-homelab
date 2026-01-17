@@ -1,3 +1,10 @@
+## [2.34.4](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.34.3...v2.34.4) (2026-01-17)
+
+
+### 🐛 Bug Fixes
+
+* update backup and CA copy jobs to use alpine image and install kubectl ([d9263ab](https://github.com/Nebu2k/kubernetes-homelab/commit/d9263ab0f13577e6f4cab1d7ecba5f3c1bec90bc))
+
 ## [2.34.3](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.34.2...v2.34.3) (2026-01-17)
 
 
