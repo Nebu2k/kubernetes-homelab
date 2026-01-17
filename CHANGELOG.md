@@ -1,3 +1,10 @@
+## [2.34.3](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.34.2...v2.34.3) (2026-01-17)
+
+
+### 🐛 Bug Fixes
+
+* change shell from bash to sh in backup-trigger command ([ff5dc2b](https://github.com/Nebu2k/kubernetes-homelab/commit/ff5dc2bde693057f0c3e3a21138cc351987ee537))
+
 ## [2.34.2](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.34.1...v2.34.2) (2026-01-17)
 
 
