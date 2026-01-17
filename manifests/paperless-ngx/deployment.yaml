@@ -250,16 +250,21 @@ spec:
                 if [ -d "$backup_dir" ]; then
                   dir_name=$(basename "$backup_dir")
                   
-                  aws s3 sync "$backup_dir" "s3://${S3_BUCKET_NAME}/paperless-backup/${dir_name}/" \
+                  if aws s3 sync "$backup_dir" "s3://${S3_BUCKET_NAME}/paperless-backup/${dir_name}/" \
                     --region "${S3_REGION}" \
                     --storage-class STANDARD_IA \
-                    --no-progress
-                  
-                  if [ $? -eq 0 ]; then
+                    --no-progress; then
+                    
                     echo "$(date): Successfully synced $dir_name to S3"
-                    # Remove local backup after successful upload
-                    rm -rf "$backup_dir"
-                    echo "$(date): Cleaned up local backup $dir_name"
+                    
+                    # Verify backup exists in S3 before deletion
+                    if aws s3 ls "s3://${S3_BUCKET_NAME}/paperless-backup/${dir_name}/" --region "${S3_REGION}" > /dev/null 2>&1; then
+                      echo "$(date): Verified $dir_name exists in S3 - removing local copy"
+                      rm -rf "$backup_dir"
+                      echo "$(date): Cleaned up local backup $dir_name"
+                    else
+                      echo "$(date): WARNING: Cannot verify $dir_name in S3 - keeping local copy"
+                    fi
                   else
                     echo "$(date): ERROR: Failed to sync $dir_name"
                   fi
@@ -267,8 +272,8 @@ spec:
               done
             fi
             
-            # Check every 5 minutes
-            sleep 300
+            # Check every hour (backup runs once daily at 02:00)
+            sleep 3600
           done
         env:
         - name: AWS_ACCESS_KEY_ID

@@ -40,6 +40,7 @@ spec:
             - sh
             - -c
             - |
+              set -e
               apk add --no-cache gettext
               envsubst < /config-template/adguardhome-sync.yaml > /config/adguardhome-sync.yaml
           volumeMounts:
