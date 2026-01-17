@@ -1,0 +1,27 @@
+---
+# Allow homepage's ca-copier ServiceAccount to read internal CA secret
+# This is needed for the CronJob in homepage namespace that copies the CA cert
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: ca-copier-cert-manager
+  namespace: cert-manager
+rules:
+  - apiGroups: [""]
+    resources: ["secrets"]
+    resourceNames: ["internal-ca-secret"]
+    verbs: ["get"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: ca-copier-homepage
+  namespace: cert-manager
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: ca-copier-cert-manager
+subjects:
+  - kind: ServiceAccount
+    name: ca-copier
+    namespace: homepage

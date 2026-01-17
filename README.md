@@ -92,6 +92,7 @@ homelab/
     │   ├── cloudflare-token-sealed.yaml
     │   ├── cloudflare-token-unsealed.yaml.example
     │   ├── cluster-issuer.yaml
+    │   ├── homepage-ca-reader-rbac.yaml
     │   ├── kustomization.yaml
     │   └── values.yaml
     ├── coredns/
