@@ -230,7 +230,6 @@ homelab/
     │   ├── adguard-dns-sync-job.yaml
     │   ├── adguard-dns-sync-rbac.yaml
     │   ├── adguard-macmini-ingress.yaml
-    │   ├── adguard-pi5-ingress.yaml
     │   ├── adguard-pve-ingress.yaml
     │   ├── adguardhome-sync-config.yaml
     │   ├── adguardhome-sync-credentials-sealed.yaml

@@ -7,7 +7,6 @@ resources:
   - certificates.yaml
   - nextcloud-ingress.yaml
   - dreambox-ingress.yaml
-  - adguard-pi5-ingress.yaml
   - adguard-macmini-ingress.yaml
   - adguard-pve-ingress.yaml
   - proxmox-ingress.yaml
