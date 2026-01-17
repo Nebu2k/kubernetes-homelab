@@ -1,3 +1,10 @@
+## [2.34.8](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.34.7...v2.34.8) (2026-01-17)
+
+
+### 🐛 Bug Fixes
+
+* increase sleep duration in backup script to one hour ([805f39c](https://github.com/Nebu2k/kubernetes-homelab/commit/805f39c008d292c16fd438819154a6760c78b2e3))
+
 ## [2.34.7](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.34.6...v2.34.7) (2026-01-17)
 
 
