@@ -273,7 +273,7 @@ spec:
             fi
             
             # Check every hour (backup runs once daily at 02:00)
-            sleep 3600
+            sleep 60
           done
         env:
         - name: AWS_ACCESS_KEY_ID
