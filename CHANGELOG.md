@@ -1,3 +1,10 @@
+## [2.34.9](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.34.8...v2.34.9) (2026-01-17)
+
+
+### 🐛 Bug Fixes
+
+* update S3 backup process to use current export directory and enable versioning ([2a571b6](https://github.com/Nebu2k/kubernetes-homelab/commit/2a571b67227d5621ecd5425fcfb7271e7cebd77e))
+
 ## [2.34.8](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.34.7...v2.34.8) (2026-01-17)
 
 
