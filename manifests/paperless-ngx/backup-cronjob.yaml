@@ -1,0 +1,87 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: paperless-backup-trigger
+  namespace: paperless-ngx
+  labels:
+    app.kubernetes.io/name: paperless-backup
+spec:
+  schedule: "0 2 * * *"  # Daily at 02:00 UTC
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  concurrencyPolicy: Forbid
+  jobTemplate:
+    spec:
+      template:
+        metadata:
+          labels:
+            app.kubernetes.io/name: paperless-backup
+        spec:
+          serviceAccountName: paperless-backup-sa
+          restartPolicy: OnFailure
+          containers:
+          - name: backup-trigger
+            image: rancher/kubectl:v1.35.0
+            command:
+            - /bin/bash
+            - -c
+            - |
+              set -euxo pipefail
+
+              echo "=== Triggering Paperless-ngx Document Export ==="
+              TIMESTAMP=$(date +%Y-%m-%d-%H%M%S)
+              EXPORT_DIR="/usr/src/paperless/export/backup-${TIMESTAMP}"
+
+              # Trigger export in Paperless pod (S3 sidecar will handle upload)
+              echo "Running document export in Paperless pod..."
+              if kubectl exec -n paperless-ngx deployment/paperless-ngx -c paperless-ngx -- \
+                bash -c "mkdir -p ${EXPORT_DIR} && python /usr/src/paperless/src/manage.py document_exporter ${EXPORT_DIR}"; then
+                echo "Export completed successfully!"
+                echo "S3 backup sidecar will automatically sync to S3 within 1 hour"
+              else
+                echo "ERROR: Export failed!"
+                exit 1
+              fi
+            resources:
+              requests:
+                cpu: 50m
+                memory: 128Mi
+              limits:
+                cpu: 200m
+                memory: 256Mi
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: paperless-backup-sa
+  namespace: paperless-ngx
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: paperless-backup-role
+  namespace: paperless-ngx
+rules:
+- apiGroups: ["apps"]
+  resources: ["deployments"]
+  verbs: ["get"]
+- apiGroups: [""]
+  resources: ["pods"]
+  verbs: ["get", "list"]
+- apiGroups: [""]
+  resources: ["pods/exec"]
+  verbs: ["create"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: paperless-backup-rolebinding
+  namespace: paperless-ngx
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: paperless-backup-role
+subjects:
+- kind: ServiceAccount
+  name: paperless-backup-sa
+  namespace: paperless-ngx

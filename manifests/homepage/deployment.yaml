@@ -34,7 +34,7 @@ spec:
           value: "3"
       initContainers:
       - name: copy-config
-        image: busybox:stable
+        image: busybox:1.36.1
         command:
         - sh
         - -c

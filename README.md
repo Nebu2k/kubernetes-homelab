@@ -202,6 +202,7 @@ homelab/
     │   ├── newt-auth-unsealed.yaml.example
     │   └── values.yaml
     ├── paperless-ngx/
+    │   ├── backup-cronjob.yaml
     │   ├── db-pvc.yaml
     │   ├── deployment.yaml
     │   ├── ingress.yaml
@@ -212,6 +213,8 @@ homelab/
     │   ├── postgresql.yaml
     │   ├── pvc.yaml
     │   ├── redis.yaml
+    │   ├── s3-backup-credentials-sealed.yaml
+    │   ├── s3-backup-credentials-unsealed.yaml.example
     │   ├── service.yaml
     │   ├── smb-credentials-sealed.yaml
     │   └── smb-credentials-unsealed.yaml.example
@@ -1199,15 +1202,15 @@ kubectl get secret -n monitoring grafana-admin-credentials \
 | Longhorn | 1.10.1 | Longhorn |
 | Unifi Poller | v2.21.0 | Unifi Poller |
 | Portainer | 2.33.6 | Portainer |
-| Paperless Ngx | latest | Paperless Ngx |
+| Paperless Ngx | 3.23 | Paperless Ngx |
 | Cert Manager | v1.19.2 | Cert Manager |
 | Uptime Kuma | 2.0.2 | Uptime Kuma |
 | Traefik | 38.0.2 | Traefik |
-| Fr24 | latest | Fr24 |
+| Fr24 | latest-build-825 | Fr24 |
 | Newt | 1.1.0 | Newt |
-| Teslamate | latest | Teslamate |
-| Minio | latest-cicd | Minio |
-| Home Assistant | stable | Home Assistant |
+| Teslamate | v2.2.0 | Teslamate |
+| Minio | RELEASE.2025-09-07T16-13-09Z | Minio |
+| Home Assistant | 2026.1.2 | Home Assistant |
 | Homepage | v1.8.0 | Homepage |
 | Beszel | 0.18.2 | Beszel |
 | K3s | v1.33.5 | Lightweight Kubernetes |

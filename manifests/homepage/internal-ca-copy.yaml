@@ -19,7 +19,7 @@ spec:
           restartPolicy: OnFailure
           containers:
             - name: copy-ca
-              image: bitnami/kubectl:latest
+              image: rancher/kubectl:v1.35.0
               command:
                 - /bin/bash
                 - -c
