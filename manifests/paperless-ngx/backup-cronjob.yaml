@@ -28,9 +28,18 @@ spec:
             - |
               set -eux
               
-              # Install kubectl
+              # Detect architecture and download correct kubectl
+              ARCH=$(uname -m)
+              case "$ARCH" in
+                x86_64)  KUBECTL_ARCH="amd64" ;;
+                aarch64) KUBECTL_ARCH="arm64" ;;
+                armv7l)  KUBECTL_ARCH="arm" ;;
+                *)       echo "Unsupported architecture: $ARCH"; exit 1 ;;
+              esac
+              
+              echo "Detected architecture: $ARCH, downloading kubectl for $KUBECTL_ARCH"
               apk add --no-cache curl
-              curl -sLO "https://dl.k8s.io/release/v1.35.0/bin/linux/amd64/kubectl"
+              curl -sLO "https://dl.k8s.io/release/v1.35.0/bin/linux/${KUBECTL_ARCH}/kubectl"
               chmod +x kubectl
               mv kubectl /usr/local/bin/
 
