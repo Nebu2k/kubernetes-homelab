@@ -1,3 +1,17 @@
+## [2.34.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.33.4...v2.34.0) (2026-01-17)
+
+
+### ✨ Features
+
+* add S3 backup cronjob and credentials management ([6946624](https://github.com/Nebu2k/kubernetes-homelab/commit/69466249af1cf64691133b9c1fc8eb3f34e4a5f4))
+* update backup cronjob and add S3 backup sidecar for document export ([5e7aa44](https://github.com/Nebu2k/kubernetes-homelab/commit/5e7aa447bd1c82c95ec08a6e78defa989367f824))
+
+
+### 🐛 Bug Fixes
+
+* improve backup synchronization and verification process in deployment ([bd59729](https://github.com/Nebu2k/kubernetes-homelab/commit/bd59729aea84f1ca79337c63bdbd3e31a851957c))
+* update container images to specific versions for stability and security ([650618c](https://github.com/Nebu2k/kubernetes-homelab/commit/650618c6d23edb292bd3fba17690f2f3a4c4767b))
+
 ## [2.33.4](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.33.3...v2.33.4) (2026-01-16)
 
 
