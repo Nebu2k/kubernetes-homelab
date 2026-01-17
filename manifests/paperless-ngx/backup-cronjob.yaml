@@ -1,0 +1,139 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: paperless-backup-s3
+  namespace: paperless-ngx
+  labels:
+    app.kubernetes.io/name: paperless-backup
+spec:
+  schedule: "0 2 * * *"  # Daily at 02:00 UTC
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  concurrencyPolicy: Forbid
+  jobTemplate:
+    spec:
+      template:
+        metadata:
+          labels:
+            app.kubernetes.io/name: paperless-backup
+        spec:
+          serviceAccountName: paperless-backup-sa
+          restartPolicy: OnFailure
+          containers:
+          - name: backup-orchestrator
+            image: bitnami/kubectl:latest
+            command:
+            - /bin/bash
+            - -c
+            - |
+              set -e
+              
+              echo "=== Paperless-ngx S3 Backup Started ==="
+              EXPORT_DIR="/export/backup-$(date +%Y-%m-%d-%H%M%S)"
+              
+              # Step 1: Export documents inside running Paperless pod
+              echo "Step 1: Running document export in Paperless pod..."
+              kubectl exec -n paperless-ngx deployment/paperless-ngx -c paperless-ngx -- \
+                bash -c "mkdir -p ${EXPORT_DIR} && python /usr/src/paperless/src/manage.py document_exporter ${EXPORT_DIR} && echo 'Export completed' && ls -lh ${EXPORT_DIR}"
+              
+              if [ $? -ne 0 ]; then
+                echo "ERROR: Export failed!"
+                exit 1
+              fi
+              
+              # Step 2: Upload to S3 from Paperless pod
+              echo "Step 2: Uploading to S3..."
+              S3_PATH="s3://${S3_BUCKET_NAME}/paperless-backup/latest/"
+              
+              kubectl exec -n paperless-ngx deployment/paperless-ngx -c paperless-ngx -- \
+                bash -c "
+                  export AWS_ACCESS_KEY_ID='${AWS_ACCESS_KEY_ID}'
+                  export AWS_SECRET_ACCESS_KEY='${AWS_SECRET_ACCESS_KEY}'
+                  
+                  # Install aws-cli if not present
+                  if ! command -v aws &> /dev/null; then
+                    echo 'Installing AWS CLI...'
+                    apt-get update -qq && apt-get install -y -qq awscli > /dev/null 2>&1
+                  fi
+                  
+                  echo 'Uploading to ${S3_PATH}...'
+                  aws s3 sync ${EXPORT_DIR} ${S3_PATH} \
+                    --region ${S3_REGION} \
+                    --storage-class STANDARD_IA \
+                    --delete \
+                    --no-progress
+                  
+                  if [ \$? -eq 0 ]; then
+                    echo 'Upload successful!'
+                    
+                    # Cleanup old exports (keep last 2)
+                    echo 'Cleaning up old exports...'
+                    ls -td /export/backup-* 2>/dev/null | tail -n +3 | xargs -r rm -rf
+                    
+                    echo 'Backup completed successfully!'
+                  else
+                    echo 'ERROR: Upload failed!'
+                    exit 1
+                  fi
+                "
+            env:
+            - name: AWS_ACCESS_KEY_ID
+              valueFrom:
+                secretKeyRef:
+                  name: s3-backup-credentials
+                  key: AWS_ACCESS_KEY_ID
+            - name: AWS_SECRET_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: s3-backup-credentials
+                  key: AWS_SECRET_ACCESS_KEY
+            - name: S3_BUCKET_NAME
+              valueFrom:
+                secretKeyRef:
+                  name: s3-backup-credentials
+                  key: S3_BUCKET_NAME
+            - name: S3_REGION
+              valueFrom:
+                secretKeyRef:
+                  name: s3-backup-credentials
+                  key: S3_REGION
+            resources:
+              requests:
+                cpu: 50m
+                memory: 64Mi
+              limits:
+                cpu: 200m
+                memory: 128Mi
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: paperless-backup-sa
+  namespace: paperless-ngx
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: paperless-backup-role
+  namespace: paperless-ngx
+rules:
+- apiGroups: ["apps"]
+  resources: ["deployments"]
+  verbs: ["get", "list"]
+- apiGroups: [""]
+  resources: ["pods", "pods/exec"]
+  verbs: ["get", "list", "create"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: paperless-backup-rolebinding
+  namespace: paperless-ngx
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: paperless-backup-role
+subjects:
+- kind: ServiceAccount
+  name: paperless-backup-sa
+  namespace: paperless-ngx

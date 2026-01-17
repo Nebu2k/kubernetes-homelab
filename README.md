@@ -202,6 +202,7 @@ homelab/
     │   ├── newt-auth-unsealed.yaml.example
     │   └── values.yaml
     ├── paperless-ngx/
+    │   ├── backup-cronjob.yaml
     │   ├── db-pvc.yaml
     │   ├── deployment.yaml
     │   ├── ingress.yaml
@@ -212,6 +213,8 @@ homelab/
     │   ├── postgresql.yaml
     │   ├── pvc.yaml
     │   ├── redis.yaml
+    │   ├── s3-backup-credentials-sealed.yaml
+    │   ├── s3-backup-credentials-unsealed.yaml.example
     │   ├── service.yaml
     │   ├── smb-credentials-sealed.yaml
     │   └── smb-credentials-unsealed.yaml.example
