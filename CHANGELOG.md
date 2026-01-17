@@ -1,3 +1,10 @@
+## [2.34.1](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.34.0...v2.34.1) (2026-01-17)
+
+
+### 🐛 Bug Fixes
+
+* update grafana and teslamate images to use correct version format ([0ac89a3](https://github.com/Nebu2k/kubernetes-homelab/commit/0ac89a3ea508c5e7fc7f1b02496efe1e44b4cbec))
+
 ## [2.34.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.33.4...v2.34.0) (2026-01-17)
 
 
