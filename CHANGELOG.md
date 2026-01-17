@@ -1,3 +1,10 @@
+## [2.34.6](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.34.5...v2.34.6) (2026-01-17)
+
+
+### 🐛 Bug Fixes
+
+* reduce sleep duration in backup sync script from 3600 seconds to 60 seconds ([6fa1cc1](https://github.com/Nebu2k/kubernetes-homelab/commit/6fa1cc1063d7d6f3277cc74ae3853f7e0b24e98f))
+
 ## [2.34.5](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.34.4...v2.34.5) (2026-01-17)
 
 
