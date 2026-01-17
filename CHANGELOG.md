@@ -1,3 +1,10 @@
+## [2.34.2](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.34.1...v2.34.2) (2026-01-17)
+
+
+### 🐛 Bug Fixes
+
+* change shell from bash to sh in S3 backup sidecar command ([95a4e41](https://github.com/Nebu2k/kubernetes-homelab/commit/95a4e4113de6e996791cccbe9e67ce3a08b7a945))
+
 ## [2.34.1](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.34.0...v2.34.1) (2026-01-17)
 
 
