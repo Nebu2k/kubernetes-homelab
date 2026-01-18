@@ -1,3 +1,10 @@
+## [2.37.7](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.37.6...v2.37.7) (2026-01-18)
+
+
+### 🐛 Bug Fixes
+
+* update offlineReplicaRebuilding configuration for Longhorn settings ([1f75a72](https://github.com/Nebu2k/kubernetes-homelab/commit/1f75a72919b6302bd28f19f829b78818c88de7dd))
+
 ## [2.37.6](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.37.5...v2.37.6) (2026-01-18)
 
 
