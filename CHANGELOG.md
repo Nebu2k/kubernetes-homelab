@@ -1,3 +1,10 @@
+## [2.37.9](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.37.8...v2.37.9) (2026-01-18)
+
+
+### 🐛 Bug Fixes
+
+* add comment for concurrentReplicaRebuildPerNodeLimit in Longhorn settings ([ab1587c](https://github.com/Nebu2k/kubernetes-homelab/commit/ab1587c6a1547dd5f74d352edc85757d6f9aa4c2))
+
 ## [2.37.8](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.37.7...v2.37.8) (2026-01-18)
 
 
