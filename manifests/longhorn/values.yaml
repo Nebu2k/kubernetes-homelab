@@ -22,7 +22,7 @@ defaultSettings:
   # Automatic replica rebalancing across nodes
   replicaAutoBalance: "best-effort"
   # Allow Longhorn to create new replicas when volumes are degraded (fixes degraded volumes automatically)
-  offlineReplicaRebuilding: "enabled"
+  offlineReplicaRebuilding: '{"v1":"true","v2":"true"}'
 
 # Disable preUpgrade hook (causes issues with ArgoCD)
 preUpgradeChecker:
