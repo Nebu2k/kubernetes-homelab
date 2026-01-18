@@ -16,7 +16,7 @@ spec:
       scrapeTimeout: 90s
       path: /pve
       params:
-        target: ['192.168.2.7']  # Proxmox host
+        target: ['192.168.2.8']  # Proxmox host
         module: ['default']
         cluster: ['1']
         node: ['1']
