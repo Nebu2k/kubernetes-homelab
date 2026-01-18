@@ -1,3 +1,10 @@
+## [2.37.1](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.37.0...v2.37.1) (2026-01-18)
+
+
+### 🐛 Bug Fixes
+
+* increase scrapeTimeout to 120s for proxmox-exporter ServiceMonitor ([a54a3e8](https://github.com/Nebu2k/kubernetes-homelab/commit/a54a3e80b58e630caf82797ca97e26aa2b725087))
+
 ## [2.37.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.36.0...v2.37.0) (2026-01-17)
 
 
