@@ -1,3 +1,10 @@
+## [2.37.5](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.37.4...v2.37.5) (2026-01-18)
+
+
+### 🐛 Bug Fixes
+
+* update scrapeTimeout to 30s in ServiceMonitor configuration ([516a8ce](https://github.com/Nebu2k/kubernetes-homelab/commit/516a8cec311f8f614adb5d0e80391a4e67eb401b))
+
 ## [2.37.4](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.37.3...v2.37.4) (2026-01-18)
 
 
