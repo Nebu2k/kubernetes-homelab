@@ -1,3 +1,10 @@
+## [2.37.10](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.37.9...v2.37.10) (2026-01-18)
+
+
+### 🐛 Bug Fixes
+
+* add volume and volumeMount for agent data in DaemonSet ([90e5edc](https://github.com/Nebu2k/kubernetes-homelab/commit/90e5edc40ace955881b809c6e1ea27b11be179ea))
+
 ## [2.37.9](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.37.8...v2.37.9) (2026-01-18)
 
 
