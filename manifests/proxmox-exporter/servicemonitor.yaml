@@ -13,4 +13,4 @@ spec:
   endpoints:
     - port: metrics
       interval: 60s
-      scrapeTimeout: 90s
+      scrapeTimeout: 30s
