@@ -1,3 +1,10 @@
+## [2.37.4](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.37.3...v2.37.4) (2026-01-18)
+
+
+### ♻️ Code Refactoring
+
+* update proxmox-exporter deployment and ServiceMonitor configuration ([6cc8e49](https://github.com/Nebu2k/kubernetes-homelab/commit/6cc8e4967038631c150ac33e092ff7145e7a769b))
+
 ## [2.37.3](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.37.2...v2.37.3) (2026-01-18)
 
 
