@@ -1,3 +1,10 @@
+## [2.37.6](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.37.5...v2.37.6) (2026-01-18)
+
+
+### 🐛 Bug Fixes
+
+* enable offline replica rebuilding for degraded volumes in Longhorn settings ([aaa5474](https://github.com/Nebu2k/kubernetes-homelab/commit/aaa5474b81d83fe0fda5649f492800eac9c40b50))
+
 ## [2.37.5](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.37.4...v2.37.5) (2026-01-18)
 
 
