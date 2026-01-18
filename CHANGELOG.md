@@ -1,3 +1,10 @@
+## [2.37.2](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.37.1...v2.37.2) (2026-01-18)
+
+
+### ♻️ Code Refactoring
+
+* update proxmox-exporter configuration and deployment settings ([8164ee2](https://github.com/Nebu2k/kubernetes-homelab/commit/8164ee2c58026b5cbca5b3a3fd431d4bea2297d3))
+
 ## [2.37.1](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.37.0...v2.37.1) (2026-01-18)
 
 
