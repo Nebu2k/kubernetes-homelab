@@ -21,45 +21,54 @@ spec:
         node-role.kubernetes.io/worker: "worker"
       containers:
         - name: pve-exporter
-          image: ghcr.io/bigtcze/pve-exporter:1.0.8
+          image: prompve/prometheus-pve-exporter:3.8.0
+          args:
+            - "--web.listen-address=[::]:9221"
+            - "--collector.status"
+            - "--collector.version"
+            - "--collector.node"
+            - "--collector.cluster"
+            - "--collector.resources"
+            - "--no-collector.config"  # Disable config collector (reduces API calls)
+            - "--no-collector.replication"
+            - "--collector.backup-info"
           ports:
             - name: metrics
               containerPort: 9221
               protocol: TCP
           env:
-            - name: PVE_HOST
-              valueFrom:
-                secretKeyRef:
-                  name: pve-api-credentials
-                  key: target
-            - name: PVE_TOKEN_ID
+            - name: PVE_USER
               valueFrom:
                 secretKeyRef:
                   name: pve-api-credentials
                   key: username
-            - name: PVE_TOKEN_SECRET
+            - name: PVE_TOKEN_NAME
+              value: "exporter"
+            - name: PVE_TOKEN_VALUE
               valueFrom:
                 secretKeyRef:
                   name: pve-api-credentials
                   key: password
-            - name: PVE_INSECURE_SKIP_VERIFY
-              value: "true"
+            - name: PVE_VERIFY_SSL
+              value: "false"
           resources:
             requests:
-              memory: "64Mi"
-              cpu: "50m"
-            limits:
               memory: "128Mi"
-              cpu: "200m"
+              cpu: "100m"
+            limits:
+              memory: "256Mi"
+              cpu: "500m"
           livenessProbe:
             httpGet:
-              path: /
+              path: /metrics
               port: metrics
-            initialDelaySeconds: 30
-            periodSeconds: 30
+            initialDelaySeconds: 60
+            periodSeconds: 60
+            timeoutSeconds: 30
           readinessProbe:
             httpGet:
-              path: /
+              path: /metrics
               port: metrics
-            initialDelaySeconds: 5
-            periodSeconds: 10
+            initialDelaySeconds: 10
+            periodSeconds: 30
+            timeoutSeconds: 30
