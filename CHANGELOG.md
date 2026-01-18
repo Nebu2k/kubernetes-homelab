@@ -1,3 +1,10 @@
+## [2.37.3](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.37.2...v2.37.3) (2026-01-18)
+
+
+### 🐛 Bug Fixes
+
+* update Proxmox host IP in ServiceMonitor configuration ([ef65313](https://github.com/Nebu2k/kubernetes-homelab/commit/ef65313cbb7e017fc33bbcd03bdecf6f2d3a9276))
+
 ## [2.37.2](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.37.1...v2.37.2) (2026-01-18)
 
 
