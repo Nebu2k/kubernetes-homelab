@@ -47,12 +47,20 @@ spec:
           limits:
             cpu: 200m
             memory: 128Mi
+        volumeMounts:
+        - name: agent-data
+          mountPath: /app/data
         securityContext:
           privileged: false
           capabilities:
             add:
             - NET_ADMIN
           readOnlyRootFilesystem: false
+      volumes:
+      - name: agent-data
+        hostPath:
+          path: /var/lib/beszel-agent
+          type: DirectoryOrCreate
       # Tolerations allow the DaemonSet to run on all nodes, including control-plane nodes
       tolerations:
       - key: node-role.kubernetes.io/control-plane
