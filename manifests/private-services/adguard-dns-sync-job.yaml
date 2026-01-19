@@ -170,7 +170,7 @@ data:
       local MAP_FILE="$2"       # Path to temp map file
       local IP_FAMILY="$3"      # "IPv4" or "IPv6"
 
-      echo "Adding/updating ${IP_FAMILY} (${RECORD_TYPE}) rewrites..."
+      >&2 echo "Adding/updating ${IP_FAMILY} (${RECORD_TYPE}) rewrites..."
       local TMP_ADDED=$(mktemp)
       local TMP_SKIPPED=$(mktemp)
       local ADDED=0
@@ -184,18 +184,18 @@ data:
 
           # Check if this exact entry already exists
           if echo "${CURRENT_REWRITES}" | grep -qxF "${DOMAIN}:${TARGET_IP}"; then
-            echo "  ✓ ${DOMAIN} -> ${TARGET_IP} (OK, ${RECORD_TYPE})"
+            >&2 echo "  ✓ ${DOMAIN} -> ${TARGET_IP} (OK, ${RECORD_TYPE})"
             echo "1" >> "${TMP_SKIPPED}"
           else
-            echo "  → Adding ${DOMAIN} -> ${TARGET_IP} (${RECORD_TYPE})"
+            >&2 echo "  → Adding ${DOMAIN} -> ${TARGET_IP} (${RECORD_TYPE})"
             if curl -s -X POST "http://${ADGUARD_HOST}/control/rewrite/add" \
               -u "${ADGUARD_USER}:${ADGUARD_PASS}" \
               -H "Content-Type: application/json" \
               -d "{\"domain\":\"${DOMAIN}\",\"answer\":\"${TARGET_IP}\"}" > /dev/null 2>&1; then
-              echo "    ✓ Added"
+              >&2 echo "    ✓ Added"
               echo "1" >> "${TMP_ADDED}"
             else
-              echo "    ✗ Failed"
+              >&2 echo "    ✗ Failed"
             fi
           fi
         done < "${MAP_FILE}"
@@ -204,7 +204,7 @@ data:
         SKIPPED=$(wc -l < "${TMP_SKIPPED}" 2>/dev/null | tr -d ' ' || echo 0)
         rm -f "${TMP_ADDED}" "${TMP_SKIPPED}"
       else
-        echo "  No domains to sync for ${IP_FAMILY}"
+        >&2 echo "  No domains to sync for ${IP_FAMILY}"
       fi
 
       # Return counts via stdout (silent - captured by caller)
