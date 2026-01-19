@@ -16,10 +16,12 @@ data:
     ADGUARD_USER="${ADGUARD_USER}"
     ADGUARD_PASS="${ADGUARD_PASS}"
     DEFAULT_INGRESS_IP="${DEFAULT_INGRESS_IP}"
+    DEFAULT_INGRESS_IP_V6="${DEFAULT_INGRESS_IP_V6}"
     DOMAIN_SUFFIX="${DOMAIN_SUFFIX}"
 
     echo "Syncing DNS rewrites to AdGuard Home at ${ADGUARD_HOST}..."
-    echo "Default Ingress IP (Traefik): ${DEFAULT_INGRESS_IP}"
+    echo "Default Ingress IPv4 (Traefik): ${DEFAULT_INGRESS_IP}"
+    echo "Default Ingress IPv6 (Traefik): ${DEFAULT_INGRESS_IP_V6}"
 
     # Get service account token
     TOKEN=$(cat /var/run/secrets/kubernetes.io/serviceaccount/token)
@@ -63,63 +65,80 @@ data:
           service: ($route.services[0].name // "null")
         }' 2>/dev/null || echo "")
 
-    ALL_INGRESS_DATA=$( (echo "${INGRESS_DATA}"; echo "${INGRESSROUTE_DATA}") | sed '/^$/d' )
+    ALL_INGRESS_DATA=$( (printf '%s\n' "${INGRESS_DATA}"; printf '%s\n' "${INGRESSROUTE_DATA}") | sed '/^$/d' )
 
     INGRESS_COUNT=$(echo "${INGRESS_DATA}" | grep -c . || echo 0)
     INGRESSROUTE_COUNT=$(echo "${INGRESSROUTE_DATA}" | grep -c . || echo 0)
     TOTAL_COUNT=$(echo "${ALL_INGRESS_DATA}" | grep -c . || echo 0)
     echo "Found ${TOTAL_COUNT} routes (${INGRESS_COUNT} Ingress, ${INGRESSROUTE_COUNT} IngressRoute)"
 
-    # Build a map of domain -> IP by checking if service has LoadBalancer
+    # Build maps of domain -> IP (both IPv4 and IPv6) by checking if service has LoadBalancer
     echo "Resolving target IPs for each domain..."
     echo ""
-    
-    # Use temp file for domain-ip mapping
-    TMP_MAP=$(mktemp)
-    
-    echo "${ALL_INGRESS_DATA}" | while IFS= read -r LINE; do
+
+    # Use temp files for domain-ip mappings
+    TMP_MAP_V4=$(mktemp)
+    TMP_MAP_V6=$(mktemp)
+
+    printf '%s\n' "${ALL_INGRESS_DATA}" | while IFS= read -r LINE; do
       if [ -z "${LINE}" ]; then
         continue
       fi
-      
+
       HOST=$(echo "${LINE}" | jq -r '.host // empty' 2>/dev/null)
       NAMESPACE=$(echo "${LINE}" | jq -r '.namespace // empty' 2>/dev/null)
       SERVICE=$(echo "${LINE}" | jq -r '.service // empty' 2>/dev/null)
-      
+
       if [ -z "${HOST}" ]; then
         continue
       fi
-      
+
       # Skip if already processed (avoid duplicates)
-      if grep -q "^${HOST}:" "${TMP_MAP}" 2>/dev/null; then
+      if grep -q "^${HOST}:" "${TMP_MAP_V4}" 2>/dev/null; then
         echo "  ${HOST} -> (skipped, duplicate)"
         continue
       fi
-      
-      TARGET_IP="${DEFAULT_INGRESS_IP}"
+
+      TARGET_IP_V4="${DEFAULT_INGRESS_IP}"
+      TARGET_IP_V6="${DEFAULT_INGRESS_IP_V6}"
       REASON="default"
-      
+
       # Skip special Traefik internal services
       if [ "${SERVICE}" = "api@internal" ] || [ -z "${SERVICE}" ] || [ "${SERVICE}" = "null" ]; then
-        echo "  ${HOST} -> ${TARGET_IP} (${REASON}, no k8s service)"
-        echo "${HOST}:${TARGET_IP}" >> "${TMP_MAP}"
+        echo "  ${HOST} -> IPv4: ${TARGET_IP_V4}, IPv6: ${TARGET_IP_V6} (${REASON}, no k8s service)"
+        echo "${HOST}:${TARGET_IP_V4}" >> "${TMP_MAP_V4}"
+        [ -n "${TARGET_IP_V6}" ] && echo "${HOST}:${TARGET_IP_V6}" >> "${TMP_MAP_V6}"
         continue
       fi
-      
+
       # Get service details
       SVC_DATA=$(curl -s -k -H "Authorization: Bearer ${TOKEN}" \
         "https://kubernetes.default.svc/api/v1/namespaces/${NAMESPACE}/services/${SERVICE}")
-      
+
       SVC_KIND=$(echo "${SVC_DATA}" | jq -r '.kind // empty' 2>/dev/null)
-      
+
       if [ "${SVC_KIND}" = "Service" ]; then
         SVC_TYPE=$(echo "${SVC_DATA}" | jq -r '.spec.type' 2>/dev/null)
-        
+
         if [ "${SVC_TYPE}" = "LoadBalancer" ]; then
-          # Get LoadBalancer IP
-          LB_IP=$(echo "${SVC_DATA}" | jq -r '.status.loadBalancer.ingress[0].ip // empty' 2>/dev/null)
-          if [ -n "${LB_IP}" ] && [ "${LB_IP}" != "null" ]; then
-            TARGET_IP="${LB_IP}"
+          # Get LoadBalancer IPs (dual-stack may have multiple ingress entries)
+          LB_IPS=$(echo "${SVC_DATA}" | jq -r '.status.loadBalancer.ingress[].ip // empty' 2>/dev/null)
+
+          if [ -n "${LB_IPS}" ]; then
+            # Separate IPv4 and IPv6 addresses (use first of each family found)
+            for IP in ${LB_IPS}; do
+              if echo "${IP}" | grep -q ':'; then
+                # IPv6 address - only set if not already set (avoid overwrite)
+                if [ "${TARGET_IP_V6}" = "${DEFAULT_INGRESS_IP_V6}" ]; then
+                  TARGET_IP_V6="${IP}"
+                fi
+              else
+                # IPv4 address - only set if not already set (avoid overwrite)
+                if [ "${TARGET_IP_V4}" = "${DEFAULT_INGRESS_IP}" ]; then
+                  TARGET_IP_V4="${IP}"
+                fi
+              fi
+            done
             REASON="LoadBalancer"
           else
             REASON="LB pending"
@@ -131,21 +150,66 @@ data:
         ERROR_MSG=$(echo "${SVC_DATA}" | jq -r '.message // "not found"' 2>/dev/null)
         REASON="error: ${ERROR_MSG}"
       fi
-      
-      echo "  ${HOST} -> ${TARGET_IP} (${REASON})"
-      echo "${HOST}:${TARGET_IP}" >> "${TMP_MAP}"
+
+      echo "  ${HOST} -> IPv4: ${TARGET_IP_V4}, IPv6: ${TARGET_IP_V6} (${REASON})"
+      echo "${HOST}:${TARGET_IP_V4}" >> "${TMP_MAP_V4}"
+      [ -n "${TARGET_IP_V6}" ] && echo "${HOST}:${TARGET_IP_V6}" >> "${TMP_MAP_V6}"
     done
-    
-    # Read map from file
-    DOMAIN_IP_MAP=$(cat "${TMP_MAP}" 2>/dev/null || echo "")
-    
+
     # Get unique domains for display
-    DOMAINS=$(cat "${TMP_MAP}" 2>/dev/null | cut -d: -f1 | sort -u)
+    DOMAINS=$(cat "${TMP_MAP_V4}" 2>/dev/null | cut -d: -f1 | sort -u)
 
     echo ""
     echo "DNS sync targets:"
     echo "${DOMAINS}"
     echo ""
+
+    # Helper function to sync DNS rewrites for a given IP family
+    sync_dns_rewrites() {
+      local RECORD_TYPE="$1"    # "A" or "AAAA"
+      local MAP_FILE="$2"       # Path to temp map file
+      local IP_FAMILY="$3"      # "IPv4" or "IPv6"
+
+      echo "Adding/updating ${IP_FAMILY} (${RECORD_TYPE}) rewrites..."
+      local TMP_ADDED=$(mktemp)
+      local TMP_SKIPPED=$(mktemp)
+      local ADDED=0
+      local SKIPPED=0
+
+      if [ -s "${MAP_FILE}" ]; then
+        while IFS=: read -r DOMAIN TARGET_IP; do
+          if [ -z "${DOMAIN}" ] || [ -z "${TARGET_IP}" ]; then
+            continue
+          fi
+
+          # Check if this exact entry already exists
+          if echo "${CURRENT_REWRITES}" | grep -qxF "${DOMAIN}:${TARGET_IP}"; then
+            echo "  ✓ ${DOMAIN} -> ${TARGET_IP} (OK, ${RECORD_TYPE})"
+            echo "1" >> "${TMP_SKIPPED}"
+          else
+            echo "  → Adding ${DOMAIN} -> ${TARGET_IP} (${RECORD_TYPE})"
+            if curl -s -X POST "http://${ADGUARD_HOST}/control/rewrite/add" \
+              -u "${ADGUARD_USER}:${ADGUARD_PASS}" \
+              -H "Content-Type: application/json" \
+              -d "{\"domain\":\"${DOMAIN}\",\"answer\":\"${TARGET_IP}\"}" > /dev/null 2>&1; then
+              echo "    ✓ Added"
+              echo "1" >> "${TMP_ADDED}"
+            else
+              echo "    ✗ Failed"
+            fi
+          fi
+        done < "${MAP_FILE}"
+
+        ADDED=$(wc -l < "${TMP_ADDED}" 2>/dev/null | tr -d ' ' || echo 0)
+        SKIPPED=$(wc -l < "${TMP_SKIPPED}" 2>/dev/null | tr -d ' ' || echo 0)
+        rm -f "${TMP_ADDED}" "${TMP_SKIPPED}"
+      else
+        echo "  No domains to sync for ${IP_FAMILY}"
+      fi
+
+      # Return counts via stdout
+      echo "${ADDED} ${SKIPPED}"
+    }
 
     # Get current rewrites from AdGuard that end with DOMAIN_SUFFIX
     CURRENT_REWRITES=$(curl -s -u "${ADGUARD_USER}:${ADGUARD_PASS}" \
@@ -161,22 +225,27 @@ data:
     # Step 1: Remove orphaned or changed rewrites
     echo "Checking for orphaned or changed rewrites..."
     REMOVED=0
-    
+
     # Use a temp file to avoid subshell issues
     TMP_REMOVED=$(mktemp)
-    
+
     if [ -n "${CURRENT_REWRITES}" ]; then
-      echo "${CURRENT_REWRITES}" | while IFS=: read -r CURRENT_DOMAIN CURRENT_IP; do
+      printf '%s\n' "${CURRENT_REWRITES}" | while IFS=: read -r CURRENT_DOMAIN CURRENT_IP; do
         if [ -z "${CURRENT_DOMAIN}" ]; then
           continue
         fi
-        
-        # Check if domain still exists in Kubernetes
-        DESIRED_ENTRY=$(grep "^${CURRENT_DOMAIN}:" "${TMP_MAP}" 2>/dev/null || echo "")
-        
-        if [ -z "${DESIRED_ENTRY}" ]; then
-          # Domain no longer exists - remove it
-          echo "  ✗ Removing orphaned ${CURRENT_DOMAIN} (${CURRENT_IP})"
+
+        # Check if domain+IP combo still exists in either IPv4 or IPv6 map
+        DESIRED_ENTRY_V4=$(grep "^${CURRENT_DOMAIN}:" "${TMP_MAP_V4}" 2>/dev/null || echo "")
+        DESIRED_ENTRY_V6=$(grep "^${CURRENT_DOMAIN}:" "${TMP_MAP_V6}" 2>/dev/null || echo "")
+
+        # Combine both entries (POSIX-compliant) and remove empty lines
+        DESIRED_ENTRIES=$(printf "%s\n%s" "${DESIRED_ENTRY_V4}" "${DESIRED_ENTRY_V6}" | sed '/^$/d')
+
+        # Check if this specific domain+IP combination is desired
+        if ! echo "${DESIRED_ENTRIES}" | grep -qxF "${CURRENT_DOMAIN}:${CURRENT_IP}"; then
+          # This specific IP for domain no longer exists - remove it
+          echo "  ✗ Removing ${CURRENT_DOMAIN} (${CURRENT_IP})"
           if curl -s -X POST "http://${ADGUARD_HOST}/control/rewrite/delete" \
             -u "${ADGUARD_USER}:${ADGUARD_PASS}" \
             -H "Content-Type: application/json" \
@@ -184,26 +253,13 @@ data:
             echo "    ✓ Removed"
             echo "1" >> "${TMP_REMOVED}"
           fi
-        else
-          # Domain exists - check if IP changed
-          DESIRED_IP=$(echo "${DESIRED_ENTRY}" | cut -d: -f2-)
-          if [ "${CURRENT_IP}" != "${DESIRED_IP}" ]; then
-            echo "  ✗ Updating ${CURRENT_DOMAIN}: ${CURRENT_IP} -> ${DESIRED_IP}"
-            if curl -s -X POST "http://${ADGUARD_HOST}/control/rewrite/delete" \
-              -u "${ADGUARD_USER}:${ADGUARD_PASS}" \
-              -H "Content-Type: application/json" \
-              -d "{\"domain\":\"${CURRENT_DOMAIN}\",\"answer\":\"${CURRENT_IP}\"}" > /dev/null 2>&1; then
-              echo "    ✓ Old entry removed"
-              echo "1" >> "${TMP_REMOVED}"
-            fi
-          fi
         fi
       done
-      
+
       REMOVED=$(wc -l < "${TMP_REMOVED}" 2>/dev/null | tr -d ' ' || echo 0)
       rm -f "${TMP_REMOVED}"
     fi
-    
+
     if [ "${REMOVED}" = "0" ]; then
       echo "  No changes needed"
     else
@@ -211,53 +267,30 @@ data:
     fi
     echo ""
 
-    # Step 2: Add new or updated rewrites
-    echo "Adding/updating rewrites..."
-    TMP_ADDED=$(mktemp)
-    TMP_SKIPPED=$(mktemp)
-    
-    if [ -s "${TMP_MAP}" ]; then
-      cat "${TMP_MAP}" | while IFS=: read -r DOMAIN TARGET_IP; do
-        if [ -z "${DOMAIN}" ] || [ -z "${TARGET_IP}" ]; then
-          continue
-        fi
-        
-        # Check if this exact entry already exists
-        if echo "${CURRENT_REWRITES}" | grep -qxF "${DOMAIN}:${TARGET_IP}"; then
-          echo "  ✓ ${DOMAIN} -> ${TARGET_IP} (OK)"
-          echo "1" >> "${TMP_SKIPPED}"
-        else
-          echo "  → Adding ${DOMAIN} -> ${TARGET_IP}"
-          if curl -s -X POST "http://${ADGUARD_HOST}/control/rewrite/add" \
-            -u "${ADGUARD_USER}:${ADGUARD_PASS}" \
-            -H "Content-Type: application/json" \
-            -d "{\"domain\":\"${DOMAIN}\",\"answer\":\"${TARGET_IP}\"}" > /dev/null 2>&1; then
-            echo "    ✓ Added"
-            echo "1" >> "${TMP_ADDED}"
-          else
-            echo "    ✗ Failed"
-          fi
-        fi
-      done
-      
-      ADDED=$(wc -l < "${TMP_ADDED}" 2>/dev/null | tr -d ' ' || echo 0)
-      SKIPPED=$(wc -l < "${TMP_SKIPPED}" 2>/dev/null | tr -d ' ' || echo 0)
-      rm -f "${TMP_ADDED}" "${TMP_SKIPPED}"
-    else
-      ADDED=0
-      SKIPPED=0
-      echo "  No domains to sync"
-    fi
-    
-    # Cleanup temp map file
-    rm -f "${TMP_MAP}"
+    # Step 2: Sync IPv4 (A) records
+    COUNTS=$(sync_dns_rewrites "A" "${TMP_MAP_V4}" "IPv4")
+    A_ADDED=$(echo "$COUNTS" | cut -d' ' -f1)
+    A_SKIPPED=$(echo "$COUNTS" | cut -d' ' -f2)
+    echo ""
+
+    # Step 3: Sync IPv6 (AAAA) records
+    COUNTS=$(sync_dns_rewrites "AAAA" "${TMP_MAP_V6}" "IPv6")
+    AAAA_ADDED=$(echo "$COUNTS" | cut -d' ' -f1)
+    AAAA_SKIPPED=$(echo "$COUNTS" | cut -d' ' -f2)
+
+    # Cleanup temp map files
+    rm -f "${TMP_MAP_V4}" "${TMP_MAP_V6}"
 
     echo ""
     echo "════════════════════════════════════════"
     echo "📊 Sync Summary:"
-    echo "   ✓ Skipped (unchanged): ${SKIPPED}"
-    echo "   ➕ Added: ${ADDED}"
-    echo "   ✗ Removed/Updated: ${REMOVED}"
+    echo "   IPv4 (A Records):"
+    echo "     ✓ Skipped (unchanged): ${A_SKIPPED}"
+    echo "     ➕ Added: ${A_ADDED}"
+    echo "   IPv6 (AAAA Records):"
+    echo "     ✓ Skipped (unchanged): ${AAAA_SKIPPED}"
+    echo "     ➕ Added: ${AAAA_ADDED}"
+    echo "   Removed/Updated: ${REMOVED}"
     echo "════════════════════════════════════════"
     echo "✅ AdGuard DNS sync complete!"
 ---
@@ -285,6 +318,8 @@ spec:
               value: "192.168.2.16"
             - name: DEFAULT_INGRESS_IP
               value: "192.168.2.250"
+            - name: DEFAULT_INGRESS_IP_V6
+              value: "2a00:1e:7c41:fb00::250"
             - name: DOMAIN_SUFFIX
               value: "elmstreet79.de"
             - name: ADGUARD_USER
@@ -332,6 +367,8 @@ spec:
                   value: "192.168.2.16"
                 - name: DEFAULT_INGRESS_IP
                   value: "192.168.2.250"
+                - name: DEFAULT_INGRESS_IP_V6
+                  value: "2a00:1e:7c41:fb00::250"
                 - name: DOMAIN_SUFFIX
                   value: "elmstreet79.de"
                 - name: ADGUARD_USER
