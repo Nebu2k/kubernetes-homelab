@@ -11,7 +11,3 @@ resources:
   - ingress.yaml
   - secret-sealed.yaml
   - agent-daemonset.yaml
-
-commonLabels:
-  app.kubernetes.io/name: beszel
-  app.kubernetes.io/component: monitoring
