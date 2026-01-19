@@ -74,7 +74,6 @@ data:
 
     # Build maps of domain -> IP (both IPv4 and IPv6) by checking if service has LoadBalancer
     echo "Resolving target IPs for each domain..."
-    echo ""
 
     # Use temp files for domain-ip mappings
     TMP_MAP_V4=$(mktemp)
@@ -159,8 +158,11 @@ data:
     # Get unique domains for display
     DOMAINS=$(cat "${TMP_MAP_V4}" 2>/dev/null | cut -d: -f1 | sort -u)
 
-    echo "DNS sync targets:"
-    printf '%s\n' "${DOMAINS}" | sed '/^$/d'
+    if [ -n "${DOMAINS}" ]; then
+      echo ""
+      echo "DNS sync targets:"
+      echo "${DOMAINS}"
+    fi
 
     # Helper function to sync DNS rewrites for a given IP family
     sync_dns_rewrites() {
@@ -205,9 +207,8 @@ data:
         echo "  No domains to sync for ${IP_FAMILY}"
       fi
 
-      # Return counts via stdout (redirect to stderr to suppress in logs, then echo to stdout for capture)
-      >&2 printf ''
-      echo "${ADDED} ${SKIPPED}"
+      # Return counts via stdout (silent - captured by caller)
+      printf '%s %s' "${ADDED}" "${SKIPPED}"
     }
 
     # Get current rewrites from AdGuard that end with DOMAIN_SUFFIX
@@ -265,11 +266,13 @@ data:
     fi
 
     # Step 2: Sync IPv4 (A) records
+    echo ""
     COUNTS=$(sync_dns_rewrites "A" "${TMP_MAP_V4}" "IPv4")
     A_ADDED=$(echo "$COUNTS" | cut -d' ' -f1)
     A_SKIPPED=$(echo "$COUNTS" | cut -d' ' -f2)
 
     # Step 3: Sync IPv6 (AAAA) records
+    echo ""
     COUNTS=$(sync_dns_rewrites "AAAA" "${TMP_MAP_V6}" "IPv6")
     AAAA_ADDED=$(echo "$COUNTS" | cut -d' ' -f1)
     AAAA_SKIPPED=$(echo "$COUNTS" | cut -d' ' -f2)
@@ -277,6 +280,7 @@ data:
     # Cleanup temp map files
     rm -f "${TMP_MAP_V4}" "${TMP_MAP_V6}"
 
+    echo ""
     echo "════════════════════════════════════════"
     echo "📊 Sync Summary:"
     echo "   IPv4 (A Records):"
