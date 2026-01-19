@@ -80,7 +80,7 @@ data:
     TMP_MAP_V4=$(mktemp)
     TMP_MAP_V6=$(mktemp)
 
-    while IFS= read -r LINE; do
+    printf '%s\n' "${ALL_INGRESS_DATA}" | while IFS= read -r LINE; do
       if [ -z "${LINE}" ]; then
         continue
       fi
@@ -154,7 +154,7 @@ data:
       echo "  ${HOST} -> IPv4: ${TARGET_IP_V4}, IPv6: ${TARGET_IP_V6} (${REASON})"
       echo "${HOST}:${TARGET_IP_V4}" >> "${TMP_MAP_V4}"
       [ -n "${TARGET_IP_V6}" ] && echo "${HOST}:${TARGET_IP_V6}" >> "${TMP_MAP_V6}"
-    done < <(printf '%s\n' "${ALL_INGRESS_DATA}")
+    done
 
     # Get unique domains for display
     DOMAINS=$(cat "${TMP_MAP_V4}" 2>/dev/null | cut -d: -f1 | sort -u)
@@ -231,7 +231,7 @@ data:
     TMP_REMOVED=$(mktemp)
 
     if [ -n "${CURRENT_REWRITES}" ]; then
-      while IFS=: read -r CURRENT_DOMAIN CURRENT_IP; do
+      printf '%s\n' "${CURRENT_REWRITES}" | while IFS=: read -r CURRENT_DOMAIN CURRENT_IP; do
         if [ -z "${CURRENT_DOMAIN}" ]; then
           continue
         fi
@@ -255,7 +255,7 @@ data:
             echo "1" >> "${TMP_REMOVED}"
           fi
         fi
-      done < <(printf '%s\n' "${CURRENT_REWRITES}")
+      done
 
       REMOVED=$(wc -l < "${TMP_REMOVED}" 2>/dev/null | tr -d ' ' || echo 0)
       rm -f "${TMP_REMOVED}"
