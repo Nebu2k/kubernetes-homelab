@@ -23,7 +23,7 @@ metadata:
 spec:
   tags:
     - storage
-  allowScheduling: true
+  allowScheduling: false
   evictionRequested: false
 
 ---
