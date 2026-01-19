@@ -65,7 +65,7 @@ data:
           service: ($route.services[0].name // "null")
         }' 2>/dev/null || echo "")
 
-    ALL_INGRESS_DATA=$( (echo "${INGRESS_DATA}"; echo "${INGRESSROUTE_DATA}") | sed '/^$/d' )
+    ALL_INGRESS_DATA=$( (printf '%s\n' "${INGRESS_DATA}"; printf '%s\n' "${INGRESSROUTE_DATA}") | sed '/^$/d' )
 
     INGRESS_COUNT=$(echo "${INGRESS_DATA}" | grep -c . || echo 0)
     INGRESSROUTE_COUNT=$(echo "${INGRESSROUTE_DATA}" | grep -c . || echo 0)
@@ -154,7 +154,7 @@ data:
       echo "  ${HOST} -> IPv4: ${TARGET_IP_V4}, IPv6: ${TARGET_IP_V6} (${REASON})"
       echo "${HOST}:${TARGET_IP_V4}" >> "${TMP_MAP_V4}"
       [ -n "${TARGET_IP_V6}" ] && echo "${HOST}:${TARGET_IP_V6}" >> "${TMP_MAP_V6}"
-    done < <(echo "${ALL_INGRESS_DATA}")
+    done < <(printf '%s\n' "${ALL_INGRESS_DATA}")
 
     # Get unique domains for display
     DOMAINS=$(cat "${TMP_MAP_V4}" 2>/dev/null | cut -d: -f1 | sort -u)
@@ -255,7 +255,7 @@ data:
             echo "1" >> "${TMP_REMOVED}"
           fi
         fi
-      done < <(echo "${CURRENT_REWRITES}")
+      done < <(printf '%s\n' "${CURRENT_REWRITES}")
 
       REMOVED=$(wc -l < "${TMP_REMOVED}" 2>/dev/null | tr -d ' ' || echo 0)
       rm -f "${TMP_REMOVED}"

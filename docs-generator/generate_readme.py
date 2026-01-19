@@ -8,7 +8,7 @@ import yaml
 from pathlib import Path
 from jinja2 import Environment, FileSystemLoader
 from collections import defaultdict
-import fnmatch
+import pathspec
 
 # Repository root
 REPO_ROOT = Path(__file__).parent.parent
@@ -219,69 +219,37 @@ def get_documentation_links():
 
 
 def load_gitignore_patterns():
-    """Load and parse .gitignore patterns."""
+    """Load and parse .gitignore patterns using pathspec."""
     gitignore_file = REPO_ROOT / ".gitignore"
-    patterns = []
     
     if not gitignore_file.exists():
-        return patterns
+        return None
     
     with open(gitignore_file, 'r') as f:
-        for line in f:
-            line = line.strip()
-            # Skip empty lines and comments
-            if not line or line.startswith('#'):
-                continue
-            # Remove trailing slashes for directory patterns
-            pattern = line.rstrip('/')
-            patterns.append(pattern)
+        spec = pathspec.PathSpec.from_lines(pathspec.patterns.GitWildMatchPattern, f)
     
-    return patterns
+    return spec
 
 
-def is_ignored(path, gitignore_patterns):
-    """Check if a file or directory should be ignored based on .gitignore patterns."""
-    # Get path relative to repository root
-    try:
-        rel_path = path.relative_to(REPO_ROOT)
-        path_str = str(rel_path)
-        name_str = path.name
-    except ValueError:
-        # Path is not relative to REPO_ROOT
+def is_ignored(path, gitignore_spec):
+    """Check if a file or directory should be ignored using pathspec."""
+    if gitignore_spec is None:
         return False
     
-    # Track if the path is ignored (considering negation patterns)
-    is_ignored_state = False
+    try:
+        rel_path = path.relative_to(REPO_ROOT)
+    except ValueError:
+        return False
     
-    for pattern in gitignore_patterns:
-        # Handle negation patterns (starting with !)
-        is_negation = pattern.startswith('!')
-        if is_negation:
-            pattern = pattern[1:]  # Remove the !
-        
-        # Check if pattern matches
-        matched = False
-        
-        # Pattern with / should match against full relative path
-        if '/' in pattern:
-            matched = fnmatch.fnmatch(path_str, pattern)
-        else:
-            # Pattern without / matches against filename only
-            matched = fnmatch.fnmatch(name_str, pattern)
-        
-        # Update ignored state based on match
-        if matched:
-            is_ignored_state = not is_negation
-    
-    return is_ignored_state
+    return gitignore_spec.match_file(rel_path)
 
 
 def generate_tree_fallback():
     """Generate tree structure manually if tree command not available."""
     lines = ["homelab/"]
     
-    # Load gitignore patterns
-    gitignore_patterns = load_gitignore_patterns()
+    # Load gitignore spec
+    gitignore_spec = load_gitignore_patterns()
     
     # Bootstrap directory
     lines.append("├── bootstrap/")
@@ -321,16 +289,16 @@ def generate_tree_fallback():
     # Manifests directory
     lines.append("└── manifests/")
     manifest_dirs = sorted([d for d in (REPO_ROOT / "manifests").iterdir() 
-                          if d.is_dir() and not d.name.startswith('.') and not is_ignored(d, gitignore_patterns)])
+                          if d.is_dir() and not d.name.startswith('.') and not is_ignored(d, gitignore_spec)])
     
     for i, manifest_dir in enumerate(manifest_dirs):
         is_last_dir = i == len(manifest_dirs) - 1
         dir_prefix = "    └── " if is_last_dir else "    ├── "
         lines.append(f"{dir_prefix}{manifest_dir.name}/")
         
-        # Add files in manifest - filter using gitignore patterns
+        # Add files in manifest - filter using gitignore spec
         all_files = sorted([f for f in manifest_dir.glob("*.yaml*") 
-                          if not f.name.startswith('.') and not is_ignored(f, gitignore_patterns)])
+                          if not f.name.startswith('.') and not is_ignored(f, gitignore_spec)])
         # Additional filter: exclude unsealed.yaml files that don't have .example extension
         manifest_files = [f for f in all_files 
                          if not (f.name.endswith('-unsealed.yaml') and not f.name.endswith('.example'))]
