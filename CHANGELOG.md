@@ -1,3 +1,10 @@
+## [3.1.1](https://github.com/Nebu2k/kubernetes-homelab/compare/v3.1.0...v3.1.1) (2026-01-19)
+
+
+### ♻️ Code Refactoring
+
+* remove commonLabels from kustomization.yaml ([8894d1e](https://github.com/Nebu2k/kubernetes-homelab/commit/8894d1ed9cd32c65ba31151dcc8caf8dddd9257b))
+
 ## [3.1.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v3.0.1...v3.1.0) (2026-01-19)
 
 
