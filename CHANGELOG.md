@@ -1,3 +1,10 @@
+## [3.0.1](https://github.com/Nebu2k/kubernetes-homelab/compare/v3.0.0...v3.0.1) (2026-01-19)
+
+
+### 🐛 Bug Fixes
+
+* redirect script output to stderr for better error visibility during DNS sync ([7b509fb](https://github.com/Nebu2k/kubernetes-homelab/commit/7b509fb1bce9c9a93a493ed5a97062ee819cf09a))
+
 ## [3.0.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.38.0...v3.0.0) (2026-01-19)
 
 
