@@ -125,14 +125,18 @@ data:
           LB_IPS=$(echo "${SVC_DATA}" | jq -r '.status.loadBalancer.ingress[].ip // empty' 2>/dev/null)
 
           if [ -n "${LB_IPS}" ]; then
-            # Separate IPv4 and IPv6 addresses
+            # Separate IPv4 and IPv6 addresses (use first of each family found)
             for IP in ${LB_IPS}; do
               if echo "${IP}" | grep -q ':'; then
-                # IPv6 address
-                TARGET_IP_V6="${IP}"
+                # IPv6 address - only set if not already set (avoid overwrite)
+                if [ "${TARGET_IP_V6}" = "${DEFAULT_INGRESS_IP_V6}" ]; then
+                  TARGET_IP_V6="${IP}"
+                fi
               else
-                # IPv4 address
-                TARGET_IP_V4="${IP}"
+                # IPv4 address - only set if not already set (avoid overwrite)
+                if [ "${TARGET_IP_V4}" = "${DEFAULT_INGRESS_IP}" ]; then
+                  TARGET_IP_V4="${IP}"
+                fi
               fi
             done
             REASON="LoadBalancer"
@@ -236,8 +240,8 @@ data:
         DESIRED_ENTRY_V4=$(grep "^${CURRENT_DOMAIN}:" "${TMP_MAP_V4}" 2>/dev/null || echo "")
         DESIRED_ENTRY_V6=$(grep "^${CURRENT_DOMAIN}:" "${TMP_MAP_V6}" 2>/dev/null || echo "")
 
-        # Combine both entries
-        DESIRED_ENTRIES="${DESIRED_ENTRY_V4}"$'\n'"${DESIRED_ENTRY_V6}"
+        # Combine both entries (POSIX-compliant)
+        DESIRED_ENTRIES=$(printf "%s\n%s" "${DESIRED_ENTRY_V4}" "${DESIRED_ENTRY_V6}")
 
         # Check if this specific domain+IP combination is desired
         if ! echo "${DESIRED_ENTRIES}" | grep -qxF "${CURRENT_DOMAIN}:${CURRENT_IP}"; then

@@ -241,22 +241,39 @@ def load_gitignore_patterns():
 
 def is_ignored(path, gitignore_patterns):
     """Check if a file or directory should be ignored based on .gitignore patterns."""
-    path_str = str(path.name)
+    # Get path relative to repository root
+    try:
+        rel_path = path.relative_to(REPO_ROOT)
+        path_str = str(rel_path)
+        name_str = path.name
+    except ValueError:
+        # Path is not relative to REPO_ROOT
+        return False
+    
+    # Track if the path is ignored (considering negation patterns)
+    is_ignored_state = False
     
     for pattern in gitignore_patterns:
         # Handle negation patterns (starting with !)
-        if pattern.startswith('!'):
-            continue
+        is_negation = pattern.startswith('!')
+        if is_negation:
+            pattern = pattern[1:]  # Remove the !
         
         # Check if pattern matches
-        if fnmatch.fnmatch(path_str, pattern):
-            return True
+        matched = False
         
-        # Also check full path for patterns with /
-        if '/' in pattern and fnmatch.fnmatch(str(path), pattern):
-            return True
+        # Pattern with / should match against full relative path
+        if '/' in pattern:
+            matched = fnmatch.fnmatch(path_str, pattern)
+        else:
+            # Pattern without / matches against filename only
+            matched = fnmatch.fnmatch(name_str, pattern)
+        
+        # Update ignored state based on match
+        if matched:
+            is_ignored_state = not is_negation
     
-    return False
+    return is_ignored_state
 
 
 def generate_tree_fallback():
