@@ -1,3 +1,10 @@
+## [3.1.4](https://github.com/Nebu2k/kubernetes-homelab/compare/v3.1.3...v3.1.4) (2026-01-19)
+
+
+### ♻️ Code Refactoring
+
+* disable scheduling for k3s-worker-1 in Longhorn node configuration ([bf1d68a](https://github.com/Nebu2k/kubernetes-homelab/commit/bf1d68abbfbeeaa7fde6d1d935ef7e8aeff3b651))
+
 ## [3.1.3](https://github.com/Nebu2k/kubernetes-homelab/compare/v3.1.2...v3.1.3) (2026-01-19)
 
 
