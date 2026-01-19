@@ -1,3 +1,10 @@
+## [2.37.11](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.37.10...v2.37.11) (2026-01-19)
+
+
+### 🐛 Bug Fixes
+
+* reduce concurrency for backup jobs to prevent etcd overload ([1c73628](https://github.com/Nebu2k/kubernetes-homelab/commit/1c7362804979f5b1cca4422401ccc591838137ec))
+
 ## [2.37.10](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.37.9...v2.37.10) (2026-01-18)
 
 
