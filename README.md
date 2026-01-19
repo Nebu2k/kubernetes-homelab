@@ -108,13 +108,11 @@ homelab/
     │   └── service.yaml
     ├── home-assistant/
     │   ├── configmap-configuration.yaml
-    │   ├── configmap-configuration.yaml.backup
     │   ├── deployment.yaml
     │   ├── ingress.yaml
     │   ├── kustomization.yaml
     │   ├── matter-pvc.yaml
     │   ├── middleware-real-ip.yaml
-    │   ├── middleware-real-ip.yaml.backup
     │   ├── namespace.yaml
     │   ├── pvc.yaml
     │   └── service.yaml
@@ -178,7 +176,6 @@ homelab/
     ├── metallb/
     │   ├── kustomization.yaml
     │   ├── metallb-ip-pool.yaml
-    │   ├── metallb-ip-pool.yaml.backup
     │   └── values.yaml
     ├── minio/
     │   ├── credentials-sealed.yaml
@@ -231,7 +228,6 @@ homelab/
     │   ├── adguard-credentials-sealed.yaml
     │   ├── adguard-credentials-unsealed.yaml.example
     │   ├── adguard-dns-sync-job.yaml
-    │   ├── adguard-dns-sync-job.yaml.backup
     │   ├── adguard-dns-sync-rbac.yaml
     │   ├── adguard-macmini-ingress.yaml
     │   ├── adguard-pve-ingress.yaml
@@ -277,8 +273,7 @@ homelab/
     │   ├── certificate.yaml
     │   ├── ingress.yaml
     │   ├── kustomization.yaml
-    │   ├── values.yaml
-    │   └── values.yaml.backup
+    │   └── values.yaml
     ├── unifi-poller/
     │   ├── deployment.yaml
     │   ├── kustomization.yaml

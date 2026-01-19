@@ -8,6 +8,7 @@ import yaml
 from pathlib import Path
 from jinja2 import Environment, FileSystemLoader
 from collections import defaultdict
+import fnmatch
 
 # Repository root
 REPO_ROOT = Path(__file__).parent.parent
@@ -217,9 +218,53 @@ def get_documentation_links():
     return dict(sorted(docs.items()))
 
 
+def load_gitignore_patterns():
+    """Load and parse .gitignore patterns."""
+    gitignore_file = REPO_ROOT / ".gitignore"
+    patterns = []
+    
+    if not gitignore_file.exists():
+        return patterns
+    
+    with open(gitignore_file, 'r') as f:
+        for line in f:
+            line = line.strip()
+            # Skip empty lines and comments
+            if not line or line.startswith('#'):
+                continue
+            # Remove trailing slashes for directory patterns
+            pattern = line.rstrip('/')
+            patterns.append(pattern)
+    
+    return patterns
+
+
+def is_ignored(path, gitignore_patterns):
+    """Check if a file or directory should be ignored based on .gitignore patterns."""
+    path_str = str(path.name)
+    
+    for pattern in gitignore_patterns:
+        # Handle negation patterns (starting with !)
+        if pattern.startswith('!'):
+            continue
+        
+        # Check if pattern matches
+        if fnmatch.fnmatch(path_str, pattern):
+            return True
+        
+        # Also check full path for patterns with /
+        if '/' in pattern and fnmatch.fnmatch(str(path), pattern):
+            return True
+    
+    return False
+
+
 def generate_tree_fallback():
     """Generate tree structure manually if tree command not available."""
     lines = ["homelab/"]
+    
+    # Load gitignore patterns
+    gitignore_patterns = load_gitignore_patterns()
     
     # Bootstrap directory
     lines.append("├── bootstrap/")
@@ -259,16 +304,17 @@ def generate_tree_fallback():
     # Manifests directory
     lines.append("└── manifests/")
     manifest_dirs = sorted([d for d in (REPO_ROOT / "manifests").iterdir() 
-                          if d.is_dir() and not d.name.startswith('.')])
+                          if d.is_dir() and not d.name.startswith('.') and not is_ignored(d, gitignore_patterns)])
     
     for i, manifest_dir in enumerate(manifest_dirs):
         is_last_dir = i == len(manifest_dirs) - 1
         dir_prefix = "    └── " if is_last_dir else "    ├── "
         lines.append(f"{dir_prefix}{manifest_dir.name}/")
         
-        # Add files in manifest (exclude *-unsealed.yaml without .example extension)
-        all_files = sorted([f for f in manifest_dir.glob("*.yaml*") if not f.name.startswith('.')])
-        # Filter out unsealed.yaml files that don't have .example extension
+        # Add files in manifest - filter using gitignore patterns
+        all_files = sorted([f for f in manifest_dir.glob("*.yaml*") 
+                          if not f.name.startswith('.') and not is_ignored(f, gitignore_patterns)])
+        # Additional filter: exclude unsealed.yaml files that don't have .example extension
         manifest_files = [f for f in all_files 
                          if not (f.name.endswith('-unsealed.yaml') and not f.name.endswith('.example'))]
         
