@@ -1,3 +1,17 @@
+## [2.38.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.37.13...v2.38.0) (2026-01-19)
+
+
+### ✨ Features
+
+* add support for .gitignore patterns in README generation ([667cf3f](https://github.com/Nebu2k/kubernetes-homelab/commit/667cf3fb2b369c7f73b4e656ed1d4cf0d3c272bd))
+* enhance dual-stack DNS sync by supporting separate IPv4 and IPv6 mappings ([9706bf6](https://github.com/Nebu2k/kubernetes-homelab/commit/9706bf6573e8111ff1443dbb8e3a7caf4075e971))
+* enhance dual-stack support across configurations and scripts ([1276a57](https://github.com/Nebu2k/kubernetes-homelab/commit/1276a57ab87cc05e8b1541b4709c3235d25a9023))
+* improve DNS sync script to handle separate IPv4 and IPv6 addresses more robustly ([b1e5a84](https://github.com/Nebu2k/kubernetes-homelab/commit/b1e5a8405995ec20603dd582f415ef5c64593584))
+* refactor DNS sync script to use printf for improved data handling ([aa1c2f6](https://github.com/Nebu2k/kubernetes-homelab/commit/aa1c2f65003fe250f1137c972bbdb218f203a907))
+* update adguard DNS sync job to use printf for better handling of input data ([5fd0120](https://github.com/Nebu2k/kubernetes-homelab/commit/5fd0120d4b2842d94d736934f0d15a12685081a4))
+* update DNS sync script to return counts via stdout and remove empty lines from entries ([2d7dc63](https://github.com/Nebu2k/kubernetes-homelab/commit/2d7dc63604636087ff2beb27722839b792baa1f3))
+* update IPv6 addresses in configuration for improved network handling ([493bd75](https://github.com/Nebu2k/kubernetes-homelab/commit/493bd75c57d149188becaf6e9ffff9be0dcc8dcb))
+
 ## [2.37.13](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.37.12...v2.37.13) (2026-01-19)
 
 
