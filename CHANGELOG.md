@@ -1,3 +1,10 @@
+## [2.37.13](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.37.12...v2.37.13) (2026-01-19)
+
+
+### 🐛 Bug Fixes
+
+* update mountPath for agent data storage to correct directory ([9feb852](https://github.com/Nebu2k/kubernetes-homelab/commit/9feb85244b25e4bc7c061706b0d7f645394d6a73))
+
 ## [2.37.12](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.37.11...v2.37.12) (2026-01-19)
 
 
