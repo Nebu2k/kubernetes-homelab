@@ -1,3 +1,10 @@
+## [3.1.2](https://github.com/Nebu2k/kubernetes-homelab/compare/v3.1.1...v3.1.2) (2026-01-19)
+
+
+### ♻️ Code Refactoring
+
+* remove optional IPv6 DualStack configuration steps from README ([b9c3a29](https://github.com/Nebu2k/kubernetes-homelab/commit/b9c3a29da3dcdd22b7c3b090dafdefa1cf1c8733))
+
 ## [3.1.1](https://github.com/Nebu2k/kubernetes-homelab/compare/v3.1.0...v3.1.1) (2026-01-19)
 
 
