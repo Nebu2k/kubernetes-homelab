@@ -1,4 +1,6 @@
 # Longhorn Recurring Backup Jobs
+# WICHTIG: concurrency auf 1 reduziert um etcd-Überlastung zu vermeiden
+# Schedule gespreizt um nicht mehrere Jobs gleichzeitig laufen zu lassen
 ---
 # Tägliches Backup um 2:00 Uhr (behält 7 Tage)
 apiVersion: longhorn.io/v1beta2
@@ -10,7 +12,7 @@ spec:
   cron: "0 2 * * *"
   task: "backup"
   retain: 7
-  concurrency: 2
+  concurrency: 1  # Reduziert von 2 auf 1 - nur 1 Volume gleichzeitig nach S3 backuppen
   labels: {}
 ---
 # Wöchentliches Backup (Sonntags um 3:00 Uhr, behält 4 Wochen)
@@ -23,18 +25,19 @@ spec:
   cron: "0 3 * * 0"
   task: "backup"
   retain: 4
-  concurrency: 2
+  concurrency: 1  # Reduziert von 2 auf 1
   labels: {}
 ---
-# Tägliche Snapshot Cleanup (4:00 Uhr)
+# Tägliche Snapshot Cleanup (8:00 Uhr - VERSCHOBEN von 4:00 Uhr)
+# Läuft jetzt 6 Stunden NACH dem Backup, um etcd Zeit zum Erholen zu geben
 apiVersion: longhorn.io/v1beta2
 kind: RecurringJob
 metadata:
   name: snapshot-cleanup-daily
   namespace: longhorn-system
 spec:
-  cron: "0 4 * * *"
+  cron: "0 8 * * *"  # Verschoben von 04:00 auf 08:00 UTC (09:00 CET)
   task: "snapshot-cleanup"
   retain: 0
-  concurrency: 5
+  concurrency: 2  # Reduziert von 5 auf 2
   labels: {}
