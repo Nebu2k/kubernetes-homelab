@@ -1,3 +1,10 @@
+## [3.1.3](https://github.com/Nebu2k/kubernetes-homelab/compare/v3.1.2...v3.1.3) (2026-01-19)
+
+
+### ♻️ Code Refactoring
+
+* simplify MetalLB LoadBalancer configuration in values.yaml ([e9f51fd](https://github.com/Nebu2k/kubernetes-homelab/commit/e9f51fd7febc227c88cf5755e2b7ae42561fac94))
+
 ## [3.1.2](https://github.com/Nebu2k/kubernetes-homelab/compare/v3.1.1...v3.1.2) (2026-01-19)
 
 
