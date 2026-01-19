@@ -49,7 +49,7 @@ spec:
             memory: 128Mi
         volumeMounts:
         - name: agent-data
-          mountPath: /app/data
+          mountPath: /var/lib/beszel-agent  # Agent speichert Daten hier, nicht in /app/data
         securityContext:
           privileged: false
           capabilities:
