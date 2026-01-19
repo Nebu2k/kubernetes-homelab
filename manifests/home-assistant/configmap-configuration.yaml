@@ -14,8 +14,7 @@ data:
         - 172.16.0.0/12
         - 192.168.0.0/16
         # IPv6 Ranges
-        - fd00:cafe:beef::/48      # ULA Kubernetes LoadBalancer
-        - fd00::/8                 # All ULA (Kubernetes pods)
+        - 2a00:1e:7c41:fb00::/64   # ISP Prefix (includes LoadBalancer IPs)
       ip_ban_enabled: true
       login_attempts_threshold: 5
     

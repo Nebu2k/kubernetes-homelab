@@ -316,7 +316,7 @@ spec:
             - name: DEFAULT_INGRESS_IP
               value: "192.168.2.250"
             - name: DEFAULT_INGRESS_IP_V6
-              value: "fd00:cafe:beef::250"
+              value: "2a00:1e:7c41:fb00::250"
             - name: DOMAIN_SUFFIX
               value: "elmstreet79.de"
             - name: ADGUARD_USER
@@ -365,7 +365,7 @@ spec:
                 - name: DEFAULT_INGRESS_IP
                   value: "192.168.2.250"
                 - name: DEFAULT_INGRESS_IP_V6
-                  value: "fd00:cafe:beef::250"
+                  value: "2a00:1e:7c41:fb00::250"
                 - name: DOMAIN_SUFFIX
                   value: "elmstreet79.de"
                 - name: ADGUARD_USER

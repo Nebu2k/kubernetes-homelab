@@ -6,8 +6,8 @@ metadata:
   namespace: metallb-system
 spec:
   addresses:
-    - 192.168.2.250-192.168.2.253      # IPv4
-    - fd00:cafe:beef::250-fd00:cafe:beef::253  # IPv6 ULA
+    - 192.168.2.250-192.168.2.253                  # IPv4
+    - 2a00:1e:7c41:fb00::250-2a00:1e:7c41:fb00::253  # IPv6 ISP Prefix (extern erreichbar)
 ---
 apiVersion: metallb.io/v1beta1
 kind: L2Advertisement
