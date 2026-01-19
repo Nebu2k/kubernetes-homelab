@@ -1,3 +1,10 @@
+## [2.37.12](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.37.11...v2.37.12) (2026-01-19)
+
+
+### 🐛 Bug Fixes
+
+* reduce default replica counts to improve performance and reduce rebuild load ([5963b4d](https://github.com/Nebu2k/kubernetes-homelab/commit/5963b4ded9e98fa7b8f25638eefaead0689a1138))
+
 ## [2.37.11](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.37.10...v2.37.11) (2026-01-19)
 
 
