@@ -207,9 +207,8 @@ data:
         echo "  No domains to sync for ${IP_FAMILY}"
       fi
 
-      # Return counts via global variables (shell function limitation)
-      eval "${RECORD_TYPE}_ADDED=${ADDED}"
-      eval "${RECORD_TYPE}_SKIPPED=${SKIPPED}"
+      # Return counts via stdout
+      echo "${ADDED} ${SKIPPED}"
     }
 
     # Get current rewrites from AdGuard that end with DOMAIN_SUFFIX
@@ -240,8 +239,8 @@ data:
         DESIRED_ENTRY_V4=$(grep "^${CURRENT_DOMAIN}:" "${TMP_MAP_V4}" 2>/dev/null || echo "")
         DESIRED_ENTRY_V6=$(grep "^${CURRENT_DOMAIN}:" "${TMP_MAP_V6}" 2>/dev/null || echo "")
 
-        # Combine both entries (POSIX-compliant)
-        DESIRED_ENTRIES=$(printf "%s\n%s" "${DESIRED_ENTRY_V4}" "${DESIRED_ENTRY_V6}")
+        # Combine both entries (POSIX-compliant) and remove empty lines
+        DESIRED_ENTRIES=$(printf "%s\n%s" "${DESIRED_ENTRY_V4}" "${DESIRED_ENTRY_V6}" | sed '/^$/d')
 
         # Check if this specific domain+IP combination is desired
         if ! echo "${DESIRED_ENTRIES}" | grep -qxF "${CURRENT_DOMAIN}:${CURRENT_IP}"; then
@@ -269,11 +268,15 @@ data:
     echo ""
 
     # Step 2: Sync IPv4 (A) records
-    sync_dns_rewrites "A" "${TMP_MAP_V4}" "IPv4"
+    COUNTS=$(sync_dns_rewrites "A" "${TMP_MAP_V4}" "IPv4")
+    A_ADDED=$(echo "$COUNTS" | cut -d' ' -f1)
+    A_SKIPPED=$(echo "$COUNTS" | cut -d' ' -f2)
     echo ""
 
     # Step 3: Sync IPv6 (AAAA) records
-    sync_dns_rewrites "AAAA" "${TMP_MAP_V6}" "IPv6"
+    COUNTS=$(sync_dns_rewrites "AAAA" "${TMP_MAP_V6}" "IPv6")
+    AAAA_ADDED=$(echo "$COUNTS" | cut -d' ' -f1)
+    AAAA_SKIPPED=$(echo "$COUNTS" | cut -d' ' -f2)
 
     # Cleanup temp map files
     rm -f "${TMP_MAP_V4}" "${TMP_MAP_V6}"
