@@ -476,6 +476,69 @@ kubectl get pods -n longhorn-system -o wide | grep k3s-worker-1
 
 ⚠️ **Note:** Longhorn automatically detects `/var/lib/longhorn` - no additional configuration needed!
 
+### Step 4.8: Enable IPv6 DualStack (Optional)
+
+If your ISP provides IPv6 and you want your Kubernetes services to be accessible via IPv6, you need to enable DualStack support in K3s.
+
+⚠️ **This is an invasive operation** - Control Plane nodes will restart sequentially!
+
+**On EACH Control Plane Node** (`k3s-cp-1`, `raspi4`, `raspi5`):
+
+```bash
+# 1. Create config directory
+sudo mkdir -p /etc/rancher/k3s
+
+# 2. Create DualStack configuration
+sudo tee /etc/rancher/k3s/config.yaml > /dev/null <<'EOF'
+cluster-cidr: "10.42.0.0/16,fd00:42::/56"
+service-cidr: "10.43.0.0/16,fd00:43::/112"
+EOF
+
+# 3. Restart K3s server
+sudo systemctl restart k3s
+
+# 4. Check service status
+sudo systemctl status k3s
+```
+
+⚠️ **Important: Execute nodes sequentially, NOT in parallel!**
+
+1. **First `raspi4`** → Wait 3 minutes → Check cluster health
+2. **Then `raspi5`** → Wait 3 minutes → Check cluster health
+3. **Then `k3s-cp-1`** → Wait 3 minutes → Check cluster health
+
+**Verify cluster health after each node** (from your laptop):
+
+```bash
+# Check all nodes are Ready
+kubectl get nodes
+
+# Check for pod issues
+kubectl get pods -A | grep -v Running
+```
+
+**After all Control Plane nodes are updated:**
+
+1. Update MetalLB to include IPv6 address pool:
+   ```bash
+   vim manifests/metallb/metallb-ip-pool.yaml
+   # Add IPv6 range from your ISP prefix
+   ```
+
+2. Update Traefik to enable DualStack:
+   ```bash
+   vim manifests/traefik/values.yaml
+   # Add: ipFamilyPolicy: PreferDualStack
+   ```
+
+3. Update CoreDNS with IPv6 upstream servers:
+   ```bash
+   vim manifests/coredns/coredns-custom.yaml
+   # Add IPv6 DNS servers
+   ```
+
+See the IPv6 migration plan in your cluster for detailed configuration examples.
+
 ### Step 5: Install ArgoCD via Helm (**on your laptop**)
 
 ⚠️ **ArgoCD is NOT managed via GitOps** (prevents self-management conflicts)
