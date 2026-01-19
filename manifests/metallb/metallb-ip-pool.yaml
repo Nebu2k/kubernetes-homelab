@@ -6,7 +6,8 @@ metadata:
   namespace: metallb-system
 spec:
   addresses:
-    - 192.168.2.250-192.168.2.253
+    - 192.168.2.250-192.168.2.253      # IPv4
+    - fd00:cafe:beef::250-fd00:cafe:beef::253  # IPv6 ULA
 ---
 apiVersion: metallb.io/v1beta1
 kind: L2Advertisement
@@ -16,3 +17,4 @@ metadata:
 spec:
   ipAddressPools:
     - homelab-pool
+  # interfaces removed to auto-detect on all nodes (ens18, eno1, eth0)

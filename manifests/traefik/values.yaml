@@ -13,10 +13,14 @@ providers:
   kubernetesIngress:
     enabled: true
 
-# MetalLB LoadBalancer IP
+# MetalLB LoadBalancer IP - DualStack
 service:
-  loadBalancerIP: 192.168.2.250
+  # loadBalancerIP: 192.168.2.250  # Removed - MetalLB auto-assigns from pool
   type: LoadBalancer
+  ipFamilyPolicy: PreferDualStack  # Enable IPv4 + IPv6
+  ipFamilies:
+    - IPv4
+    - IPv6
 
 # Prometheus metrics
 metrics:

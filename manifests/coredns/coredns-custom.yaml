@@ -6,11 +6,12 @@ metadata:
   namespace: kube-system
 data:
   forward.override: |
-    forward . 1.1.1.1
+    forward . 1.1.1.1 2606:4700:4700::1111  # Cloudflare IPv4 + IPv6
   elmstreet79.server: |
-    # Forward internal elmstreet79.de queries to AdGuard Home
+    # Forward internal elmstreet79.de queries to AdGuard Home (DualStack)
     elmstreet79.de:53 {
       errors
       cache 300
-      forward . 192.168.2.4:53 192.168.2.16:53
+      # IPv4 and IPv6 addresses for both AdGuard instances
+      forward . 192.168.2.4:53 [2a00:1e:7c41:fb00:1cfc:955f:d9e8:8b51]:53 192.168.2.16:53 [2a00:1e:7c41:fb00:be24:11ff:fe92:b845]:53
     }

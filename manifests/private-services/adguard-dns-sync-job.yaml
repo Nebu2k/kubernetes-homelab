@@ -16,10 +16,12 @@ data:
     ADGUARD_USER="${ADGUARD_USER}"
     ADGUARD_PASS="${ADGUARD_PASS}"
     DEFAULT_INGRESS_IP="${DEFAULT_INGRESS_IP}"
+    DEFAULT_INGRESS_IP_V6="${DEFAULT_INGRESS_IP_V6}"
     DOMAIN_SUFFIX="${DOMAIN_SUFFIX}"
 
     echo "Syncing DNS rewrites to AdGuard Home at ${ADGUARD_HOST}..."
-    echo "Default Ingress IP (Traefik): ${DEFAULT_INGRESS_IP}"
+    echo "Default Ingress IPv4 (Traefik): ${DEFAULT_INGRESS_IP}"
+    echo "Default Ingress IPv6 (Traefik): ${DEFAULT_INGRESS_IP_V6}"
 
     # Get service account token
     TOKEN=$(cat /var/run/secrets/kubernetes.io/serviceaccount/token)
@@ -249,15 +251,61 @@ data:
       echo "  No domains to sync"
     fi
     
+    echo ""
+
+    # Step 3: Add/update IPv6 (AAAA) rewrites
+    echo "Adding/updating IPv6 rewrites..."
+    TMP_ADDED_V6=$(mktemp)
+    TMP_SKIPPED_V6=$(mktemp)
+
+    if [ -n "${DEFAULT_INGRESS_IP_V6}" ] && [ -s "${TMP_MAP}" ]; then
+      cat "${TMP_MAP}" | while IFS=: read -r DOMAIN TARGET_IP; do
+        if [ -z "${DOMAIN}" ]; then
+          continue
+        fi
+
+        TARGET_IP_V6="${DEFAULT_INGRESS_IP_V6}"
+
+        # Check if this exact IPv6 entry already exists
+        if echo "${CURRENT_REWRITES}" | grep -qxF "${DOMAIN}:${TARGET_IP_V6}"; then
+          echo "  ✓ ${DOMAIN} -> ${TARGET_IP_V6} (OK, AAAA)"
+          echo "1" >> "${TMP_SKIPPED_V6}"
+        else
+          echo "  → Adding ${DOMAIN} -> ${TARGET_IP_V6} (AAAA)"
+          if curl -s -X POST "http://${ADGUARD_HOST}/control/rewrite/add" \
+            -u "${ADGUARD_USER}:${ADGUARD_PASS}" \
+            -H "Content-Type: application/json" \
+            -d "{\"domain\":\"${DOMAIN}\",\"answer\":\"${TARGET_IP_V6}\"}" > /dev/null 2>&1; then
+            echo "    ✓ Added"
+            echo "1" >> "${TMP_ADDED_V6}"
+          else
+            echo "    ✗ Failed"
+          fi
+        fi
+      done
+
+      ADDED_V6=$(wc -l < "${TMP_ADDED_V6}" 2>/dev/null | tr -d ' ' || echo 0)
+      SKIPPED_V6=$(wc -l < "${TMP_SKIPPED_V6}" 2>/dev/null | tr -d ' ' || echo 0)
+      rm -f "${TMP_ADDED_V6}" "${TMP_SKIPPED_V6}"
+    else
+      ADDED_V6=0
+      SKIPPED_V6=0
+      echo "  No IPv6 address configured or no domains to sync"
+    fi
+
     # Cleanup temp map file
     rm -f "${TMP_MAP}"
 
     echo ""
     echo "════════════════════════════════════════"
     echo "📊 Sync Summary:"
-    echo "   ✓ Skipped (unchanged): ${SKIPPED}"
-    echo "   ➕ Added: ${ADDED}"
-    echo "   ✗ Removed/Updated: ${REMOVED}"
+    echo "   IPv4 (A Records):"
+    echo "     ✓ Skipped (unchanged): ${SKIPPED}"
+    echo "     ➕ Added: ${ADDED}"
+    echo "     ✗ Removed/Updated: ${REMOVED}"
+    echo "   IPv6 (AAAA Records):"
+    echo "     ✓ Skipped (unchanged): ${SKIPPED_V6}"
+    echo "     ➕ Added: ${ADDED_V6}"
     echo "════════════════════════════════════════"
     echo "✅ AdGuard DNS sync complete!"
 ---
@@ -285,6 +333,8 @@ spec:
               value: "192.168.2.16"
             - name: DEFAULT_INGRESS_IP
               value: "192.168.2.250"
+            - name: DEFAULT_INGRESS_IP_V6
+              value: "fd00:cafe:beef::250"
             - name: DOMAIN_SUFFIX
               value: "elmstreet79.de"
             - name: ADGUARD_USER
@@ -332,6 +382,8 @@ spec:
                   value: "192.168.2.16"
                 - name: DEFAULT_INGRESS_IP
                   value: "192.168.2.250"
+                - name: DEFAULT_INGRESS_IP_V6
+                  value: "fd00:cafe:beef::250"
                 - name: DOMAIN_SUFFIX
                   value: "elmstreet79.de"
                 - name: ADGUARD_USER
