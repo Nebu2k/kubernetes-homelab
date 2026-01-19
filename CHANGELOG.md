@@ -1,3 +1,14 @@
+## [3.0.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.38.0...v3.0.0) (2026-01-19)
+
+
+### ⚠ BREAKING CHANGES
+
+* enhance DNS sync script output by adding conditional display of targets and summary counts
+
+### ✨ Features
+
+* enhance DNS sync script output by adding conditional display of targets and summary counts ([91fba7b](https://github.com/Nebu2k/kubernetes-homelab/commit/91fba7b2710a09844168df5ecbd92d92336682b3))
+
 ## [2.38.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v2.37.13...v2.38.0) (2026-01-19)
 
 
