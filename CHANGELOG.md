@@ -1,3 +1,10 @@
+## [3.1.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v3.0.1...v3.1.0) (2026-01-19)
+
+
+### ✨ Features
+
+* add optional IPv6 DualStack configuration steps for K3s installation ([610bdf3](https://github.com/Nebu2k/kubernetes-homelab/commit/610bdf325e957ccf04406c3713f0c7a811655826))
+
 ## [3.0.1](https://github.com/Nebu2k/kubernetes-homelab/compare/v3.0.0...v3.0.1) (2026-01-19)
 
 
