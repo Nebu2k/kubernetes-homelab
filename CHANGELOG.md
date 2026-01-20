@@ -1,3 +1,10 @@
+## [3.2.1](https://github.com/Nebu2k/kubernetes-homelab/compare/v3.2.0...v3.2.1) (2026-01-20)
+
+
+### 🐛 Bug Fixes
+
+* increase SYSTEM_UPGRADE_JOB_ACTIVE_DEADLINE_SECONDS to 1800 ([596ce65](https://github.com/Nebu2k/kubernetes-homelab/commit/596ce65051d8a2da1f679171654b9f4fb168cba0))
+
 ## [3.2.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v3.1.6...v3.2.0) (2026-01-20)
 
 
