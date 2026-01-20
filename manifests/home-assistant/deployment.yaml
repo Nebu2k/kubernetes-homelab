@@ -29,7 +29,7 @@ spec:
               - key: kubernetes.io/hostname
                 operator: In
                 values:
-                - k3s-worker-1
+                - prodesk
       nodeSelector:
         node-role.kubernetes.io/worker: "worker"
       initContainers:
