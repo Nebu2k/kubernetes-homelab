@@ -19,7 +19,7 @@ Production-ready K3s cluster managed via GitOps using ArgoCD App-of-Apps pattern
 
 | Wave | Component |
 |------|-----------|
-| 0 | Sealed Secrets, System Upgrade Controller, Coredns Config |
+| 0 | Sealed Secrets, Coredns Config |
 | 1 | Reloader, Kured, Metallb |
 | 2 | Cert Manager |
 | 3 | Traefik |
@@ -45,7 +45,6 @@ homelab/
 │   ├── kustomization.yaml         # List of all apps
 │   ├── coredns-config.yaml            # Wave 0
 │   ├── sealed-secrets.yaml            # Wave 0
-│   ├── system-upgrade-controller.yaml # Wave 0
 │   ├── kured.yaml                     # Wave 1
 │   ├── metallb.yaml                   # Wave 1
 │   ├── reloader.yaml                  # Wave 1
@@ -255,10 +254,6 @@ homelab/
     │   └── servicemonitor.yaml
     ├── reloader/
     │   └── values.yaml
-    ├── system-upgrade-controller/
-    │   ├── controller.yaml
-    │   ├── kustomization.yaml
-    │   └── upgrade-plans.yaml
     ├── teslamate/
     │   ├── database-deployment.yaml
     │   ├── database-pdb.yaml
