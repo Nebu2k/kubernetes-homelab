@@ -1,3 +1,10 @@
+## [3.2.2](https://github.com/Nebu2k/kubernetes-homelab/compare/v3.2.1...v3.2.2) (2026-01-20)
+
+
+### ♻️ Code Refactoring
+
+* remove system-upgrade-controller and related resources ([a3a399c](https://github.com/Nebu2k/kubernetes-homelab/commit/a3a399cb319fc9332afc220da436f99851c91daa))
+
 ## [3.2.1](https://github.com/Nebu2k/kubernetes-homelab/compare/v3.2.0...v3.2.1) (2026-01-20)
 
 
