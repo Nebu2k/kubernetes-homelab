@@ -1,3 +1,10 @@
+## [3.2.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v3.1.6...v3.2.0) (2026-01-20)
+
+
+### ✨ Features
+
+* add system-upgrade-controller and upgrade plans for k3s ([2c6811b](https://github.com/Nebu2k/kubernetes-homelab/commit/2c6811b0ab4ab9ac5d24993ef65b2c3f96b26d07))
+
 ## [3.1.6](https://github.com/Nebu2k/kubernetes-homelab/compare/v3.1.5...v3.1.6) (2026-01-20)
 
 
