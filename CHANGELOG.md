@@ -1,3 +1,10 @@
+## [3.1.6](https://github.com/Nebu2k/kubernetes-homelab/compare/v3.1.5...v3.1.6) (2026-01-20)
+
+
+### 🐛 Bug Fixes
+
+* update node affinity to use prodesk for home-assistant deployment ([e0fc92c](https://github.com/Nebu2k/kubernetes-homelab/commit/e0fc92c9e13f2ff1b902c2e935ae88d10c7583b2))
+
 ## [3.1.5](https://github.com/Nebu2k/kubernetes-homelab/compare/v3.1.4...v3.1.5) (2026-01-20)
 
 
