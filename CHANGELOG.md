@@ -1,3 +1,10 @@
+## [3.1.5](https://github.com/Nebu2k/kubernetes-homelab/compare/v3.1.4...v3.1.5) (2026-01-20)
+
+
+### 🐛 Bug Fixes
+
+* update node affinity to use k3s-worker-1 for home-assistant deployment ([2151410](https://github.com/Nebu2k/kubernetes-homelab/commit/215141030bcc90508a24a174d2e5df1b8159df81))
+
 ## [3.1.4](https://github.com/Nebu2k/kubernetes-homelab/compare/v3.1.3...v3.1.4) (2026-01-19)
 
 
