@@ -1,3 +1,10 @@
+## [3.3.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v3.2.2...v3.3.0) (2026-01-21)
+
+
+### ✨ Features
+
+* **prometheus:** enable EndpointSlice discovery role for Kubernetes v1.33+ ([3ab1ef9](https://github.com/Nebu2k/kubernetes-homelab/commit/3ab1ef9f1bb7983741ee31000cc16a92f8d59540))
+
 ## [3.2.2](https://github.com/Nebu2k/kubernetes-homelab/compare/v3.2.1...v3.2.2) (2026-01-20)
 
 
