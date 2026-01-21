@@ -25,6 +25,9 @@ kubeEtcd:
 prometheus:
   
   prometheusSpec:
+    # Use EndpointSlice instead of deprecated Endpoints API (required for Kubernetes v1.33+)
+    discoveryRole: endpointslice
+    
     # Resource limits (conservative for Pi)
     resources:
       requests:
