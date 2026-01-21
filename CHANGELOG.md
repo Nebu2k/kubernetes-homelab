@@ -1,3 +1,10 @@
+## [3.3.1](https://github.com/Nebu2k/kubernetes-homelab/compare/v3.3.0...v3.3.1) (2026-01-21)
+
+
+### 🐛 Bug Fixes
+
+* **longhorn:** reduce backup concurrency to prevent overload on ARM nodes ([f47c72d](https://github.com/Nebu2k/kubernetes-homelab/commit/f47c72df0d2c7e83533f628490685e427ac39806))
+
 ## [3.3.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v3.2.2...v3.3.0) (2026-01-21)
 
 
