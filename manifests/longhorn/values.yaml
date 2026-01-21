@@ -23,6 +23,9 @@ defaultSettings:
   replicaAutoBalance: "best-effort"
   # Limit concurrent replica rebuilds per node to prevent overload (especially on Raspberry Pis)
   concurrentReplicaRebuildPerNodeLimit: "2"
+  # Reduce backup concurrency to prevent overwhelming ARM nodes during nightly backups
+  backupConcurrentLimit: "1"  # Default is 2, reduce to 1 to prevent raspi5 overload
+  concurrentVolumeBackupRestorePerNodeLimit: "2"  # Default is 5, reduce to 2
 
 # Disable preUpgrade hook (causes issues with ArgoCD)
 preUpgradeChecker:
