@@ -14,6 +14,14 @@ spec:
     - storage
   allowScheduling: true
   evictionRequested: false
+  disks:
+    default-disk-k3s-worker-1:
+      allowScheduling: true
+      diskType: filesystem
+      evictionRequested: false
+      path: /var/lib/longhorn/
+      tags:
+        - storage
 
 ---
 apiVersion: longhorn.io/v1beta2
@@ -27,6 +35,14 @@ spec:
     - storage
   allowScheduling: true
   evictionRequested: false
+  disks:
+    default-disk-raspi4:
+      allowScheduling: true
+      diskType: filesystem
+      evictionRequested: false
+      path: /var/lib/longhorn/
+      tags:
+        - storage
 
 ---
 apiVersion: longhorn.io/v1beta2
@@ -40,6 +56,14 @@ spec:
     - storage
   allowScheduling: true
   evictionRequested: false
+  disks:
+    default-disk-raspi5:
+      allowScheduling: true
+      diskType: filesystem
+      evictionRequested: false
+      path: /var/lib/longhorn/
+      tags:
+        - storage
 
 ---
 # Exclude low-storage nodes
