@@ -1,3 +1,10 @@
+## [3.3.3](https://github.com/Nebu2k/kubernetes-homelab/compare/v3.3.2...v3.3.3) (2026-01-22)
+
+
+### 🐛 Bug Fixes
+
+* **longhorn:** add missing name fields in node specifications ([46080a5](https://github.com/Nebu2k/kubernetes-homelab/commit/46080a54d537966dc26588a4a591e1a3efe45216))
+
 ## [3.3.2](https://github.com/Nebu2k/kubernetes-homelab/compare/v3.3.1...v3.3.2) (2026-01-22)
 
 
