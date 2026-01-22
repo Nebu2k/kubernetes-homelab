@@ -1,3 +1,10 @@
+## [3.3.4](https://github.com/Nebu2k/kubernetes-homelab/compare/v3.3.3...v3.3.4) (2026-01-22)
+
+
+### 🐛 Bug Fixes
+
+* **longhorn:** add disk specifications for k3s-worker-1, raspi4, and raspi5 nodes ([20a5282](https://github.com/Nebu2k/kubernetes-homelab/commit/20a52822d3c4d195626c2c35c6050d9fd3b42e30))
+
 ## [3.3.3](https://github.com/Nebu2k/kubernetes-homelab/compare/v3.3.2...v3.3.3) (2026-01-22)
 
 
