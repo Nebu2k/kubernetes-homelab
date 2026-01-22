@@ -1,3 +1,10 @@
+## [3.3.2](https://github.com/Nebu2k/kubernetes-homelab/compare/v3.3.1...v3.3.2) (2026-01-22)
+
+
+### 🐛 Bug Fixes
+
+* **longhorn:** enable scheduling for raspi4 node ([24773fd](https://github.com/Nebu2k/kubernetes-homelab/commit/24773fd545fb541e2c063a9d0e4fdd3a4c4fd52f))
+
 ## [3.3.1](https://github.com/Nebu2k/kubernetes-homelab/compare/v3.3.0...v3.3.1) (2026-01-21)
 
 
