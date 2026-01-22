@@ -16,7 +16,7 @@ defaultBackupStore:
 
 # Default settings
 defaultSettings:
-  defaultReplicaCount: "2"  # Reduziert von 3 auf 2 - weniger I/O-Last auf Control-Plane
+  defaultReplicaCount: "3"
   # RWX (ReadWriteMany) Support via NFS
   rwxVolumeFastFailover: "true"
   # Automatic replica rebalancing across nodes
