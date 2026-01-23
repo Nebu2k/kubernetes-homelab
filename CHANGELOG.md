@@ -1,3 +1,10 @@
+## [3.7.1](https://github.com/Nebu2k/kubernetes-homelab/compare/v3.7.0...v3.7.1) (2026-01-23)
+
+
+### 🐛 Bug Fixes
+
+* update pollInterval format to string in S3 backup target configuration ([adc0e3f](https://github.com/Nebu2k/kubernetes-homelab/commit/adc0e3fc1638f9a6c5a89016cfcfeb1948121576))
+
 ## [3.7.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v3.6.2...v3.7.0) (2026-01-23)
 
 
