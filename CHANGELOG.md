@@ -1,3 +1,10 @@
+## [3.7.7](https://github.com/Nebu2k/kubernetes-homelab/compare/v3.7.6...v3.7.7) (2026-01-23)
+
+
+### ♻️ Code Refactoring
+
+* remove S3 backup target configuration and update default backup store to S3 ([5dc6e63](https://github.com/Nebu2k/kubernetes-homelab/commit/5dc6e63f680b75091714de462788bedcdc7b35b0))
+
 ## [3.7.6](https://github.com/Nebu2k/kubernetes-homelab/compare/v3.7.5...v3.7.6) (2026-01-23)
 
 
