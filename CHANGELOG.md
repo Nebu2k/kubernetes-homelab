@@ -1,3 +1,10 @@
+## [3.3.5](https://github.com/Nebu2k/kubernetes-homelab/compare/v3.3.4...v3.3.5) (2026-01-22)
+
+
+### 🐛 Bug Fixes
+
+* **longhorn:** revert defaultReplicaCount to 3 for improved I/O performance on Control-Plane ([593a2e2](https://github.com/Nebu2k/kubernetes-homelab/commit/593a2e2d35ddcb6a5e76f37b6c6c5c46ea9404ab))
+
 ## [3.3.4](https://github.com/Nebu2k/kubernetes-homelab/compare/v3.3.3...v3.3.4) (2026-01-22)
 
 
