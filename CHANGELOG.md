@@ -1,3 +1,10 @@
+## [3.7.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v3.6.2...v3.7.0) (2026-01-23)
+
+
+### ✨ Features
+
+* add S3 backup target and update recurring backup jobs for NFS ([26ae63f](https://github.com/Nebu2k/kubernetes-homelab/commit/26ae63f56e151911d017b6b6b34f4569250f1775))
+
 ## [3.6.2](https://github.com/Nebu2k/kubernetes-homelab/compare/v3.6.1...v3.6.2) (2026-01-23)
 
 
