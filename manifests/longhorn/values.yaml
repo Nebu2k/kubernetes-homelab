@@ -11,7 +11,7 @@ persistence:
 
 # Default backup store configuration (now NFS, S3 as secondary target)
 defaultBackupStore:
-  backupTarget: "nfs://192.168.2.6:/var/nfs/shared/longhorn_backup?nfsOptions=soft,timeo=600,retrans=2"
+  backupTarget: "nfs://192.168.2.6:/var/nfs/shared/longhorn_backup?nfsOptions=vers=3"
   backupTargetCredentialSecret: ""
 
 # Default settings
