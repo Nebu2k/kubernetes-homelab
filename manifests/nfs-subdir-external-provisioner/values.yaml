@@ -5,9 +5,9 @@ nfs:
   server: 192.168.2.6
   path: /var/nfs/shared/kubernetes_data
   mountOptions:
-    - nfsvers=4.1
     - hard
     - timeo=600
+    - retrans=2
     - retrans=2
 
 storageClass:
