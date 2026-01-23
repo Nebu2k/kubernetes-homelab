@@ -1,3 +1,10 @@
+## [3.6.1](https://github.com/Nebu2k/kubernetes-homelab/compare/v3.6.0...v3.6.1) (2026-01-23)
+
+
+### ♻️ Code Refactoring
+
+* update nfs-storage configuration and remove deprecated files ([2468969](https://github.com/Nebu2k/kubernetes-homelab/commit/2468969d60fb789cd4c7132518cf262afce72517))
+
 ## [3.6.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v3.5.1...v3.6.0) (2026-01-23)
 
 
