@@ -2,15 +2,14 @@
 # WICHTIG: concurrency auf 1 reduziert um etcd-Überlastung zu vermeiden
 # Schedule gespreizt um nicht mehrere Jobs gleichzeitig laufen zu lassen
 #
-# NFS Backup Jobs (Default) - Volumes mit Label: recurring-job.longhorn.io/backup-nfs-*: enabled
-# S3 Backup Jobs (Optional) - Volumes mit Label: recurring-job.longhorn.io/backup-s3-*: enabled
+# S3 Backup Jobs (Default) - Alle Volumes nutzen Standard S3 Backup Target
 ---
-# === NFS BACKUPS (Default) ===
-# Tägliches NFS Backup um 2:00 Uhr (behält 7 Tage)
+# === S3 BACKUPS (Default) ===
+# Tägliches S3 Backup um 2:00 Uhr (behält 7 Tage)
 apiVersion: longhorn.io/v1beta2
 kind: RecurringJob
 metadata:
-  name: backup-nfs-daily
+  name: backup-daily
   namespace: longhorn-system
 spec:
   cron: "0 2 * * *"
@@ -19,11 +18,11 @@ spec:
   concurrency: 1
   labels: {}
 ---
-# Wöchentliches NFS Backup (Sonntags um 3:00 Uhr, behält 4 Wochen)
+# Wöchentliches S3 Backup (Sonntags um 3:00 Uhr, behält 4 Wochen)
 apiVersion: longhorn.io/v1beta2
 kind: RecurringJob
 metadata:
-  name: backup-nfs-weekly
+  name: backup-weekly
   namespace: longhorn-system
 spec:
   cron: "0 3 * * 0"
@@ -31,35 +30,6 @@ spec:
   retain: 4
   concurrency: 1
   labels: {}
----
-# === S3 BACKUPS (Optional) ===
-# Tägliches S3 Backup um 2:30 Uhr (behält 7 Tage) - 30min versetzt zu NFS
-apiVersion: longhorn.io/v1beta2
-kind: RecurringJob
-metadata:
-  name: backup-s3-daily
-  namespace: longhorn-system
-spec:
-  cron: "30 2 * * *"
-  task: "backup"
-  retain: 7
-  concurrency: 1
-  labels:
-    backup-target: s3-backup
----
-# Wöchentliches S3 Backup (Sonntags um 3:30 Uhr, behält 4 Wochen)
-apiVersion: longhorn.io/v1beta2
-kind: RecurringJob
-metadata:
-  name: backup-s3-weekly
-  namespace: longhorn-system
-spec:
-  cron: "30 3 * * 0"
-  task: "backup"
-  retain: 4
-  concurrency: 1
-  labels:
-    backup-target: s3-backup
 ---
 # === CLEANUP JOBS (für beide Targets) ===
 # Tägliche Snapshot Cleanup (8:00 Uhr - VERSCHOBEN von 4:00 Uhr)
