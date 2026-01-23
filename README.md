@@ -1233,7 +1233,6 @@ kubectl get secret -n monitoring grafana-admin-credentials \
 - [Longhorn](https://charts.longhorn.io)
 - [Metallb](https://metallb.github.io/metallb)
 - [Minio](https://min.io/docs/minio/kubernetes/upstream/)
-- [N8N](https://docs.n8n.io/)
 - [Newt](https://charts.fossorial.io)
 - [Portainer](https://portainer.github.io/k8s)
 - [Proxmox Exporter](https://github.com/prometheus-pve/prometheus-pve-exporter)
@@ -1243,6 +1242,7 @@ kubectl get secret -n monitoring grafana-admin-credentials \
 - [Traefik](https://traefik.github.io/charts)
 - [Unifi Poller](https://unpoller.com/)
 - [Uptime Kuma](https://github.com/louislam/uptime-kuma/wiki)
+- [n8n](https://docs.n8n.io/)
 
 ## 📝 License
 

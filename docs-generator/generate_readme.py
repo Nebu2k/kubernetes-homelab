@@ -156,6 +156,30 @@ def get_component_versions():
     return versions
 
 
+def smart_title_case(text):
+    """Convert text to title case while preserving known acronyms in uppercase."""
+    # Special cases with specific casing
+    special_cases = {'n8n': 'n8n'}
+    
+    # Common acronyms that should stay uppercase
+    acronyms = {'nfs', 's3', 'api', 'dns', 'tls', 'ssl', 'http', 'https', 
+                'k3s', 'k8s', 'cpu', 'ram', 'gpu', 'io', 'ip', 'vpn', 'ssh'}
+    
+    words = text.replace('-', ' ').split()
+    result = []
+    
+    for word in words:
+        word_lower = word.lower()
+        if word_lower in special_cases:
+            result.append(special_cases[word_lower])
+        elif word_lower in acronyms:
+            result.append(word.upper())
+        else:
+            result.append(word.capitalize())
+    
+    return ' '.join(result)
+
+
 def get_documentation_links():
     """Extract documentation links from Helm chart repositories and add official docs for custom apps."""
     docs = {}
@@ -199,13 +223,13 @@ def get_documentation_links():
 
                 if chart and repo_url and not repo_url.startswith('https://github.com/Nebu2k'):
                     # Use chart name as display name, repo URL as link
-                    doc_name = chart.replace('-', ' ').title()
+                    doc_name = smart_title_case(chart)
                     docs[doc_name] = repo_url
                     helm_chart_found = True
 
             # For apps without Helm charts, use official documentation if available
             if not helm_chart_found and app_name in OFFICIAL_DOCS:
-                doc_name = app_name.replace('-', ' ').title()
+                doc_name = smart_title_case(app_name)
                 docs[doc_name] = OFFICIAL_DOCS[app_name]
 
         except Exception as e:
