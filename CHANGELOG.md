@@ -1,3 +1,10 @@
+## [3.8.1](https://github.com/Nebu2k/kubernetes-homelab/compare/v3.8.0...v3.8.1) (2026-01-23)
+
+
+### 🐛 Bug Fixes
+
+* update endpoint and id in newt-auth sealed secret configuration ([5acd097](https://github.com/Nebu2k/kubernetes-homelab/commit/5acd097d096e3e0e4390589f6fcfbab7b27e26d5))
+
 ## [3.8.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v3.7.7...v3.8.0) (2026-01-23)
 
 
