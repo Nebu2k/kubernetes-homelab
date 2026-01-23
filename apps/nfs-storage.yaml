@@ -9,10 +9,19 @@ metadata:
     - resources-finalizer.argocd.argoproj.io
 spec:
   project: default
-  source:
-    repoURL: https://github.com/Nebu2k/kubernetes-homelab.git
-    targetRevision: main
-    path: manifests/nfs-subdir-external-provisioner
+  sources:
+    # Helm chart source
+    - repoURL: https://kubernetes-sigs.github.io/nfs-subdir-external-provisioner
+      chart: nfs-subdir-external-provisioner
+      targetRevision: 4.0.18
+      helm:
+        releaseName: nfs-provisioner
+        valueFiles:
+          - $values/manifests/nfs-subdir-external-provisioner/values.yaml
+    # Git source for values.yaml
+    - repoURL: https://github.com/Nebu2k/kubernetes-homelab.git
+      targetRevision: main
+      ref: values
   destination:
     server: https://kubernetes.default.svc
     namespace: nfs-storage

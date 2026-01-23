@@ -204,8 +204,6 @@ homelab/
     │   ├── newt-auth-unsealed.yaml.example
     │   └── values.yaml
     ├── nfs-subdir-external-provisioner/
-    │   ├── kustomization.yaml
-    │   ├── namespace.yaml
     │   └── values.yaml
     ├── paperless-ngx/
     │   ├── backup-cronjob.yaml
@@ -1215,6 +1213,7 @@ kubectl get secret -n monitoring grafana-admin-credentials \
 | Teslamate | 2.2.0 | Teslamate |
 | Minio | RELEASE.2025-09-07T16-13-09Z | Minio |
 | Home Assistant | 2026.1.2 | Home Assistant |
+| Nfs Subdir External Provisioner | 4.0.18 | Nfs Storage |
 | Homepage | v1.8.0 | Homepage |
 | Beszel | 0.18.2 | Beszel |
 | K3s | v1.33.5 | Lightweight Kubernetes |
@@ -1235,6 +1234,7 @@ kubectl get secret -n monitoring grafana-admin-credentials \
 - [Minio](https://min.io/docs/minio/kubernetes/upstream/)
 - [n8n](https://docs.n8n.io/)
 - [Newt](https://charts.fossorial.io)
+- [NFS Subdir External Provisioner](https://kubernetes-sigs.github.io/nfs-subdir-external-provisioner)
 - [Portainer](https://portainer.github.io/k8s)
 - [Proxmox Exporter](https://github.com/prometheus-pve/prometheus-pve-exporter)
 - [Reloader](https://stakater.github.io/stakater-charts)
