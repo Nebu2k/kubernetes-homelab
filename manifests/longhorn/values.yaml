@@ -7,12 +7,12 @@ persistence:
     selector: "storage"
   recurringJobSelector:
     enable: true
-    jobList: '[{"name":"backup-daily","isGroup":false},{"name":"backup-weekly","isGroup":false},{"name":"snapshot-cleanup-daily","isGroup":false}]'
+    jobList: '[{"name":"backup-nfs-daily","isGroup":false},{"name":"backup-nfs-weekly","isGroup":false},{"name":"snapshot-cleanup-daily","isGroup":false}]'
 
-# Default backup store configuration  
+# Default backup store configuration (now NFS, S3 as secondary target)
 defaultBackupStore:
-  backupTarget: "s3://homelab-longhorn-elmstreet79@eu-central-1/"
-  backupTargetCredentialSecret: "longhorn-s3-secret"
+  backupTarget: "nfs://192.168.2.6:/var/nfs/shared/longhorn_backup"
+  backupTargetCredentialSecret: ""
 
 # Default settings
 defaultSettings:

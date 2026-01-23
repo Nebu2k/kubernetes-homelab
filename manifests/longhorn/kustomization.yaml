@@ -5,6 +5,7 @@ resources:
   - s3-secret-sealed.yaml
   - disable-local-path-default.yaml
   - recurring-backup-jobs.yaml
+  - backup-target-s3.yaml
   - ingress.yaml
   - servicemonitor.yaml
   - node-config.yaml

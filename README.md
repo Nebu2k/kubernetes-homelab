@@ -165,6 +165,7 @@ homelab/
     │   ├── namespace.yaml
     │   └── service.yaml
     ├── longhorn/
+    │   ├── backup-target-s3.yaml
     │   ├── disable-local-path-default.yaml
     │   ├── ingress.yaml
     │   ├── kustomization.yaml
