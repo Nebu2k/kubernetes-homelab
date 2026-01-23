@@ -362,8 +362,6 @@ def main():
     print("  🔐 Extracting Homepage widget secrets...")
     homepage_secrets = get_homepage_widget_secrets()
     print(f"      Found {len(homepage_secrets)} secrets to automate")
-    for sec in homepage_secrets:
-        print(f"        - {sec['base_name']}")
     
     print("  📚 Extracting documentation links...")
     documentation_links = get_documentation_links()
