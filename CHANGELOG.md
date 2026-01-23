@@ -1,3 +1,22 @@
+## [3.6.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v3.5.1...v3.6.0) (2026-01-23)
+
+
+### ✨ Features
+
+* add NFS storage configuration and related resources ([798922d](https://github.com/Nebu2k/kubernetes-homelab/commit/798922d473d89a64ee059346cf45531436fe6d20))
+
+
+### 🐛 Bug Fixes
+
+* add StorageClass configuration to disable local path as default ([6cf6e3e](https://github.com/Nebu2k/kubernetes-homelab/commit/6cf6e3e7c4e34d424c721dc56cd4c7f8451df69d))
+* update NFS path in values.yaml for correct data storage location ([ba7d597](https://github.com/Nebu2k/kubernetes-homelab/commit/ba7d5972d4617cc021f2f9b9c148898075f0340f))
+* update repoURL in nfs-storage.yaml and add smart_title_case function for title formatting ([7998b4a](https://github.com/Nebu2k/kubernetes-homelab/commit/7998b4a733f50ea7e4dca59e0ef588c29ab75e94))
+
+
+### ♻️ Code Refactoring
+
+* consolidate special cases and acronyms for title casing in smart_title_case function ([676b0e4](https://github.com/Nebu2k/kubernetes-homelab/commit/676b0e403a4a8a3b0fae08e9b8344b1493a1ffb7))
+
 ## [3.5.1](https://github.com/Nebu2k/kubernetes-homelab/compare/v3.5.0...v3.5.1) (2026-01-23)
 
 
