@@ -7,5 +7,5 @@ metadata:
 spec:
   backupTargetURL: s3://homelab-longhorn-elmstreet79@eu-central-1/
   credentialSecret: longhorn-s3-secret
-  pollInterval: 300
+  pollInterval: "300"
   syncRequestedAt: ""
