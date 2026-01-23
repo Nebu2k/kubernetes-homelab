@@ -26,5 +26,6 @@ resources:
   - beszel.yaml
   - fr24.yaml
   - paperless-ngx.yaml
+  - newt.yaml
 ---
 
