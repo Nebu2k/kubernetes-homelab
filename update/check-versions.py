@@ -72,9 +72,13 @@ def get_latest_helm_version(chart_name: str, repo_url: Optional[str] = None) -> 
 
 def get_latest_docker_tag(image: str) -> Optional[str]:
     """Get latest Docker image tag from Docker Hub, GHCR, or Quay."""
-    if image.startswith("ghcr.io/"):
+    # Extract registry by splitting on first '/' to ensure it's at the start
+    registry = image.split('/')[0] if '/' in image else None
+    
+    # Validate registry is one of the expected values
+    if registry == "ghcr.io":
         return _get_ghcr_tag(image)
-    elif image.startswith("quay.io/"):
+    elif registry == "quay.io":
         return _get_quay_tag(image)
     else:
         return _get_dockerhub_tag(image)
