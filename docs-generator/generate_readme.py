@@ -17,6 +17,13 @@ MANIFESTS_DIR = REPO_ROOT / "manifests"
 TEMPLATE_DIR = Path(__file__).parent / "templates"
 OUTPUT_FILE = REPO_ROOT / "README.md"
 
+# Special cases for title casing
+SPECIAL_CASES = {'n8n': 'n8n'}
+
+# Common acronyms that should stay uppercase
+ACRONYMS = {'nfs', 's3', 'api', 'dns', 'tls', 'ssl', 'http', 'https',
+            'k3s', 'k8s', 'cpu', 'ram', 'gpu', 'io', 'ip', 'vpn', 'ssh'}
+
 
 def get_sync_waves():
     """Extract sync-wave annotations from ArgoCD Applications."""
@@ -158,21 +165,14 @@ def get_component_versions():
 
 def smart_title_case(text):
     """Convert text to title case while preserving known acronyms in uppercase."""
-    # Special cases with specific casing
-    special_cases = {'n8n': 'n8n'}
-    
-    # Common acronyms that should stay uppercase
-    acronyms = {'nfs', 's3', 'api', 'dns', 'tls', 'ssl', 'http', 'https', 
-                'k3s', 'k8s', 'cpu', 'ram', 'gpu', 'io', 'ip', 'vpn', 'ssh'}
-    
     words = text.replace('-', ' ').split()
     result = []
     
     for word in words:
         word_lower = word.lower()
-        if word_lower in special_cases:
-            result.append(special_cases[word_lower])
-        elif word_lower in acronyms:
+        if word_lower in SPECIAL_CASES:
+            result.append(SPECIAL_CASES[word_lower])
+        elif word_lower in ACRONYMS:
             result.append(word.upper())
         else:
             result.append(word.capitalize())
@@ -238,8 +238,8 @@ def get_documentation_links():
     # Add always-present core components
     docs['K3s'] = 'https://docs.k3s.io/'
 
-    # Sort by name
-    return dict(sorted(docs.items()))
+    # Sort by name (case-insensitive)
+    return dict(sorted(docs.items(), key=lambda item: item[0].lower()))
 
 
 def load_gitignore_patterns():
