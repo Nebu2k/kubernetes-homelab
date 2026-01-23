@@ -1,3 +1,10 @@
+## [3.7.3](https://github.com/Nebu2k/kubernetes-homelab/compare/v3.7.2...v3.7.3) (2026-01-23)
+
+
+### 🐛 Bug Fixes
+
+* remove unused syncRequestedAt field from S3 backup target configuration ([a129781](https://github.com/Nebu2k/kubernetes-homelab/commit/a12978154d000cfefc246b3b0d297195e993fdc7))
+
 ## [3.7.2](https://github.com/Nebu2k/kubernetes-homelab/compare/v3.7.1...v3.7.2) (2026-01-23)
 
 
