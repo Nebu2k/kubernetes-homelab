@@ -1,0 +1,78 @@
+name: Build SMB Sync Image
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'manifests/paperless-ngx/Dockerfile.smb-sync'
+      - '.github/workflows/build-smb-sync-image.yml'
+  workflow_dispatch:  # Manual trigger option
+
+env:
+  IMAGE_NAME: nebu2k/paperless-smb-sync
+  PLATFORMS: linux/amd64,linux/arm64
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+        with:
+          platforms: arm64,amd64
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to DockerHub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Extract version from Dockerfile
+        id: version
+        run: |
+          ALPINE_VERSION=$(grep -oP 'FROM alpine:\K[0-9.]+' manifests/paperless-ngx/Dockerfile.smb-sync)
+          BUILD_DATE=$(date +%Y%m%d)
+          VERSION="1.0"
+          
+          echo "alpine_version=${ALPINE_VERSION}" >> $GITHUB_OUTPUT
+          echo "build_date=${BUILD_DATE}" >> $GITHUB_OUTPUT
+          echo "version=${VERSION}" >> $GITHUB_OUTPUT
+          echo "full_tag=${VERSION}-alpine${ALPINE_VERSION}" >> $GITHUB_OUTPUT
+
+      - name: Build and push
+        uses: docker/build-push-action@v5
+        with:
+          context: manifests/paperless-ngx
+          file: manifests/paperless-ngx/Dockerfile.smb-sync
+          platforms: ${{ env.PLATFORMS }}
+          push: true
+          tags: |
+            ${{ env.IMAGE_NAME }}:latest
+            ${{ env.IMAGE_NAME }}:${{ steps.version.outputs.full_tag }}
+            ${{ env.IMAGE_NAME }}:${{ steps.version.outputs.version }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          labels: |
+            org.opencontainers.image.title=Paperless-NGX SMB Sync
+            org.opencontainers.image.description=Alpine-based image with samba-client and rsync for Paperless-NGX SMB sync sidecar
+            org.opencontainers.image.version=${{ steps.version.outputs.full_tag }}
+            org.opencontainers.image.created=${{ steps.version.outputs.build_date }}
+            org.opencontainers.image.source=${{ github.repositoryUrl }}
+
+      - name: Image digest
+        run: |
+          echo "🎉 Successfully built and pushed multi-arch image:"
+          echo "   - ${{ env.IMAGE_NAME }}:latest"
+          echo "   - ${{ env.IMAGE_NAME }}:${{ steps.version.outputs.full_tag }}"
+          echo "   - ${{ env.IMAGE_NAME }}:${{ steps.version.outputs.version }}"
+          echo ""
+          echo "Platforms: ${{ env.PLATFORMS }}"
+          echo "Alpine version: ${{ steps.version.outputs.alpine_version }}"

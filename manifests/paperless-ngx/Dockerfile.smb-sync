@@ -1,0 +1,9 @@
+FROM alpine:3.23
+
+# Install SMB client and rsync tools
+RUN apk add --no-cache --no-progress \
+    samba-client \
+    rsync
+
+# Use sh as default entrypoint
+ENTRYPOINT ["/bin/sh"]
