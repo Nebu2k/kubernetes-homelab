@@ -1,3 +1,11 @@
+## [3.6.2](https://github.com/Nebu2k/kubernetes-homelab/compare/v3.6.1...v3.6.2) (2026-01-23)
+
+
+### 🐛 Bug Fixes
+
+* remove duplicate retrans option from NFS mount options ([15c03ed](https://github.com/Nebu2k/kubernetes-homelab/commit/15c03ed9e986d79424d45471b0a05a324ba1149a))
+* update NFS mount options to include nfsvers and remove duplicate retrans ([44a3d74](https://github.com/Nebu2k/kubernetes-homelab/commit/44a3d74c41e7debdaf5e248164d117eab67b8a97))
+
 ## [3.6.1](https://github.com/Nebu2k/kubernetes-homelab/compare/v3.6.0...v3.6.1) (2026-01-23)
 
 
