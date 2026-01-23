@@ -1,3 +1,10 @@
+## [3.5.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v3.4.0...v3.5.0) (2026-01-23)
+
+
+### ✨ Features
+
+* **paperless-ngx:** update smb-sync container image and sync interval; add liveness probe ([29343bd](https://github.com/Nebu2k/kubernetes-homelab/commit/29343bd92020de6d151737e537c51ffedea84996))
+
 ## [3.4.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v3.3.5...v3.4.0) (2026-01-23)
 
 
