@@ -1,3 +1,10 @@
+## [3.5.1](https://github.com/Nebu2k/kubernetes-homelab/compare/v3.5.0...v3.5.1) (2026-01-23)
+
+
+### 🐛 Bug Fixes
+
+* improve registry validation in get_latest_docker_tag function ([f693910](https://github.com/Nebu2k/kubernetes-homelab/commit/f693910d15ff04a10962759b3ea011220d073fa8))
+
 ## [3.5.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v3.4.0...v3.5.0) (2026-01-23)
 
 
