@@ -165,6 +165,7 @@ homelab/
     │   ├── namespace.yaml
     │   └── service.yaml
     ├── longhorn/
+    │   ├── disable-local-path-default.yaml
     │   ├── ingress.yaml
     │   ├── kustomization.yaml
     │   ├── node-config.yaml
