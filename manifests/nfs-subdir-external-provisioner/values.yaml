@@ -1,0 +1,45 @@
+# NFS Subdir External Provisioner
+# Connects to NAS NFS share for external storage
+
+nfs:
+  server: 192.168.2.6
+  path: /var/nfs/shared/longhorn_data
+  mountOptions:
+    - nfsvers=4.1
+    - hard
+    - timeo=600
+    - retrans=2
+
+storageClass:
+  name: nfs-storage
+  # Do not set as default - keep Longhorn as default
+  defaultClass: false
+  # Reclaim policy: Delete removes data when PVC is deleted
+  # Change to "Retain" if you want to keep data after PVC deletion
+  reclaimPolicy: Delete
+  # Archive PVs on delete (moves to "archived-<pvc-name>" folder)
+  archiveOnDelete: true
+  # Allow volume expansion
+  allowVolumeExpansion: true
+  # Immediate binding (create PV immediately when PVC is created)
+  volumeBindingMode: Immediate
+  accessModes: ReadWriteMany
+
+# Resource limits for the provisioner
+resources:
+  limits:
+    cpu: 100m
+    memory: 128Mi
+  requests:
+    cpu: 50m
+    memory: 64Mi
+
+# Deploy on worker nodes only
+nodeSelector:
+  node-role.kubernetes.io/worker: "worker"
+
+# Tolerations for node taints (if needed)
+tolerations: []
+
+# Number of replicas
+replicaCount: 1
