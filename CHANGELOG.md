@@ -1,3 +1,10 @@
+## [3.7.2](https://github.com/Nebu2k/kubernetes-homelab/compare/v3.7.1...v3.7.2) (2026-01-23)
+
+
+### 🐛 Bug Fixes
+
+* update pollInterval format to include seconds in S3 backup target configuration ([93d6ea8](https://github.com/Nebu2k/kubernetes-homelab/commit/93d6ea8a64270ca36a065b41261a8449c6b27bc6))
+
 ## [3.7.1](https://github.com/Nebu2k/kubernetes-homelab/compare/v3.7.0...v3.7.1) (2026-01-23)
 
 
