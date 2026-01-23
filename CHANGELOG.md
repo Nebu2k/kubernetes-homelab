@@ -1,3 +1,10 @@
+## [3.4.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v3.3.5...v3.4.0) (2026-01-23)
+
+
+### ✨ Features
+
+* **paperless-ngx:** update resource requests and limits for improved performance; add Dockerfile for SMB sync image ([1a0c844](https://github.com/Nebu2k/kubernetes-homelab/commit/1a0c84494727c7618071b59658c87077a524ec1a))
+
 ## [3.3.5](https://github.com/Nebu2k/kubernetes-homelab/compare/v3.3.4...v3.3.5) (2026-01-22)
 
 
