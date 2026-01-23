@@ -8,6 +8,7 @@ resources:
   - metallb.yaml
   - cert-manager.yaml
   - traefik.yaml
+  - nfs-storage.yaml
   - longhorn.yaml
   - kube-prometheus-stack.yaml
   - proxmox-exporter.yaml
