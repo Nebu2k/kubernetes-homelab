@@ -1,3 +1,10 @@
+## [3.7.6](https://github.com/Nebu2k/kubernetes-homelab/compare/v3.7.5...v3.7.6) (2026-01-23)
+
+
+### 🐛 Bug Fixes
+
+* simplify backup target URL in Longhorn configuration ([0c184d4](https://github.com/Nebu2k/kubernetes-homelab/commit/0c184d4723aca9153eb02d88c3fc05f1e4a9fc57))
+
 ## [3.7.5](https://github.com/Nebu2k/kubernetes-homelab/compare/v3.7.4...v3.7.5) (2026-01-23)
 
 
