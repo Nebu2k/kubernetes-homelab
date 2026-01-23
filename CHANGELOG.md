@@ -1,3 +1,10 @@
+## [3.8.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v3.7.7...v3.8.0) (2026-01-23)
+
+
+### ✨ Features
+
+* add newt resource and sealed secret configuration ([c1c6953](https://github.com/Nebu2k/kubernetes-homelab/commit/c1c69530c105af1b6db0ee67c4a7b27717bc7866))
+
 ## [3.7.7](https://github.com/Nebu2k/kubernetes-homelab/compare/v3.7.6...v3.7.7) (2026-01-23)
 
 
