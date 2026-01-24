@@ -244,7 +244,6 @@ homelab/
     │   ├── internal-cluster-issuer.yaml
     │   ├── kustomization.yaml
     │   ├── nextcloud-ingress.yaml
-    │   ├── pangolin-sync-job.yaml
     │   ├── plex-ingress.yaml
     │   ├── proxmox-ingress.yaml
     │   ├── servers-transport.yaml
