@@ -1,3 +1,10 @@
+## [3.8.3](https://github.com/Nebu2k/kubernetes-homelab/compare/v3.8.2...v3.8.3) (2026-01-26)
+
+
+### 🐛 Bug Fixes
+
+* add Cloudflare proxied annotation to nextcloud ingress ([8a2ee67](https://github.com/Nebu2k/kubernetes-homelab/commit/8a2ee6724b68364b6b8ff3acbe4967e24ff79f59))
+
 ## [3.8.2](https://github.com/Nebu2k/kubernetes-homelab/compare/v3.8.1...v3.8.2) (2026-01-24)
 
 
