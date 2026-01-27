@@ -247,7 +247,8 @@ homelab/
     │   ├── plex-ingress.yaml
     │   ├── proxmox-ingress.yaml
     │   ├── servers-transport.yaml
-    │   └── unifi-ingress.yaml
+    │   ├── unifi-ingress.yaml
+    │   └── vscode-ingress.yaml
     ├── proxmox-exporter/
     │   ├── deployment.yaml
     │   ├── kustomization.yaml

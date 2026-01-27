@@ -20,3 +20,4 @@ resources:
   - adguardhome-sync-credentials-sealed.yaml
   - adguardhome-sync-deployment.yaml
   - adguardhome-sync-web-ingress.yaml
+  - vscode-ingress.yaml

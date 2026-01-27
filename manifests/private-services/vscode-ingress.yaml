@@ -1,0 +1,51 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: vscode
+  namespace: private-services
+spec:
+  type: ClusterIP
+  ports:
+    - name: http
+      port: 8080
+      targetPort: 8080
+      protocol: TCP
+---
+apiVersion: v1
+kind: Endpoints
+metadata:
+  name: vscode
+  namespace: private-services
+subsets:
+  - addresses:
+      - ip: 192.168.2.4
+    ports:
+      - name: http
+        port: 8080
+        protocol: TCP
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: vscode
+  namespace: private-services
+  annotations:
+    cert-manager.io/cluster-issuer: internal-ca-issuer
+spec:
+  ingressClassName: traefik
+  tls:
+    - hosts:
+        - vscode.elmstreet79.de
+      secretName: vscode-tls
+  rules:
+    - host: vscode.elmstreet79.de
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: vscode
+                port:
+                  name: http
