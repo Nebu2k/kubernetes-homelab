@@ -1,3 +1,10 @@
+## [3.9.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v3.8.3...v3.9.0) (2026-01-27)
+
+
+### ✨ Features
+
+* add vscode ingress configuration and service ([e87dc6a](https://github.com/Nebu2k/kubernetes-homelab/commit/e87dc6a7d416e3c6dbb691720d84e2a67cd04144))
+
 ## [3.8.3](https://github.com/Nebu2k/kubernetes-homelab/compare/v3.8.2...v3.8.3) (2026-01-26)
 
 
