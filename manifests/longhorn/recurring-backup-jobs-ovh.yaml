@@ -1,0 +1,53 @@
+# Longhorn OVH S3 Recurring Backup Jobs
+# WICHTIG: Zeitlich versetzt zu MinIO Backups um Raspberry Pi Überlastung zu vermeiden
+#
+# OVH S3 Target: s3://elmstreet79-homelab@de/
+# Endpoint: https://s3.de.io.cloud.ovh.net
+# Secret: longhorn-ovh-secret
+#
+# Schedule:
+# - Täglich 05:00 UTC (3h nach MinIO daily backup)
+# - Wöchentlich Sonntag 06:00 UTC (3h nach MinIO weekly backup)
+#
+# HINWEIS: Diese Jobs nutzen Parameter um ein alternatives Backup-Target anzugeben
+---
+# === OVH S3 BACKUPS (Separate Target) ===
+# Tägliches OVH S3 Backup um 5:00 Uhr (behält 7 Tage)
+apiVersion: longhorn.io/v1beta2
+kind: RecurringJob
+metadata:
+  name: ovh-backup-daily
+  namespace: longhorn-system
+spec:
+  cron: "0 5 * * *"
+  task: "backup"
+  retain: 7
+  concurrency: 1
+  groups:
+    - ovh-backup
+  labels:
+    backup-target: ovh
+  # Parameters für OVH S3 Target
+  parameters:
+    backupTarget: "s3://elmstreet79-homelab@de/"
+    credential: "longhorn-ovh-secret:longhorn-system"
+---
+# Wöchentliches OVH S3 Backup (Sonntags um 6:00 Uhr, behält 4 Wochen)
+apiVersion: longhorn.io/v1beta2
+kind: RecurringJob
+metadata:
+  name: ovh-backup-weekly
+  namespace: longhorn-system
+spec:
+  cron: "0 6 * * 0"
+  task: "backup"
+  retain: 4
+  concurrency: 1
+  groups:
+    - ovh-backup
+  labels:
+    backup-target: ovh
+  # Parameters für OVH S3 Target
+  parameters:
+    backupTarget: "s3://elmstreet79-homelab@de/"
+    credential: "longhorn-ovh-secret:longhorn-system"
