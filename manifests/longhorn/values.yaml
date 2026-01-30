@@ -7,7 +7,7 @@ persistence:
     selector: "storage"
   recurringJobSelector:
     enable: true
-    jobList: '[{"name":"backup","isGroup":true},{"name":"snapshot","isGroup":true}]'
+    jobList: '[{"name":"backup","isGroup":true},{"name":"snapshot","isGroup":true},{"name":"maintenance","isGroup":true}]'
 
 # Default backup store configuration (MinIO on Proxmox VM)
 defaultBackupStore:
