@@ -1,3 +1,10 @@
+## [3.20.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v3.19.3...v3.20.0) (2026-01-30)
+
+
+### ✨ Features
+
+* add system backup jobs and filesystem trim to recurring jobs configuration ([f9958e2](https://github.com/Nebu2k/kubernetes-homelab/commit/f9958e27d42aa03d0a7c767f84c7ef13abc6dbce))
+
 ## [3.19.3](https://github.com/Nebu2k/kubernetes-homelab/compare/v3.19.2...v3.19.3) (2026-01-30)
 
 
