@@ -1,3 +1,10 @@
+## [3.14.1](https://github.com/Nebu2k/kubernetes-homelab/compare/v3.14.0...v3.14.1) (2026-01-30)
+
+
+### 🐛 Bug Fixes
+
+* update MinIO service and endpoints to use the correct namespace ([be26937](https://github.com/Nebu2k/kubernetes-homelab/commit/be269370b19cc6fcd0cea795fdd600b8aa843be7))
+
 ## [3.14.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v3.13.0...v3.14.0) (2026-01-30)
 
 
