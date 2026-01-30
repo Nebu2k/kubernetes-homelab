@@ -1,3 +1,10 @@
+## [3.12.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v3.11.0...v3.12.0) (2026-01-30)
+
+
+### ✨ Features
+
+* enhance prometheus lifecycle management and add duplicate entry cleanup for AdGuard DNS sync ([33a1a5c](https://github.com/Nebu2k/kubernetes-homelab/commit/33a1a5c85dcd5724c2822685eefc18e655a4c5a2))
+
 ## [3.11.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v3.10.1...v3.11.0) (2026-01-30)
 
 
