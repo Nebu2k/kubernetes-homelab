@@ -21,3 +21,4 @@ resources:
   - adguardhome-sync-deployment.yaml
   - adguardhome-sync-web-ingress.yaml
   - vscode-ingress.yaml
+  - minio-ingress.yaml
