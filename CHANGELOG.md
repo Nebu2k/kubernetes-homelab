@@ -1,3 +1,10 @@
+## [3.9.1](https://github.com/Nebu2k/kubernetes-homelab/compare/v3.9.0...v3.9.1) (2026-01-30)
+
+
+### 🐛 Bug Fixes
+
+* increase storage and retention size for Prometheus ([4d51bb0](https://github.com/Nebu2k/kubernetes-homelab/commit/4d51bb0547a560ad00c56274810e0cef45a06058))
+
 ## [3.9.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v3.8.3...v3.9.0) (2026-01-27)
 
 
