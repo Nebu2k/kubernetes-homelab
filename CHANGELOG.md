@@ -1,3 +1,10 @@
+## [3.19.1](https://github.com/Nebu2k/kubernetes-homelab/compare/v3.19.0...v3.19.1) (2026-01-30)
+
+
+### ♻️ Code Refactoring
+
+* remove dummy default job to streamline backup job configuration ([b93399c](https://github.com/Nebu2k/kubernetes-homelab/commit/b93399c9d52db49e4a0cc928591e8b7677cebcef))
+
 ## [3.19.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v3.18.0...v3.19.0) (2026-01-30)
 
 
