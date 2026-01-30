@@ -1,3 +1,10 @@
+## [3.11.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v3.10.1...v3.11.0) (2026-01-30)
+
+
+### ✨ Features
+
+* add MinIO ingress and service configurations for external access ([15357d3](https://github.com/Nebu2k/kubernetes-homelab/commit/15357d33d41f175272083be03b9b60cbbac3c9c1))
+
 ## [3.10.1](https://github.com/Nebu2k/kubernetes-homelab/compare/v3.10.0...v3.10.1) (2026-01-30)
 
 
