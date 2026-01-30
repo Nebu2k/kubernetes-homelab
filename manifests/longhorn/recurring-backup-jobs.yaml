@@ -51,3 +51,21 @@ spec:
   groups:
     - backup
   labels: {}
+---
+# === DUMMY DEFAULT JOB ===
+# Longhorn weist Volumes ohne explizite Jobs automatisch der "default" Gruppe zu.
+# Dieser Job läuft niemals (31. Februar existiert nicht), verhindert aber dass
+# Volumes mit default Gruppe tatsächliche Backups bekommen.
+apiVersion: longhorn.io/v1beta2
+kind: RecurringJob
+metadata:
+  name: default
+  namespace: longhorn-system
+spec:
+  cron: "0 0 31 2 *"  # 31. Februar = niemals
+  task: "snapshot"
+  retain: 0
+  concurrency: 1
+  groups:
+    - default
+  labels: {}
