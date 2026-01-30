@@ -3,8 +3,6 @@ kind: PersistentVolumeClaim
 metadata:
   name: home-assistant-config
   namespace: home-assistant
-  annotations:
-    recurring-job.longhorn.io/groups: '[]'
 spec:
   accessModes:
     - ReadWriteOnce
