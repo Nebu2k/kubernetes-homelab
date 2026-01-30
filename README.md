@@ -27,7 +27,7 @@ Production-ready K3s cluster managed via GitOps using ArgoCD App-of-Apps pattern
 | 5 | Landing Page, Portainer, Teslamate, Nfs Storage |
 | 6 | Kube Prometheus Stack |
 | 7 | Unifi Poller, Home Assistant |
-| 8 | Uptime Kuma, Newt, Minio |
+| 8 | Uptime Kuma, Newt |
 | 9 | N8n, Paperless Ngx, Homepage |
 | 10 | Beszel |
 | 11 | Proxmox Exporter |
@@ -58,7 +58,6 @@ homelab/
 │   ├── kube-prometheus-stack.yaml     # Wave 6
 │   ├── home-assistant.yaml            # Wave 7
 │   ├── unifi-poller.yaml              # Wave 7
-│   ├── minio.yaml                     # Wave 8
 │   ├── newt.yaml                      # Wave 8
 │   ├── uptime-kuma.yaml               # Wave 8
 │   ├── homepage.yaml                  # Wave 9
@@ -171,22 +170,12 @@ homelab/
     │   ├── minio-secret-sealed.yaml
     │   ├── node-config.yaml
     │   ├── recurring-backup-jobs.yaml
-    │   ├── s3-secret-sealed.yaml
-    │   ├── s3-secret-unsealed.yaml.example
     │   ├── servicemonitor.yaml
     │   └── values.yaml
     ├── metallb/
     │   ├── kustomization.yaml
     │   ├── metallb-ip-pool.yaml
     │   └── values.yaml
-    ├── minio/
-    │   ├── credentials-sealed.yaml
-    │   ├── deployment.yaml
-    │   ├── ingress.yaml
-    │   ├── kustomization.yaml
-    │   ├── namespace.yaml
-    │   ├── pvc.yaml
-    │   └── service.yaml
     ├── n8n/
     │   ├── deployment.yaml
     │   ├── ingress.yaml
@@ -1213,7 +1202,6 @@ kubectl get secret -n monitoring grafana-admin-credentials \
 | Fr24 | latest-build-825 | Fr24 |
 | Newt | 1.1.0 | Newt |
 | Teslamate | 2.2.0 | Teslamate |
-| Minio | RELEASE.2025-09-07T16-13-09Z | Minio |
 | Home Assistant | 2026.1.2 | Home Assistant |
 | Nfs Subdir External Provisioner | 4.0.18 | Nfs Storage |
 | Homepage | v1.8.0 | Homepage |
@@ -1233,7 +1221,6 @@ kubectl get secret -n monitoring grafana-admin-credentials \
 - [Landing Page](https://github.com/nginx/nginx)
 - [Longhorn](https://charts.longhorn.io)
 - [Metallb](https://metallb.github.io/metallb)
-- [Minio](https://min.io/docs/minio/kubernetes/upstream/)
 - [n8n](https://docs.n8n.io/)
 - [Newt](https://charts.fossorial.io)
 - [NFS Subdir External Provisioner](https://kubernetes-sigs.github.io/nfs-subdir-external-provisioner)

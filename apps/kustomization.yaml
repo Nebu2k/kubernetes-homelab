@@ -17,7 +17,6 @@ resources:
   - uptime-kuma.yaml
   - homepage.yaml
   - n8n.yaml
-  - minio.yaml
   - argocd-config.yaml
   - private-services.yaml
   - home-assistant.yaml
