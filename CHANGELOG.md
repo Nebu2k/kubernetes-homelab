@@ -1,3 +1,10 @@
+## [3.15.1](https://github.com/Nebu2k/kubernetes-homelab/compare/v3.15.0...v3.15.1) (2026-01-30)
+
+
+### 🐛 Bug Fixes
+
+* update MinIO ingress namespaces to private-services ([1b901ba](https://github.com/Nebu2k/kubernetes-homelab/commit/1b901baac122267121edd918cfe9fc6b42b54cef))
+
 ## [3.15.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v3.14.1...v3.15.0) (2026-01-30)
 
 
