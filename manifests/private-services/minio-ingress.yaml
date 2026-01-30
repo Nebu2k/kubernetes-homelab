@@ -42,13 +42,6 @@ metadata:
   namespace: default
   annotations:
     cert-manager.io/cluster-issuer: internal-ca-issuer
-    gethomepage.dev/enabled: "true"
-    gethomepage.dev/group: Infrastructure
-    gethomepage.dev/name: MinIO (Proxmox VM)
-    gethomepage.dev/description: S3 Object Storage for Longhorn Backups
-    gethomepage.dev/icon: minio.png
-    gethomepage.dev/href: https://minio.elmstreet79.de
-    gethomepage.dev/weight: "60"
 spec:
   ingressClassName: traefik
   tls:
