@@ -6,7 +6,6 @@ resources:
   - ovh-secret-sealed.yaml
   - disable-local-path-default.yaml
   - recurring-backup-jobs.yaml
-  - recurring-backup-jobs-ovh.yaml
   - ingress.yaml
   - servicemonitor.yaml
   - node-config.yaml

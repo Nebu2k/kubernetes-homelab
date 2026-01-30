@@ -172,7 +172,6 @@ homelab/
     │   ├── node-config.yaml
     │   ├── ovh-secret-sealed.yaml
     │   ├── ovh-secret-unsealed.yaml.example
-    │   ├── recurring-backup-jobs-ovh.yaml
     │   ├── recurring-backup-jobs.yaml
     │   ├── servicemonitor.yaml
     │   └── values.yaml
