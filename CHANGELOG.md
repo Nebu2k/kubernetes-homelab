@@ -1,3 +1,10 @@
+## [3.18.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v3.17.3...v3.18.0) (2026-01-30)
+
+
+### ✨ Features
+
+* add dummy default job to prevent backups for volumes without explicit jobs ([f94739a](https://github.com/Nebu2k/kubernetes-homelab/commit/f94739abae83060c92618e51a85c77119374357c))
+
 ## [3.17.3](https://github.com/Nebu2k/kubernetes-homelab/compare/v3.17.2...v3.17.3) (2026-01-30)
 
 
