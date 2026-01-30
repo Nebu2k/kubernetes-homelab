@@ -1,3 +1,10 @@
+## [3.19.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v3.18.0...v3.19.0) (2026-01-30)
+
+
+### ✨ Features
+
+* add OVH S3 backup support with recurring jobs and secrets ([1fed886](https://github.com/Nebu2k/kubernetes-homelab/commit/1fed886d0d6703c038c13c57e52b05a886a9e50c))
+
 ## [3.18.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v3.17.3...v3.18.0) (2026-01-30)
 
 
