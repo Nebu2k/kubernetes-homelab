@@ -16,6 +16,8 @@ spec:
   task: "backup"
   retain: 7
   concurrency: 1
+  groups:
+    - backup
   labels: {}
 ---
 # Wöchentliches S3 Backup (Sonntags um 3:00 Uhr, behält 4 Wochen)
@@ -29,6 +31,8 @@ spec:
   task: "backup"
   retain: 4
   concurrency: 1
+  groups:
+    - backup
   labels: {}
 ---
 # === CLEANUP JOBS (für beide Targets) ===
@@ -44,4 +48,6 @@ spec:
   task: "snapshot-cleanup"
   retain: 0
   concurrency: 2  # Reduziert von 5 auf 2
+  groups:
+    - backup
   labels: {}
