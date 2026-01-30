@@ -1,7 +1,7 @@
 # Longhorn distributed storage values
 persistence:
   defaultClass: true
-  defaultClassReplicaCount: 2  # Reduziert von 3 auf 2 - HA bleibt, weniger Rebuild-Last
+  defaultClassReplicaCount: 3  # Konsistent mit defaultReplicaCount
   defaultNodeSelector:
     enable: true
     selector: "storage"
