@@ -1,3 +1,10 @@
+## [3.10.1](https://github.com/Nebu2k/kubernetes-homelab/compare/v3.10.0...v3.10.1) (2026-01-30)
+
+
+### ♻️ Code Refactoring
+
+* remove MinIO resources and configurations ([96b728c](https://github.com/Nebu2k/kubernetes-homelab/commit/96b728c8b7903098e66667b5b8b1b29da057999c))
+
 ## [3.10.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v3.9.2...v3.10.0) (2026-01-30)
 
 
