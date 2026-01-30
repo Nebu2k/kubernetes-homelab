@@ -1,3 +1,10 @@
+## [3.9.2](https://github.com/Nebu2k/kubernetes-homelab/compare/v3.9.1...v3.9.2) (2026-01-30)
+
+
+### 🐛 Bug Fixes
+
+* update defaultClassReplicaCount to match defaultReplicaCount ([353633e](https://github.com/Nebu2k/kubernetes-homelab/commit/353633ec34503d569f553da8faae58b68cc8f5cb))
+
 ## [3.9.1](https://github.com/Nebu2k/kubernetes-homelab/compare/v3.9.0...v3.9.1) (2026-01-30)
 
 
