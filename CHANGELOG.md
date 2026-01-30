@@ -1,3 +1,10 @@
+## [3.15.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v3.14.1...v3.15.0) (2026-01-30)
+
+
+### ✨ Features
+
+* add MinIO service entry to homepage config and remove annotations from MinIO ingress ([ffd6ca6](https://github.com/Nebu2k/kubernetes-homelab/commit/ffd6ca60cab5b7f4a14739d2837ec10745d7c375))
+
 ## [3.14.1](https://github.com/Nebu2k/kubernetes-homelab/compare/v3.14.0...v3.14.1) (2026-01-30)
 
 
