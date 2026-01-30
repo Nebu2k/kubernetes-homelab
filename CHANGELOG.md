@@ -1,3 +1,10 @@
+## [3.10.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v3.9.2...v3.10.0) (2026-01-30)
+
+
+### ✨ Features
+
+* add MinIO VM configuration and secrets for Longhorn backups ([aa0b286](https://github.com/Nebu2k/kubernetes-homelab/commit/aa0b286a778672064bc72addc75998bed54bbe1c))
+
 ## [3.9.2](https://github.com/Nebu2k/kubernetes-homelab/compare/v3.9.1...v3.9.2) (2026-01-30)
 
 
