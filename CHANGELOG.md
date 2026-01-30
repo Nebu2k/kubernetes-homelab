@@ -1,3 +1,10 @@
+## [3.19.2](https://github.com/Nebu2k/kubernetes-homelab/compare/v3.19.1...v3.19.2) (2026-01-30)
+
+
+### ♻️ Code Refactoring
+
+* remove OVH S3 recurring backup jobs from configuration ([3e7aab1](https://github.com/Nebu2k/kubernetes-homelab/commit/3e7aab1e70217619fcecc18ebeeee9e6216bc48f))
+
 ## [3.19.1](https://github.com/Nebu2k/kubernetes-homelab/compare/v3.19.0...v3.19.1) (2026-01-30)
 
 
