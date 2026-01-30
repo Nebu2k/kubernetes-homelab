@@ -41,6 +41,20 @@ prometheus:
     nodeSelector:
       node-role.kubernetes.io/worker: worker
     
+    # Lifecycle hooks to prevent Longhorn volume attachment issues
+    containers:
+      - name: prometheus
+        lifecycle:
+          preStop:
+            exec:
+              command:
+                - /bin/sh
+                - -c
+                - sleep 10 && sync && umount /prometheus || true
+    
+    # Graceful shutdown period
+    terminationGracePeriodSeconds: 120
+    
     # Storage configuration
     storageSpec:
       volumeClaimTemplate:

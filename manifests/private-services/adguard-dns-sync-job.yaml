@@ -215,11 +215,57 @@ data:
     CURRENT_REWRITES=$(curl -s -u "${ADGUARD_USER}:${ADGUARD_PASS}" \
       "http://${ADGUARD_HOST}/control/rewrite/list" | \
       jq -r ".[] | select(.domain | endswith(\"${DOMAIN_SUFFIX}\")) | .domain + \":\" + .answer" | \
-      sort -u)
+      sort)
 
     echo "Current AdGuard rewrites for ${DOMAIN_SUFFIX}:"
     CURRENT_COUNT=$(echo "${CURRENT_REWRITES}" | grep -c . || echo 0)
     echo "Found ${CURRENT_COUNT} existing rewrites"
+
+    # Step 0: Remove duplicates in AdGuard (keep first occurrence of each domain+IP)
+    echo "Checking for duplicate entries in AdGuard..."
+    DUPLICATES_REMOVED=0
+    TMP_SEEN=$(mktemp)
+    TMP_DUP_REMOVED=$(mktemp)
+
+    if [ -n "${CURRENT_REWRITES}" ]; then
+      printf '%s\n' "${CURRENT_REWRITES}" | while IFS=: read -r CURRENT_DOMAIN CURRENT_IP; do
+        if [ -z "${CURRENT_DOMAIN}" ]; then
+          continue
+        fi
+
+        ENTRY="${CURRENT_DOMAIN}:${CURRENT_IP}"
+        
+        # Check if we've seen this exact entry before
+        if grep -qxF "${ENTRY}" "${TMP_SEEN}" 2>/dev/null; then
+          echo "  ✗ Removing duplicate: ${CURRENT_DOMAIN} -> ${CURRENT_IP}"
+          if curl -s -X POST "http://${ADGUARD_HOST}/control/rewrite/delete" \
+            -u "${ADGUARD_USER}:${ADGUARD_PASS}" \
+            -H "Content-Type: application/json" \
+            -d "{\"domain\":\"${CURRENT_DOMAIN}\",\"answer\":\"${CURRENT_IP}\"}" > /dev/null 2>&1; then
+            echo "    ✓ Removed duplicate"
+            echo "1" >> "${TMP_DUP_REMOVED}"
+          fi
+        else
+          # Mark this entry as seen
+          echo "${ENTRY}" >> "${TMP_SEEN}"
+        fi
+      done
+
+      DUPLICATES_REMOVED=$(wc -l < "${TMP_DUP_REMOVED}" 2>/dev/null | tr -d ' ' || echo 0)
+      rm -f "${TMP_SEEN}" "${TMP_DUP_REMOVED}"
+    fi
+
+    if [ "${DUPLICATES_REMOVED}" = "0" ]; then
+      echo "  No duplicates found"
+    else
+      echo "  Removed duplicates: ${DUPLICATES_REMOVED}"
+      
+      # Refresh current rewrites after cleanup
+      CURRENT_REWRITES=$(curl -s -u "${ADGUARD_USER}:${ADGUARD_PASS}" \
+        "http://${ADGUARD_HOST}/control/rewrite/list" | \
+        jq -r ".[] | select(.domain | endswith(\"${DOMAIN_SUFFIX}\")) | .domain + \":\" + .answer" | \
+        sort -u)
+    fi
 
     # Step 1: Remove orphaned or changed rewrites
     echo "Checking for orphaned or changed rewrites..."
@@ -283,6 +329,7 @@ data:
     echo ""
     echo "════════════════════════════════════════"
     echo "📊 Sync Summary:"
+    echo "   Duplicate Cleanup: ${DUPLICATES_REMOVED}"
     echo "   IPv4 (A Records):"
     echo "     ✓ Skipped (unchanged): ${A_SKIPPED}"
     echo "     ➕ Added: ${A_ADDED}"
