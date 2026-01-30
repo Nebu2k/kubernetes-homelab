@@ -1,3 +1,10 @@
+## [3.21.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v3.20.0...v3.21.0) (2026-01-30)
+
+
+### ✨ Features
+
+* update recurring backup jobs to include system backups and maintenance tasks ([773fd9b](https://github.com/Nebu2k/kubernetes-homelab/commit/773fd9bf0dab8bab7ab78ecb0422ebdf1de1d689))
+
 ## [3.20.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v3.19.3...v3.20.0) (2026-01-30)
 
 
