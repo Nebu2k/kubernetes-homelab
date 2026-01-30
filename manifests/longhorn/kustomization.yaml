@@ -3,6 +3,7 @@ kind: Kustomization
 namespace: longhorn-system
 resources:
   - s3-secret-sealed.yaml
+  - minio-secret-sealed.yaml
   - disable-local-path-default.yaml
   - recurring-backup-jobs.yaml
   - ingress.yaml

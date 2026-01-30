@@ -9,10 +9,10 @@ persistence:
     enable: true
     jobList: '[{"name":"backup-nfs-daily","isGroup":false},{"name":"backup-nfs-weekly","isGroup":false},{"name":"snapshot-cleanup-daily","isGroup":false}]'
 
-# Default backup store configuration (now NFS, S3 as secondary target)
+# Default backup store configuration (MinIO on Proxmox VM)
 defaultBackupStore:
-    backupTarget: "s3://homelab-longhorn-elmstreet79@eu-central-1/"
-    backupTargetCredentialSecret: longhorn-s3-secret
+    backupTarget: "s3://homelab-longhorn@us-east-1/"
+    backupTargetCredentialSecret: longhorn-minio-secret
 # Default settings
 defaultSettings:
   defaultReplicaCount: "3"

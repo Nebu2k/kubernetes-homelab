@@ -168,6 +168,7 @@ homelab/
     │   ├── disable-local-path-default.yaml
     │   ├── ingress.yaml
     │   ├── kustomization.yaml
+    │   ├── minio-secret-sealed.yaml
     │   ├── node-config.yaml
     │   ├── recurring-backup-jobs.yaml
     │   ├── s3-secret-sealed.yaml
