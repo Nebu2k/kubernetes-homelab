@@ -44,6 +44,22 @@ spec:
     - snapshot
   labels: {}
 ---
+# Filesystem Trim (wöchentlich Sonntags 7:00 Uhr)
+# Gibt freien Speicher an SSD/NVMe zurück, verbessert Performance
+apiVersion: longhorn.io/v1beta2
+kind: RecurringJob
+metadata:
+  name: filesystem-trim-weekly
+  namespace: longhorn-system
+spec:
+  cron: "0 7 * * 0"
+  task: "filesystem-trim"
+  retain: 0
+  concurrency: 1
+  groups:
+    - snapshot  # In snapshot Gruppe, da es lokale Wartung ist
+  labels: {}
+---
 # === BACKUPS (S3 MinIO) ===
 # Tägliches Backup um 2:00 Uhr (behält 7 Tage)
 apiVersion: longhorn.io/v1beta2
@@ -103,4 +119,66 @@ spec:
   concurrency: 1
   groups:
     - backup
+  labels: {}
+---
+# === SYSTEM BACKUPS (S3 MinIO) ===
+# Für kritische System-Namespaces (argocd, cert-manager, etc.)
+# Tägliches System-Backup um 6:00 Uhr (behält 7 Tage)
+apiVersion: longhorn.io/v1beta2
+kind: RecurringJob
+metadata:
+  name: system-backup-daily
+  namespace: longhorn-system
+spec:
+  cron: "0 6 * * *"
+  task: "backup"
+  retain: 7
+  concurrency: 1
+  groups:
+    - system-backup
+  labels: {}
+---
+# Wöchentliches System-Backup (Sonntags um 6:30 Uhr, behält 4 Wochen)
+apiVersion: longhorn.io/v1beta2
+kind: RecurringJob
+metadata:
+  name: system-backup-weekly
+  namespace: longhorn-system
+spec:
+  cron: "30 6 * * 0"
+  task: "backup"
+  retain: 4
+  concurrency: 1
+  groups:
+    - system-backup
+  labels: {}
+---
+# Monatliches System-Backup (1. des Monats um 6:00 Uhr, behält 6 Monate)
+apiVersion: longhorn.io/v1beta2
+kind: RecurringJob
+metadata:
+  name: system-backup-monthly
+  namespace: longhorn-system
+spec:
+  cron: "0 6 1 * *"
+  task: "backup"
+  retain: 6
+  concurrency: 1
+  groups:
+    - system-backup
+  labels: {}
+---
+# Jährliches System-Backup (1. Januar um 6:00 Uhr, behält 1 Jahr)
+apiVersion: longhorn.io/v1beta2
+kind: RecurringJob
+metadata:
+  name: system-backup-yearly
+  namespace: longhorn-system
+spec:
+  cron: "0 6 1 1 *"
+  task: "backup"
+  retain: 1
+  concurrency: 1
+  groups:
+    - system-backup
   labels: {}
