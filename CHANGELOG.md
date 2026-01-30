@@ -1,3 +1,10 @@
+## [3.14.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v3.13.0...v3.14.0) (2026-01-30)
+
+
+### ✨ Features
+
+* enhance duplicate entry detection and removal in AdGuard DNS sync ([6d67503](https://github.com/Nebu2k/kubernetes-homelab/commit/6d67503f067f77e012e1e32850184a6e49caf1b3))
+
 ## [3.13.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v3.12.0...v3.13.0) (2026-01-30)
 
 
