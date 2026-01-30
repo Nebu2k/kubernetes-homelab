@@ -212,60 +212,60 @@ data:
     }
 
     # Get current rewrites from AdGuard that end with DOMAIN_SUFFIX
-    # Note: Use sort (without -u) to keep duplicates for detection
     CURRENT_REWRITES_RAW=$(curl -s -u "${ADGUARD_USER}:${ADGUARD_PASS}" \
       "http://${ADGUARD_HOST}/control/rewrite/list" | \
-      jq -r ".[] | select(.domain | endswith(\"${DOMAIN_SUFFIX}\")) | .domain + \":\" + .answer" | \
-      sort)
+      jq -r ".[] | select(.domain | endswith(\"${DOMAIN_SUFFIX}\")) | .domain + \":\" + .answer")
 
     echo "Current AdGuard rewrites for ${DOMAIN_SUFFIX}:"
     CURRENT_COUNT=$(echo "${CURRENT_REWRITES_RAW}" | grep -c . || echo 0)
     echo "Found ${CURRENT_COUNT} existing rewrites"
 
-    # Step 0: Remove duplicates in AdGuard (keep first occurrence of each domain+IP)
+    # Step 0: Remove duplicates in AdGuard
     echo "Checking for duplicate entries in AdGuard..."
     DUPLICATES_REMOVED=0
-    TMP_DUP_REMOVED=$(mktemp)
-
+    
     if [ -n "${CURRENT_REWRITES_RAW}" ]; then
-      # Find entries that appear more than once using uniq -d
-      DUPLICATES=$(printf '%s\n' "${CURRENT_REWRITES_RAW}" | uniq -d)
+      # Count occurrences of each entry using sort | uniq -c
+      # Format: "  count domain:ip"
+      COUNTS=$(printf '%s\n' "${CURRENT_REWRITES_RAW}" | sort | uniq -c | sed 's/^[[:space:]]*//')
       
-      if [ -n "${DUPLICATES}" ]; then
-        echo "  Found duplicates to remove:"
-        printf '%s\n' "${DUPLICATES}" | while IFS=: read -r DUP_DOMAIN DUP_IP; do
-          if [ -z "${DUP_DOMAIN}" ]; then
-            continue
-          fi
+      # Find entries that appear more than once
+      printf '%s\n' "${COUNTS}" | while read -r COUNT ENTRY; do
+        if [ -z "${ENTRY}" ] || [ -z "${COUNT}" ]; then
+          continue
+        fi
+        
+        # If count > 1, we have a duplicate
+        if [ "${COUNT}" -gt 1 ]; then
+          DOMAIN=$(echo "${ENTRY}" | cut -d: -f1)
+          IP=$(echo "${ENTRY}" | cut -d: -f2-)
           
-          # Count how many times this entry exists
-          COUNT=$(printf '%s\n' "${CURRENT_REWRITES_RAW}" | grep -cxF "${DUP_DOMAIN}:${DUP_IP}" || echo 0)
+          echo "  Found duplicate: ${DOMAIN} -> ${IP} (${COUNT}x)"
           
-          if [ "${COUNT}" -gt 1 ]; then
-            # Remove all but one (remove COUNT-1 times)
-            REMOVE_COUNT=$((COUNT - 1))
-            echo "    ${DUP_DOMAIN} -> ${DUP_IP} (found ${COUNT}x, removing ${REMOVE_COUNT}x)"
-            
-            for i in $(seq 1 ${REMOVE_COUNT}); do
-              if curl -s -X POST "http://${ADGUARD_HOST}/control/rewrite/delete" \
-                -u "${ADGUARD_USER}:${ADGUARD_PASS}" \
-                -H "Content-Type: application/json" \
-                -d "{\"domain\":\"${DUP_DOMAIN}\",\"answer\":\"${DUP_IP}\"}" > /dev/null 2>&1; then
-                echo "1" >> "${TMP_DUP_REMOVED}"
-              fi
-            done
-          fi
-        done
-      fi
-
-      DUPLICATES_REMOVED=$(wc -l < "${TMP_DUP_REMOVED}" 2>/dev/null | tr -d ' ' || echo 0)
-      rm -f "${TMP_DUP_REMOVED}"
+          # Remove COUNT-1 times (keep one)
+          REMOVE_COUNT=$((COUNT - 1))
+          
+          i=0
+          while [ $i -lt ${REMOVE_COUNT} ]; do
+            if curl -s -X POST "http://${ADGUARD_HOST}/control/rewrite/delete" \
+              -u "${ADGUARD_USER}:${ADGUARD_PASS}" \
+              -H "Content-Type: application/json" \
+              -d "{\"domain\":\"${DOMAIN}\",\"answer\":\"${IP}\"}" > /dev/null 2>&1; then
+              echo "    ✓ Removed duplicate $(($i + 1))/${REMOVE_COUNT}"
+              DUPLICATES_REMOVED=$((DUPLICATES_REMOVED + 1))
+            else
+              echo "    ✗ Failed to remove duplicate $(($i + 1))/${REMOVE_COUNT}"
+            fi
+            i=$((i + 1))
+          done
+        fi
+      done
     fi
 
     if [ "${DUPLICATES_REMOVED}" = "0" ]; then
       echo "  No duplicates found"
     else
-      echo "  Removed duplicates: ${DUPLICATES_REMOVED}"
+      echo "  Total duplicates removed: ${DUPLICATES_REMOVED}"
     fi
     
     # Get cleaned current rewrites (unique only)
