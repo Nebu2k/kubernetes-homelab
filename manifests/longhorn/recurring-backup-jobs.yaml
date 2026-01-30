@@ -1,11 +1,51 @@
-# Longhorn Recurring Backup Jobs
+# Longhorn Recurring Jobs - Backups & Snapshots
 # WICHTIG: concurrency auf 1 reduziert um etcd-Überlastung zu vermeiden
 # Schedule gespreizt um nicht mehrere Jobs gleichzeitig laufen zu lassen
 #
-# S3 Backup Jobs (Default) - Alle Volumes nutzen Standard S3 Backup Target
+# Retention Strategy (GFS - Grandfather-Father-Son):
+# - keep_last    = 3  (letzte 3 Backups)
+# - keep_daily   = 7  (7 tägliche)
+# - keep_weekly  = 4  (4 wöchentliche)
+# - keep_monthly = 6  (6 monatliche)
+# - keep_yearly  = 1  (1 jährliches)
+#
+# Snapshots: Lokal im Cluster (schnelles Recovery)
+# Backups: S3 MinIO (Disaster Recovery)
 ---
-# === S3 BACKUPS (Default) ===
-# Tägliches S3 Backup um 2:00 Uhr (behält 7 Tage)
+# === SNAPSHOTS (Lokal) ===
+# Täglicher Snapshot um 1:00 Uhr (behält 7 Tage)
+apiVersion: longhorn.io/v1beta2
+kind: RecurringJob
+metadata:
+  name: snapshot-daily
+  namespace: longhorn-system
+spec:
+  cron: "0 1 * * *"
+  task: "snapshot"
+  retain: 7
+  concurrency: 1
+  groups:
+    - snapshot
+  labels: {}
+---
+# Snapshot Cleanup (täglich 8:00 Uhr)
+# WICHTIG: In snapshot Gruppe, nicht backup Gruppe!
+apiVersion: longhorn.io/v1beta2
+kind: RecurringJob
+metadata:
+  name: snapshot-cleanup-daily
+  namespace: longhorn-system
+spec:
+  cron: "0 8 * * *"
+  task: "snapshot-cleanup"
+  retain: 0
+  concurrency: 2
+  groups:
+    - snapshot
+  labels: {}
+---
+# === BACKUPS (S3 MinIO) ===
+# Tägliches Backup um 2:00 Uhr (behält 7 Tage)
 apiVersion: longhorn.io/v1beta2
 kind: RecurringJob
 metadata:
@@ -20,7 +60,7 @@ spec:
     - backup
   labels: {}
 ---
-# Wöchentliches S3 Backup (Sonntags um 3:00 Uhr, behält 4 Wochen)
+# Wöchentliches Backup (Sonntags um 3:00 Uhr, behält 4 Wochen)
 apiVersion: longhorn.io/v1beta2
 kind: RecurringJob
 metadata:
@@ -35,20 +75,32 @@ spec:
     - backup
   labels: {}
 ---
-# === CLEANUP JOBS (für beide Targets) ===
-# Tägliche Snapshot Cleanup (8:00 Uhr - VERSCHOBEN von 4:00 Uhr)
-# Läuft jetzt 6 Stunden NACH dem Backup, um etcd Zeit zum Erholen zu geben
+# Monatliches Backup (1. des Monats um 4:00 Uhr, behält 6 Monate)
 apiVersion: longhorn.io/v1beta2
 kind: RecurringJob
 metadata:
-  name: snapshot-cleanup-daily
+  name: backup-monthly
   namespace: longhorn-system
 spec:
-  cron: "0 8 * * *"  # Verschoben von 04:00 auf 08:00 UTC (09:00 CET)
-  task: "snapshot-cleanup"
-  retain: 0
-  concurrency: 2  # Reduziert von 5 auf 2
+  cron: "0 4 1 * *"
+  task: "backup"
+  retain: 6
+  concurrency: 1
   groups:
     - backup
   labels: {}
-
+---
+# Jährliches Backup (1. Januar um 5:00 Uhr, behält 1 Jahr)
+apiVersion: longhorn.io/v1beta2
+kind: RecurringJob
+metadata:
+  name: backup-yearly
+  namespace: longhorn-system
+spec:
+  cron: "0 5 1 1 *"
+  task: "backup"
+  retain: 1
+  concurrency: 1
+  groups:
+    - backup
+  labels: {}

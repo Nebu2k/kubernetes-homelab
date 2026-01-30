@@ -170,8 +170,6 @@ homelab/
     │   ├── minio-secret-sealed.yaml
     │   ├── minio-secret-unsealed.yaml.example
     │   ├── node-config.yaml
-    │   ├── ovh-secret-sealed.yaml
-    │   ├── ovh-secret-unsealed.yaml.example
     │   ├── recurring-backup-jobs.yaml
     │   ├── servicemonitor.yaml
     │   └── values.yaml
