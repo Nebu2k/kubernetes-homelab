@@ -60,7 +60,7 @@ prometheus:
       volumeClaimTemplate:
         metadata:
           annotations:
-            recurring-job.longhorn.io/source: disabled
+            recurring-job.longhorn.io/groups: '[]'
         spec:
           storageClassName: longhorn
           accessModes: ["ReadWriteOnce"]
