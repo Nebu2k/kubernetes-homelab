@@ -1,3 +1,10 @@
+## [3.21.1](https://github.com/Nebu2k/kubernetes-homelab/compare/v3.21.0...v3.21.1) (2026-01-30)
+
+
+### 🐛 Bug Fixes
+
+* add maintenance job to recurring job list in Longhorn configuration ([fe0e9f3](https://github.com/Nebu2k/kubernetes-homelab/commit/fe0e9f398bebbd3487ebd9ee613687be188c4403))
+
 ## [3.21.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v3.20.0...v3.21.0) (2026-01-30)
 
 
