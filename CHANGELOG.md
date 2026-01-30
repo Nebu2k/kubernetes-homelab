@@ -1,3 +1,10 @@
+## [3.17.2](https://github.com/Nebu2k/kubernetes-homelab/compare/v3.17.1...v3.17.2) (2026-01-30)
+
+
+### 🐛 Bug Fixes
+
+* remove unused Longhorn recurring job annotations from PVC configurations ([ef1471e](https://github.com/Nebu2k/kubernetes-homelab/commit/ef1471ef0d4d910fb9f6d8de67a82f27075c231d))
+
 ## [3.17.1](https://github.com/Nebu2k/kubernetes-homelab/compare/v3.17.0...v3.17.1) (2026-01-30)
 
 
