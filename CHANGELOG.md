@@ -1,3 +1,10 @@
+## [3.19.3](https://github.com/Nebu2k/kubernetes-homelab/compare/v3.19.2...v3.19.3) (2026-01-30)
+
+
+### ♻️ Code Refactoring
+
+* remove OVH S3 secret and update backup job configurations ([949c096](https://github.com/Nebu2k/kubernetes-homelab/commit/949c096592c7882262918cefc7790467abd00816))
+
 ## [3.19.2](https://github.com/Nebu2k/kubernetes-homelab/compare/v3.19.1...v3.19.2) (2026-01-30)
 
 
