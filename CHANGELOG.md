@@ -1,3 +1,10 @@
+## [3.16.1](https://github.com/Nebu2k/kubernetes-homelab/compare/v3.16.0...v3.16.1) (2026-01-30)
+
+
+### 🐛 Bug Fixes
+
+* update recurring job list for Longhorn backup configuration ([69780bc](https://github.com/Nebu2k/kubernetes-homelab/commit/69780bc9387ce72436d6c0ebb592b8cdc0b92eaa))
+
 ## [3.16.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v3.15.1...v3.16.0) (2026-01-30)
 
 
