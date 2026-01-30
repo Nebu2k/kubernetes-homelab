@@ -44,6 +44,7 @@ spec:
     - snapshot
   labels: {}
 ---
+# === MAINTENANCE TASKS ===
 # Filesystem Trim (wöchentlich Sonntags 7:00 Uhr)
 # Gibt freien Speicher an SSD/NVMe zurück, verbessert Performance
 apiVersion: longhorn.io/v1beta2
@@ -57,7 +58,7 @@ spec:
   retain: 0
   concurrency: 1
   groups:
-    - snapshot  # In snapshot Gruppe, da es lokale Wartung ist
+    - maintenance
   labels: {}
 ---
 # === BACKUPS (S3 MinIO) ===
@@ -121,8 +122,8 @@ spec:
     - backup
   labels: {}
 ---
-# === SYSTEM BACKUPS (S3 MinIO) ===
-# Für kritische System-Namespaces (argocd, cert-manager, etc.)
+# === SYSTEM BACKUPS (Longhorn System) ===
+# Sichert Longhorn-Systemkonfiguration selbst
 # Tägliches System-Backup um 6:00 Uhr (behält 7 Tage)
 apiVersion: longhorn.io/v1beta2
 kind: RecurringJob
@@ -131,11 +132,9 @@ metadata:
   namespace: longhorn-system
 spec:
   cron: "0 6 * * *"
-  task: "backup"
+  task: "system-backup"
   retain: 7
   concurrency: 1
-  groups:
-    - system-backup
   labels: {}
 ---
 # Wöchentliches System-Backup (Sonntags um 6:30 Uhr, behält 4 Wochen)
@@ -146,11 +145,9 @@ metadata:
   namespace: longhorn-system
 spec:
   cron: "30 6 * * 0"
-  task: "backup"
+  task: "system-backup"
   retain: 4
   concurrency: 1
-  groups:
-    - system-backup
   labels: {}
 ---
 # Monatliches System-Backup (1. des Monats um 6:00 Uhr, behält 6 Monate)
@@ -161,11 +158,9 @@ metadata:
   namespace: longhorn-system
 spec:
   cron: "0 6 1 * *"
-  task: "backup"
+  task: "system-backup"
   retain: 6
   concurrency: 1
-  groups:
-    - system-backup
   labels: {}
 ---
 # Jährliches System-Backup (1. Januar um 6:00 Uhr, behält 1 Jahr)
@@ -176,9 +171,7 @@ metadata:
   namespace: longhorn-system
 spec:
   cron: "0 6 1 1 *"
-  task: "backup"
+  task: "system-backup"
   retain: 1
   concurrency: 1
-  groups:
-    - system-backup
   labels: {}
