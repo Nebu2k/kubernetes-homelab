@@ -1,3 +1,10 @@
+## [3.21.2](https://github.com/Nebu2k/kubernetes-homelab/compare/v3.21.1...v3.21.2) (2026-01-31)
+
+
+### 🐛 Bug Fixes
+
+* update PodDisruptionBudget to use maxUnavailable instead of minAvailable ([8382b19](https://github.com/Nebu2k/kubernetes-homelab/commit/8382b1946fc633c9619488bd25ff7ea5fee7e8ed))
+
 ## [3.21.1](https://github.com/Nebu2k/kubernetes-homelab/compare/v3.21.0...v3.21.1) (2026-01-30)
 
 
