@@ -101,8 +101,5 @@ output "minio_connection_info" {
   MinIO S3 API:
     Endpoint: http://${module.minio_backup.vm_ip}:9000
     
-  Longhorn Backup Target:
-    s3://homelab-longhorn@us-east-1/
-    AWS_ENDPOINT: http://${module.minio_backup.vm_ip}:9000
   EOT
 }
