@@ -1,3 +1,10 @@
+## [3.22.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v3.21.2...v3.22.0) (2026-01-31)
+
+
+### ✨ Features
+
+* add MinIO provider and bucket configuration for Longhorn backups ([f26b26e](https://github.com/Nebu2k/kubernetes-homelab/commit/f26b26eb6d4c831af68f6831271dc440655bffc7))
+
 ## [3.21.2](https://github.com/Nebu2k/kubernetes-homelab/compare/v3.21.1...v3.21.2) (2026-01-31)
 
 
