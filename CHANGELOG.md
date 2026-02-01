@@ -1,3 +1,10 @@
+## [3.23.2](https://github.com/Nebu2k/kubernetes-homelab/compare/v3.23.1...v3.23.2) (2026-02-01)
+
+
+### ♻️ Code Refactoring
+
+* comment out Dreambox ingress configuration for clarity ([ea9bc53](https://github.com/Nebu2k/kubernetes-homelab/commit/ea9bc53d8579bae9bdeddedaf842dc2e3a188ce4))
+
 ## [3.23.1](https://github.com/Nebu2k/kubernetes-homelab/compare/v3.23.0...v3.23.1) (2026-02-01)
 
 
