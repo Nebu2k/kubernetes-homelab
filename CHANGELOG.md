@@ -1,3 +1,10 @@
+## [3.23.1](https://github.com/Nebu2k/kubernetes-homelab/compare/v3.23.0...v3.23.1) (2026-02-01)
+
+
+### 🐛 Bug Fixes
+
+* clarify snapshot cleanup job group in recurring backup jobs configuration ([eef56bb](https://github.com/Nebu2k/kubernetes-homelab/commit/eef56bbbee9a8bdad57b7c00594ca31830c52d4e))
+
 ## [3.23.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v3.22.0...v3.23.0) (2026-02-01)
 
 
