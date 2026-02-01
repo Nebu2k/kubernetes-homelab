@@ -1,3 +1,10 @@
+## [3.23.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v3.22.0...v3.23.0) (2026-02-01)
+
+
+### ✨ Features
+
+* update Proxmox Backup Server configuration and add PBS root password variable ([4ffcb1d](https://github.com/Nebu2k/kubernetes-homelab/commit/4ffcb1d7fe610185e18d5c6a9388eac029e1f3b0))
+
 ## [3.22.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v3.21.2...v3.22.0) (2026-01-31)
 
 
