@@ -65,6 +65,7 @@ package_upgrade: true
 package_reboot_if_required: false
 
 packages:
+  - qemu-guest-agent
 %{ for pkg in cloud_init_packages ~}
   - ${pkg}
 %{ endfor ~}

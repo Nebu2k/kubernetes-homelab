@@ -36,7 +36,6 @@ module "minio_backup" {
 
   # Cloud-init customization
   cloud_init_packages = [
-    "qemu-guest-agent",
     "docker.io",
     "docker-compose"
   ]

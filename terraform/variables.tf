@@ -66,3 +66,9 @@ variable "minio_root_password" {
   type        = string
   sensitive   = true
 }
+
+variable "pbs_root_password" {
+  description = "Proxmox Backup Server root@pam password (for web interface)"
+  type        = string
+  sensitive   = true
+}

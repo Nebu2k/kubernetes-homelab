@@ -120,9 +120,9 @@ variable "cloud_init_user" {
 }
 
 variable "cloud_init_packages" {
-  description = "Additional packages to install via cloud-init"
+  description = "Additional packages to install via cloud-init (qemu-guest-agent is always installed)"
   type        = list(string)
-  default     = ["qemu-guest-agent"]
+  default     = []
 }
 
 variable "cloud_init_runcmd" {
