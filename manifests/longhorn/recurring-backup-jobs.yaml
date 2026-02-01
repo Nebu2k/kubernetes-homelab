@@ -29,7 +29,6 @@ spec:
   labels: {}
 ---
 # Snapshot Cleanup (täglich 8:00 Uhr)
-# WICHTIG: In snapshot Gruppe, nicht backup Gruppe!
 apiVersion: longhorn.io/v1beta2
 kind: RecurringJob
 metadata:
