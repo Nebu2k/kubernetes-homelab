@@ -1,3 +1,10 @@
+## [3.34.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v3.33.0...v3.34.0) (2026-02-02)
+
+
+### ✨ Features
+
+* **cert-manager:** implement temporary file counters for sync summary in sync-pangolin.sh ([161145a](https://github.com/Nebu2k/kubernetes-homelab/commit/161145a582e2956a8a12fea28b680ee090f3a5b1))
+
 ## [3.33.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v3.32.0...v3.33.0) (2026-02-02)
 
 
