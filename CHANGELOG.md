@@ -1,3 +1,10 @@
+## [3.26.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v3.25.0...v3.26.0) (2026-02-02)
+
+
+### ✨ Features
+
+* **traefik:** replace service.yaml with dashboard-service.yaml and remove dashboard ingressRoute ([1abcaab](https://github.com/Nebu2k/kubernetes-homelab/commit/1abcaab36c391e4824fc5d9d72bd9ff981d9faf1))
+
 ## [3.25.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v3.24.8...v3.25.0) (2026-02-02)
 
 
