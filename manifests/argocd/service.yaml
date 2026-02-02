@@ -8,4 +8,3 @@ metadata:
     pangolin.io/expose: "true"
     pangolin.io/subdomain: "argocd"
     pangolin.io/auth: "true"
-    pangolin.io/port: "80"

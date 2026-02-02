@@ -7,7 +7,7 @@ metadata:
     pangolin.io/expose: "true"
     pangolin.io/subdomain: "home"
     pangolin.io/auth: "true"
-    pangolin.io/port: "3000"
+
   labels:
     app.kubernetes.io/name: homepage
 spec:

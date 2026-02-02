@@ -7,7 +7,6 @@ metadata:
     pangolin.io/expose: "true"
     pangolin.io/subdomain: "fr24"
     pangolin.io/auth: "true"
-    pangolin.io/port: "8754"
   labels:
     app: fr24feed
 spec:

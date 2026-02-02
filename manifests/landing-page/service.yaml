@@ -7,7 +7,6 @@ metadata:
     pangolin.io/expose: "true"
     pangolin.io/subdomain: "www"
     pangolin.io/auth: "false"
-    pangolin.io/port: "80"
 spec:
   selector:
     app: landing-page
@@ -28,7 +27,6 @@ metadata:
     pangolin.io/expose: "true"
     pangolin.io/subdomain: "@"
     pangolin.io/auth: "false"
-    pangolin.io/port: "80"
 spec:
   selector:
     app: landing-page

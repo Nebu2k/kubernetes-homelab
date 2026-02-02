@@ -34,7 +34,7 @@ ALL_SERVICES=$(curl -s --cacert /var/run/secrets/kubernetes.io/serviceaccount/ca
       namespace: .metadata.namespace,
       subdomain: (.metadata.annotations["pangolin.io/subdomain"] // .metadata.name),
       auth: ((.metadata.annotations["pangolin.io/auth"] // "true") == "true"),
-      port: (.metadata.annotations["pangolin.io/port"] // .spec.ports[0].port // .spec.ports[0].name),
+      port: (.spec.ports[0].port // .spec.ports[0].name),
       host: (let $sub = .metadata.annotations["pangolin.io/subdomain"] // .metadata.name; if $sub == "@" then $suffix else $sub + "." + $suffix end)
     }' | jq -s '.')
 
@@ -82,19 +82,25 @@ echo "${ALL_SERVICES}" | jq -c '.[]' | while IFS= read -r service; do
   
   SVC_TYPE=$(echo "${SVC_DATA}" | jq -r '.spec.type // "ClusterIP"')
   
-  # Resolve named ports to numbers (e.g., "http" → 80)
-  if ! echo "${SERVICE_PORT}" | grep -qE '^[0-9]+$'; then
-    echo "    → Resolving named port '${SERVICE_PORT}'..."
-    NUMERIC_PORT=$(echo "${SVC_DATA}" | jq -r ".spec.ports[] | select(.name == \"${SERVICE_PORT}\") | .port // empty")
-    
-    if [ -z "${NUMERIC_PORT}" ]; then
-      echo "    ⚠️  Could not resolve named port '${SERVICE_PORT}', skipping"
-      continue
-    fi
-    
-    SERVICE_PORT="${NUMERIC_PORT}"
-    echo "    → Resolved to port ${SERVICE_PORT}"
+  # Find the service port spec matching the annotation
+  # SERVICE_PORT can be a name or number
+  if echo "${SERVICE_PORT}" | grep -qE '^[0-9]+$'; then
+    # Numeric port - find by port number
+    PORT_SPEC=$(echo "${SVC_DATA}" | jq -r ".spec.ports[] | select(.port == ${SERVICE_PORT})")
+  else
+    # Named port - find by name
+    PORT_SPEC=$(echo "${SVC_DATA}" | jq -r ".spec.ports[] | select(.name == \"${SERVICE_PORT}\")")
   fi
+  
+  if [ -z "${PORT_SPEC}" ]; then
+    echo "    ⚠️  Could not find port spec for '${SERVICE_PORT}', skipping"
+    continue
+  fi
+  
+  # Get the targetPort from the port spec (can be name or number)
+  TARGET_PORT_VALUE=$(echo "${PORT_SPEC}" | jq -r '.targetPort // .port')
+  
+  echo "    → Service port: ${SERVICE_PORT}, target port: ${TARGET_PORT_VALUE}"
   
   if [ "${SVC_TYPE}" = "ClusterIP" ] || [ "${SVC_TYPE}" = "ExternalName" ]; then
     # For ClusterIP, check if it's an external service (has Endpoints)
@@ -103,22 +109,38 @@ echo "${ALL_SERVICES}" | jq -c '.[]' | while IFS= read -r service; do
     
     TARGET_IP=$(echo "${ENDPOINTS}" | jq -r '.subsets[0].addresses[0].ip // empty')
     
-    # Try matching by port number first, then fall back to port name
-    TARGET_PORT=$(echo "${ENDPOINTS}" | jq -r ".subsets[0].ports[] | select(.port == ${SERVICE_PORT} or .name == \"${SERVICE_PORT}\") | .port // empty" | head -n1)
+    # Match endpoint port using targetPort value (can be name or number)
+    if echo "${TARGET_PORT_VALUE}" | grep -qE '^[0-9]+$'; then
+      # Numeric targetPort - match by port number
+      TARGET_PORT=$(echo "${ENDPOINTS}" | jq -r ".subsets[0].ports[] | select(.port == ${TARGET_PORT_VALUE}) | .port // empty" | head -n1)
+    else
+      # Named targetPort - match by name
+      TARGET_PORT=$(echo "${ENDPOINTS}" | jq -r ".subsets[0].ports[] | select(.name == \"${TARGET_PORT_VALUE}\") | .port // empty" | head -n1)
+    fi
     
     if [ -z "${TARGET_PORT}" ]; then
-      # Fallback: use SERVICE_PORT directly
-      TARGET_PORT="${SERVICE_PORT}"
+      # Fallback: if targetPort is numeric, use it directly
+      if echo "${TARGET_PORT_VALUE}" | grep -qE '^[0-9]+$'; then
+        TARGET_PORT="${TARGET_PORT_VALUE}"
+      else
+        echo "    ⚠️  Could not resolve target port '${TARGET_PORT_VALUE}' in endpoints, skipping"
+        continue
+      fi
     fi
     
     if [ -z "${TARGET_IP}" ]; then
       # Fallback to service cluster IP (for internal services)
       TARGET_IP=$(echo "${SVC_DATA}" | jq -r '.spec.clusterIP // empty')
-      TARGET_PORT="${SERVICE_PORT}"
     fi
   elif [ "${SVC_TYPE}" = "LoadBalancer" ]; then
     TARGET_IP=$(echo "${SVC_DATA}" | jq -r '.status.loadBalancer.ingress[0].ip // empty')
-    TARGET_PORT="${SERVICE_PORT}"
+    # For LoadBalancer, use the targetPort from service spec
+    if echo "${TARGET_PORT_VALUE}" | grep -qE '^[0-9]+$'; then
+      TARGET_PORT="${TARGET_PORT_VALUE}"
+    else
+      # Named targetPort on LoadBalancer - should not happen, but fallback to service port
+      TARGET_PORT=$(echo "${PORT_SPEC}" | jq -r '.port')
+    fi
   else
     echo "    ⚠️  Unknown service type: ${SVC_TYPE}, skipping"
     continue

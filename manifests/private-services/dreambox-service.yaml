@@ -8,7 +8,6 @@ metadata:
     pangolin.io/expose: "true"
     pangolin.io/subdomain: "dreambox"
     pangolin.io/auth: "false"
-    pangolin.io/port: "443"
 spec:
   clusterIP: None
   ports:

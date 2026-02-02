@@ -7,7 +7,6 @@ metadata:
     pangolin.io/expose: "true"
     pangolin.io/subdomain: "n8n"
     pangolin.io/auth: "true"
-    pangolin.io/port: "80"
   labels:
     app.kubernetes.io/name: n8n
 spec:
