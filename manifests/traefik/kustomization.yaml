@@ -3,5 +3,4 @@ kind: Kustomization
 namespace: traefik
 resources:
   - certificate.yaml
-  - ingress.yaml
   - dashboard-service.yaml
