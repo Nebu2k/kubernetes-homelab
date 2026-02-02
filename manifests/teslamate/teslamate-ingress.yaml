@@ -15,10 +15,6 @@ metadata:
     gethomepage.dev/pod-selector: "app=teslamate"
 spec:
   ingressClassName: traefik
-  tls:
-    - hosts:
-        - teslamate-settings.elmstreet79.de
-      secretName: teslamate-tls
   rules:
     - host: teslamate-settings.elmstreet79.de
       http:

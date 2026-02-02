@@ -15,10 +15,6 @@ metadata:
     gethomepage.dev/weight: "22"
 spec:
   ingressClassName: traefik
-  tls:
-    - hosts:
-        - alertmanager.elmstreet79.de
-      secretName: alertmanager-tls
   rules:
     - host: alertmanager.elmstreet79.de
       http:

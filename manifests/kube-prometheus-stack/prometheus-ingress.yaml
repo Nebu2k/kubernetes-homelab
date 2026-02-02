@@ -15,10 +15,6 @@ metadata:
     gethomepage.dev/weight: "20"
 spec:
   ingressClassName: traefik
-  tls:
-    - hosts:
-        - prometheus.elmstreet79.de
-      secretName: prometheus-tls
   rules:
     - host: prometheus.elmstreet79.de
       http:

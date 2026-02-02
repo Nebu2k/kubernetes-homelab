@@ -15,10 +15,6 @@ metadata:
     gethomepage.dev/pod-selector: "app=teslamate-grafana"
 spec:
   ingressClassName: traefik
-  tls:
-    - hosts:
-        - teslamate.elmstreet79.de
-      secretName: teslamate-grafana-tls
   rules:
     - host: teslamate.elmstreet79.de
       http:
