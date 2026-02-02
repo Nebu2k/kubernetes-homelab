@@ -1,3 +1,10 @@
+## [3.24.6](https://github.com/Nebu2k/kubernetes-homelab/compare/v3.24.5...v3.24.6) (2026-02-02)
+
+
+### 🐛 Bug Fixes
+
+* **pangolin-sync:** update image tags to use latest and streamline versioning ([1d3922d](https://github.com/Nebu2k/kubernetes-homelab/commit/1d3922dd28e23752396270fb5a915da7449009a8))
+
 ## [3.24.5](https://github.com/Nebu2k/kubernetes-homelab/compare/v3.24.4...v3.24.5) (2026-02-02)
 
 
