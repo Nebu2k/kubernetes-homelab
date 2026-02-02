@@ -32,7 +32,7 @@ ALL_SERVICES=$(curl -s --cacert /var/run/secrets/kubernetes.io/serviceaccount/ca
     {
       name: .metadata.name,
       namespace: .metadata.namespace,
-      subdomain: (.metadata.annotations["pangolin.io/subdomain"] // .metadata.name),
+      subdomain: ((.metadata.annotations["pangolin.io/subdomain"] // .metadata.name) as $sub | if $sub == "@" then "" else $sub end),
       auth: ((.metadata.annotations["pangolin.io/auth"] // "true") == "true"),
       port: (.spec.ports[0].port // .spec.ports[0].name),
       host: ((.metadata.annotations["pangolin.io/subdomain"] // .metadata.name) as $sub | if $sub == "@" then $suffix else ($sub + "." + $suffix) end)
@@ -289,23 +289,28 @@ echo "🗑️  Checking for orphaned resources..."
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 REMOVED=0
 
-echo "${PANGOLIN_RESOURCES}" | jq -c --argjson k8s_services "${ALL_SERVICES}" '
-  ($k8s_services | map(.host)) as $k8s_hosts |
-  .[] | select(.fullDomain and ($k8s_hosts | index(.fullDomain) | not))
-' | while IFS= read -r resource; do
-  FULL_DOMAIN=$(echo "${resource}" | jq -r '.fullDomain')
+echo "${PANGOLIN_RESOURCES}" | jq -rc 'if type == "array" then .[] else empty end' | while IFS= read -r resource; do
+  FULL_DOMAIN=$(echo "${resource}" | jq -r '.fullDomain // empty')
   RESOURCE_ID=$(echo "${resource}" | jq -r '.resourceId')
-
-  echo "  ✗ Removing orphaned resource: ${FULL_DOMAIN}"
   
-  DELETE_RESPONSE=$(curl -s -X DELETE \
-    -H "Authorization: Bearer ${API_KEY}" \
-    "${API_BASE_URL}/resource/${RESOURCE_ID}")
-  if echo "${DELETE_RESPONSE}" | jq -e '.success' > /dev/null; then
-    echo "    ✓ Removed"
-    REMOVED=$((REMOVED + 1))
-  else
-    echo "    ❌ Failed to remove: $(echo "${DELETE_RESPONSE}" | jq -r '.message // "Unknown error"')"
+  # Skip if no domain
+  if [ -z "${FULL_DOMAIN}" ]; then
+    continue
+  fi
+  
+  # Check if this host exists in our service list
+  if ! echo "${ALL_SERVICES}" | jq -e ".[] | select(.host == \"${FULL_DOMAIN}\")" > /dev/null; then
+    echo "  ✗ Removing orphaned resource: ${FULL_DOMAIN}"
+    
+    DELETE_RESPONSE=$(curl -s -X DELETE \
+      -H "Authorization: Bearer ${API_KEY}" \
+      "${API_BASE_URL}/resource/${RESOURCE_ID}")
+    if echo "${DELETE_RESPONSE}" | jq -e '.success' > /dev/null; then
+      echo "    ✓ Removed"
+      REMOVED=$((REMOVED + 1))
+    else
+      echo "    ❌ Failed to remove: $(echo "${DELETE_RESPONSE}" | jq -r '.message // "Unknown error"')"
+    fi
   fi
 done
 
