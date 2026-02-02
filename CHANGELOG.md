@@ -1,3 +1,10 @@
+## [3.24.2](https://github.com/Nebu2k/kubernetes-homelab/compare/v3.24.1...v3.24.2) (2026-02-02)
+
+
+### 🐛 Bug Fixes
+
+* **pangolin-sync:** ensure imagePullPolicy is set to Always for containers ([e333f0d](https://github.com/Nebu2k/kubernetes-homelab/commit/e333f0d4e1170200a395d9ab468dc6ba60549f7e))
+
 ## [3.24.1](https://github.com/Nebu2k/kubernetes-homelab/compare/v3.24.0...v3.24.1) (2026-02-02)
 
 
