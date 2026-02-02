@@ -158,7 +158,9 @@ homelab/
     │   ├── kustomization.yaml
     │   ├── prometheus-ingress.yaml
     │   ├── prometheus-rules.yaml
-    │   ├── services.yaml
+    │   ├── service-alertmanager.yaml
+    │   ├── service-grafana.yaml
+    │   ├── service-prometheus.yaml
     │   └── values.yaml
     ├── kured/
     │   └── values.yaml

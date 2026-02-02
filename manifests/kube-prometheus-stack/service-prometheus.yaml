@@ -1,0 +1,10 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: kube-prometheus-stack-prometheus
+  namespace: monitoring
+  annotations:
+    pangolin.io/expose: "true"
+    pangolin.io/subdomain: "prometheus"
+    pangolin.io/auth: "true"

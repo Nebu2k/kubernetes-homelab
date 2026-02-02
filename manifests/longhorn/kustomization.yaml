@@ -8,5 +8,8 @@ resources:
   - ingress.yaml
   - servicemonitor.yaml
   - node-config.yaml
-patchesStrategicMerge:
-  - service.yaml
+patches:
+  - path: service.yaml
+    target:
+      kind: Service
+      name: longhorn-frontend

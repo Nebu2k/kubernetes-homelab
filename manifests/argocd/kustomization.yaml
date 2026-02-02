@@ -6,5 +6,8 @@ resources:
   - argocd-server-patch.yaml
   - argocd-cm-patch.yaml
   - argocd-rbac-cm-patch.yaml
-patchesStrategicMerge:
-  - service.yaml
+patches:
+  - path: service.yaml
+    target:
+      kind: Service
+      name: argocd-server

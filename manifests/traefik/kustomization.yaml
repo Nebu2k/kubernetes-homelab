@@ -4,5 +4,8 @@ namespace: traefik
 resources:
   - certificate.yaml
   - ingress.yaml
-patchesStrategicMerge:
-  - service.yaml
+patches:
+  - path: service.yaml
+    target:
+      kind: Service
+      name: traefik
