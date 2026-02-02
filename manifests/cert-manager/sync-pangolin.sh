@@ -26,7 +26,7 @@ TOKEN=$(cat /var/run/secrets/kubernetes.io/serviceaccount/token)
 # Fetch Services with Pangolin labels
 echo "📡 Fetching Services with pangolin.io/expose annotation..."
 ALL_SERVICES=$(curl -s --cacert /var/run/secrets/kubernetes.io/serviceaccount/ca.crt -H "Authorization: Bearer ${TOKEN}" \
-  "https://kubernetes.default.svc/api/v1/services?limit=500" | \
+  "https://kubernetes.default.svc/api/v1/services" | \
   jq -r --arg suffix "${DOMAIN_SUFFIX}" '.items[] | 
     select(.metadata.annotations["pangolin.io/expose"] == "true") | 
     {
