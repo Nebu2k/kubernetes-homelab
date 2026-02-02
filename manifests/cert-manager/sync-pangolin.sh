@@ -61,9 +61,13 @@ echo ""
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo "📤 Syncing resources to Pangolin..."
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-ADDED=0
-UPDATED=0
-SKIPPED=0
+
+# Use temp files to track counters (workaround for subshell issue with pipes)
+COUNTER_DIR="/tmp/pangolin-sync-$$"
+mkdir -p "${COUNTER_DIR}"
+echo "0" > "${COUNTER_DIR}/added"
+echo "0" > "${COUNTER_DIR}/updated"
+echo "0" > "${COUNTER_DIR}/skipped"
 
 echo "${ALL_SERVICES}" | jq -c '.[]' | while IFS= read -r service; do
   HOST=$(echo "${service}" | jq -r '.host')
@@ -194,7 +198,7 @@ echo "${ALL_SERVICES}" | jq -c '.[]' | while IFS= read -r service; do
     # If we have exactly 1 correct target and no other targets, we're done
     if [ "${EXISTING_TARGET_COUNT}" = "1" ] && [ "${CORRECT_TARGET_COUNT}" = "1" ]; then
       echo "    ✓ ${HOST} (already correct)"
-      SKIPPED=$((SKIPPED + 1))
+      echo "$(($(cat "${COUNTER_DIR}/skipped") + 1))" > "${COUNTER_DIR}/skipped"
     else
       # Need to reconcile - API doesn't support deleting individual targets
       # So we delete the entire resource and recreate it with correct target
@@ -298,10 +302,10 @@ echo "${ALL_SERVICES}" | jq -c '.[]' | while IFS= read -r service; do
       if echo "${TARGET_RESPONSE}" | jq -e '.success' > /dev/null; then
         if [ "${NEEDS_RECONCILE}" = "true" ]; then
           echo "    ✓ Reconciled ${HOST} → ${TARGET_IP}:${TARGET_PORT}"
-          UPDATED=$((UPDATED + 1))
+          echo "$(($(cat "${COUNTER_DIR}/updated") + 1))" > "${COUNTER_DIR}/updated"
         else
           echo "    ✓ Created ${HOST} → ${TARGET_IP}:${TARGET_PORT}"
-          ADDED=$((ADDED + 1))
+          echo "$(($(cat "${COUNTER_DIR}/added") + 1))" > "${COUNTER_DIR}/added"
         fi
         # Reload resources after create
         PANGOLIN_RESOURCES=$(curl -s -H "Authorization: Bearer ${API_KEY}" "${API_BASE_URL}/org/${ORG_ID}/resources" | jq -r ".data.resources // []")
@@ -317,7 +321,7 @@ echo ""
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo "🗑️  Checking for orphaned resources..."
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-REMOVED=0
+echo "0" > "${COUNTER_DIR}/removed"
 
 echo "${PANGOLIN_RESOURCES}" | jq -rc 'if type == "array" then .[] else empty end' | while IFS= read -r resource; do
   FULL_DOMAIN=$(echo "${resource}" | jq -r '.fullDomain // empty')
@@ -337,7 +341,7 @@ echo "${PANGOLIN_RESOURCES}" | jq -rc 'if type == "array" then .[] else empty en
       "${API_BASE_URL}/resource/${RESOURCE_ID}")
     if echo "${DELETE_RESPONSE}" | jq -e '.success' > /dev/null; then
       echo "    ✓ Removed"
-      REMOVED=$((REMOVED + 1))
+      echo "$(($(cat "${COUNTER_DIR}/removed") + 1))" > "${COUNTER_DIR}/removed"
     else
       echo "    ❌ Failed to remove: $(echo "${DELETE_RESPONSE}" | jq -r '.message // "Unknown error"')"
     fi
@@ -348,6 +352,10 @@ echo ""
 echo "═══════════════════════════════════════════════════════"
 echo "📊 Sync Summary"
 echo "═══════════════════════════════════════════════════════"
+SKIPPED=$(cat "${COUNTER_DIR}/skipped")
+ADDED=$(cat "${COUNTER_DIR}/added")
+UPDATED=$(cat "${COUNTER_DIR}/updated")
+REMOVED=$(cat "${COUNTER_DIR}/removed")
 echo "   ✓ Skipped (unchanged):  ${SKIPPED}"
 echo "   ➕ Added:                ${ADDED}"
 echo "   🔄 Updated:              ${UPDATED}"
@@ -355,3 +363,6 @@ echo "   ✗ Removed:              ${REMOVED}"
 echo "═══════════════════════════════════════════════════════"
 echo "✅ Pangolin sync complete!"
 echo ""
+
+# Cleanup temp directory
+rm -rf "${COUNTER_DIR}"
