@@ -518,13 +518,17 @@ All services are accessible via Pangolin's secure network infrastructure:
 - **Auto-Cleanup**: Removes orphaned resources when Ingresses/Services are deleted
 - **SSL/TLS**: Pangolin provides automatic SSL certificates for all exposed services
 
-**Examples:**
+**All Pangolin-Exposed Services:**
 
 ```text
-Homepage: https://home.elmstreet79.de (pangolin.io/auth: "true" → requires authentication)
-Uptime Kuma: https://uptime.elmstreet79.de (pangolin.io/auth: "false" → public access)
-ArgoCD: https://argocd.elmstreet79.de (via Pangolin with authentication)
-Longhorn: https://longhorn.elmstreet79.de (via Pangolin with authentication)
+# Services with Pangolin authentication required (pangolin.io/auth: "true"):
+{% for service in pangolin_services.with_auth -%}
+{{ service.name }}: {{ service.url }}
+{% endfor %}
+# Services publicly accessible without authentication (pangolin.io/auth: "false"):
+{% for service in pangolin_services.without_auth -%}
+{{ service.name }}: {{ service.url }}
+{% endfor %}
 ```
 
 ## 🔧 Management

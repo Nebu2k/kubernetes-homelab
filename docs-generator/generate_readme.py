@@ -369,6 +369,84 @@ def get_homepage_widget_secrets():
     return secrets
 
 
+def get_pangolin_services():
+    """
+    Extract all services with pangolin.io/expose annotation.
+    Returns dict with 'with_auth' and 'without_auth' lists.
+    """
+    services = {
+        'with_auth': [],
+        'without_auth': []
+    }
+    
+    # Scan all YAML files in manifests directory
+    for yaml_file in MANIFESTS_DIR.rglob("*.yaml"):
+        # Skip unsealed files and examples
+        if 'unsealed' in yaml_file.name or 'example' in yaml_file.name:
+            continue
+            
+        try:
+            with open(yaml_file, 'r') as f:
+                # Handle multi-document YAML files
+                for doc in yaml.safe_load_all(f):
+                    if not doc:
+                        continue
+                    
+                    # Check for pangolin.io/expose annotation
+                    annotations = doc.get('metadata', {}).get('annotations', {})
+                    
+                    if annotations.get('pangolin.io/expose') == "true":
+                        # Determine service name and URL
+                        name = None
+                        url = None
+                        
+                        # For Ingress resources
+                        if doc.get('kind') == 'Ingress':
+                            rules = doc.get('spec', {}).get('rules', [])
+                            if rules and len(rules) > 0:
+                                host = rules[0].get('host')
+                                if host:
+                                    url = f"https://{host}"
+                                    # Use gethomepage name if available, otherwise use metadata name
+                                    name = annotations.get('gethomepage.dev/name', 
+                                                          doc['metadata']['name'].replace('-', ' ').title())
+                        
+                        # For Service resources with pangolin.io/subdomain
+                        elif doc.get('kind') == 'Service':
+                            subdomain = annotations.get('pangolin.io/subdomain')
+                            if subdomain:
+                                # Get domain from environment or use default
+                                domain = 'elmstreet79.de'
+                                if subdomain == '@':
+                                    url = f"https://{domain}"
+                                else:
+                                    url = f"https://{subdomain}.{domain}"
+                                name = doc['metadata']['name'].replace('-external', '').replace('-', ' ').title()
+                        
+                        # Add to appropriate list based on auth requirement
+                        if name and url:
+                            auth_required = annotations.get('pangolin.io/auth', 'true') == 'true'
+                            
+                            service_entry = {
+                                'name': name,
+                                'url': url
+                            }
+                            
+                            if auth_required:
+                                services['with_auth'].append(service_entry)
+                            else:
+                                services['without_auth'].append(service_entry)
+        
+        except Exception as e:
+            continue
+    
+    # Sort by name
+    services['with_auth'].sort(key=lambda x: x['name'])
+    services['without_auth'].sort(key=lambda x: x['name'])
+    
+    return services
+
+
 def main():
     """Generate README from template."""
     print("🔄 Generating README.md...")
@@ -387,6 +465,10 @@ def main():
     homepage_secrets = get_homepage_widget_secrets()
     print(f"      Found {len(homepage_secrets)} secrets to automate")
     
+    print("  🌐 Extracting Pangolin-exposed services...")
+    pangolin_services = get_pangolin_services()
+    print(f"      Found {len(pangolin_services['with_auth'])} with auth, {len(pangolin_services['without_auth'])} without auth")
+    
     print("  📚 Extracting documentation links...")
     documentation_links = get_documentation_links()
     print(f"      Found {len(documentation_links)} documentation sources")
@@ -397,6 +479,7 @@ def main():
         'versions': versions,
         'repo_structure': repo_structure,
         'homepage_secrets': homepage_secrets,
+        'pangolin_services': pangolin_services,
         'documentation_links': documentation_links
     }
     

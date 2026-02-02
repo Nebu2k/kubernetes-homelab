@@ -874,13 +874,42 @@ All services are accessible via Pangolin's secure network infrastructure:
 - **Auto-Cleanup**: Removes orphaned resources when Ingresses/Services are deleted
 - **SSL/TLS**: Pangolin provides automatic SSL certificates for all exposed services
 
-**Examples:**
+**All Pangolin-Exposed Services:**
 
 ```text
-Homepage: https://home.elmstreet79.de (pangolin.io/auth: "true" → requires authentication)
-Uptime Kuma: https://uptime.elmstreet79.de (pangolin.io/auth: "false" → public access)
-ArgoCD: https://argocd.elmstreet79.de (via Pangolin with authentication)
-Longhorn: https://longhorn.elmstreet79.de (via Pangolin with authentication)
+# Services with Pangolin authentication required (pangolin.io/auth: "true"):
+Adguard Macmini: https://adguard-macmini.elmstreet79.de
+Adguard Pve: https://adguard.elmstreet79.de
+Adguardhome Sync: https://adguardhome-sync-web.elmstreet79.de
+AlertManager: https://alertmanager.elmstreet79.de
+ArgoCD: https://argocd.elmstreet79.de
+Beszel Hub: https://beszel.elmstreet79.de
+FlightRadar24: https://fr24.elmstreet79.de
+Glances Macmini: https://glances-macmini.elmstreet79.de
+Grafana: https://grafana.elmstreet79.de
+Homepage: https://home.elmstreet79.de
+Longhorn: https://longhorn.elmstreet79.de
+Minio: https://minio.elmstreet79.de
+Minio Api: https://minio-api.elmstreet79.de
+Paperless-ngx: https://paperless.elmstreet79.de
+Prometheus: https://prometheus.elmstreet79.de
+Proxmox: https://pve.elmstreet79.de
+TeslaMate Settings: https://teslamate-settings.elmstreet79.de
+Traefik Dashboard: https://traefik.elmstreet79.de
+Unifi: https://unifi.elmstreet79.de
+Unifi Nas: https://nas.elmstreet79.de
+Uptime Kuma: https://uptime.elmstreet79.de
+Vscode: https://vscode.elmstreet79.de
+n8n: https://n8n.elmstreet79.de
+
+# Services publicly accessible without authentication (pangolin.io/auth: "false"):
+Dreambox: https://dreambox.elmstreet79.de
+Home Assistant: https://homeassistant.elmstreet79.de
+Landing Page: https://www.elmstreet79.de
+Nextcloud Aio: https://nextcloud.elmstreet79.de
+Plex: https://plex.elmstreet79.de
+TeslaMate Grafana: https://teslamate.elmstreet79.de
+
 ```
 
 ## 🔧 Management
