@@ -12,7 +12,6 @@ resources:
   - service.yaml
   - configmap.yaml
   - ingress.yaml
-  - internal-ca-copy.yaml
   - proxmox-secret-sealed.yaml
   - argocd-token-secret-sealed.yaml
   - adguard-credentials-sealed.yaml

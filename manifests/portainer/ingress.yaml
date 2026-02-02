@@ -6,7 +6,6 @@ metadata:
   name: portainer
   namespace: portainer
   annotations:
-    cloudflare.io/proxied: "false"
     gethomepage.dev/enabled: "true"
     gethomepage.dev/name: "Portainer"
     gethomepage.dev/description: "Container Management"
@@ -24,5 +23,3 @@ spec:
           port: 9443
           scheme: https
           serversTransport: insecure-transport
-  tls:
-    secretName: portainer-tls

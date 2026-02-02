@@ -4,7 +4,8 @@ metadata:
   name: teslamate
   namespace: teslamate
   annotations:
-    cert-manager.io/cluster-issuer: internal-ca-issuer
+    pangolin.io/expose: "true"
+    pangolin.io/auth: "true"
     gethomepage.dev/enabled: "true"
     gethomepage.dev/name: "TeslaMate Settings"
     gethomepage.dev/description: "Tesla Tracking & Analytics"

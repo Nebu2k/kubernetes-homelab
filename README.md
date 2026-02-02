@@ -21,7 +21,7 @@ Production-ready K3s cluster managed via GitOps using ArgoCD App-of-Apps pattern
 |------|-----------|
 | 0 | Sealed Secrets, Coredns Config |
 | 1 | Reloader, Kured, Metallb |
-| 2 | Cert Manager |
+| 2 | Pangolin Sync |
 | 3 | Traefik |
 | 4 | Longhorn |
 | 5 | Landing Page, Portainer, Teslamate, Nfs Storage |
@@ -48,7 +48,7 @@ homelab/
 │   ├── kured.yaml                     # Wave 1
 │   ├── metallb.yaml                   # Wave 1
 │   ├── reloader.yaml                  # Wave 1
-│   ├── cert-manager.yaml              # Wave 2
+│   ├── pangolin-sync.yaml             # Wave 2
 │   ├── traefik.yaml                   # Wave 3
 │   ├── longhorn.yaml                  # Wave 4
 │   ├── landing-page.yaml              # Wave 5
@@ -85,21 +85,6 @@ homelab/
     │   ├── secret-sealed.yaml
     │   ├── secret-unsealed.yaml.example
     │   └── service.yaml
-    ├── cert-manager/
-    │   ├── cloudflare-dns-sync-configmap.yaml
-    │   ├── cloudflare-dns-sync-jobs.yaml
-    │   ├── cloudflare-dns-sync-rbac.yaml
-    │   ├── cloudflare-token-sealed.yaml
-    │   ├── cloudflare-token-unsealed.yaml.example
-    │   ├── cluster-issuer.yaml
-    │   ├── homepage-ca-reader-rbac.yaml
-    │   ├── kustomization.yaml
-    │   ├── pangolin-api-credentials-sealed.yaml
-    │   ├── pangolin-api-credentials-unsealed.yaml.example
-    │   ├── pangolin-sync-job.yaml
-    │   ├── pangolin-sync-rbac.yaml
-    │   ├── pangolin-sync-test-job.yaml
-    │   └── values.yaml
     ├── coredns/
     │   ├── coredns-custom.yaml
     │   └── kustomization.yaml
@@ -135,7 +120,6 @@ homelab/
     │   ├── grafana-credentials-sealed.yaml
     │   ├── grafana-credentials-unsealed.yaml.example
     │   ├── ingress.yaml
-    │   ├── internal-ca-copy.yaml
     │   ├── kustomization.yaml
     │   ├── namespace.yaml
     │   ├── nextcloud-token-sealed.yaml
@@ -158,9 +142,6 @@ homelab/
     │   ├── kustomization.yaml
     │   ├── prometheus-ingress.yaml
     │   ├── prometheus-rules.yaml
-    │   ├── service-alertmanager.yaml
-    │   ├── service-grafana.yaml
-    │   ├── service-prometheus.yaml
     │   └── values.yaml
     ├── kured/
     │   └── values.yaml
@@ -179,7 +160,6 @@ homelab/
     │   ├── minio-secret-unsealed.yaml.example
     │   ├── node-config.yaml
     │   ├── recurring-backup-jobs.yaml
-    │   ├── service.yaml
     │   ├── servicemonitor.yaml
     │   └── values.yaml
     ├── metallb/
@@ -205,6 +185,13 @@ homelab/
     │   └── values.yaml
     ├── nfs-subdir-external-provisioner/
     │   └── values.yaml
+    ├── pangolin-sync/
+    │   ├── kustomization.yaml
+    │   ├── pangolin-api-credentials-sealed.yaml
+    │   ├── pangolin-api-credentials-unsealed.yaml.example
+    │   ├── pangolin-sync-job.yaml
+    │   ├── pangolin-sync-rbac.yaml
+    │   └── values.yaml
     ├── paperless-ngx/
     │   ├── backup-cronjob.yaml
     │   ├── db-pvc.yaml
@@ -228,40 +215,22 @@ homelab/
     │   ├── servers-transport.yaml
     │   └── values.yaml
     ├── private-services/
-    │   ├── adguard-credentials-sealed.yaml
-    │   ├── adguard-credentials-unsealed.yaml.example
-    │   ├── adguard-dns-sync-job.yaml
-    │   ├── adguard-dns-sync-rbac.yaml
-    │   ├── adguard-macmini-ingress.yaml
     │   ├── adguard-macmini-service.yaml
-    │   ├── adguard-pve-ingress.yaml
     │   ├── adguard-pve-service.yaml
     │   ├── adguardhome-sync-config.yaml
     │   ├── adguardhome-sync-credentials-sealed.yaml
     │   ├── adguardhome-sync-deployment.yaml
     │   ├── adguardhome-sync-service.yaml
-    │   ├── adguardhome-sync-web-ingress.yaml
-    │   ├── certificates.yaml
-    │   ├── dreambox-ingress.yaml
     │   ├── dreambox-service.yaml
-    │   ├── glances-macmini-ingress.yaml
     │   ├── glances-macmini-service.yaml
-    │   ├── internal-cluster-issuer.yaml
     │   ├── kustomization.yaml
     │   ├── minio-api-service.yaml
-    │   ├── minio-ingress.yaml
     │   ├── minio-service.yaml
-    │   ├── nextcloud-ingress.yaml
     │   ├── nextcloud-service.yaml
-    │   ├── plex-ingress.yaml
     │   ├── plex-service.yaml
-    │   ├── proxmox-ingress.yaml
     │   ├── proxmox-service.yaml
-    │   ├── servers-transport.yaml
-    │   ├── unifi-ingress.yaml
     │   ├── unifi-nas-service.yaml
     │   ├── unifi-service.yaml
-    │   ├── vscode-ingress.yaml
     │   └── vscode-service.yaml
     ├── proxmox-exporter/
     │   ├── deployment.yaml
@@ -292,7 +261,6 @@ homelab/
     │   ├── teslamate-secret-unsealed.yaml.example
     │   └── teslamate-service.yaml
     ├── traefik/
-    │   ├── certificate.yaml
     │   ├── dashboard-service.yaml
     │   ├── kustomization.yaml
     │   └── values.yaml
@@ -1224,7 +1192,6 @@ kubectl get secret -n monitoring grafana-admin-credentials \
 | Unifi Poller | v2.21.0 | Unifi Poller |
 | Portainer | 2.33.6 | Portainer |
 | Paperless Ngx | latest | Paperless Ngx |
-| Cert Manager | v1.19.2 | Cert Manager |
 | Uptime Kuma | 2.0.2 | Uptime Kuma |
 | Traefik | 38.0.2 | Traefik |
 | Fr24 | latest-build-825 | Fr24 |
@@ -1240,7 +1207,6 @@ kubectl get secret -n monitoring grafana-admin-credentials \
 
 ## 📖 Documentation
 
-- [Cert Manager](https://charts.jetstack.io)
 - [Home Assistant](https://www.home-assistant.io/docs/)
 - [Homepage](https://gethomepage.dev/latest/)
 - [K3s](https://docs.k3s.io/)

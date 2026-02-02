@@ -4,10 +4,8 @@ metadata:
   name: home-assistant
   namespace: home-assistant
   annotations:
-    cert-manager.io/cluster-issuer: letsencrypt-prod
     pangolin.io/expose: "true"
     pangolin.io/auth: "false"
-    adguard-dns-sync/exclude: "true"
     traefik.ingress.kubernetes.io/router.middlewares: home-assistant-real-ip@kubernetescrd
     gethomepage.dev/enabled: "true"
     gethomepage.dev/name: "Home Assistant"
@@ -17,10 +15,6 @@ metadata:
     gethomepage.dev/weight: "10"
 spec:
   ingressClassName: traefik
-  tls:
-    - hosts:
-        - homeassistant.elmstreet79.de
-      secretName: home-assistant-tls
   rules:
     - host: homeassistant.elmstreet79.de
       http:

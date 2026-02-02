@@ -6,16 +6,10 @@ metadata:
   labels:
     app: beszel-hub
   annotations:
-    cert-manager.io/cluster-issuer: internal-ca-issuer
     pangolin.io/expose: "true"
     pangolin.io/auth: "true"
-    adguard-dns-sync/exclude: "true"
 spec:
   ingressClassName: traefik
-  tls:
-  - hosts:
-    - beszel.elmstreet79.de
-    secretName: beszel-hub-tls
   rules:
   - host: beszel.elmstreet79.de
     http:

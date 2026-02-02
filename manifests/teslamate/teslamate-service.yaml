@@ -4,10 +4,6 @@ kind: Service
 metadata:
   name: teslamate
   namespace: teslamate
-  annotations:
-    pangolin.io/expose: "true"
-    pangolin.io/subdomain: "teslamate-settings"
-    pangolin.io/auth: "true"
 spec:
   selector:
     app: teslamate

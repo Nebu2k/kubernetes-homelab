@@ -4,7 +4,8 @@ metadata:
   name: n8n
   namespace: n8n
   annotations:
-    cert-manager.io/cluster-issuer: "internal-ca-issuer"
+    pangolin.io/expose: "true"
+    pangolin.io/auth: "true"
     gethomepage.dev/enabled: "true"
     gethomepage.dev/name: "n8n"
     gethomepage.dev/description: "Workflow Automation"
@@ -13,10 +14,6 @@ metadata:
     gethomepage.dev/weight: "30"
 spec:
   ingressClassName: traefik
-  tls:
-    - hosts:
-        - n8n.elmstreet79.de
-      secretName: n8n-tls
   rules:
     - host: n8n.elmstreet79.de
       http:

@@ -4,14 +4,11 @@ metadata:
   name: homepage
   namespace: homepage
   annotations:
-    cert-manager.io/cluster-issuer: "internal-ca-issuer"
+    pangolin.io/expose: "true"
+    pangolin.io/auth: "true"
     gethomepage.dev/enabled: "false"
 spec:
   ingressClassName: traefik
-  tls:
-    - hosts:
-        - home.elmstreet79.de
-      secretName: homepage-tls
   rules:
     - host: home.elmstreet79.de
       http:

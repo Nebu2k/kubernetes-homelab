@@ -4,7 +4,7 @@ apiVersion: batch/v1
 kind: Job
 metadata:
   name: pangolin-sync-postsync
-  namespace: cert-manager
+  namespace: pangolin-sync
   annotations:
     argocd.argoproj.io/hook: PostSync
     argocd.argoproj.io/hook-delete-policy: BeforeHookCreation
@@ -27,7 +27,7 @@ apiVersion: batch/v1
 kind: CronJob
 metadata:
   name: pangolin-sync
-  namespace: cert-manager
+  namespace: pangolin-sync
 spec:
   schedule: "*/5 * * * *" # Every 5 minutes
   concurrencyPolicy: Forbid # Prevent overlapping runs

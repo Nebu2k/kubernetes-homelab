@@ -4,7 +4,8 @@ metadata:
   name: alertmanager
   namespace: monitoring
   annotations:
-    cert-manager.io/cluster-issuer: "internal-ca-issuer"
+    pangolin.io/expose: "true"
+    pangolin.io/auth: "true"
     # Homepage integration
     gethomepage.dev/enabled: "true"
     gethomepage.dev/group: "Monitoring"

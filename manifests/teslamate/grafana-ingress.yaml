@@ -4,7 +4,8 @@ metadata:
   name: teslamate-grafana
   namespace: teslamate
   annotations:
-    cert-manager.io/cluster-issuer: letsencrypt-prod
+    pangolin.io/expose: "true"
+    pangolin.io/auth: "false"
     gethomepage.dev/enabled: "true"
     gethomepage.dev/name: "TeslaMate Grafana"
     gethomepage.dev/description: "Tesla Analytics Dashboards"
