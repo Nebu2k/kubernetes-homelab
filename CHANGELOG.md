@@ -1,3 +1,10 @@
+## [3.26.1](https://github.com/Nebu2k/kubernetes-homelab/compare/v3.26.0...v3.26.1) (2026-02-02)
+
+
+### 🐛 Bug Fixes
+
+* **traefik:** update dashboard service port and targetPort to 8080 ([d8922f6](https://github.com/Nebu2k/kubernetes-homelab/commit/d8922f69dc93de91498ee9874376ae21bb26f85a))
+
 ## [3.26.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v3.25.0...v3.26.0) (2026-02-02)
 
 
