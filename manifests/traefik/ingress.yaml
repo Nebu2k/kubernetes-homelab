@@ -1,26 +1,26 @@
----
-# Standard Ingress für AdGuard DNS Sync + Cert-Manager
-apiVersion: networking.k8s.io/v1
-kind: Ingress
-metadata:
-  name: traefik-dashboard
-  namespace: traefik
-  annotations:
-    cert-manager.io/cluster-issuer: internal-ca-issuer
-spec:
-  ingressClassName: traefik
-  tls:
-    - hosts:
-        - traefik.elmstreet79.de
-      secretName: traefik-dashboard-tls
-  rules:
-    - host: traefik.elmstreet79.de
-      http:
-        paths:
-          - path: /
-            pathType: Prefix
-            backend:
-              service:
-                name: traefik
-                port:
-                  number: 9000
+# ---
+# # Standard Ingress für AdGuard DNS Sync + Cert-Manager
+# apiVersion: networking.k8s.io/v1
+# kind: Ingress
+# metadata:
+#   name: traefik-dashboard
+#   namespace: traefik
+#   annotations:
+#     cert-manager.io/cluster-issuer: internal-ca-issuer
+# spec:
+#   ingressClassName: traefik
+#   tls:
+#     - hosts:
+#         - traefik.elmstreet79.de
+#       secretName: traefik-dashboard-tls
+#   rules:
+#     - host: traefik.elmstreet79.de
+#       http:
+#         paths:
+#           - path: /
+#             pathType: Prefix
+#             backend:
+#               service:
+#                 name: traefik
+#                 port:
+#                   number: 9000
