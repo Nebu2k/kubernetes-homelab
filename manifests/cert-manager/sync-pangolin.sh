@@ -228,18 +228,39 @@ echo "${ALL_SERVICES}" | jq -c '.[]' | while IFS= read -r service; do
     # Create new resource
     echo "    ➕ Creating ${HOST}"
     
+    # Build JSON payload - conditionally include subdomain field
+    if [ "${SUBDOMAIN}" = "" ]; then
+      # Root domain - omit subdomain field
+      JSON_PAYLOAD=$(jq -n \
+        --arg name "${NAME}" \
+        --arg domainId "${DOMAIN_ID}" \
+        '{
+          name: $name,
+          http: true,
+          protocol: "tcp",
+          domainId: $domainId
+        }')
+    else
+      # Subdomain - include subdomain field
+      JSON_PAYLOAD=$(jq -n \
+        --arg name "${NAME}" \
+        --arg subdomain "${SUBDOMAIN}" \
+        --arg domainId "${DOMAIN_ID}" \
+        '{
+          name: $name,
+          subdomain: $subdomain,
+          http: true,
+          protocol: "tcp",
+          domainId: $domainId
+        }')
+    fi
+    
     # Use /org/:orgId/resource endpoint (domain-based HTTP resources)
     CREATE_RESPONSE=$(curl -s -X PUT \
       -H "Authorization: Bearer ${API_KEY}" \
       -H "Content-Type: application/json" \
       "${API_BASE_URL}/org/${ORG_ID}/resource" \
-      -d "{
-        \"name\": \"${NAME}\",
-        \"subdomain\": \"${SUBDOMAIN}\",
-        \"http\": true,
-        \"protocol\": \"tcp\",
-        \"domainId\": \"${DOMAIN_ID}\"
-      }")
+      -d "${JSON_PAYLOAD}")
     
     RESOURCE_ID=$(echo "${CREATE_RESPONSE}" | jq -r '.data.resourceId // empty')
     
