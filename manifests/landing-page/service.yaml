@@ -26,7 +26,7 @@ metadata:
   namespace: landing-page
   annotations:
     pangolin.io/expose: "true"
-    pangolin.io/subdomain: "elmstreet79"
+    pangolin.io/subdomain: "@"
     pangolin.io/auth: "false"
     pangolin.io/port: "80"
 spec:

@@ -56,6 +56,8 @@ metadata:
   namespace: cert-manager
 spec:
   schedule: "*/5 * * * *" # Every 5 minutes
+  concurrencyPolicy: Forbid # Prevent overlapping runs
+  startingDeadlineSeconds: 300 # Skip if job start is delayed >5min
   successfulJobsHistoryLimit: 3
   failedJobsHistoryLimit: 3
   jobTemplate:

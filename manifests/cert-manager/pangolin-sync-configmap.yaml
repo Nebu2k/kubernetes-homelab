@@ -42,6 +42,7 @@ data:
   sync-pangolin.sh: |
     #!/bin/sh
     set -e
+    set -o pipefail
 
     # Install jq for JSON parsing
     apk add --no-cache jq > /dev/null 2>&1
@@ -68,7 +69,7 @@ data:
 
     # Fetch Services with Pangolin labels
     echo "📡 Fetching Services with pangolin.io/expose annotation..."
-    ALL_SERVICES=$(curl -s -k -H "Authorization: Bearer ${TOKEN}" \
+    ALL_SERVICES=$(curl -s --cacert /var/run/secrets/kubernetes.io/serviceaccount/ca.crt -H "Authorization: Bearer ${TOKEN}" \
       "https://kubernetes.default.svc/api/v1/services?limit=500" | \
       jq -r '.items[] | 
         select(.metadata.annotations["pangolin.io/expose"] == "true") | 
@@ -78,7 +79,7 @@ data:
           subdomain: (.metadata.annotations["pangolin.io/subdomain"] // .metadata.name),
           auth: ((.metadata.annotations["pangolin.io/auth"] // "true") == "true"),
           port: (.metadata.annotations["pangolin.io/port"] // .spec.ports[0].port // .spec.ports[0].name),
-          host: ((.metadata.annotations["pangolin.io/subdomain"] // .metadata.name) + ".'"${DOMAIN_SUFFIX}"'")
+          host: (let $sub = .metadata.annotations["pangolin.io/subdomain"] // .metadata.name; if $sub == "@" then "'"${DOMAIN_SUFFIX}"'" else $sub + ".'"${DOMAIN_SUFFIX}"'" end)
         }' | jq -s '.')
 
     SERVICE_COUNT=$(echo "${ALL_SERVICES}" | jq 'length')
@@ -120,7 +121,7 @@ data:
       echo "  Resolving ${NAMESPACE}/${NAME}:${SERVICE_PORT}..."
       
       # Get service details
-      SVC_DATA=$(curl -s -k -H "Authorization: Bearer ${TOKEN}" \
+      SVC_DATA=$(curl -s --cacert /var/run/secrets/kubernetes.io/serviceaccount/ca.crt -H "Authorization: Bearer ${TOKEN}" \
         "https://kubernetes.default.svc/api/v1/namespaces/${NAMESPACE}/services/${NAME}")
       
       SVC_TYPE=$(echo "${SVC_DATA}" | jq -r '.spec.type // "ClusterIP"')
@@ -141,7 +142,7 @@ data:
       
       if [ "${SVC_TYPE}" = "ClusterIP" ] || [ "${SVC_TYPE}" = "ExternalName" ]; then
         # For ClusterIP, check if it's an external service (has Endpoints)
-        ENDPOINTS=$(curl -s -k -H "Authorization: Bearer ${TOKEN}" \
+        ENDPOINTS=$(curl -s --cacert /var/run/secrets/kubernetes.io/serviceaccount/ca.crt -H "Authorization: Bearer ${TOKEN}" \
           "https://kubernetes.default.svc/api/v1/namespaces/${NAMESPACE}/endpoints/${NAME}")
         
         TARGET_IP=$(echo "${ENDPOINTS}" | jq -r '.subsets[0].addresses[0].ip // empty')
@@ -168,12 +169,12 @@ data:
       fi
 
       if [ -z "${TARGET_IP}" ]; then
-        echo "    ⚠️  Could not resolve backend IP for ${SERVICE_NAME}, skipping"
+        echo "    ⚠️  Could not resolve backend IP for ${NAME}, skipping"
         continue
       fi
       
       if [ -z "${TARGET_PORT}" ]; then
-        echo "    ⚠️  Could not resolve target port for ${SERVICE_NAME}, skipping"
+        echo "    ⚠️  Could not resolve target port for ${NAME}, skipping"
         continue
       fi
 
@@ -206,8 +207,44 @@ data:
             echo "    ❌ Failed to add target: $(echo ${TARGET_RESPONSE} | jq -r '.message // "Unknown error"')"
           fi
         else
-          echo "    ✓ ${HOST} (already exists)"
-          SKIPPED=$((SKIPPED + 1))
+          # Target exists - check if IP/port changed
+          EXISTING_TARGET=$(echo "${PANGOLIN_RESOURCES}" | jq -r ".[] | select(.fullDomain == \"${HOST}\") | .targets[0]")
+          EXISTING_TARGET_ID=$(echo "${EXISTING_TARGET}" | jq -r '.targetId // empty')
+          EXISTING_IP=$(echo "${EXISTING_TARGET}" | jq -r '.ip // empty')
+          EXISTING_PORT=$(echo "${EXISTING_TARGET}" | jq -r '.port // empty')
+          
+          if [ "${EXISTING_IP}" != "${TARGET_IP}" ] || [ "${EXISTING_PORT}" != "${TARGET_PORT}" ]; then
+            echo "    🔄 Updating ${HOST} target (${EXISTING_IP}:${EXISTING_PORT} → ${TARGET_IP}:${TARGET_PORT})"
+            
+            # Delete old target
+            if [ -n "${EXISTING_TARGET_ID}" ]; then
+              DELETE_TARGET_RESPONSE=$(curl -s -X DELETE \
+                -H "Authorization: Bearer ${API_KEY}" \
+                "${API_BASE_URL}/resource/${EXISTING_RESOURCE_ID}/target/${EXISTING_TARGET_ID}")
+            fi
+            
+            # Create new target
+            TARGET_RESPONSE=$(curl -s -X PUT \
+              -H "Authorization: Bearer ${API_KEY}" \
+              -H "Content-Type: application/json" \
+              "${API_BASE_URL}/resource/${EXISTING_RESOURCE_ID}/target" \
+              -d "{
+                \"siteId\": ${SITE_ID},
+                \"ip\": \"${TARGET_IP}\",
+                \"port\": ${TARGET_PORT},
+                \"method\": \"https\"
+              }")
+            
+            if echo "${TARGET_RESPONSE}" | jq -e '.success' > /dev/null; then
+              echo "    ✓ Updated ${HOST} → ${TARGET_IP}:${TARGET_PORT}"
+              UPDATED=$((UPDATED + 1))
+            else
+              echo "    ❌ Failed to update target: $(echo ${TARGET_RESPONSE} | jq -r '.message // "Unknown error"')"
+            fi
+          else
+            echo "    ✓ ${HOST} (already exists)"
+            SKIPPED=$((SKIPPED + 1))
+          fi
         fi
       else
         # Create new resource
