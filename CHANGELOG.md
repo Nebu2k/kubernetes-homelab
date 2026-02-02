@@ -1,3 +1,17 @@
+## [3.37.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v3.36.0...v3.37.0) (2026-02-02)
+
+
+### ✨ Features
+
+* **cert-manager:** add temporary test job and config map for sync-pangolin.sh validation ([0d47206](https://github.com/Nebu2k/kubernetes-homelab/commit/0d47206fceff51ad5e664f9b7fdb8eba78fd420c))
+* **cert-manager:** add validation for ingress fetching response in sync-pangolin.sh ([3ea5d11](https://github.com/Nebu2k/kubernetes-homelab/commit/3ea5d1167945738d1b3a9b9e98c551090f4faf1a))
+* **cert-manager:** enhance external service detection in sync-pangolin.sh ([9d76dba](https://github.com/Nebu2k/kubernetes-homelab/commit/9d76dba4038333253ce6c5c1248187c018b8d10b))
+* **cert-manager:** simplify ingress fetching logic in sync-pangolin.sh ([8c92273](https://github.com/Nebu2k/kubernetes-homelab/commit/8c9227375992118404f07fa9d7c577d7f5aa4c52))
+* **cert-manager:** simplify ingress fetching logic in sync-pangolin.sh ([74fcde1](https://github.com/Nebu2k/kubernetes-homelab/commit/74fcde12acf43aa0767411c4a8ea0c82d3021ba6))
+* **coredns:** remove internal forwarding configuration for elmstreet79.de ([da6fece](https://github.com/Nebu2k/kubernetes-homelab/commit/da6fece1b6bc2f345c2c8a3ce1abc3cef561d824))
+* **workflows:** update runner version to ubuntu-24.04 for build and release workflows ([b4153c3](https://github.com/Nebu2k/kubernetes-homelab/commit/b4153c334482dd4b030e7328ee346cc3006e6f1a))
+* **workflows:** update runner version to ubuntu-latest for build workflows ([1f51496](https://github.com/Nebu2k/kubernetes-homelab/commit/1f51496f53d99b6d5b5900c93ca7c79fed0cf5a5))
+
 ## [3.36.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v3.35.0...v3.36.0) (2026-02-02)
 
 
