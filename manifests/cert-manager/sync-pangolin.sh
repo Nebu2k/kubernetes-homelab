@@ -233,7 +233,7 @@ echo "${ALL_SERVICES}" | jq -c '.[]' | while IFS= read -r service; do
           "${API_BASE_URL}/resource/${RESOURCE_ID}" \
           -d '{"sso": false}')
         
-        if echo "${UPDATE_RESPONSE}" | jq -e '.success' > /dev/null 2>&1; then
+        if echo "${UPDATE_RESPONSE}" | jq -e '.success' > /dev/null; then
           echo "    ✓ SSO disabled"
         fi
       fi
@@ -267,28 +267,23 @@ echo "🗑️  Checking for orphaned resources..."
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 REMOVED=0
 
-echo "${PANGOLIN_RESOURCES}" | jq -c '.[]' | while IFS= read -r resource; do
-  FULL_DOMAIN=$(echo "${resource}" | jq -r '.fullDomain // empty')
+echo "${PANGOLIN_RESOURCES}" | jq -c --argjson k8s_services "${ALL_SERVICES}" '
+  ($k8s_services | map(.host)) as $k8s_hosts |
+  .[] | select(.fullDomain and ($k8s_hosts | index(.fullDomain) | not))
+' | while IFS= read -r resource; do
+  FULL_DOMAIN=$(echo "${resource}" | jq -r '.fullDomain')
   RESOURCE_ID=$(echo "${resource}" | jq -r '.resourceId')
+
+  echo "  ✗ Removing orphaned resource: ${FULL_DOMAIN}"
   
-  # Skip if no domain
-  if [ -z "${FULL_DOMAIN}" ]; then
-    continue
-  fi
-  
-  # Check if this host exists in our service list
-  if ! echo "${ALL_SERVICES}" | jq -e ".[] | select(.host == \"${FULL_DOMAIN}\")" > /dev/null; then
-    echo "  ✗ Removing orphaned resource: ${FULL_DOMAIN}"
-    
-    DELETE_RESPONSE=$(curl -s -X DELETE \
-      -H "Authorization: Bearer ${API_KEY}" \
-      "${API_BASE_URL}/resource/${RESOURCE_ID}")
-    if echo "${DELETE_RESPONSE}" | jq -e '.success' > /dev/null; then
-      echo "    ✓ Removed"
-      REMOVED=$((REMOVED + 1))
-    else
-      echo "    ❌ Failed to remove: $(echo ${DELETE_RESPONSE} | jq -r '.message // "Unknown error"')"
-    fi
+  DELETE_RESPONSE=$(curl -s -X DELETE \
+    -H "Authorization: Bearer ${API_KEY}" \
+    "${API_BASE_URL}/resource/${RESOURCE_ID}")
+  if echo "${DELETE_RESPONSE}" | jq -e '.success' > /dev/null; then
+    echo "    ✓ Removed"
+    REMOVED=$((REMOVED + 1))
+  else
+    echo "    ❌ Failed to remove: $(echo "${DELETE_RESPONSE}" | jq -r '.message // "Unknown error"')"
   fi
 done
 
