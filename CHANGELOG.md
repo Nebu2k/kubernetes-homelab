@@ -1,3 +1,10 @@
+## [3.35.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v3.34.0...v3.35.0) (2026-02-02)
+
+
+### ✨ Features
+
+* **argocd:** update ingress and remove service; enhance sync logic in sync-pangolin.sh ([a6a95f8](https://github.com/Nebu2k/kubernetes-homelab/commit/a6a95f83bd4af74336aa38c15a16c2969eed844f))
+
 ## [3.34.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v3.33.0...v3.34.0) (2026-02-02)
 
 
