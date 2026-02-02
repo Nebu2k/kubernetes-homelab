@@ -1,3 +1,10 @@
+## [3.26.3](https://github.com/Nebu2k/kubernetes-homelab/compare/v3.26.2...v3.26.3) (2026-02-02)
+
+
+### 🐛 Bug Fixes
+
+* **traefik:** restore and format ingress configuration for dashboard ([0ed4cf5](https://github.com/Nebu2k/kubernetes-homelab/commit/0ed4cf50d28a2be11e023b06c4d469d217892743))
+
 ## [3.26.2](https://github.com/Nebu2k/kubernetes-homelab/compare/v3.26.1...v3.26.2) (2026-02-02)
 
 
