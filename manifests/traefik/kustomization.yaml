@@ -4,8 +4,4 @@ namespace: traefik
 resources:
   - certificate.yaml
   - ingress.yaml
-patches:
-  - path: service.yaml
-    target:
-      kind: Service
-      name: traefik
+  - dashboard-service.yaml

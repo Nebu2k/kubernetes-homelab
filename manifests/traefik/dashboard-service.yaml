@@ -1,0 +1,19 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: traefik-dashboard
+  namespace: traefik
+  annotations:
+    pangolin.io/expose: "true"
+    pangolin.io/subdomain: "traefik"
+    pangolin.io/auth: "true"
+spec:
+  selector:
+    app.kubernetes.io/instance: traefik-traefik
+    app.kubernetes.io/name: traefik
+  ports:
+    - name: dashboard
+      port: 9000
+      targetPort: traefik
+      protocol: TCP

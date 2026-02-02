@@ -293,9 +293,9 @@ homelab/
     │   └── teslamate-service.yaml
     ├── traefik/
     │   ├── certificate.yaml
+    │   ├── dashboard-service.yaml
     │   ├── ingress.yaml
     │   ├── kustomization.yaml
-    │   ├── service.yaml
     │   └── values.yaml
     ├── unifi-poller/
     │   ├── deployment.yaml
