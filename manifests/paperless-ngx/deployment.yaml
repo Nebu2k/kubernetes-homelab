@@ -44,7 +44,8 @@ spec:
       containers:
       # Sidecar: Sync files from SMB share to consume folder
       - name: smb-sync
-        image: nebu2k/paperless-smb-sync:1.0-alpine3.23
+        image: nebu2k/paperless-smb-sync:latest
+        imagePullPolicy: IfNotPresent
         command:
         - sh
         - -c
