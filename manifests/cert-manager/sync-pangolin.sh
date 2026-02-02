@@ -26,21 +26,27 @@ TOKEN=$(cat /var/run/secrets/kubernetes.io/serviceaccount/token)
 # Step 1: Fetch Ingresses with Pangolin annotations
 echo "📡 Fetching Ingresses with pangolin.io/expose annotation..."
 
-# Fetch all ingresses cluster-wide using kubectl (simpler and more reliable)
+# Fetch all ingresses cluster-wide
 ALL_INGRESSES_RAW=$(curl -s --cacert /var/run/secrets/kubernetes.io/serviceaccount/ca.crt -H "Authorization: Bearer ${TOKEN}" \
   "https://kubernetes.default.svc/apis/networking.k8s.io/v1/ingresses?limit=500")
 
-INGRESS_SERVICES=$(echo "${ALL_INGRESSES_RAW}" | jq '[.items[]? |
-  select(.metadata.annotations["pangolin.io/expose"]? == "true") |
-  {
-    name: .spec.rules[0].http.paths[0].backend.service.name,
-    namespace: .metadata.namespace,
-    subdomain: (.spec.rules[0].host | split(".")[0]),
-    auth: ((.metadata.annotations["pangolin.io/auth"] // "true") == "true"),
-    port: (.spec.rules[0].http.paths[0].backend.service.port.number // .spec.rules[0].http.paths[0].backend.service.port.name),
-    host: .spec.rules[0].host,
-    source: "ingress"
-  }] // []')
+# Check if response has items (valid response)
+if echo "${ALL_INGRESSES_RAW}" | jq -e '.items' > /dev/null 2>&1; then
+  INGRESS_SERVICES=$(echo "${ALL_INGRESSES_RAW}" | jq '[.items[] |
+    select(.metadata.annotations["pangolin.io/expose"]? == "true") |
+    {
+      name: .spec.rules[0].http.paths[0].backend.service.name,
+      namespace: .metadata.namespace,
+      subdomain: (.spec.rules[0].host | split(".")[0]),
+      auth: ((.metadata.annotations["pangolin.io/auth"] // "true") == "true"),
+      port: (.spec.rules[0].http.paths[0].backend.service.port.number // .spec.rules[0].http.paths[0].backend.service.port.name),
+      host: .spec.rules[0].host,
+      source: "ingress"
+    }]')
+else
+  echo "  ⚠️  Could not fetch ingresses (check RBAC permissions)"
+  INGRESS_SERVICES="[]"
+fi
 
 INGRESS_COUNT=$(echo "${INGRESS_SERVICES}" | jq 'length')
 echo "✓ Found ${INGRESS_COUNT} ingresses with pangolin.io/expose annotation"
