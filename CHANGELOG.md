@@ -1,3 +1,10 @@
+## [3.31.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v3.30.0...v3.31.0) (2026-02-02)
+
+
+### ✨ Features
+
+* **cert-manager:** optimize service and resource handling in sync-pangolin.sh ([acf42d9](https://github.com/Nebu2k/kubernetes-homelab/commit/acf42d9f3fed740960e5fdafc9b94b9c3c56d8c3))
+
 ## [3.30.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v3.29.0...v3.30.0) (2026-02-02)
 
 
