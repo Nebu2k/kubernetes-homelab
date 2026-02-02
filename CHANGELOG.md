@@ -1,3 +1,10 @@
+## [3.32.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v3.31.0...v3.32.0) (2026-02-02)
+
+
+### ✨ Features
+
+* **cert-manager:** streamline target deletion process in sync-pangolin.sh ([948e4c4](https://github.com/Nebu2k/kubernetes-homelab/commit/948e4c48def25548f36f23b94812fa606d5e3728))
+
 ## [3.31.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v3.30.0...v3.31.0) (2026-02-02)
 
 
