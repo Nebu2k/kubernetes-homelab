@@ -8,3 +8,5 @@ resources:
   - ingress.yaml
   - servicemonitor.yaml
   - node-config.yaml
+patchesStrategicMerge:
+  - service.yaml

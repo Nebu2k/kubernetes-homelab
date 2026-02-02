@@ -3,6 +3,10 @@ kind: Service
 metadata:
   name: beszel-hub
   namespace: beszel
+  annotations:
+    pangolin.io/expose: "true"
+    pangolin.io/subdomain: "beszel"
+    pangolin.io/auth: "true"
   labels:
     app: beszel-hub
 spec:

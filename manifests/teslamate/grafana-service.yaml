@@ -1,0 +1,16 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: teslamate-grafana
+  namespace: teslamate
+  annotations:
+    pangolin.io/expose: "true"
+    pangolin.io/subdomain: "teslamate"
+    pangolin.io/auth: "false"
+spec:
+  selector:
+    app: teslamate-grafana
+  ports:
+  - port: 3000
+    targetPort: 3000

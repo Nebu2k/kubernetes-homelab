@@ -13,6 +13,10 @@ resources:
   - mosquitto-deployment.yaml
   - teslamate-deployment.yaml
   - grafana-deployment.yaml
+  - database-service.yaml
+  - mosquitto-service.yaml
+  - teslamate-service.yaml
+  - grafana-service.yaml
   - teslamate-ingress.yaml
   - grafana-ingress.yaml
   - teslamate-secret-sealed.yaml

@@ -61,15 +61,3 @@ spec:
       - name: data
         persistentVolumeClaim:
           claimName: teslamate-grafana
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: teslamate-grafana
-  namespace: teslamate
-spec:
-  selector:
-    app: teslamate-grafana
-  ports:
-  - port: 3000
-    targetPort: 3000

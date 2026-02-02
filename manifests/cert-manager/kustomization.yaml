@@ -8,3 +8,6 @@ resources:
   - cloudflare-dns-sync-rbac.yaml
   - cloudflare-dns-sync-jobs.yaml
   - homepage-ca-reader-rbac.yaml
+  - pangolin-api-credentials-sealed.yaml
+  - pangolin-sync-rbac.yaml
+  - pangolin-sync-job.yaml

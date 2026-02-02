@@ -1,0 +1,16 @@
+FROM alpine:3.23
+
+# Install curl and jq for API calls and JSON parsing
+RUN apk add --no-cache --no-progress \
+    curl \
+    jq \
+    bash
+
+# Copy sync script
+COPY sync-pangolin.sh /usr/local/bin/sync-pangolin.sh
+RUN chmod +x /usr/local/bin/sync-pangolin.sh
+
+# Run as non-root user
+USER nobody
+
+ENTRYPOINT ["/usr/local/bin/sync-pangolin.sh"]

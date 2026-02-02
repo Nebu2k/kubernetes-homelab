@@ -5,6 +5,10 @@ metadata:
   namespace: home-assistant
   labels:
     app.kubernetes.io/name: home-assistant
+  annotations:
+    pangolin.io/expose: "true"
+    pangolin.io/subdomain: "homeassistant"
+    pangolin.io/auth: "false"
 spec:
   type: ClusterIP
   ports:

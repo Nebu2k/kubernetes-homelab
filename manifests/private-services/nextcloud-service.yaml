@@ -1,0 +1,30 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: nextcloud-aio
+  namespace: private-services
+  annotations:
+    pangolin.io/expose: "true"
+    pangolin.io/subdomain: "nextcloud"
+    pangolin.io/auth: "false"
+spec:
+  type: ClusterIP
+  ports:
+    - name: http
+      port: 80
+      targetPort: 11000
+      protocol: TCP
+---
+apiVersion: v1
+kind: Endpoints
+metadata:
+  name: nextcloud-aio
+  namespace: private-services
+subsets:
+  - addresses:
+      - ip: 192.168.2.12
+    ports:
+      - name: http
+        port: 11000
+        protocol: TCP

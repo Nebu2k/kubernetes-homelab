@@ -74,7 +74,8 @@ homelab/
     │   ├── argocd-rbac-cm-patch.yaml
     │   ├── argocd-server-patch.yaml
     │   ├── ingress.yaml
-    │   └── kustomization.yaml
+    │   ├── kustomization.yaml
+    │   └── service.yaml
     ├── beszel/
     │   ├── agent-daemonset.yaml
     │   ├── deployment.yaml
@@ -94,6 +95,10 @@ homelab/
     │   ├── cluster-issuer.yaml
     │   ├── homepage-ca-reader-rbac.yaml
     │   ├── kustomization.yaml
+    │   ├── pangolin-api-credentials-sealed.yaml
+    │   ├── pangolin-api-credentials-unsealed.yaml.example
+    │   ├── pangolin-sync-job.yaml
+    │   ├── pangolin-sync-rbac.yaml
     │   └── values.yaml
     ├── coredns/
     │   ├── coredns-custom.yaml
@@ -153,6 +158,7 @@ homelab/
     │   ├── kustomization.yaml
     │   ├── prometheus-ingress.yaml
     │   ├── prometheus-rules.yaml
+    │   ├── services.yaml
     │   └── values.yaml
     ├── kured/
     │   └── values.yaml
@@ -171,6 +177,7 @@ homelab/
     │   ├── minio-secret-unsealed.yaml.example
     │   ├── node-config.yaml
     │   ├── recurring-backup-jobs.yaml
+    │   ├── service.yaml
     │   ├── servicemonitor.yaml
     │   └── values.yaml
     ├── metallb/
@@ -224,23 +231,36 @@ homelab/
     │   ├── adguard-dns-sync-job.yaml
     │   ├── adguard-dns-sync-rbac.yaml
     │   ├── adguard-macmini-ingress.yaml
+    │   ├── adguard-macmini-service.yaml
     │   ├── adguard-pve-ingress.yaml
+    │   ├── adguard-pve-service.yaml
     │   ├── adguardhome-sync-config.yaml
     │   ├── adguardhome-sync-credentials-sealed.yaml
     │   ├── adguardhome-sync-deployment.yaml
+    │   ├── adguardhome-sync-service.yaml
     │   ├── adguardhome-sync-web-ingress.yaml
     │   ├── certificates.yaml
     │   ├── dreambox-ingress.yaml
+    │   ├── dreambox-service.yaml
     │   ├── glances-macmini-ingress.yaml
+    │   ├── glances-macmini-service.yaml
     │   ├── internal-cluster-issuer.yaml
     │   ├── kustomization.yaml
+    │   ├── minio-api-service.yaml
     │   ├── minio-ingress.yaml
+    │   ├── minio-service.yaml
     │   ├── nextcloud-ingress.yaml
+    │   ├── nextcloud-service.yaml
     │   ├── plex-ingress.yaml
+    │   ├── plex-service.yaml
     │   ├── proxmox-ingress.yaml
+    │   ├── proxmox-service.yaml
     │   ├── servers-transport.yaml
     │   ├── unifi-ingress.yaml
-    │   └── vscode-ingress.yaml
+    │   ├── unifi-nas-service.yaml
+    │   ├── unifi-service.yaml
+    │   ├── vscode-ingress.yaml
+    │   └── vscode-service.yaml
     ├── proxmox-exporter/
     │   ├── deployment.yaml
     │   ├── kustomization.yaml
@@ -254,21 +274,26 @@ homelab/
     │   ├── database-deployment.yaml
     │   ├── database-pdb.yaml
     │   ├── database-pvc.yaml
+    │   ├── database-service.yaml
     │   ├── grafana-deployment.yaml
     │   ├── grafana-ingress.yaml
     │   ├── grafana-pvc.yaml
+    │   ├── grafana-service.yaml
     │   ├── kustomization.yaml
     │   ├── mosquitto-deployment.yaml
     │   ├── mosquitto-pvc.yaml
+    │   ├── mosquitto-service.yaml
     │   ├── namespace.yaml
     │   ├── teslamate-deployment.yaml
     │   ├── teslamate-ingress.yaml
     │   ├── teslamate-secret-sealed.yaml
-    │   └── teslamate-secret-unsealed.yaml.example
+    │   ├── teslamate-secret-unsealed.yaml.example
+    │   └── teslamate-service.yaml
     ├── traefik/
     │   ├── certificate.yaml
     │   ├── ingress.yaml
     │   ├── kustomization.yaml
+    │   ├── service.yaml
     │   └── values.yaml
     ├── unifi-poller/
     │   ├── deployment.yaml

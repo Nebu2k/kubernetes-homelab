@@ -5,6 +5,21 @@ resources:
   - internal-cluster-issuer.yaml
   - servers-transport.yaml
   - certificates.yaml
+  # Service files (extracted from ingress/deployment files)
+  - adguard-macmini-service.yaml
+  - adguard-pve-service.yaml
+  - adguardhome-sync-service.yaml
+  - dreambox-service.yaml
+  - glances-macmini-service.yaml
+  - minio-service.yaml
+  - minio-api-service.yaml
+  - nextcloud-service.yaml
+  - plex-service.yaml
+  - proxmox-service.yaml
+  - unifi-service.yaml
+  - unifi-nas-service.yaml
+  - vscode-service.yaml
+  # Ingress files
   - nextcloud-ingress.yaml
   - dreambox-ingress.yaml
   - adguard-macmini-ingress.yaml
@@ -13,12 +28,13 @@ resources:
   - glances-macmini-ingress.yaml
   - unifi-ingress.yaml
   - plex-ingress.yaml
+  - adguardhome-sync-web-ingress.yaml
+  - vscode-ingress.yaml
+  - minio-ingress.yaml
+  # Other resources
   - adguard-credentials-sealed.yaml
   - adguard-dns-sync-rbac.yaml
   - adguard-dns-sync-job.yaml
   - adguardhome-sync-config.yaml
   - adguardhome-sync-credentials-sealed.yaml
   - adguardhome-sync-deployment.yaml
-  - adguardhome-sync-web-ingress.yaml
-  - vscode-ingress.yaml
-  - minio-ingress.yaml

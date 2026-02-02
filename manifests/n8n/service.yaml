@@ -3,6 +3,10 @@ kind: Service
 metadata:
   name: n8n
   namespace: n8n
+  annotations:
+    pangolin.io/expose: "true"
+    pangolin.io/subdomain: "n8n"
+    pangolin.io/auth: "true"
   labels:
     app.kubernetes.io/name: n8n
 spec:

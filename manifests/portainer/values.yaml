@@ -1,6 +1,10 @@
 # Portainer management UI values
 service:
   type: ClusterIP  # Access via Ingress
+  annotations:
+    pangolin.io/expose: "true"
+    pangolin.io/subdomain: "portainer"
+    pangolin.io/auth: "true"
   
 # Single replica for homelab (HA not supported due to BoltDB)
 replicaCount: 1

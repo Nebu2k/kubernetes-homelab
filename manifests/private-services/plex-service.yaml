@@ -1,0 +1,26 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: plex-external
+  namespace: private-services
+  annotations:
+    pangolin.io/expose: "true"
+    pangolin.io/subdomain: "plex"
+    pangolin.io/auth: "false"
+spec:
+  type: ClusterIP
+  ports:
+    - port: 32400
+      targetPort: 32400
+---
+apiVersion: v1
+kind: Endpoints
+metadata:
+  name: plex-external
+  namespace: private-services
+subsets:
+  - addresses:
+      - ip: 192.168.2.4
+    ports:
+      - port: 32400

@@ -1,0 +1,32 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: minio-api-external
+  namespace: private-services
+  annotations:
+    pangolin.io/expose: "true"
+    pangolin.io/subdomain: "minio-api"
+    pangolin.io/auth: "true"
+
+spec:
+  type: ClusterIP
+  clusterIP: None
+  ports:
+    - name: api
+      port: 9000
+      targetPort: 9000
+      protocol: TCP
+---
+apiVersion: v1
+kind: Endpoints
+metadata:
+  name: minio-api-external
+  namespace: private-services
+subsets:
+  - addresses:
+      - ip: 192.168.2.15
+    ports:
+      - name: api
+        port: 9000
+        protocol: TCP
