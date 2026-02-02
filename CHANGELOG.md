@@ -1,3 +1,10 @@
+## [3.28.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v3.27.1...v3.28.0) (2026-02-02)
+
+
+### ✨ Features
+
+* **cert-manager:** enhance service type handling and target resolution in sync-pangolin.sh ([10fcef1](https://github.com/Nebu2k/kubernetes-homelab/commit/10fcef1fab8ebc4cd4ca39b8c3c02d487e95f3ac))
+
 ## [3.27.1](https://github.com/Nebu2k/kubernetes-homelab/compare/v3.27.0...v3.27.1) (2026-02-02)
 
 
