@@ -172,21 +172,24 @@ echo "${ALL_SERVICES}" | jq -c '.[]' | while IFS= read -r service; do
     # Check if this is an external service (Endpoints pointing outside cluster)
     ENDPOINTS=$(curl -s --cacert /var/run/secrets/kubernetes.io/serviceaccount/ca.crt -H "Authorization: Bearer ${TOKEN}" \
       "https://kubernetes.default.svc/api/v1/namespaces/${NAMESPACE}/endpoints/${NAME}")
-    
+
     ENDPOINT_IP=$(echo "${ENDPOINTS}" | jq -r '.subsets[0].addresses[0].ip // empty')
-    
-    # Check if endpoint IP is outside cluster network (10.42.x.x or 10.43.x.x = cluster IPs)
-    if [ -n "${ENDPOINT_IP}" ] && ! echo "${ENDPOINT_IP}" | grep -qE '^10\.(42|43)\.'; then
+    # Check if endpoint points to a Pod (has targetRef.kind == "Pod")
+    # If it has a Pod reference, it's a cluster pod (even with hostNetwork) and should use LB
+    ENDPOINT_IS_POD=$(echo "${ENDPOINTS}" | jq -r '.subsets[0].addresses[0].targetRef.kind // empty')
+
+    # External service = IP outside cluster network AND not pointing to a Pod
+    if [ -n "${ENDPOINT_IP}" ] && ! echo "${ENDPOINT_IP}" | grep -qE '^10\.(42|43)\.' && [ "${ENDPOINT_IS_POD}" != "Pod" ]; then
       # External endpoint - use it directly (e.g., dreambox, proxmox)
       TARGET_IP="${ENDPOINT_IP}"
-      
+
       # Match endpoint port
       if echo "${TARGET_PORT_VALUE}" | grep -qE '^[0-9]+$'; then
         TARGET_PORT=$(echo "${ENDPOINTS}" | jq -r ".subsets[0].ports[] | select(.port == ${TARGET_PORT_VALUE}) | .port // empty" | head -n1)
       else
         TARGET_PORT=$(echo "${ENDPOINTS}" | jq -r ".subsets[0].ports[] | select(.name == \"${TARGET_PORT_VALUE}\") | .port // empty" | head -n1)
       fi
-      
+
       if [ -z "${TARGET_PORT}" ]; then
         if echo "${TARGET_PORT_VALUE}" | grep -qE '^[0-9]+$'; then
           TARGET_PORT="${TARGET_PORT_VALUE}"
@@ -195,10 +198,10 @@ echo "${ALL_SERVICES}" | jq -c '.[]' | while IFS= read -r service; do
           continue
         fi
       fi
-      
+
       echo "    → External service: ${TARGET_IP}:${TARGET_PORT}"
     else
-      # Internal cluster service - route via Traefik LoadBalancer
+      # Internal cluster service (or hostNetwork pod) - route via Traefik LoadBalancer
       TARGET_IP="192.168.2.250"
       TARGET_PORT="443"
       echo "    → Internal cluster service - routing via Traefik LB: ${TARGET_IP}:${TARGET_PORT}"
