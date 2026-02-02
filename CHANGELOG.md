@@ -1,3 +1,10 @@
+## [3.24.7](https://github.com/Nebu2k/kubernetes-homelab/compare/v3.24.6...v3.24.7) (2026-02-02)
+
+
+### 🐛 Bug Fixes
+
+* **deployment:** update smb-sync image to latest and set imagePullPolicy ([faf4044](https://github.com/Nebu2k/kubernetes-homelab/commit/faf40446fce6bece493fbbc14898fac996064d29))
+
 ## [3.24.6](https://github.com/Nebu2k/kubernetes-homelab/compare/v3.24.5...v3.24.6) (2026-02-02)
 
 
