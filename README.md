@@ -74,8 +74,7 @@ homelab/
     │   ├── argocd-rbac-cm-patch.yaml
     │   ├── argocd-server-patch.yaml
     │   ├── ingress.yaml
-    │   ├── kustomization.yaml
-    │   └── service.yaml
+    │   └── kustomization.yaml
     ├── beszel/
     │   ├── agent-daemonset.yaml
     │   ├── deployment.yaml

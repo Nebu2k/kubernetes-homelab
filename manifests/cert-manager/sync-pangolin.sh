@@ -23,28 +23,68 @@ echo ""
 # Get service account token
 TOKEN=$(cat /var/run/secrets/kubernetes.io/serviceaccount/token)
 
-# Fetch Services with Pangolin labels
+# Step 1: Fetch Ingresses with Pangolin annotations
+echo "📡 Fetching Ingresses with pangolin.io/expose annotation..."
+INGRESS_SERVICES=$(curl -s --cacert /var/run/secrets/kubernetes.io/serviceaccount/ca.crt -H "Authorization: Bearer ${TOKEN}" \
+  "https://kubernetes.default.svc/api/v1/namespaces" | \
+  jq -r '.items[].metadata.name' | while read -r ns; do
+    curl -s --cacert /var/run/secrets/kubernetes.io/serviceaccount/ca.crt -H "Authorization: Bearer ${TOKEN}" \
+      "https://kubernetes.default.svc/apis/networking.k8s.io/v1/namespaces/${ns}/ingresses" 2>/dev/null || echo '{"items":[]}'
+  done | jq -s 'map(.items[]) | .[] |
+    select(.metadata.annotations["pangolin.io/expose"] == "true") |
+    {
+      name: .spec.rules[0].http.paths[0].backend.service.name,
+      namespace: .metadata.namespace,
+      subdomain: (.spec.rules[0].host | split(".")[0]),
+      auth: ((.metadata.annotations["pangolin.io/auth"] // "true") == "true"),
+      port: (.spec.rules[0].http.paths[0].backend.service.port.number // .spec.rules[0].http.paths[0].backend.service.port.name),
+      host: .spec.rules[0].host,
+      source: "ingress"
+    }' | jq -s '.')
+
+INGRESS_COUNT=$(echo "${INGRESS_SERVICES}" | jq 'length')
+echo "✓ Found ${INGRESS_COUNT} ingresses with pangolin.io/expose annotation"
+
+# Step 2: Fetch Services with Pangolin annotations
 echo "📡 Fetching Services with pangolin.io/expose annotation..."
-ALL_SERVICES=$(curl -s --cacert /var/run/secrets/kubernetes.io/serviceaccount/ca.crt -H "Authorization: Bearer ${TOKEN}" \
+SERVICE_SERVICES=$(curl -s --cacert /var/run/secrets/kubernetes.io/serviceaccount/ca.crt -H "Authorization: Bearer ${TOKEN}" \
   "https://kubernetes.default.svc/api/v1/services" | \
-  jq -r --arg suffix "${DOMAIN_SUFFIX}" '.items[] | 
-    select(.metadata.annotations["pangolin.io/expose"] == "true") | 
+  jq -r --arg suffix "${DOMAIN_SUFFIX}" '.items[] |
+    select(.metadata.annotations["pangolin.io/expose"] == "true") |
     {
       name: .metadata.name,
       namespace: .metadata.namespace,
       subdomain: ((.metadata.annotations["pangolin.io/subdomain"] // .metadata.name) as $sub | if $sub == "@" then "" else $sub end),
       auth: ((.metadata.annotations["pangolin.io/auth"] // "true") == "true"),
       port: (.spec.ports[0].port // .spec.ports[0].name),
-      host: ((.metadata.annotations["pangolin.io/subdomain"] // .metadata.name) as $sub | if $sub == "@" then $suffix else ($sub + "." + $suffix) end)
+      host: ((.metadata.annotations["pangolin.io/subdomain"] // .metadata.name) as $sub | if $sub == "@" then $suffix else ($sub + "." + $suffix) end),
+      source: "service"
     }' | jq -s '.')
 
-SERVICE_COUNT=$(echo "${ALL_SERVICES}" | jq 'length')
-echo "✓ Found ${SERVICE_COUNT} services with pangolin.io/expose label"
+SERVICE_SERVICE_COUNT=$(echo "${SERVICE_SERVICES}" | jq 'length')
+echo "✓ Found ${SERVICE_SERVICE_COUNT} services with pangolin.io/expose annotation"
+
+# Step 3: Merge and deduplicate (Ingress takes precedence over Service)
+echo "🔄 Merging sources and removing duplicates..."
+ALL_SERVICES=$(jq -s --arg suffix "${DOMAIN_SUFFIX}" '
+  (.[0] + .[1]) |
+  group_by(.namespace + "/" + .name) |
+  map(
+    if (map(select(.source == "ingress")) | length) > 0 then
+      map(select(.source == "ingress"))[0]
+    else
+      .[0]
+    end
+  )
+' <(echo "${INGRESS_SERVICES}") <(echo "${SERVICE_SERVICES}"))
+
+TOTAL_COUNT=$(echo "${ALL_SERVICES}" | jq 'length')
+echo "✓ Total unique services to sync: ${TOTAL_COUNT}"
 echo ""
 
 # Display services
 echo "Services to sync:"
-echo "${ALL_SERVICES}" | jq -r '.[] | "  • \(.host) → \(.namespace)/\(.name):\(.port) (auth: \(.auth))"'
+echo "${ALL_SERVICES}" | jq -r '.[] | "  • \(.host) → \(.namespace)/\(.name):\(.port) (auth: \(.auth), source: \(.source))"'
 echo ""
 
 # Fetch current Pangolin resources
