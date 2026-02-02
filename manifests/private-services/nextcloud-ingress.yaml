@@ -4,6 +4,11 @@ kind: Service
 metadata:
   name: nextcloud-aio
   namespace: private-services
+  annotations:
+    pangolin.io/expose: "true"
+    pangolin.io/subdomain: "nextcloud"
+    pangolin.io/auth: "false"
+    pangolin.io/port: "80"
 spec:
   type: ClusterIP
   ports:

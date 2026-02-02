@@ -1,0 +1,33 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: kube-prometheus-stack-grafana
+  namespace: monitoring
+  annotations:
+    pangolin.io/expose: "true"
+    pangolin.io/subdomain: "grafana"
+    pangolin.io/auth: "true"
+    pangolin.io/port: "80"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: kube-prometheus-stack-prometheus
+  namespace: monitoring
+  annotations:
+    pangolin.io/expose: "true"
+    pangolin.io/subdomain: "prometheus"
+    pangolin.io/auth: "true"
+    pangolin.io/port: "9090"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: kube-prometheus-stack-alertmanager
+  namespace: monitoring
+  annotations:
+    pangolin.io/expose: "true"
+    pangolin.io/subdomain: "alertmanager"
+    pangolin.io/auth: "true"
+    pangolin.io/port: "9093"

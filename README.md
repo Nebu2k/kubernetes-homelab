@@ -74,7 +74,8 @@ homelab/
     │   ├── argocd-rbac-cm-patch.yaml
     │   ├── argocd-server-patch.yaml
     │   ├── ingress.yaml
-    │   └── kustomization.yaml
+    │   ├── kustomization.yaml
+    │   └── service-patch.yaml
     ├── beszel/
     │   ├── agent-daemonset.yaml
     │   ├── deployment.yaml
@@ -94,6 +95,10 @@ homelab/
     │   ├── cluster-issuer.yaml
     │   ├── homepage-ca-reader-rbac.yaml
     │   ├── kustomization.yaml
+    │   ├── pangolin-api-credentials-sealed.yaml
+    │   ├── pangolin-api-credentials-unsealed.yaml.example
+    │   ├── pangolin-sync-configmap.yaml
+    │   ├── pangolin-sync-job.yaml
     │   └── values.yaml
     ├── coredns/
     │   ├── coredns-custom.yaml
@@ -153,6 +158,7 @@ homelab/
     │   ├── kustomization.yaml
     │   ├── prometheus-ingress.yaml
     │   ├── prometheus-rules.yaml
+    │   ├── service-patches.yaml
     │   └── values.yaml
     ├── kured/
     │   └── values.yaml
@@ -171,6 +177,7 @@ homelab/
     │   ├── minio-secret-unsealed.yaml.example
     │   ├── node-config.yaml
     │   ├── recurring-backup-jobs.yaml
+    │   ├── service-patch.yaml
     │   ├── servicemonitor.yaml
     │   └── values.yaml
     ├── metallb/
@@ -217,6 +224,7 @@ homelab/
     │   ├── ingress.yaml
     │   ├── kustomization.yaml
     │   ├── servers-transport.yaml
+    │   ├── service-patch.yaml
     │   └── values.yaml
     ├── private-services/
     │   ├── adguard-credentials-sealed.yaml
@@ -269,6 +277,7 @@ homelab/
     │   ├── certificate.yaml
     │   ├── ingress.yaml
     │   ├── kustomization.yaml
+    │   ├── service-patch.yaml
     │   └── values.yaml
     ├── unifi-poller/
     │   ├── deployment.yaml

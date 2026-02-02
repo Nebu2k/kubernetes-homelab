@@ -1,0 +1,100 @@
+---
+# PostSync Hook: Runs after every ArgoCD sync
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: pangolin-sync-postsync
+  namespace: cert-manager
+  annotations:
+    argocd.argoproj.io/hook: PostSync
+    argocd.argoproj.io/hook-delete-policy: BeforeHookCreation
+spec:
+  ttlSecondsAfterFinished: 300 # Clean up after 5min
+  template:
+    spec:
+      serviceAccountName: pangolin-sync
+      restartPolicy: OnFailure
+      containers:
+        - name: sync
+          image: alpine/curl:8.17.0
+          command: ["/bin/sh", "/scripts/sync-pangolin.sh"]
+          env:
+            - name: API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: pangolin-api-credentials
+                  key: apiKey
+            - name: ORG_ID
+              valueFrom:
+                secretKeyRef:
+                  name: pangolin-api-credentials
+                  key: orgId
+            - name: SITE_ID
+              valueFrom:
+                secretKeyRef:
+                  name: pangolin-api-credentials
+                  key: siteId
+            - name: API_BASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: pangolin-api-credentials
+                  key: apiBaseUrl
+          volumeMounts:
+            - name: scripts
+              mountPath: /scripts
+      volumes:
+        - name: scripts
+          configMap:
+            name: pangolin-sync-script
+            defaultMode: 0755
+---
+# CronJob: Runs every 5 minutes
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: pangolin-sync
+  namespace: cert-manager
+spec:
+  schedule: "*/5 * * * *" # Every 5 minutes
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      ttlSecondsAfterFinished: 3600 # Clean up after 1h
+      template:
+        spec:
+          serviceAccountName: pangolin-sync
+          restartPolicy: OnFailure
+          containers:
+            - name: sync
+              image: alpine/curl:8.17.0
+              command: ["/bin/sh", "/scripts/sync-pangolin.sh"]
+              env:
+                - name: API_KEY
+                  valueFrom:
+                    secretKeyRef:
+                      name: pangolin-api-credentials
+                      key: apiKey
+                - name: ORG_ID
+                  valueFrom:
+                    secretKeyRef:
+                      name: pangolin-api-credentials
+                      key: orgId
+                - name: SITE_ID
+                  valueFrom:
+                    secretKeyRef:
+                      name: pangolin-api-credentials
+                      key: siteId
+                - name: API_BASE_URL
+                  valueFrom:
+                    secretKeyRef:
+                      name: pangolin-api-credentials
+                      key: apiBaseUrl
+              volumeMounts:
+                - name: scripts
+                  mountPath: /scripts
+          volumes:
+            - name: scripts
+              configMap:
+                name: pangolin-sync-script
+                defaultMode: 0755

@@ -3,6 +3,11 @@ kind: Service
 metadata:
   name: uptime-kuma
   namespace: uptime-kuma
+  annotations:
+    pangolin.io/expose: "true"
+    pangolin.io/subdomain: "uptime"
+    pangolin.io/auth: "true"
+    pangolin.io/port: "3001"
   labels:
     app.kubernetes.io/name: uptime-kuma
 spec:

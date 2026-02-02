@@ -4,6 +4,11 @@ kind: Service
 metadata:
   name: adguard-macmini
   namespace: private-services
+  annotations:
+    pangolin.io/expose: "true"
+    pangolin.io/subdomain: "adguard-macmini"
+    pangolin.io/auth: "true"
+    pangolin.io/port: "80"
 spec:
   type: ClusterIP
   ports:

@@ -4,6 +4,11 @@ kind: Service
 metadata:
   name: unifi
   namespace: private-services
+  annotations:
+    pangolin.io/expose: "true"
+    pangolin.io/subdomain: "unifi"
+    pangolin.io/auth: "true"
+    pangolin.io/port: "443"
 spec:
   type: ClusterIP
   ports:
@@ -50,6 +55,11 @@ kind: Service
 metadata:
   name: unifi-nas
   namespace: private-services
+  annotations:
+    pangolin.io/expose: "true"
+    pangolin.io/subdomain: "nas"
+    pangolin.io/auth: "true"
+    pangolin.io/port: "443"
 spec:
   type: ClusterIP
   ports:

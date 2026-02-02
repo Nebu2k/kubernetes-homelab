@@ -8,3 +8,4 @@ resources:
   - ingress.yaml
   - servicemonitor.yaml
   - node-config.yaml
+  - service-patch.yaml

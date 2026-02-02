@@ -5,6 +5,11 @@ kind: Service
 metadata:
   name: minio-external
   namespace: private-services
+  annotations:
+    pangolin.io/expose: "true"
+    pangolin.io/subdomain: "minio"
+    pangolin.io/auth: "true"
+    pangolin.io/port: "9001"
 spec:
   type: ClusterIP
   clusterIP: None
@@ -17,6 +22,39 @@ spec:
       port: 9000
       targetPort: 9000
       protocol: TCP
+---
+# MinIO API Service (separate for minio-api subdomain)
+apiVersion: v1
+kind: Service
+metadata:
+  name: minio-api-external
+  namespace: private-services
+  annotations:
+    pangolin.io/expose: "true"
+    pangolin.io/subdomain: "minio-api"
+    pangolin.io/auth: "true"
+    pangolin.io/port: "9000"
+spec:
+  type: ClusterIP
+  clusterIP: None
+  ports:
+    - name: api
+      port: 9000
+      targetPort: 9000
+      protocol: TCP
+---
+apiVersion: v1
+kind: Endpoints
+metadata:
+  name: minio-api-external
+  namespace: private-services
+subsets:
+  - addresses:
+      - ip: 192.168.2.15
+    ports:
+      - name: api
+        port: 9000
+        protocol: TCP
 ---
 apiVersion: v1
 kind: Endpoints
@@ -82,6 +120,6 @@ spec:
             pathType: Prefix
             backend:
               service:
-                name: minio-external
+                name: minio-api-external
                 port:
                   name: api

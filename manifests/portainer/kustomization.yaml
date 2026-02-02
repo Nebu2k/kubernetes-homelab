@@ -4,3 +4,4 @@ namespace: portainer
 resources:
   - ingress.yaml
   - servers-transport.yaml
+  - service-patch.yaml

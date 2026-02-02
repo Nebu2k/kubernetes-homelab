@@ -4,6 +4,11 @@ kind: Service
 metadata:
   name: vscode
   namespace: private-services
+  annotations:
+    pangolin.io/expose: "true"
+    pangolin.io/subdomain: "vscode"
+    pangolin.io/auth: "true"
+    pangolin.io/port: "8080"
 spec:
   type: ClusterIP
   ports:
