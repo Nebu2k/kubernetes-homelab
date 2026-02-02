@@ -65,7 +65,7 @@ ADDED=0
 UPDATED=0
 SKIPPED=0
 
-while IFS= read -r service; do
+echo "${ALL_SERVICES}" | jq -c '.[]' | while IFS= read -r service; do
   HOST=$(echo "${service}" | jq -r '.host')
   SUBDOMAIN=$(echo "${service}" | jq -r '.subdomain')
   NAME=$(echo "${service}" | jq -r '.name')
@@ -199,23 +199,22 @@ while IFS= read -r service; do
       echo "    🗑️  Reconciling targets (found ${EXISTING_TARGET_COUNT}, expected 1)..."
 
       ALL_TARGET_IDS=$(echo "${EXISTING_TARGETS_JSON}" | jq -r '.[].targetId')
-      TARGETS_DELETED=0
 
-      while IFS= read -r TARGET_ID; do
-        if [ -n "${TARGET_ID}" ]; then
-          DELETE_RESPONSE=$(curl -s -X DELETE \
-            -H "Authorization: Bearer ${API_KEY}" \
-            "${API_BASE_URL}/resource/${EXISTING_RESOURCE_ID}/target/${TARGET_ID}")
+      if [ -n "${ALL_TARGET_IDS}" ]; then
+        echo "${ALL_TARGET_IDS}" | while IFS= read -r TARGET_ID; do
+          if [ -n "${TARGET_ID}" ]; then
+            DELETE_RESPONSE=$(curl -s -X DELETE \
+              -H "Authorization: Bearer ${API_KEY}" \
+              "${API_BASE_URL}/resource/${EXISTING_RESOURCE_ID}/target/${TARGET_ID}")
 
-          if echo "${DELETE_RESPONSE}" | jq -e '.success' > /dev/null; then
-            TARGETS_DELETED=$((TARGETS_DELETED + 1))
-          else
-            echo "    ⚠️  Failed to delete target ${TARGET_ID}"
+            if echo "${DELETE_RESPONSE}" | jq -e '.success' > /dev/null; then
+              echo "    ✓ Deleted target ${TARGET_ID}"
+            else
+              echo "    ⚠️  Failed to delete target ${TARGET_ID}"
+            fi
           fi
-        fi
-      done <<< "${ALL_TARGET_IDS}"
-
-      echo "    ✓ Deleted ${TARGETS_DELETED} target(s)"
+        done
+      fi
 
       # Now create the correct target
       echo "    ➕ Creating correct target: ${TARGET_IP}:${TARGET_PORT}"
@@ -319,7 +318,7 @@ while IFS= read -r service; do
       fi
     fi
   fi
-done < <(echo "${ALL_SERVICES}" | jq -c '.[]')
+done
 
 # Step 2: Remove orphaned resources
 echo ""
@@ -328,19 +327,19 @@ echo "🗑️  Checking for orphaned resources..."
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 REMOVED=0
 
-while IFS= read -r resource; do
+echo "${PANGOLIN_RESOURCES}" | jq -rc 'if type == "array" then .[] else empty end' | while IFS= read -r resource; do
   FULL_DOMAIN=$(echo "${resource}" | jq -r '.fullDomain // empty')
   RESOURCE_ID=$(echo "${resource}" | jq -r '.resourceId')
-  
+
   # Skip if no domain
   if [ -z "${FULL_DOMAIN}" ]; then
     continue
   fi
-  
+
   # Check if this host exists in our service list
   if ! echo "${ALL_SERVICES}" | jq -e ".[] | select(.host == \"${FULL_DOMAIN}\")" > /dev/null; then
     echo "  ✗ Removing orphaned resource: ${FULL_DOMAIN}"
-    
+
     DELETE_RESPONSE=$(curl -s -X DELETE \
       -H "Authorization: Bearer ${API_KEY}" \
       "${API_BASE_URL}/resource/${RESOURCE_ID}")
@@ -351,7 +350,7 @@ while IFS= read -r resource; do
       echo "    ❌ Failed to remove: $(echo "${DELETE_RESPONSE}" | jq -r '.message // "Unknown error"')"
     fi
   fi
-done < <(echo "${PANGOLIN_RESOURCES}" | jq -rc 'if type == "array" then .[] else empty end')
+done
 
 echo ""
 echo "═══════════════════════════════════════════════════════"
