@@ -33,8 +33,8 @@ Production-ready K3s cluster managed via GitOps using ArgoCD App-of-Apps pattern
 ### Prerequisites
 
 - 2+ nodes
-- Domain with Cloudflare DNS
-- Cloudflare API Token (Zone.DNS Edit permission)
+- Domain (any DNS provider)
+- Pangolin API credentials (for SSL/TLS certificates)
 - S3-compatible storage for Longhorn backups (optional)
 
 ### Step 1: Install K3s Cluster (**on raspi4**)
@@ -270,39 +270,22 @@ cd kubernetes-homelab
    # Change: 192.168.2.250-192.168.2.253
    ```
 
-2. **Cert-Manager Email**:
-
-   ```bash
-   vim manifests/cert-manager/cluster-issuer.yaml
-   # Change: certs@elmstreet79.de
-   ```
-
-3. **Cloudflare API Token** (required):
+2. **Pangolin API Credentials** (required):
 
    ```bash
    # Create from example
-   cp manifests/cert-manager/cloudflare-token-unsealed.yaml.example \
-      manifests/cert-manager/cloudflare-token-unsealed.yaml
+   cp manifests/pangolin-sync/pangolin-api-credentials-unsealed.yaml.example \
+      manifests/pangolin-sync/pangolin-api-credentials-unsealed.yaml
    
-   # Add your Cloudflare API token
-   vim manifests/cert-manager/cloudflare-token-unsealed.yaml
-   # Change: api-token: "your-cloudflare-api-token-here"
+   # Add your Pangolin API credentials
+   vim manifests/pangolin-sync/pangolin-api-credentials-unsealed.yaml
+   # Update: API_KEY, ORG_ID, SITE_ID, DOMAIN_ID, DOMAIN_SUFFIX
    
    # Note: Sealing happens AFTER cluster bootstrap (Step 7+)
    # For now, keep it unsealed locally (gitignored)
    ```
 
-   **Generate secure passwords/keys:**
-
-   ```bash
-   # Generate a secure password (32 bytes, base64 encoded)
-   openssl rand -base64 32
-   
-   # Generate a longer encryption key (64 bytes, base64 encoded)
-   openssl rand -base64 64
-   ```
-
-4. **Longhorn S3 Backup** (optional):
+3. **Longhorn S3 Backup** (optional):
 
    ```bash
    # Create from example
@@ -319,7 +302,7 @@ cd kubernetes-homelab
 
    ⚠️ **Note:** `*-unsealed.yaml` files are gitignored for security. Only `.example` templates are committed.
 
-5. **Traefik Dashboard Domain** (required if using different domain):
+4. **Traefik Dashboard Domain** (required if using different domain):
 
    The Traefik dashboard is configured in the Helm values file:
 
@@ -328,19 +311,6 @@ cd kubernetes-homelab
    # Update line 45: matchRule: Host(`traefik.your-domain.com`)
    # Update annotations with your domain
    ```
-
-6. **Cloudflare DNS Sync Configuration** (optional - adjust DynDNS target):
-
-   If you want to change the DynDNS target for public DNS records:
-
-   ```bash
-   vim manifests/cert-manager/cloudflare-dns-sync-configmap.yaml
-   # Update TARGET to your DynDNS hostname (e.g., your-hostname.ipv64.net)
-   # Update ZONE_ID to your Cloudflare Zone ID
-   ```
-
-   **Get Cloudflare Zone ID** (if needed):
-   - Cloudflare Dashboard → Your Domain → Overview (right sidebar)
 
 **Commit and push:**
 
@@ -363,7 +333,7 @@ kubectl get applications -n argocd -w
 **What happens:**
 
 - Sealed Secrets Controller installs first (Sync-Wave 0)
-- MetalLB, Cert-Manager, Traefik, etc. follow in order
+- MetalLB, Pangolin, Traefik, etc. follow in order
 - Some apps will stay "Progressing" until secrets are sealed (next step)
 
 ### Step 7.5: Seal Secrets (**on your laptop** - AFTER Step 7)
@@ -384,39 +354,29 @@ This allows you to seal secrets even when not connected to the cluster:
 # Download the public certificate (one-time setup)
 kubeseal --fetch-cert --controller-namespace=kube-system > sealed-secrets-pub-cert.pem
 
-# Now seal your secrets offline using the certificate
+# Seal Pangolin API credentials
 kubeseal --cert sealed-secrets-pub-cert.pem --format=yaml \
-  < manifests/cert-manager/cloudflare-token-unsealed.yaml \
-  > manifests/cert-manager/cloudflare-token-sealed.yaml
-
-# Seal AdGuard credentials for DNS sync:
-kubeseal --cert sealed-secrets-pub-cert.pem --format=yaml \
-  < manifests/private-services/adguard-credentials-unsealed.yaml \
-  > manifests/private-services/adguard-credentials-sealed.yaml
+  < manifests/pangolin-sync/pangolin-api-credentials-unsealed.yaml \
+  > manifests/pangolin-sync/pangolin-api-credentials-sealed.yaml
 
 # If using Longhorn S3 backup:
 kubeseal --cert sealed-secrets-pub-cert.pem --format=yaml \
-  < manifests/longhorn/s3-secret-unsealed.yaml \
-  > manifests/longhorn/s3-secret-sealed.yaml
+  < manifests/longhorn/minio-secret-unsealed.yaml \
+  > manifests/longhorn/minio-secret-sealed.yaml
 ```
 
 **Option B: Seal directly from cluster** (requires cluster access):
 
 ```bash
-# Seal your secrets (must be connected to cluster)
+# Seal Pangolin API credentials
 kubeseal --format=yaml --controller-namespace=kube-system \
-  < manifests/cert-manager/cloudflare-token-unsealed.yaml \
-  > manifests/cert-manager/cloudflare-token-sealed.yaml
-
-# Seal AdGuard credentials for DNS sync:
-kubeseal --format=yaml --controller-namespace=kube-system \
-  < manifests/private-services/adguard-credentials-unsealed.yaml \
-  > manifests/private-services/adguard-credentials-sealed.yaml
+  < manifests/pangolin-sync/pangolin-api-credentials-unsealed.yaml \
+  > manifests/pangolin-sync/pangolin-api-credentials-sealed.yaml
 
 # If using Longhorn S3 backup:
 kubeseal --format=yaml --controller-namespace=kube-system \
-  < manifests/longhorn/s3-secret-unsealed.yaml \
-  > manifests/longhorn/s3-secret-sealed.yaml
+  < manifests/longhorn/minio-secret-unsealed.yaml \
+  > manifests/longhorn/minio-secret-sealed.yaml
 ```
 
 **Commit and deploy:**
@@ -473,17 +433,16 @@ kubectl get applications -n argocd
 kubectl get svc -n traefik
 # EXTERNAL-IP should show 192.168.2.250
 
-# Certificates issued (takes 2-5 min for DNS-01)
-kubectl get certificate -A
-# All should show READY=True
-
 # Ingresses configured
 kubectl get ingress -A
 ```
 
 ### Step 9: Access UIs (**from your laptop browser**)
 
-⚠️ **DNS Records**: All public DNS records (HTTPS services) are **automatically created** by the Cloudflare DNS Sync job after deployment! No manual DNS configuration needed.
+⚠️ **All Services**: Services annotated with `pangolin.io/expose: "true"` are automatically registered in Pangolin for external HTTPS access with SSL certificates!
+
+- **With Authentication**: Services with `pangolin.io/auth: "true"` require Pangolin authentication
+- **Without Authentication**: Services without auth annotation are directly accessible from the internet
 
 **ArgoCD:**
 
@@ -519,8 +478,8 @@ kubectl delete pod -n portainer -l app.kubernetes.io/name=portainer
 **Longhorn:**
 
 ```text
-URL: http://longhorn.elmstreet79.de
-(Internal DNS only, managed by AdGuard DNS Sync)
+URL: https://longhorn.elmstreet79.de
+(via Pangolin)
 ```
 
 **Homepage (Homelab Dashboard):**
@@ -539,103 +498,33 @@ URL: https://uptime.elmstreet79.de
 
 ⚠️ **First visit:** Create admin account on initial access. Then add monitors for your services.
 
-**Private Services:**
+**Service Access Architecture:**
 
-Private Services provide internal DNS names for services running outside Kubernetes (e.g., Docker containers on Raspberry Pis) without exposing them publicly. This architecture uses:
+All services are accessible via Pangolin's secure network infrastructure:
 
-1. **Internal DNS Names**: Services accessible via `*.elmstreet79.de` only within the local network
-2. **Automated DNS Management**: PostSync Hook + CronJob automatically sync Kubernetes Ingresses to AdGuard Home DNS Rewrites
-3. **Single Source of Truth**: AdGuard Home manages all internal DNS rewrites, CoreDNS forwards queries to AdGuard
-4. **No Public SSL**: Internal services use HTTP only (no cert-manager annotations)
+**Pangolin-Exposed Services:**
 
-**Architecture:**
+- **Filter Logic**: Ingresses/Services WITH `pangolin.io/expose: "true"` annotation
+- **Access**: Publicly accessible from the internet with automatic SSL/TLS certificates
+- **Authentication**:
+  - `pangolin.io/auth: "true"` → Requires Pangolin authentication (secure, private access)
+  - `pangolin.io/auth: "false"` or no auth annotation → Directly accessible without authentication
 
-```text
-External Service → Kubernetes Service (ClusterIP) → Manual Endpoints → External IP:Port
-                ↓
-            IngressRoute → Traefik LoadBalancer (192.168.2.250)
-                ↓
-            AdGuard DNS Sync Job → AdGuard API → DNS Rewrite (*.elmstreet79.de → 192.168.2.250)
-                ↓
-            CoreDNS → Forward *.elmstreet79.de → AdGuard DNS (192.168.2.2, 192.168.2.4)
-```
+**Pangolin Sync Automation:**
+
+- **PostSync Hook**: Runs automatically after every ArgoCD sync
+- **CronJob**: Fallback every 5 minutes
+- **Pangolin API**: Registers resources in Pangolin network for secure external access
+- **Auto-Cleanup**: Removes orphaned resources when Ingresses/Services are deleted
+- **SSL/TLS**: Pangolin provides automatic SSL certificates for all exposed services
 
 **Examples:**
 
 ```text
-AdGuard Home: http://adguard.elmstreet79.de → 192.168.2.2:8080
-Longhorn: http://longhorn.elmstreet79.de → Internal K8s service
-```
-
-**AdGuard DNS Sync Automation:**
-
-- **PostSync Hook**: Runs automatically after every ArgoCD sync
-- **Filter Logic**: Only syncs Ingresses WITHOUT `cert-manager.io/cluster-issuer` annotation
-- **AdGuard API**: Creates/updates/deletes DNS Rewrites pointing to Traefik LoadBalancer IP (192.168.2.250)
-- **Auto-Cleanup**: Removes orphaned DNS entries when Ingresses are deleted
-
-**Public Services with SSL:**
-
-Public services (accessible from the internet) use a separate DNS sync system:
-
-**Cloudflare DNS Sync Automation:**
-
-- **PostSync Hook**: Runs automatically after every ArgoCD sync
-- **CronJob**: Fallback every 6 hours
-- **Filter Logic**: Only syncs Ingresses WITH `cert-manager.io/cluster-issuer` annotation
-- **Cloudflare API**: Creates/updates/deletes CNAME records pointing to DynDNS target (e.g., `nebu2k.ipv64.net`)
-- **Auto-Cleanup**: Removes orphaned DNS records when Ingresses are deleted
-- **Let's Encrypt**: Cert-Manager automatically provisions SSL certificates via DNS-01 challenge
-
-**Examples:**
-
-```text
-TeslaLogger: https://teslalogger.elmstreet79.de (→ 192.168.2.9:3000)
-Dreambox: https://dreambox.elmstreet79.de (→ 192.168.2.11:80)
-(External services routed via Traefik IngressRoute with TLS)
-```
-
-### Internal CA for Private Services
-
-The cluster includes an **Internal Certificate Authority** for issuing self-signed certificates to private services (services without public SSL certificates). This is automatically deployed via `private-services.yaml` (Sync-Wave 16).
-
-**Architecture:**
-
-1. **Self-Signed CA**: Created by cert-manager in `cert-manager` namespace
-2. **Internal ClusterIssuer**: Issues certificates for internal services
-3. **Automatic Distribution**: CronJob copies CA certificate to `homepage` namespace every 12 hours
-4. **Use Case**: Homepage can trust internal services with self-signed certificates
-
-**Trust Internal CA on your laptop** (for accessing internal HTTPS services without browser warnings):
-
-```bash
-# Export the CA certificate from the cluster
-kubectl get secret internal-ca-secret -n cert-manager \
-  -o jsonpath='{.data.ca\.crt}' | base64 -d > internal-ca.crt
-
-# macOS: Add to system keychain and trust
-sudo security add-trusted-cert -d -r trustRoot \
-  -k /Library/Keychains/System.keychain internal-ca.crt
-
-# Linux: Add to trusted certificates
-sudo cp internal-ca.crt /usr/local/share/ca-certificates/
-sudo update-ca-certificates
-
-# Windows: Import via certmgr.msc
-# Double-click internal-ca.crt → Install Certificate → Local Machine → 
-# Place in "Trusted Root Certification Authorities"
-```
-
-⚠️ **Note:** After adding the CA certificate, restart your browser to apply the changes.
-
-**Verify CA is working:**
-
-```bash
-# Check if internal-ca certificate exists
-kubectl get certificate internal-ca -n cert-manager
-
-# Check if ClusterIssuer is ready
-kubectl get clusterissuer internal-ca-issuer
+Homepage: https://home.elmstreet79.de (pangolin.io/auth: "true" → requires authentication)
+Uptime Kuma: https://uptime.elmstreet79.de (pangolin.io/auth: "false" → public access)
+ArgoCD: https://argocd.elmstreet79.de (via Pangolin with authentication)
+Longhorn: https://longhorn.elmstreet79.de (via Pangolin with authentication)
 ```
 
 ## 🔧 Management
@@ -673,16 +562,16 @@ kubectl get application traefik -n argocd -w
 
 ```bash
 # 1. Edit unsealed secret
-vim manifests/cert-manager/cloudflare-token-unsealed.yaml
+vim manifests/pangolin-sync/pangolin-api-credentials-unsealed.yaml
 
 # 2. Re-seal (using offline certificate)
 kubeseal --cert sealed-secrets-pub-cert.pem --format=yaml \
-  < manifests/cert-manager/cloudflare-token-unsealed.yaml \
-  > manifests/cert-manager/cloudflare-token-sealed.yaml
+  < manifests/pangolin-sync/pangolin-api-credentials-unsealed.yaml \
+  > manifests/pangolin-sync/pangolin-api-credentials-sealed.yaml
 
 # 3. Commit and push
-git add manifests/cert-manager/cloudflare-token-sealed.yaml
-git commit -m "Rotate Cloudflare token"
+git add manifests/pangolin-sync/pangolin-api-credentials-sealed.yaml
+git commit -m "Rotate Pangolin API credentials"
 git push
 ```
 
@@ -691,8 +580,8 @@ git push
 ```bash
 # Re-seal (requires cluster connection)
 kubeseal --format=yaml --controller-namespace=kube-system \
-  < manifests/cert-manager/cloudflare-token-unsealed.yaml \
-  > manifests/cert-manager/cloudflare-token-sealed.yaml
+  < manifests/pangolin-sync/pangolin-api-credentials-unsealed.yaml \
+  > manifests/pangolin-sync/pangolin-api-credentials-sealed.yaml
 ```
 
 ### Force Sync Application
@@ -739,27 +628,6 @@ kubectl logs -n metallb-system -l app.kubernetes.io/component=speaker
 ```
 
 **Fix:** Ensure L2Advertisement exists in `manifests/metallb/metallb-ip-pool.yaml`
-
-### Certificates Not Ready
-
-**Check status:**
-
-```bash
-kubectl describe certificate <name> -n <namespace>
-kubectl get challenge -A
-```
-
-**Common issues:**
-
-1. Cloudflare secret not sealed correctly
-2. DNS-01 challenge takes 2-5 minutes (normal)
-3. Cert-Manager webhook TLS error (delete webhook pod to restart)
-
-**Fix webhook:**
-
-```bash
-kubectl delete pod -n cert-manager -l app.kubernetes.io/name=webhook
-```
 
 ### ArgoCD App OutOfSync
 
