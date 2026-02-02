@@ -25,12 +25,11 @@ TOKEN=$(cat /var/run/secrets/kubernetes.io/serviceaccount/token)
 
 # Step 1: Fetch Ingresses with Pangolin annotations
 echo "📡 Fetching Ingresses with pangolin.io/expose annotation..."
+
+# Fetch all ingresses across all namespaces (cluster-wide)
 INGRESS_SERVICES=$(curl -s --cacert /var/run/secrets/kubernetes.io/serviceaccount/ca.crt -H "Authorization: Bearer ${TOKEN}" \
-  "https://kubernetes.default.svc/api/v1/namespaces" | \
-  jq -r '.items[].metadata.name' | while read -r ns; do
-    curl -s --cacert /var/run/secrets/kubernetes.io/serviceaccount/ca.crt -H "Authorization: Bearer ${TOKEN}" \
-      "https://kubernetes.default.svc/apis/networking.k8s.io/v1/namespaces/${ns}/ingresses" 2>/dev/null || echo '{"items":[]}'
-  done | jq -s 'map(.items[]) | .[] |
+  "https://kubernetes.default.svc/apis/networking.k8s.io/v1/ingresses" | \
+  jq '[.items[] |
     select(.metadata.annotations["pangolin.io/expose"] == "true") |
     {
       name: .spec.rules[0].http.paths[0].backend.service.name,
@@ -40,7 +39,7 @@ INGRESS_SERVICES=$(curl -s --cacert /var/run/secrets/kubernetes.io/serviceaccoun
       port: (.spec.rules[0].http.paths[0].backend.service.port.number // .spec.rules[0].http.paths[0].backend.service.port.name),
       host: .spec.rules[0].host,
       source: "ingress"
-    }' | jq -s '.')
+    }]')
 
 INGRESS_COUNT=$(echo "${INGRESS_SERVICES}" | jq 'length')
 echo "✓ Found ${INGRESS_COUNT} ingresses with pangolin.io/expose annotation"
