@@ -3,10 +3,6 @@ kind: Service
 metadata:
   name: fr24feed
   namespace: fr24
-  annotations:
-    pangolin.io/expose: "true"
-    pangolin.io/subdomain: "fr24"
-    pangolin.io/auth: "true"
   labels:
     app: fr24feed
 spec:
