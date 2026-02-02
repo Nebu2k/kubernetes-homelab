@@ -17,6 +17,7 @@ spec:
       containers:
         - name: sync
           image: nebu2k/pangolin-sync:1.0-alpine3.23
+          imagePullPolicy: Always
           envFrom:
             - secretRef:
                 name: pangolin-api-credentials
@@ -43,6 +44,7 @@ spec:
           containers:
             - name: sync
               image: nebu2k/pangolin-sync:1.0-alpine3.23
+              imagePullPolicy: Always
               envFrom:
                 - secretRef:
                     name: pangolin-api-credentials
