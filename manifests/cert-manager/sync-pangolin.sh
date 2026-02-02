@@ -232,7 +232,7 @@ echo "${ALL_SERVICES}" | jq -c '.[]' | while IFS= read -r service; do
           "${API_BASE_URL}/resource/${RESOURCE_ID}" \
           -d '{"sso": false}')
         
-        if echo "${UPDATE_RESPONSE}" | jq -e '.success' > /dev/null 2>&1; then
+        if echo "${UPDATE_RESPONSE}" | jq -e '.success' > /dev/null; then
           echo "    ✓ SSO disabled"
         fi
       fi
