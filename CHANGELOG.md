@@ -1,3 +1,10 @@
+## [3.27.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v3.26.3...v3.27.0) (2026-02-02)
+
+
+### ✨ Features
+
+* **traefik:** add ingress route configuration for dashboard with TLS ([49351b8](https://github.com/Nebu2k/kubernetes-homelab/commit/49351b8a337338cb3348ea1be24c6324efe6d587))
+
 ## [3.26.3](https://github.com/Nebu2k/kubernetes-homelab/compare/v3.26.2...v3.26.3) (2026-02-02)
 
 
