@@ -103,6 +103,7 @@ homelab/
     ├── coredns/
     │   ├── coredns-custom.yaml
     │   └── kustomization.yaml
+    ├── external-services/
     ├── fr24/
     │   ├── deployment.yaml
     │   ├── fr24-secret-sealed.yaml
@@ -205,6 +206,7 @@ homelab/
     │   └── values.yaml
     ├── nfs-subdir-external-provisioner/
     │   └── values.yaml
+    ├── pangolin-sync/
     ├── paperless-ngx/
     │   ├── backup-cronjob.yaml
     │   ├── db-pvc.yaml
