@@ -1,3 +1,10 @@
+## [3.27.1](https://github.com/Nebu2k/kubernetes-homelab/compare/v3.27.0...v3.27.1) (2026-02-02)
+
+
+### 🐛 Bug Fixes
+
+* **traefik:** remove ingress resource from kustomization.yaml ([4cbde16](https://github.com/Nebu2k/kubernetes-homelab/commit/4cbde16a9c80150367b3db9831e3c0c866ee8daf))
+
 ## [3.27.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v3.26.3...v3.27.0) (2026-02-02)
 
 
