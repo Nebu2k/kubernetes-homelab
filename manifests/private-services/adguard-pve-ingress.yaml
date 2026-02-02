@@ -1,35 +1,4 @@
 ---
-apiVersion: v1
-kind: Service
-metadata:
-  name: adguard-pve
-  namespace: private-services
-  annotations:
-    pangolin.io/expose: "true"
-    pangolin.io/subdomain: "adguard"
-    pangolin.io/auth: "true"
-    pangolin.io/port: "80"
-spec:
-  type: ClusterIP
-  ports:
-    - name: http
-      port: 80
-      targetPort: 80
-      protocol: TCP
----
-apiVersion: v1
-kind: Endpoints
-metadata:
-  name: adguard-pve
-  namespace: private-services
-subsets:
-  - addresses:
-      - ip: 192.168.2.16
-    ports:
-      - name: http
-        port: 80
-        protocol: TCP
----
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:

@@ -4,4 +4,4 @@ namespace: traefik
 resources:
   - certificate.yaml
   - ingress.yaml
-  - service-patch.yaml
+  - service.yaml

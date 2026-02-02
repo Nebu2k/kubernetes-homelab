@@ -54,20 +54,3 @@ spec:
           limits:
             memory: "512Mi"
             cpu: "500m"
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: teslamate
-  namespace: teslamate
-  annotations:
-    pangolin.io/expose: "true"
-    pangolin.io/subdomain: "teslamate-settings"
-    pangolin.io/auth: "true"
-    pangolin.io/port: "4000"
-spec:
-  selector:
-    app: teslamate
-  ports:
-  - port: 4000
-    targetPort: 4000

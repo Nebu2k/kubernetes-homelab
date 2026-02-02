@@ -1,0 +1,31 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: adguard-macmini
+  namespace: private-services
+  annotations:
+    pangolin.io/expose: "true"
+    pangolin.io/subdomain: "adguard-macmini"
+    pangolin.io/auth: "true"
+    pangolin.io/port: "80"
+spec:
+  type: ClusterIP
+  ports:
+    - name: http
+      port: 80
+      targetPort: 80
+      protocol: TCP
+---
+apiVersion: v1
+kind: Endpoints
+metadata:
+  name: adguard-macmini
+  namespace: private-services
+subsets:
+  - addresses:
+      - ip: 192.168.2.4
+    ports:
+      - name: http
+        port: 80
+        protocol: TCP

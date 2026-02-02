@@ -9,4 +9,4 @@ resources:
   - alertmanager-ingress.yaml
   - prometheus-rules.yaml
   - aws-credentials-sealed.yaml
-  - service-patches.yaml
+  - services.yaml

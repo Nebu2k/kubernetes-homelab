@@ -57,15 +57,3 @@ spec:
       - name: data
         persistentVolumeClaim:
           claimName: teslamate-db
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: teslamate-database
-  namespace: teslamate
-spec:
-  selector:
-    app: teslamate-database
-  ports:
-  - port: 5432
-    targetPort: 5432

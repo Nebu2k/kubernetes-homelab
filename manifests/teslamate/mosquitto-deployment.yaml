@@ -42,15 +42,3 @@ spec:
       - name: data
         persistentVolumeClaim:
           claimName: mosquitto-data
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: teslamate-mosquitto
-  namespace: teslamate
-spec:
-  selector:
-    app: teslamate-mosquitto
-  ports:
-  - port: 1883
-    targetPort: 1883
