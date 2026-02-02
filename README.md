@@ -208,8 +208,7 @@ homelab/
     │   ├── pangolin-api-credentials-sealed.yaml
     │   ├── pangolin-api-credentials-unsealed.yaml.example
     │   ├── pangolin-sync-job.yaml
-    │   ├── pangolin-sync-rbac.yaml
-    │   └── values.yaml
+    │   └── pangolin-sync-rbac.yaml
     ├── paperless-ngx/
     │   ├── backup-cronjob.yaml
     │   ├── db-pvc.yaml
