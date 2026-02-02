@@ -65,7 +65,7 @@ ADDED=0
 UPDATED=0
 SKIPPED=0
 
-echo "${ALL_SERVICES}" | jq -c '.[]' | while IFS= read -r service; do
+while IFS= read -r service; do
   HOST=$(echo "${service}" | jq -r '.host')
   SUBDOMAIN=$(echo "${service}" | jq -r '.subdomain')
   NAME=$(echo "${service}" | jq -r '.name')
@@ -301,7 +301,7 @@ echo "${ALL_SERVICES}" | jq -c '.[]' | while IFS= read -r service; do
       fi
     fi
   fi
-done
+done < <(echo "${ALL_SERVICES}" | jq -c '.[]')
 
 # Step 2: Remove orphaned resources
 echo ""
@@ -310,7 +310,7 @@ echo "🗑️  Checking for orphaned resources..."
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 REMOVED=0
 
-echo "${PANGOLIN_RESOURCES}" | jq -rc 'if type == "array" then .[] else empty end' | while IFS= read -r resource; do
+while IFS= read -r resource; do
   FULL_DOMAIN=$(echo "${resource}" | jq -r '.fullDomain // empty')
   RESOURCE_ID=$(echo "${resource}" | jq -r '.resourceId')
   
@@ -333,7 +333,7 @@ echo "${PANGOLIN_RESOURCES}" | jq -rc 'if type == "array" then .[] else empty en
       echo "    ❌ Failed to remove: $(echo "${DELETE_RESPONSE}" | jq -r '.message // "Unknown error"')"
     fi
   fi
-done
+done < <(echo "${PANGOLIN_RESOURCES}" | jq -rc 'if type == "array" then .[] else empty end')
 
 echo ""
 echo "═══════════════════════════════════════════════════════"
