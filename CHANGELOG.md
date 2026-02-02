@@ -1,3 +1,10 @@
+## [3.24.1](https://github.com/Nebu2k/kubernetes-homelab/compare/v3.24.0...v3.24.1) (2026-02-02)
+
+
+### ♻️ Code Refactoring
+
+* **sync-pangolin:** improve host calculation logic for service subdomains ([00de9b6](https://github.com/Nebu2k/kubernetes-homelab/commit/00de9b6839a80858d567be546c903af6f902380d))
+
 ## [3.24.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v3.23.2...v3.24.0) (2026-02-02)
 
 
