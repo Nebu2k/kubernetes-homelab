@@ -97,43 +97,17 @@ while IFS= read -r service; do
     continue
   fi
   
+  
   # Get the targetPort from the port spec (can be name or number)
   TARGET_PORT_VALUE=$(echo "${PORT_SPEC}" | jq -r '.targetPort // .port')
   
   echo "    → Service port: ${SERVICE_PORT}, target port: ${TARGET_PORT_VALUE}"
   
-  if [ "${SVC_TYPE}" = "ClusterIP" ] || [ "${SVC_TYPE}" = "ExternalName" ]; then
-    # For ClusterIP, check if it's an external service (has Endpoints)
-    ENDPOINTS=$(curl -s --cacert /var/run/secrets/kubernetes.io/serviceaccount/ca.crt -H "Authorization: Bearer ${TOKEN}" \
-      "https://kubernetes.default.svc/api/v1/namespaces/${NAMESPACE}/endpoints/${NAME}")
-    
-    TARGET_IP=$(echo "${ENDPOINTS}" | jq -r '.subsets[0].addresses[0].ip // empty')
-    
-    # Match endpoint port using targetPort value (can be name or number)
-    if echo "${TARGET_PORT_VALUE}" | grep -qE '^[0-9]+$'; then
-      # Numeric targetPort - match by port number
-      TARGET_PORT=$(echo "${ENDPOINTS}" | jq -r ".subsets[0].ports[] | select(.port == ${TARGET_PORT_VALUE}) | .port // empty" | head -n1)
-    else
-      # Named targetPort - match by name
-      TARGET_PORT=$(echo "${ENDPOINTS}" | jq -r ".subsets[0].ports[] | select(.name == \"${TARGET_PORT_VALUE}\") | .port // empty" | head -n1)
-    fi
-    
-    if [ -z "${TARGET_PORT}" ]; then
-      # Fallback: if targetPort is numeric, use it directly
-      if echo "${TARGET_PORT_VALUE}" | grep -qE '^[0-9]+$'; then
-        TARGET_PORT="${TARGET_PORT_VALUE}"
-      else
-        echo "    ⚠️  Could not resolve target port '${TARGET_PORT_VALUE}' in endpoints, skipping"
-        continue
-      fi
-    fi
-    
-    if [ -z "${TARGET_IP}" ]; then
-      # Fallback to service cluster IP (for internal services)
-      TARGET_IP=$(echo "${SVC_DATA}" | jq -r '.spec.clusterIP // empty')
-    fi
-  elif [ "${SVC_TYPE}" = "LoadBalancer" ]; then
+  # Determine target IP and port based on service type
+  if [ "${SVC_TYPE}" = "LoadBalancer" ]; then
+    # LoadBalancer services use their own external IP
     TARGET_IP=$(echo "${SVC_DATA}" | jq -r '.status.loadBalancer.ingress[0].ip // empty')
+    
     # For LoadBalancer, use the targetPort from service spec
     if echo "${TARGET_PORT_VALUE}" | grep -qE '^[0-9]+$'; then
       TARGET_PORT="${TARGET_PORT_VALUE}"
@@ -141,6 +115,53 @@ while IFS= read -r service; do
       # Named targetPort on LoadBalancer - should not happen, but fallback to service port
       TARGET_PORT=$(echo "${PORT_SPEC}" | jq -r '.port')
     fi
+    
+    if [ -z "${TARGET_IP}" ]; then
+      echo "    ⚠️  LoadBalancer IP not assigned yet, skipping"
+      continue
+    fi
+    
+    echo "    → LoadBalancer service: ${TARGET_IP}:${TARGET_PORT}"
+    
+  elif [ "${SVC_TYPE}" = "ClusterIP" ] || [ "${SVC_TYPE}" = "NodePort" ]; then
+    # Check if this is an external service (Endpoints pointing outside cluster)
+    ENDPOINTS=$(curl -s --cacert /var/run/secrets/kubernetes.io/serviceaccount/ca.crt -H "Authorization: Bearer ${TOKEN}" \
+      "https://kubernetes.default.svc/api/v1/namespaces/${NAMESPACE}/endpoints/${NAME}")
+    
+    ENDPOINT_IP=$(echo "${ENDPOINTS}" | jq -r '.subsets[0].addresses[0].ip // empty')
+    
+    # Check if endpoint IP is outside cluster network (10.42.x.x or 10.43.x.x = cluster IPs)
+    if [ -n "${ENDPOINT_IP}" ] && ! echo "${ENDPOINT_IP}" | grep -qE '^10\.(42|43)\.'; then
+      # External endpoint - use it directly (e.g., dreambox, proxmox)
+      TARGET_IP="${ENDPOINT_IP}"
+      
+      # Match endpoint port
+      if echo "${TARGET_PORT_VALUE}" | grep -qE '^[0-9]+$'; then
+        TARGET_PORT=$(echo "${ENDPOINTS}" | jq -r ".subsets[0].ports[] | select(.port == ${TARGET_PORT_VALUE}) | .port // empty" | head -n1)
+      else
+        TARGET_PORT=$(echo "${ENDPOINTS}" | jq -r ".subsets[0].ports[] | select(.name == \"${TARGET_PORT_VALUE}\") | .port // empty" | head -n1)
+      fi
+      
+      if [ -z "${TARGET_PORT}" ]; then
+        if echo "${TARGET_PORT_VALUE}" | grep -qE '^[0-9]+$'; then
+          TARGET_PORT="${TARGET_PORT_VALUE}"
+        else
+          echo "    ⚠️  Could not resolve target port '${TARGET_PORT_VALUE}' in endpoints, skipping"
+          continue
+        fi
+      fi
+      
+      echo "    → External service: ${TARGET_IP}:${TARGET_PORT}"
+    else
+      # Internal cluster service - route via Traefik LoadBalancer
+      TARGET_IP="192.168.2.250"
+      TARGET_PORT="443"
+      echo "    → Internal cluster service - routing via Traefik LB: ${TARGET_IP}:${TARGET_PORT}"
+    fi
+    
+  elif [ "${SVC_TYPE}" = "ExternalName" ]; then
+    echo "    ⚠️  ExternalName services not supported, skipping"
+    continue
   else
     echo "    ⚠️  Unknown service type: ${SVC_TYPE}, skipping"
     continue
@@ -157,7 +178,6 @@ while IFS= read -r service; do
   fi
 
   echo "    → Target: https://${TARGET_IP}:${TARGET_PORT}"
-
   # Check if resource already exists in Pangolin (match by fullDomain)
   EXISTING_RESOURCE_ID=$(echo "${PANGOLIN_RESOURCES}" | jq -r ".[] | select(.fullDomain == \"${HOST}\") | .resourceId")
   EXISTING_TARGETS=$(echo "${PANGOLIN_RESOURCES}" | jq -r ".[] | select(.fullDomain == \"${HOST}\") | .targets | length")
@@ -181,6 +201,8 @@ while IFS= read -r service; do
       if echo "${TARGET_RESPONSE}" | jq -e '.success' > /dev/null; then
         echo "    ✓ Updated ${HOST} → ${TARGET_IP}:${TARGET_PORT}"
         UPDATED=$((UPDATED + 1))
+        # Reload resources after update
+        PANGOLIN_RESOURCES=$(curl -s -H "Authorization: Bearer ${API_KEY}" "${API_BASE_URL}/org/${ORG_ID}/resources" | jq -r ".data.resources // []")
       else
         echo "    ❌ Failed to add target: $(echo ${TARGET_RESPONSE} | jq -r '.message // "Unknown error"')"
       fi
@@ -217,6 +239,8 @@ while IFS= read -r service; do
           echo "    ✓ Updated ${HOST} → ${TARGET_IP}:${TARGET_PORT}"
           UPDATED=$((UPDATED + 1))
         else
+          # Reload resources after update
+          PANGOLIN_RESOURCES=$(curl -s -H "Authorization: Bearer ${API_KEY}" "${API_BASE_URL}/org/${ORG_ID}/resources" | jq -r ".data.resources // []")
           echo "    ❌ Failed to update target: $(echo ${TARGET_RESPONSE} | jq -r '.message // "Unknown error"')"
         fi
       else
@@ -296,6 +320,8 @@ while IFS= read -r service; do
       if echo "${TARGET_RESPONSE}" | jq -e '.success' > /dev/null; then
         echo "    ✓ Created ${HOST} → ${TARGET_IP}:${TARGET_PORT}"
         ADDED=$((ADDED + 1))
+        # Reload resources after create
+        PANGOLIN_RESOURCES=$(curl -s -H "Authorization: Bearer ${API_KEY}" "${API_BASE_URL}/org/${ORG_ID}/resources" | jq -r ".data.resources // []")
       else
         echo "    ❌ Failed to create target: $(echo ${TARGET_RESPONSE} | jq -r '.message // "Unknown error"')"
       fi
