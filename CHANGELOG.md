@@ -1,3 +1,10 @@
+## [3.25.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v3.24.8...v3.25.0) (2026-02-02)
+
+
+### ✨ Features
+
+* **kube-prometheus-stack:** restructure service definitions and update kustomization files ([e2e1f81](https://github.com/Nebu2k/kubernetes-homelab/commit/e2e1f81416a59125b9ad3ef17a7dc0669c796b20))
+
 ## [3.24.8](https://github.com/Nebu2k/kubernetes-homelab/compare/v3.24.7...v3.24.8) (2026-02-02)
 
 
