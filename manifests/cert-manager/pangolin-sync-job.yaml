@@ -16,8 +16,7 @@ spec:
       restartPolicy: OnFailure
       containers:
         - name: sync
-          image: alpine/curl:8.17.0
-          command: ["/bin/sh", "/scripts/sync-pangolin.sh"]
+          image: nebu2k/pangolin-sync:1.0-alpine3.23
           env:
             - name: API_KEY
               valueFrom:
@@ -39,14 +38,11 @@ spec:
                 secretKeyRef:
                   name: pangolin-api-credentials
                   key: apiBaseUrl
-          volumeMounts:
-            - name: scripts
-              mountPath: /scripts
-      volumes:
-        - name: scripts
-          configMap:
-            name: pangolin-sync-script
-            defaultMode: 0755
+            - name: DOMAIN_ID
+              valueFrom:
+                secretKeyRef:
+                  name: pangolin-api-credentials
+                  key: domainId
 ---
 # CronJob: Runs every 5 minutes
 apiVersion: batch/v1
@@ -69,8 +65,7 @@ spec:
           restartPolicy: OnFailure
           containers:
             - name: sync
-              image: alpine/curl:8.17.0
-              command: ["/bin/sh", "/scripts/sync-pangolin.sh"]
+              image: nebu2k/pangolin-sync:1.0-alpine3.23
               env:
                 - name: API_KEY
                   valueFrom:
@@ -92,11 +87,8 @@ spec:
                     secretKeyRef:
                       name: pangolin-api-credentials
                       key: apiBaseUrl
-              volumeMounts:
-                - name: scripts
-                  mountPath: /scripts
-          volumes:
-            - name: scripts
-              configMap:
-                name: pangolin-sync-script
-                defaultMode: 0755
+                - name: DOMAIN_ID
+                  valueFrom:
+                    secretKeyRef:
+                      name: pangolin-api-credentials
+                      key: domainId

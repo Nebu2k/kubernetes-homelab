@@ -97,8 +97,8 @@ homelab/
     │   ├── kustomization.yaml
     │   ├── pangolin-api-credentials-sealed.yaml
     │   ├── pangolin-api-credentials-unsealed.yaml.example
-    │   ├── pangolin-sync-configmap.yaml
     │   ├── pangolin-sync-job.yaml
+    │   ├── pangolin-sync-rbac.yaml
     │   └── values.yaml
     ├── coredns/
     │   ├── coredns-custom.yaml
@@ -224,7 +224,6 @@ homelab/
     │   ├── ingress.yaml
     │   ├── kustomization.yaml
     │   ├── servers-transport.yaml
-    │   ├── service.yaml
     │   └── values.yaml
     ├── private-services/
     │   ├── adguard-credentials-sealed.yaml
