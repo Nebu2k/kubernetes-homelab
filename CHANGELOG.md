@@ -1,3 +1,10 @@
+## [3.36.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v3.35.0...v3.36.0) (2026-02-02)
+
+
+### ✨ Features
+
+* **manifests:** update ingress annotations for beszel, fr24, and home-assistant; remove service annotations ([87f81fd](https://github.com/Nebu2k/kubernetes-homelab/commit/87f81fd51e154017054ca3be52c203f1e007dcd3))
+
 ## [3.35.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v3.34.0...v3.35.0) (2026-02-02)
 
 
