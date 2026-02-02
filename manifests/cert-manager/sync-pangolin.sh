@@ -26,20 +26,21 @@ TOKEN=$(cat /var/run/secrets/kubernetes.io/serviceaccount/token)
 # Step 1: Fetch Ingresses with Pangolin annotations
 echo "📡 Fetching Ingresses with pangolin.io/expose annotation..."
 
-# Fetch all ingresses across all namespaces (cluster-wide)
-INGRESS_SERVICES=$(curl -s --cacert /var/run/secrets/kubernetes.io/serviceaccount/ca.crt -H "Authorization: Bearer ${TOKEN}" \
-  "https://kubernetes.default.svc/apis/networking.k8s.io/v1/ingresses" | \
-  jq '[.items[] |
-    select(.metadata.annotations["pangolin.io/expose"] == "true") |
-    {
-      name: .spec.rules[0].http.paths[0].backend.service.name,
-      namespace: .metadata.namespace,
-      subdomain: (.spec.rules[0].host | split(".")[0]),
-      auth: ((.metadata.annotations["pangolin.io/auth"] // "true") == "true"),
-      port: (.spec.rules[0].http.paths[0].backend.service.port.number // .spec.rules[0].http.paths[0].backend.service.port.name),
-      host: .spec.rules[0].host,
-      source: "ingress"
-    }]')
+# Fetch all ingresses cluster-wide using kubectl (simpler and more reliable)
+ALL_INGRESSES_RAW=$(curl -s --cacert /var/run/secrets/kubernetes.io/serviceaccount/ca.crt -H "Authorization: Bearer ${TOKEN}" \
+  "https://kubernetes.default.svc/apis/networking.k8s.io/v1/ingresses?limit=500")
+
+INGRESS_SERVICES=$(echo "${ALL_INGRESSES_RAW}" | jq '[.items[]? |
+  select(.metadata.annotations["pangolin.io/expose"]? == "true") |
+  {
+    name: .spec.rules[0].http.paths[0].backend.service.name,
+    namespace: .metadata.namespace,
+    subdomain: (.spec.rules[0].host | split(".")[0]),
+    auth: ((.metadata.annotations["pangolin.io/auth"] // "true") == "true"),
+    port: (.spec.rules[0].http.paths[0].backend.service.port.number // .spec.rules[0].http.paths[0].backend.service.port.name),
+    host: .spec.rules[0].host,
+    source: "ingress"
+  }] // []')
 
 INGRESS_COUNT=$(echo "${INGRESS_SERVICES}" | jq 'length')
 echo "✓ Found ${INGRESS_COUNT} ingresses with pangolin.io/expose annotation"
@@ -48,8 +49,8 @@ echo "✓ Found ${INGRESS_COUNT} ingresses with pangolin.io/expose annotation"
 echo "📡 Fetching Services with pangolin.io/expose annotation..."
 SERVICE_SERVICES=$(curl -s --cacert /var/run/secrets/kubernetes.io/serviceaccount/ca.crt -H "Authorization: Bearer ${TOKEN}" \
   "https://kubernetes.default.svc/api/v1/services" | \
-  jq -r --arg suffix "${DOMAIN_SUFFIX}" '.items[] |
-    select(.metadata.annotations["pangolin.io/expose"] == "true") |
+  jq -r --arg suffix "${DOMAIN_SUFFIX}" '[.items[]? |
+    select(.metadata.annotations["pangolin.io/expose"]? == "true") |
     {
       name: .metadata.name,
       namespace: .metadata.namespace,
@@ -58,7 +59,7 @@ SERVICE_SERVICES=$(curl -s --cacert /var/run/secrets/kubernetes.io/serviceaccoun
       port: (.spec.ports[0].port // .spec.ports[0].name),
       host: ((.metadata.annotations["pangolin.io/subdomain"] // .metadata.name) as $sub | if $sub == "@" then $suffix else ($sub + "." + $suffix) end),
       source: "service"
-    }' | jq -s '.')
+    }] // []')
 
 SERVICE_SERVICE_COUNT=$(echo "${SERVICE_SERVICES}" | jq 'length')
 echo "✓ Found ${SERVICE_SERVICE_COUNT} services with pangolin.io/expose annotation"
