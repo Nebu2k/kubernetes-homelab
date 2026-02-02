@@ -1,3 +1,10 @@
+## [3.24.5](https://github.com/Nebu2k/kubernetes-homelab/compare/v3.24.4...v3.24.5) (2026-02-02)
+
+
+### 🐛 Bug Fixes
+
+* **sync-pangolin:** streamline service and resource processing loops ([2afabf1](https://github.com/Nebu2k/kubernetes-homelab/commit/2afabf1c70c90cb6da76378b35d2857894fbe7b3))
+
 ## [3.24.4](https://github.com/Nebu2k/kubernetes-homelab/compare/v3.24.3...v3.24.4) (2026-02-02)
 
 
