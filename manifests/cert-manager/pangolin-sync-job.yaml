@@ -17,37 +17,9 @@ spec:
       containers:
         - name: sync
           image: nebu2k/pangolin-sync:1.0-alpine3.23
-          env:
-            - name: API_KEY
-              valueFrom:
-                secretKeyRef:
-                  name: pangolin-api-credentials
-                  key: apiKey
-            - name: ORG_ID
-              valueFrom:
-                secretKeyRef:
-                  name: pangolin-api-credentials
-                  key: orgId
-            - name: SITE_ID
-              valueFrom:
-                secretKeyRef:
-                  name: pangolin-api-credentials
-                  key: siteId
-            - name: API_BASE_URL
-              valueFrom:
-                secretKeyRef:
-                  name: pangolin-api-credentials
-                  key: apiBaseUrl
-            - name: DOMAIN_ID
-              valueFrom:
-                secretKeyRef:
-                  name: pangolin-api-credentials
-                  key: domainId
-            - name: DOMAIN_SUFFIX
-              valueFrom:
-                secretKeyRef:
-                  name: pangolin-api-credentials
-                  key: domainSuffix
+          envFrom:
+            - secretRef:
+                name: pangolin-api-credentials
 ---
 # CronJob: Runs every 5 minutes
 apiVersion: batch/v1
@@ -71,34 +43,6 @@ spec:
           containers:
             - name: sync
               image: nebu2k/pangolin-sync:1.0-alpine3.23
-              env:
-                - name: API_KEY
-                  valueFrom:
-                    secretKeyRef:
-                      name: pangolin-api-credentials
-                      key: apiKey
-                - name: ORG_ID
-                  valueFrom:
-                    secretKeyRef:
-                      name: pangolin-api-credentials
-                      key: orgId
-                - name: SITE_ID
-                  valueFrom:
-                    secretKeyRef:
-                      name: pangolin-api-credentials
-                      key: siteId
-                - name: API_BASE_URL
-                  valueFrom:
-                    secretKeyRef:
-                      name: pangolin-api-credentials
-                      key: apiBaseUrl
-                - name: DOMAIN_ID
-                  valueFrom:
-                    secretKeyRef:
-                      name: pangolin-api-credentials
-                      key: domainId
-                - name: DOMAIN_SUFFIX
-                  valueFrom:
-                    secretKeyRef:
-                      name: pangolin-api-credentials
-                      key: domainSuffix
+              envFrom:
+                - secretRef:
+                    name: pangolin-api-credentials
