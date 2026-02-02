@@ -1,3 +1,10 @@
+## [3.33.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v3.32.0...v3.33.0) (2026-02-02)
+
+
+### ✨ Features
+
+* **cert-manager:** enhance reconciliation process in sync-pangolin.sh ([cfd01af](https://github.com/Nebu2k/kubernetes-homelab/commit/cfd01af7b6712f7ff871b7744a33a49cdab8c7cb))
+
 ## [3.32.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v3.31.0...v3.32.0) (2026-02-02)
 
 
