@@ -294,7 +294,6 @@ homelab/
     ├── traefik/
     │   ├── certificate.yaml
     │   ├── dashboard-service.yaml
-    │   ├── ingress.yaml
     │   ├── kustomization.yaml
     │   └── values.yaml
     ├── unifi-poller/

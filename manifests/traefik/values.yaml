@@ -40,6 +40,15 @@ globalArguments:
   - "--ping=true"
   - "--entrypoints.websecure.transport.respondingTimeouts.readTimeout=24h"
 
+# Dashboard
+ingressRoute:
+  dashboard:
+    enabled: true
+    matchRule: Host(`traefik.elmstreet79.de`)
+    entryPoints: ["websecure"]
+    tls:
+      secretName: traefik-dashboard-tls
+
 # Ports
 ports:
   web:
