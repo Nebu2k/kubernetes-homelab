@@ -43,6 +43,11 @@ spec:
                 secretKeyRef:
                   name: pangolin-api-credentials
                   key: domainId
+            - name: DOMAIN_SUFFIX
+              valueFrom:
+                secretKeyRef:
+                  name: pangolin-api-credentials
+                  key: domainSuffix
 ---
 # CronJob: Runs every 5 minutes
 apiVersion: batch/v1
@@ -92,3 +97,8 @@ spec:
                     secretKeyRef:
                       name: pangolin-api-credentials
                       key: domainId
+                - name: DOMAIN_SUFFIX
+                  valueFrom:
+                    secretKeyRef:
+                      name: pangolin-api-credentials
+                      key: domainSuffix

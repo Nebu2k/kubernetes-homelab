@@ -6,7 +6,7 @@ API_KEY="${API_KEY}"
 ORG_ID="${ORG_ID}"
 SITE_ID="${SITE_ID}"
 API_BASE_URL="${API_BASE_URL}"
-DOMAIN_SUFFIX="elmstreet79.de"
+DOMAIN_SUFFIX="${DOMAIN_SUFFIX}"
 DOMAIN_ID="${DOMAIN_ID}"
 
 echo "═══════════════════════════════════════════════════════"
