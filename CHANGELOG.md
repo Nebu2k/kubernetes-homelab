@@ -1,3 +1,10 @@
+## [3.24.4](https://github.com/Nebu2k/kubernetes-homelab/compare/v3.24.3...v3.24.4) (2026-02-02)
+
+
+### 🐛 Bug Fixes
+
+* **sync-pangolin:** conditionally include subdomain field in JSON payload for resource creation ([4349187](https://github.com/Nebu2k/kubernetes-homelab/commit/43491873f3aaa8bf87333d26d42513c9d2cbe902))
+
 ## [3.24.3](https://github.com/Nebu2k/kubernetes-homelab/compare/v3.24.2...v3.24.3) (2026-02-02)
 
 
