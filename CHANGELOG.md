@@ -1,3 +1,10 @@
+## [3.24.3](https://github.com/Nebu2k/kubernetes-homelab/compare/v3.24.2...v3.24.3) (2026-02-02)
+
+
+### 🐛 Bug Fixes
+
+* **sync-pangolin:** handle orphaned resources more robustly and improve subdomain handling ([311a613](https://github.com/Nebu2k/kubernetes-homelab/commit/311a61370be93f563143f5892133752e66da1cf3))
+
 ## [3.24.2](https://github.com/Nebu2k/kubernetes-homelab/compare/v3.24.1...v3.24.2) (2026-02-02)
 
 
