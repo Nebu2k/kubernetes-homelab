@@ -2,12 +2,13 @@
 set -e
 set -o pipefail
 
-API_KEY="${API_KEY}"
-ORG_ID="${ORG_ID}"
-SITE_ID="${SITE_ID}"
-API_BASE_URL="${API_BASE_URL}"
-DOMAIN_SUFFIX="${DOMAIN_SUFFIX}"
-DOMAIN_ID="${DOMAIN_ID}"
+# Required environment variables (provided by Kubernetes Secret):
+# - API_KEY: Pangolin API authentication key
+# - ORG_ID: Organization ID
+# - SITE_ID: Site ID for target registration
+# - API_BASE_URL: Base URL for Pangolin API
+# - DOMAIN_SUFFIX: Domain suffix for resource FQDNs (e.g., elmstreet79.de)
+# - DOMAIN_ID: Pangolin domain ID
 
 echo "═══════════════════════════════════════════════════════"
 echo "🔄 Pangolin Resource Sync"
