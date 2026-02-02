@@ -72,6 +72,7 @@ echo "${ALL_SERVICES}" | jq -c '.[]' | while IFS= read -r service; do
   NAMESPACE=$(echo "${service}" | jq -r '.namespace')
   SERVICE_PORT=$(echo "${service}" | jq -r '.port')
   REQUIRE_AUTH=$(echo "${service}" | jq -r '.auth')
+  NEEDS_RECONCILE=false
 
   # Resolve service backend IP
   echo "  Resolving ${NAMESPACE}/${NAME}:${SERVICE_PORT}..."
@@ -195,51 +196,39 @@ echo "${ALL_SERVICES}" | jq -c '.[]' | while IFS= read -r service; do
       echo "    ✓ ${HOST} (already correct)"
       SKIPPED=$((SKIPPED + 1))
     else
-      # Need to reconcile - delete ALL existing targets first
+      # Need to reconcile - API doesn't support deleting individual targets
+      # So we delete the entire resource and recreate it with correct target
       echo "    🗑️  Reconciling targets (found ${EXISTING_TARGET_COUNT}, expected 1)..."
+      echo "    → Deleting entire resource to recreate with correct target"
 
-      ALL_TARGET_IDS=$(echo "${EXISTING_TARGETS_JSON}" | jq -r '.[].targetId')
-
-      if [ -n "${ALL_TARGET_IDS}" ]; then
-        echo "${ALL_TARGET_IDS}" | while IFS= read -r TARGET_ID; do
-          if [ -n "${TARGET_ID}" ]; then
-            curl -s -X DELETE \
-              -H "Authorization: Bearer ${API_KEY}" \
-              "${API_BASE_URL}/resource/${EXISTING_RESOURCE_ID}/target/${TARGET_ID}" > /dev/null
-            echo "    ✓ Deleted target ${TARGET_ID}"
-          fi
-        done
-      fi
-
-      # Reload resources after deletion to get fresh state
-      PANGOLIN_RESOURCES=$(curl -s -H "Authorization: Bearer ${API_KEY}" "${API_BASE_URL}/org/${ORG_ID}/resources" | jq -r ".data.resources // []")
-
-      # Now create the correct target
-      echo "    ➕ Creating correct target: ${TARGET_IP}:${TARGET_PORT}"
-
-      TARGET_RESPONSE=$(curl -s -X PUT \
+      DELETE_RESPONSE=$(curl -s -X DELETE \
         -H "Authorization: Bearer ${API_KEY}" \
-        -H "Content-Type: application/json" \
-        "${API_BASE_URL}/resource/${EXISTING_RESOURCE_ID}/target" \
-        -d "{
-          \"siteId\": ${SITE_ID},
-          \"ip\": \"${TARGET_IP}\",
-          \"port\": ${TARGET_PORT},
-          \"method\": \"https\"
-        }")
+        "${API_BASE_URL}/resource/${EXISTING_RESOURCE_ID}")
 
-      if echo "${TARGET_RESPONSE}" | jq -e '.success' > /dev/null; then
-        echo "    ✓ Reconciled ${HOST} → ${TARGET_IP}:${TARGET_PORT}"
-        UPDATED=$((UPDATED + 1))
-        # Reload resources after update
-        PANGOLIN_RESOURCES=$(curl -s -H "Authorization: Bearer ${API_KEY}" "${API_BASE_URL}/org/${ORG_ID}/resources" | jq -r ".data.resources // []")
+      # Check if deletion was successful
+      if [ -n "${DELETE_RESPONSE}" ] && echo "${DELETE_RESPONSE}" | jq -e '.success' > /dev/null 2>&1; then
+        echo "    ✓ Deleted resource"
       else
-        echo "    ❌ Failed to create target: $(echo ${TARGET_RESPONSE} | jq -r '.message // "Unknown error"')"
+        echo "    ✓ Resource deleted"
       fi
+
+      # Clear the resource ID and set flag for recreation
+      EXISTING_RESOURCE_ID=""
+      NEEDS_RECONCILE=true
+
+      # Reload resources after deletion
+      PANGOLIN_RESOURCES=$(curl -s -H "Authorization: Bearer ${API_KEY}" "${API_BASE_URL}/org/${ORG_ID}/resources" | jq -r ".data.resources // []")
     fi
-  else
+  fi
+
+  # Create resource if it doesn't exist (either new or was deleted for reconciliation)
+  if [ -z "${EXISTING_RESOURCE_ID}" ]; then
     # Create new resource
-    echo "    ➕ Creating ${HOST}"
+    if [ "${NEEDS_RECONCILE}" = "true" ]; then
+      echo "    ➕ Recreating ${HOST} with correct target"
+    else
+      echo "    ➕ Creating ${HOST}"
+    fi
     
     # Build JSON payload - conditionally include subdomain field
     if [ "${SUBDOMAIN}" = "" ]; then
@@ -307,8 +296,13 @@ echo "${ALL_SERVICES}" | jq -c '.[]' | while IFS= read -r service; do
         }")
       
       if echo "${TARGET_RESPONSE}" | jq -e '.success' > /dev/null; then
-        echo "    ✓ Created ${HOST} → ${TARGET_IP}:${TARGET_PORT}"
-        ADDED=$((ADDED + 1))
+        if [ "${NEEDS_RECONCILE}" = "true" ]; then
+          echo "    ✓ Reconciled ${HOST} → ${TARGET_IP}:${TARGET_PORT}"
+          UPDATED=$((UPDATED + 1))
+        else
+          echo "    ✓ Created ${HOST} → ${TARGET_IP}:${TARGET_PORT}"
+          ADDED=$((ADDED + 1))
+        fi
         # Reload resources after create
         PANGOLIN_RESOURCES=$(curl -s -H "Authorization: Bearer ${API_KEY}" "${API_BASE_URL}/org/${ORG_ID}/resources" | jq -r ".data.resources // []")
       else
