@@ -98,6 +98,7 @@ homelab/
     │   ├── pangolin-api-credentials-unsealed.yaml.example
     │   ├── pangolin-sync-job.yaml
     │   ├── pangolin-sync-rbac.yaml
+    │   ├── pangolin-sync-test-job.yaml
     │   └── values.yaml
     ├── coredns/
     │   ├── coredns-custom.yaml

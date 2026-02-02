@@ -72,7 +72,7 @@ echo "✓ Found ${SERVICE_SERVICE_COUNT} services with pangolin.io/expose annota
 
 # Step 3: Merge and deduplicate (Ingress takes precedence over Service)
 echo "🔄 Merging sources and removing duplicates..."
-ALL_SERVICES=$(jq -s --arg suffix "${DOMAIN_SUFFIX}" '
+ALL_SERVICES=$(printf '%s\n%s' "${INGRESS_SERVICES}" "${SERVICE_SERVICES}" | jq -s --arg suffix "${DOMAIN_SUFFIX}" '
   (.[0] + .[1]) |
   group_by(.namespace + "/" + .name) |
   map(
@@ -82,7 +82,7 @@ ALL_SERVICES=$(jq -s --arg suffix "${DOMAIN_SUFFIX}" '
       .[0]
     end
   )
-' <(echo "${INGRESS_SERVICES}") <(echo "${SERVICE_SERVICES}"))
+')
 
 TOTAL_COUNT=$(echo "${ALL_SERVICES}" | jq 'length')
 echo "✓ Total unique services to sync: ${TOTAL_COUNT}"
