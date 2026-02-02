@@ -16,8 +16,8 @@ spec:
       restartPolicy: OnFailure
       containers:
         - name: sync
-          image: nebu2k/pangolin-sync:1.0-alpine3.23
-          imagePullPolicy: Always
+          image: nebu2k/pangolin-sync:latest
+          # imagePullPolicy defaults to IfNotPresent
           envFrom:
             - secretRef:
                 name: pangolin-api-credentials
@@ -43,8 +43,8 @@ spec:
           restartPolicy: OnFailure
           containers:
             - name: sync
-              image: nebu2k/pangolin-sync:1.0-alpine3.23
-              imagePullPolicy: Always
+              image: nebu2k/pangolin-sync:latest
+              # imagePullPolicy defaults to IfNotPresent
               envFrom:
                 - secretRef:
                     name: pangolin-api-credentials
