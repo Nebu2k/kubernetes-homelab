@@ -203,18 +203,16 @@ echo "${ALL_SERVICES}" | jq -c '.[]' | while IFS= read -r service; do
       if [ -n "${ALL_TARGET_IDS}" ]; then
         echo "${ALL_TARGET_IDS}" | while IFS= read -r TARGET_ID; do
           if [ -n "${TARGET_ID}" ]; then
-            DELETE_RESPONSE=$(curl -s -X DELETE \
+            curl -s -X DELETE \
               -H "Authorization: Bearer ${API_KEY}" \
-              "${API_BASE_URL}/resource/${EXISTING_RESOURCE_ID}/target/${TARGET_ID}")
-
-            if echo "${DELETE_RESPONSE}" | jq -e '.success' > /dev/null; then
-              echo "    ✓ Deleted target ${TARGET_ID}"
-            else
-              echo "    ⚠️  Failed to delete target ${TARGET_ID}"
-            fi
+              "${API_BASE_URL}/resource/${EXISTING_RESOURCE_ID}/target/${TARGET_ID}" > /dev/null
+            echo "    ✓ Deleted target ${TARGET_ID}"
           fi
         done
       fi
+
+      # Reload resources after deletion to get fresh state
+      PANGOLIN_RESOURCES=$(curl -s -H "Authorization: Bearer ${API_KEY}" "${API_BASE_URL}/org/${ORG_ID}/resources" | jq -r ".data.resources // []")
 
       # Now create the correct target
       echo "    ➕ Creating correct target: ${TARGET_IP}:${TARGET_PORT}"
