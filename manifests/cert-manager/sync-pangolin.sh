@@ -35,7 +35,7 @@ ALL_SERVICES=$(curl -s --cacert /var/run/secrets/kubernetes.io/serviceaccount/ca
       subdomain: (.metadata.annotations["pangolin.io/subdomain"] // .metadata.name),
       auth: ((.metadata.annotations["pangolin.io/auth"] // "true") == "true"),
       port: (.spec.ports[0].port // .spec.ports[0].name),
-      host: (let $sub = .metadata.annotations["pangolin.io/subdomain"] // .metadata.name; if $sub == "@" then $suffix else $sub + "." + $suffix end)
+      host: ((.metadata.annotations["pangolin.io/subdomain"] // .metadata.name) as $sub | if $sub == "@" then $suffix else ($sub + "." + $suffix) end)
     }' | jq -s '.')
 
 SERVICE_COUNT=$(echo "${ALL_SERVICES}" | jq 'length')
