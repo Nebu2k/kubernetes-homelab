@@ -33,7 +33,7 @@ Production-ready K3s cluster managed via GitOps using ArgoCD App-of-Apps pattern
 | 11 | Proxmox Exporter |
 | 12 | Argocd Config |
 | 15 | Fr24 |
-| 16 | Private Services |
+| 16 | External Services |
 
 ## 📁 Repository Structure
 
@@ -67,7 +67,7 @@ homelab/
 │   ├── proxmox-exporter.yaml          # Wave 11
 │   ├── argocd-config.yaml             # Wave 12
 │   ├── fr24.yaml                      # Wave 15
-│   └── private-services.yaml          # Wave 16
+│   └── external-services.yaml         # Wave 16
 └── manifests/
     ├── argocd/
     │   ├── argocd-cm-patch.yaml
@@ -88,6 +88,24 @@ homelab/
     ├── coredns/
     │   ├── coredns-custom.yaml
     │   └── kustomization.yaml
+    ├── external-services/
+    │   ├── adguard-macmini-service.yaml
+    │   ├── adguard-pve-service.yaml
+    │   ├── adguardhome-sync-config.yaml
+    │   ├── adguardhome-sync-credentials-sealed.yaml
+    │   ├── adguardhome-sync-deployment.yaml
+    │   ├── adguardhome-sync-service.yaml
+    │   ├── dreambox-service.yaml
+    │   ├── glances-macmini-service.yaml
+    │   ├── kustomization.yaml
+    │   ├── minio-api-service.yaml
+    │   ├── minio-service.yaml
+    │   ├── nextcloud-service.yaml
+    │   ├── plex-service.yaml
+    │   ├── proxmox-service.yaml
+    │   ├── unifi-nas-service.yaml
+    │   ├── unifi-service.yaml
+    │   └── vscode-service.yaml
     ├── fr24/
     │   ├── deployment.yaml
     │   ├── fr24-secret-sealed.yaml
@@ -214,24 +232,6 @@ homelab/
     │   ├── kustomization.yaml
     │   ├── servers-transport.yaml
     │   └── values.yaml
-    ├── private-services/
-    │   ├── adguard-macmini-service.yaml
-    │   ├── adguard-pve-service.yaml
-    │   ├── adguardhome-sync-config.yaml
-    │   ├── adguardhome-sync-credentials-sealed.yaml
-    │   ├── adguardhome-sync-deployment.yaml
-    │   ├── adguardhome-sync-service.yaml
-    │   ├── dreambox-service.yaml
-    │   ├── glances-macmini-service.yaml
-    │   ├── kustomization.yaml
-    │   ├── minio-api-service.yaml
-    │   ├── minio-service.yaml
-    │   ├── nextcloud-service.yaml
-    │   ├── plex-service.yaml
-    │   ├── proxmox-service.yaml
-    │   ├── unifi-nas-service.yaml
-    │   ├── unifi-service.yaml
-    │   └── vscode-service.yaml
     ├── proxmox-exporter/
     │   ├── deployment.yaml
     │   ├── kustomization.yaml

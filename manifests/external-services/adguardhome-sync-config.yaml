@@ -3,7 +3,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: adguardhome-sync-config
-  namespace: private-services
+  namespace: external-services
 data:
   adguardhome-sync.yaml: |
     # AdGuard Home Sync Configuration

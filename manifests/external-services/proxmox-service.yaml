@@ -2,11 +2,11 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: unifi-nas
-  namespace: private-services
+  name: proxmox
+  namespace: external-services
   annotations:
     pangolin.io/expose: "true"
-    pangolin.io/subdomain: "nas"
+    pangolin.io/subdomain: "pve"
     pangolin.io/auth: "true"
 
 spec:
@@ -14,18 +14,18 @@ spec:
   ports:
     - name: https
       port: 443
-      targetPort: 443
+      targetPort: 8006
       protocol: TCP
 ---
 apiVersion: v1
 kind: Endpoints
 metadata:
-  name: unifi-nas
-  namespace: private-services
+  name: proxmox
+  namespace: external-services
 subsets:
   - addresses:
-      - ip: 192.168.2.6
+      - ip: 192.168.2.8
     ports:
       - name: https
-        port: 443
+        port: 8006
         protocol: TCP

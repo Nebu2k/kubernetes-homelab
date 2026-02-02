@@ -3,7 +3,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: adguardhome-sync
-  namespace: private-services
+  namespace: external-services
   labels:
     app: adguardhome-sync
   annotations:

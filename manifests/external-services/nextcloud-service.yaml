@@ -3,7 +3,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: nextcloud-aio
-  namespace: private-services
+  namespace: external-services
   annotations:
     pangolin.io/expose: "true"
     pangolin.io/subdomain: "nextcloud"
@@ -20,7 +20,7 @@ apiVersion: v1
 kind: Endpoints
 metadata:
   name: nextcloud-aio
-  namespace: private-services
+  namespace: external-services
 subsets:
   - addresses:
       - ip: 192.168.2.12

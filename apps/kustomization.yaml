@@ -17,7 +17,7 @@ resources:
   - homepage.yaml
   - n8n.yaml
   - argocd-config.yaml
-  - private-services.yaml
+  - external-services.yaml
   - home-assistant.yaml
   - teslamate.yaml
   - landing-page.yaml
