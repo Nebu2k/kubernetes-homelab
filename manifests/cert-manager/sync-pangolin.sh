@@ -180,13 +180,52 @@ while IFS= read -r service; do
   echo "    → Target: https://${TARGET_IP}:${TARGET_PORT}"
   # Check if resource already exists in Pangolin (match by fullDomain)
   EXISTING_RESOURCE_ID=$(echo "${PANGOLIN_RESOURCES}" | jq -r ".[] | select(.fullDomain == \"${HOST}\") | .resourceId")
-  EXISTING_TARGETS=$(echo "${PANGOLIN_RESOURCES}" | jq -r ".[] | select(.fullDomain == \"${HOST}\") | .targets | length")
+  EXISTING_TARGETS_JSON=$(echo "${PANGOLIN_RESOURCES}" | jq -r ".[] | select(.fullDomain == \"${HOST}\") | .targets")
 
   if [ -n "${EXISTING_RESOURCE_ID}" ]; then
-    # Resource exists - check if targets need update
-    if [ "${EXISTING_TARGETS}" = "0" ]; then
-      echo "    🔄 Updating ${HOST} (adding target)"
-      
+    # Resource exists - reconcile targets
+    # Find the correct target (matching IP and port)
+    CORRECT_TARGET=$(echo "${EXISTING_TARGETS_JSON}" | jq -r ".[] | select(.ip == \"${TARGET_IP}\" and .port == ${TARGET_PORT})")
+
+    # Count how many targets exist
+    EXISTING_TARGET_COUNT=$(echo "${EXISTING_TARGETS_JSON}" | jq 'length')
+
+    # Get all target IDs that don't match the desired state
+    WRONG_TARGETS=$(echo "${EXISTING_TARGETS_JSON}" | jq -r ".[] | select(.ip != \"${TARGET_IP}\" or .port != ${TARGET_PORT}) | .targetId")
+
+    # Delete all wrong targets
+    if [ -n "${WRONG_TARGETS}" ]; then
+      echo "    🗑️  Removing incorrect targets..."
+      while IFS= read -r WRONG_TARGET_ID; do
+        if [ -n "${WRONG_TARGET_ID}" ]; then
+          DELETE_RESPONSE=$(curl -s -X DELETE \
+            -H "Authorization: Bearer ${API_KEY}" \
+            "${API_BASE_URL}/resource/${EXISTING_RESOURCE_ID}/target/${WRONG_TARGET_ID}")
+
+          if echo "${DELETE_RESPONSE}" | jq -e '.success' > /dev/null; then
+            echo "    ✓ Deleted incorrect target ID: ${WRONG_TARGET_ID}"
+          else
+            echo "    ⚠️  Failed to delete target ${WRONG_TARGET_ID}"
+          fi
+        fi
+      done <<< "${WRONG_TARGETS}"
+    fi
+
+    # Check if correct target exists
+    if [ -n "${CORRECT_TARGET}" ] && [ "${CORRECT_TARGET}" != "null" ]; then
+      if [ -n "${WRONG_TARGETS}" ]; then
+        echo "    ✓ ${HOST} → ${TARGET_IP}:${TARGET_PORT} (cleaned up wrong targets)"
+        UPDATED=$((UPDATED + 1))
+        # Reload resources after cleanup
+        PANGOLIN_RESOURCES=$(curl -s -H "Authorization: Bearer ${API_KEY}" "${API_BASE_URL}/org/${ORG_ID}/resources" | jq -r ".data.resources // []")
+      else
+        echo "    ✓ ${HOST} (already correct)"
+        SKIPPED=$((SKIPPED + 1))
+      fi
+    else
+      # Correct target doesn't exist - create it
+      echo "    🔄 Creating correct target: ${TARGET_IP}:${TARGET_PORT}"
+
       TARGET_RESPONSE=$(curl -s -X PUT \
         -H "Authorization: Bearer ${API_KEY}" \
         -H "Content-Type: application/json" \
@@ -197,55 +236,14 @@ while IFS= read -r service; do
           \"port\": ${TARGET_PORT},
           \"method\": \"https\"
         }")
-      
+
       if echo "${TARGET_RESPONSE}" | jq -e '.success' > /dev/null; then
         echo "    ✓ Updated ${HOST} → ${TARGET_IP}:${TARGET_PORT}"
         UPDATED=$((UPDATED + 1))
         # Reload resources after update
         PANGOLIN_RESOURCES=$(curl -s -H "Authorization: Bearer ${API_KEY}" "${API_BASE_URL}/org/${ORG_ID}/resources" | jq -r ".data.resources // []")
       else
-        echo "    ❌ Failed to add target: $(echo ${TARGET_RESPONSE} | jq -r '.message // "Unknown error"')"
-      fi
-    else
-      # Target exists - check if IP/port changed
-      EXISTING_TARGET=$(echo "${PANGOLIN_RESOURCES}" | jq -r ".[] | select(.fullDomain == \"${HOST}\") | .targets[0]")
-      EXISTING_TARGET_ID=$(echo "${EXISTING_TARGET}" | jq -r '.targetId // empty')
-      EXISTING_IP=$(echo "${EXISTING_TARGET}" | jq -r '.ip // empty')
-      EXISTING_PORT=$(echo "${EXISTING_TARGET}" | jq -r '.port // empty')
-      
-      if [ "${EXISTING_IP}" != "${TARGET_IP}" ] || [ "${EXISTING_PORT}" != "${TARGET_PORT}" ]; then
-        echo "    🔄 Updating ${HOST} target (${EXISTING_IP}:${EXISTING_PORT} → ${TARGET_IP}:${TARGET_PORT})"
-        
-        # Delete old target
-        if [ -n "${EXISTING_TARGET_ID}" ]; then
-          DELETE_TARGET_RESPONSE=$(curl -s -X DELETE \
-            -H "Authorization: Bearer ${API_KEY}" \
-            "${API_BASE_URL}/resource/${EXISTING_RESOURCE_ID}/target/${EXISTING_TARGET_ID}")
-        fi
-        
-        # Create new target
-        TARGET_RESPONSE=$(curl -s -X PUT \
-          -H "Authorization: Bearer ${API_KEY}" \
-          -H "Content-Type: application/json" \
-          "${API_BASE_URL}/resource/${EXISTING_RESOURCE_ID}/target" \
-          -d "{
-            \"siteId\": ${SITE_ID},
-            \"ip\": \"${TARGET_IP}\",
-            \"port\": ${TARGET_PORT},
-            \"method\": \"https\"
-          }")
-        
-        if echo "${TARGET_RESPONSE}" | jq -e '.success' > /dev/null; then
-          echo "    ✓ Updated ${HOST} → ${TARGET_IP}:${TARGET_PORT}"
-          UPDATED=$((UPDATED + 1))
-        else
-          # Reload resources after update
-          PANGOLIN_RESOURCES=$(curl -s -H "Authorization: Bearer ${API_KEY}" "${API_BASE_URL}/org/${ORG_ID}/resources" | jq -r ".data.resources // []")
-          echo "    ❌ Failed to update target: $(echo ${TARGET_RESPONSE} | jq -r '.message // "Unknown error"')"
-        fi
-      else
-        echo "    ✓ ${HOST} (already exists)"
-        SKIPPED=$((SKIPPED + 1))
+        echo "    ❌ Failed to create target: $(echo ${TARGET_RESPONSE} | jq -r '.message // "Unknown error"')"
       fi
     fi
   else
