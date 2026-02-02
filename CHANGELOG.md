@@ -1,3 +1,10 @@
+## [3.24.8](https://github.com/Nebu2k/kubernetes-homelab/compare/v3.24.7...v3.24.8) (2026-02-02)
+
+
+### ♻️ Code Refactoring
+
+* **ingress:** reformat ingress.yaml for improved readability ([50d6664](https://github.com/Nebu2k/kubernetes-homelab/commit/50d666433722ac69ab5b9221dbec8bd800e9d593))
+
 ## [3.24.7](https://github.com/Nebu2k/kubernetes-homelab/compare/v3.24.6...v3.24.7) (2026-02-02)
 
 
