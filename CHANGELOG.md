@@ -1,3 +1,22 @@
+## [3.24.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v3.23.2...v3.24.0) (2026-02-02)
+
+
+### ✨ Features
+
+* Add Pangolin annotations to services for exposure and routing ([752aa19](https://github.com/Nebu2k/kubernetes-homelab/commit/752aa197530d849a7fc07a5128321bde6b63dc10))
+* Add Pangolin service configurations for ArgoCD, kube-prometheus-stack, Longhorn, Portainer, and Traefik ([14cd2ed](https://github.com/Nebu2k/kubernetes-homelab/commit/14cd2edbc59d2a88692100f6420d143ac8d604ff))
+* **cert-manager:** enhance pangolin API credentials and sync script with domain suffix ([625067c](https://github.com/Nebu2k/kubernetes-homelab/commit/625067c233d613896f3eb464021c28466db3852a))
+* **cert-manager:** update pangolin sync script and Docker image ([278e462](https://github.com/Nebu2k/kubernetes-homelab/commit/278e4621e8d8741cb133e666caa261f914822ec2))
+* Update kustomization files to include patchesStrategicMerge for services and enhance pangolin sync job configuration ([524e0e0](https://github.com/Nebu2k/kubernetes-homelab/commit/524e0e0d755797730a3bed2ea5afce6e37191b3c))
+
+
+### ♻️ Code Refactoring
+
+* **cert-manager:** update environment variable keys to uppercase and simplify secret references ([a494d59](https://github.com/Nebu2k/kubernetes-homelab/commit/a494d59245332d5841b1ad9292657ff3b89259fe))
+* **services:** remove deprecated port annotations from service manifests ([c0d5828](https://github.com/Nebu2k/kubernetes-homelab/commit/c0d5828ac55c4a285789a395796333533290ebac))
+* **sync-pangolin:** remove service limit from API request for fetching services ([96b2363](https://github.com/Nebu2k/kubernetes-homelab/commit/96b2363fb2bdb80efe7dad22bec925bd613a9e05))
+* **sync-pangolin:** update environment variable documentation for clarity ([09adbf2](https://github.com/Nebu2k/kubernetes-homelab/commit/09adbf27535242a61ec49f268f648751bee31d7b))
+
 ## [3.23.2](https://github.com/Nebu2k/kubernetes-homelab/compare/v3.23.1...v3.23.2) (2026-02-01)
 
 
