@@ -330,9 +330,45 @@ echo "${ALL_SERVICES}" | jq -c '.[]' | while IFS= read -r service; do
           -H "Content-Type: application/json" \
           "${API_BASE_URL}/resource/${RESOURCE_ID}" \
           -d '{"sso": false}')
-        
+
         if echo "${UPDATE_RESPONSE}" | jq -e '.success' > /dev/null; then
           echo "    ✓ SSO disabled"
+        fi
+      else
+        # For protected services (auth: true), create CIDR rules to allow internal access without auth
+        echo "    → Creating internal access rules (bypass auth for cluster IPs)"
+
+        # Rule 1: Allow Pod CIDR (10.42.0.0/16) - priority 10
+        RULE1_RESPONSE=$(curl -s -X PUT \
+          -H "Authorization: Bearer ${API_KEY}" \
+          -H "Content-Type: application/json" \
+          "${API_BASE_URL}/resource/${RESOURCE_ID}/rule" \
+          -d '{
+            "action": "ACCEPT",
+            "match": "CIDR",
+            "value": "10.42.0.0/16",
+            "priority": 10,
+            "enabled": true
+          }')
+
+        # Rule 2: Allow Service CIDR (10.43.0.0/16) - priority 11
+        RULE2_RESPONSE=$(curl -s -X PUT \
+          -H "Authorization: Bearer ${API_KEY}" \
+          -H "Content-Type: application/json" \
+          "${API_BASE_URL}/resource/${RESOURCE_ID}/rule" \
+          -d '{
+            "action": "ACCEPT",
+            "match": "CIDR",
+            "value": "10.43.0.0/16",
+            "priority": 11,
+            "enabled": true
+          }')
+
+        if echo "${RULE1_RESPONSE}" | jq -e '.success' > /dev/null && \
+           echo "${RULE2_RESPONSE}" | jq -e '.success' > /dev/null; then
+          echo "    ✓ Internal access rules created (10.42.0.0/16, 10.43.0.0/16)"
+        else
+          echo "    ⚠️  Failed to create internal access rules (may already exist)"
         fi
       fi
       
