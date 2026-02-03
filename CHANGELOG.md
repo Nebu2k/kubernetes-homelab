@@ -1,3 +1,10 @@
+## [4.1.2](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.1.1...v4.1.2) (2026-02-03)
+
+
+### Bug Fixes
+
+* remove redundant host entry for landing-page Ingress ([93e07b5](https://github.com/Nebu2k/kubernetes-homelab/commit/93e07b539431e272d3cb2918c55214cc7094f719))
+
 ## [4.1.1](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.1.0...v4.1.1) (2026-02-03)
 
 
