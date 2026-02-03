@@ -1,3 +1,10 @@
+# [4.1.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.0.2...v4.1.0) (2026-02-03)
+
+
+### Features
+
+* add Ingress resource for adguardhome-sync service ([0a59c93](https://github.com/Nebu2k/kubernetes-homelab/commit/0a59c93a41bf232c1d3164c02273b91164dc7f03))
+
 ## [4.0.2](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.0.1...v4.0.2) (2026-02-03)
 
 
