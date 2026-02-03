@@ -6,6 +6,7 @@ resources:
   - adguard-macmini-service.yaml
   - adguard-pve-service.yaml
   - adguardhome-sync-service.yaml
+  - adguardhome-sync-web-ingress.yaml
   - dreambox-service.yaml
   - glances-macmini-service.yaml
   - minio-service.yaml

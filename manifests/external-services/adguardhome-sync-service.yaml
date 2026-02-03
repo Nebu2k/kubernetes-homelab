@@ -4,11 +4,6 @@ kind: Service
 metadata:
   name: adguardhome-sync
   namespace: external-services
-  annotations:
-    pangolin.io/expose: "true"
-    pangolin.io/subdomain: "adguardhome-sync-web"
-    pangolin.io/auth: "true"
-
   labels:
     app: adguardhome-sync
 spec:

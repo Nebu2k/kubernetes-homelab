@@ -1,0 +1,29 @@
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: adguardhome-sync-web
+  namespace: private-services
+  annotations:
+    pangolin.io/expose: "true"
+    pangolin.io/auth: "true"
+    gethomepage.dev/enabled: "true"
+    gethomepage.dev/group: Infrastructure
+    gethomepage.dev/name: AdGuard Sync (k8s)
+    gethomepage.dev/icon: adguard-home-sync.png
+    gethomepage.dev/description: AdGuard Configuration Sync
+    gethomepage.dev/weight: "44"
+    gethomepage.dev/pod-selector: "app=adguardhome-sync"
+spec:
+  ingressClassName: traefik
+  rules:
+    - host: adguardhome-sync-web.elmstreet79.de
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: adguardhome-sync
+                port:
+                  number: 8080

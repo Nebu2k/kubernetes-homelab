@@ -101,6 +101,7 @@ homelab/
     │   ├── adguardhome-sync-credentials-sealed.yaml
     │   ├── adguardhome-sync-deployment.yaml
     │   ├── adguardhome-sync-service.yaml
+    │   ├── adguardhome-sync-web-ingress.yaml
     │   ├── dreambox-service.yaml
     │   ├── glances-macmini-service.yaml
     │   ├── kustomization.yaml
@@ -883,9 +884,9 @@ All services are accessible via Pangolin's secure network infrastructure:
 
 ```text
 # Services with Pangolin authentication required (pangolin.io/auth: "true"):
+AdGuard Sync (k8s): https://adguardhome-sync-web.elmstreet79.de
 Adguard Macmini: https://adguard-macmini.elmstreet79.de
 Adguard Pve: https://adguard.elmstreet79.de
-Adguardhome Sync: https://adguardhome-sync-web.elmstreet79.de
 AlertManager: https://alertmanager.elmstreet79.de
 ArgoCD: https://argocd.elmstreet79.de
 Beszel Hub: https://beszel.elmstreet79.de
