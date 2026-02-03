@@ -26,13 +26,3 @@ spec:
                 name: landing-page
                 port:
                   number: 80
-    - host: elmstreet79.de
-      http:
-        paths:
-          - path: /
-            pathType: Prefix
-            backend:
-              service:
-                name: landing-page
-                port:
-                  number: 80
