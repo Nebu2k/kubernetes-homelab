@@ -314,17 +314,12 @@ echo "${ALL_SERVICES}" | jq -c '.[]' | while IFS= read -r service; do
           PRIO=$((PRIO + 1))
         done
 
-        # Ensure applyRules is enabled
-        APPLY_RULES_CURRENT=$(echo "${PANGOLIN_RESOURCES}" | jq -r --arg id "${EXISTING_RESOURCE_ID}" '.[] | select(.resourceId == $id) | .applyRules // false')
-        if [ "${APPLY_RULES_CURRENT}" != "true" ]; then
-          curl -s -X POST \
-            -H "Authorization: Bearer ${API_KEY}" \
-            -H "Content-Type: application/json" \
-            "${API_BASE_URL}/resource/${EXISTING_RESOURCE_ID}" \
-            -d '{"applyRules": true}' > /dev/null
-          echo "    ✓ applyRules enabled"
-          RULES_CHANGED=true
-        fi
+        # Ensure applyRules is enabled (POST is idempotent, Pangolin does not return this field in GET)
+        curl -s -X POST \
+          -H "Authorization: Bearer ${API_KEY}" \
+          -H "Content-Type: application/json" \
+          "${API_BASE_URL}/resource/${EXISTING_RESOURCE_ID}" \
+          -d '{"applyRules": true}' > /dev/null
       fi
 
       if [ "${RULES_CHANGED}" = "true" ]; then
