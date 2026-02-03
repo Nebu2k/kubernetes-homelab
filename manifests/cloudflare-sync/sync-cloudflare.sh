@@ -79,7 +79,7 @@ sync_records() {
     curl -s -X POST "${CF_API}/zones/${CF_ZONE_ID}/dns_records" \
       -H "Authorization: Bearer ${CF_API_TOKEN}" \
       -H "Content-Type: application/json" \
-      -d "{\"type\":\"A\",\"name\":\"${HOST}\",\"content\":\"${CF_IPV4}\",\"ttl\":1,\"proxied\":false}" > /dev/null
+      -d "{\"type\":\"A\",\"name\":\"${HOST}\",\"content\":\"${CF_IPV4}\",\"ttl\":1,\"proxied\":false,\"comment\":\"managed-by: cloudflare-sync\"}" > /dev/null
     echo "    ✓ A ${HOST} → ${CF_IPV4} (created)"
     CHANGED=true
   fi
@@ -100,7 +100,7 @@ sync_records() {
     curl -s -X POST "${CF_API}/zones/${CF_ZONE_ID}/dns_records" \
       -H "Authorization: Bearer ${CF_API_TOKEN}" \
       -H "Content-Type: application/json" \
-      -d "{\"type\":\"AAAA\",\"name\":\"${HOST}\",\"content\":\"${CF_IPV6}\",\"ttl\":1,\"proxied\":false}" > /dev/null
+      -d "{\"type\":\"AAAA\",\"name\":\"${HOST}\",\"content\":\"${CF_IPV6}\",\"ttl\":1,\"proxied\":false,\"comment\":\"managed-by: cloudflare-sync\"}" > /dev/null
     echo "    ✓ AAAA ${HOST} → ${CF_IPV6} (created)"
     CHANGED=true
   fi
