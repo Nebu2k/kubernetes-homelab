@@ -48,15 +48,17 @@ ALL_INGRESSES_RAW=$(curl -s --cacert /var/run/secrets/kubernetes.io/serviceaccou
 
 # Check if response has items (valid response)
 if echo "${ALL_INGRESSES_RAW}" | jq -e '.items' > /dev/null 2>&1; then
-  INGRESS_SERVICES=$(echo "${ALL_INGRESSES_RAW}" | jq '[.items[] |
+  INGRESS_SERVICES=$(echo "${ALL_INGRESSES_RAW}" | jq --arg suffix "${DOMAIN_SUFFIX}" '[.items[] |
     select(.metadata.annotations["pangolin.io/expose"]? == "true") |
+    . as $ing |
+    .spec.rules[] |
     {
-      name: .spec.rules[0].http.paths[0].backend.service.name,
-      namespace: .metadata.namespace,
-      subdomain: (.spec.rules[0].host | split(".")[0]),
-      auth: ((.metadata.annotations["pangolin.io/auth"] // "true") == "true"),
-      port: (.spec.rules[0].http.paths[0].backend.service.port.number // .spec.rules[0].http.paths[0].backend.service.port.name),
-      host: .spec.rules[0].host,
+      name: .http.paths[0].backend.service.name,
+      namespace: $ing.metadata.namespace,
+      subdomain: (if .host == $suffix then "" else (.host | split(".")[0]) end),
+      auth: (($ing.metadata.annotations["pangolin.io/auth"] // "true") == "true"),
+      port: (.http.paths[0].backend.service.port.number // .http.paths[0].backend.service.port.name),
+      host: .host,
       source: "ingress"
     }]')
 else
@@ -90,7 +92,7 @@ echo "✓ Found ${SERVICE_SERVICE_COUNT} services with pangolin.io/expose annota
 echo "🔄 Merging sources and removing duplicates..."
 ALL_SERVICES=$(printf '%s\n%s' "${INGRESS_SERVICES}" "${SERVICE_SERVICES}" | jq -s --arg suffix "${DOMAIN_SUFFIX}" '
   (.[0] + .[1]) |
-  group_by(.namespace + "/" + .name) |
+  group_by(.host) |
   map(
     if (map(select(.source == "ingress")) | length) > 0 then
       map(select(.source == "ingress"))[0]
@@ -251,8 +253,9 @@ echo "${ALL_SERVICES}" | jq -c '.[]' | while IFS= read -r service; do
   EXISTING_RESOURCE_ID=$(echo "${PANGOLIN_RESOURCES}" | jq -r ".[] | select(.fullDomain == \"${HOST}\") | .resourceId")
   EXISTING_TARGETS_JSON=$(echo "${PANGOLIN_RESOURCES}" | jq -r ".[] | select(.fullDomain == \"${HOST}\") | .targets")
 
-  # Determine expected method: https for port 443, http otherwise
-  if [ "${TARGET_PORT}" = "443" ]; then
+  # Determine expected method based on Service port (not targetPort — e.g. Proxmox: port 443, targetPort 8006)
+  SVC_PORT_NUM=$(echo "${PORT_SPEC}" | jq -r '.port')
+  if [ "${SVC_PORT_NUM}" = "443" ]; then
     EXPECTED_METHOD="https"
   else
     EXPECTED_METHOD="http"
