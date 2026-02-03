@@ -247,18 +247,25 @@ echo "${ALL_SERVICES}" | jq -c '.[]' | while IFS= read -r service; do
     continue
   fi
 
-  echo "    → Desired target: https://${TARGET_IP}:${TARGET_PORT}"
   # Check if resource already exists in Pangolin (match by fullDomain)
   EXISTING_RESOURCE_ID=$(echo "${PANGOLIN_RESOURCES}" | jq -r ".[] | select(.fullDomain == \"${HOST}\") | .resourceId")
   EXISTING_TARGETS_JSON=$(echo "${PANGOLIN_RESOURCES}" | jq -r ".[] | select(.fullDomain == \"${HOST}\") | .targets")
+
+  # Determine expected method: https for port 443, http otherwise
+  if [ "${TARGET_PORT}" = "443" ]; then
+    EXPECTED_METHOD="https"
+  else
+    EXPECTED_METHOD="http"
+  fi
+  echo "    → Desired target: ${EXPECTED_METHOD}://${TARGET_IP}:${TARGET_PORT}"
 
   if [ -n "${EXISTING_RESOURCE_ID}" ]; then
     # Resource exists - reconcile ALL targets
     EXISTING_TARGET_COUNT=$(echo "${EXISTING_TARGETS_JSON}" | jq 'length')
 
-    # Check if we have exactly one target with correct IP and port
-    CORRECT_TARGET_COUNT=$(echo "${EXISTING_TARGETS_JSON}" | jq --arg ip "${TARGET_IP}" --argjson port "${TARGET_PORT}" \
-      '[.[] | select(.ip == $ip and .port == $port)] | length')
+    # Check if we have exactly one target with correct IP, port and method
+    CORRECT_TARGET_COUNT=$(echo "${EXISTING_TARGETS_JSON}" | jq --arg ip "${TARGET_IP}" --argjson port "${TARGET_PORT}" --arg method "${EXPECTED_METHOD}" \
+      '[.[] | select(.ip == $ip and .port == $port and .method == $method)] | length')
 
     # If we have exactly 1 correct target and no other targets, we're done
     if [ "${EXISTING_TARGET_COUNT}" = "1" ] && [ "${CORRECT_TARGET_COUNT}" = "1" ]; then
@@ -454,7 +461,7 @@ echo "${ALL_SERVICES}" | jq -c '.[]' | while IFS= read -r service; do
           \"siteId\": ${SITE_ID},
           \"ip\": \"${TARGET_IP}\",
           \"port\": ${TARGET_PORT},
-          \"method\": \"https\"
+          \"method\": \"${EXPECTED_METHOD}\"
         }")
       
       if echo "${TARGET_RESPONSE}" | jq -e '.success' > /dev/null; then
