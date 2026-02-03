@@ -16,9 +16,11 @@
           { "type": "test", "release": "patch" },
           { "type": "build", "release": "patch" },
           { "type": "ci", "release": "patch" },
-          { "type": "chore", "release": false },
-          { "breaking": true, "release": "major" }
-        ]
+          { "type": "chore", "release": false }
+        ],
+        "parserOpts": {
+          "noteKeywords": ["BREAKING CHANGE", "BREAKING CHANGES", "BREAKING"]
+        }
       }
     ],
     [
