@@ -1,3 +1,11 @@
+## [4.0.2](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.0.1...v4.0.2) (2026-02-03)
+
+
+### Bug Fixes
+
+* add comment to DNS records created by cloudflare-sync script ([a300fef](https://github.com/Nebu2k/kubernetes-homelab/commit/a300fef67d502179385953fa75629e39658ea40f))
+* simplify applyRules enabling logic in sync-pangolin script ([fdddaa2](https://github.com/Nebu2k/kubernetes-homelab/commit/fdddaa2db39892db06dfa58944a1ec1afd3350f9))
+
 ## [4.0.1](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.0.0...v4.0.1) (2026-02-03)
 
 
