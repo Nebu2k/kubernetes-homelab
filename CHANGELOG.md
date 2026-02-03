@@ -1,3 +1,18 @@
+## [3.38.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v3.37.0...v3.38.0) (2026-02-03)
+
+
+### ✨ Features
+
+* **readme:** update Pangolin services section to list services with and without authentication ([7122c46](https://github.com/Nebu2k/kubernetes-homelab/commit/7122c46a836e06d51ac8458801b50d6d60793917))
+* **sync-pangolin:** add internal access rules for protected services ([8acb86d](https://github.com/Nebu2k/kubernetes-homelab/commit/8acb86d2669ab65ecc5ca1793d94d4fbc6fea327))
+* **sync-pangolin:** enhance egress CIDR rule management for protected services ([e5beacd](https://github.com/Nebu2k/kubernetes-homelab/commit/e5beacdfeda2c1651af227e7695eb9d3a25e797d))
+
+
+### 🐛 Bug Fixes
+
+* **coredns:** remove redundant internal forwarding configuration ([8eef9fb](https://github.com/Nebu2k/kubernetes-homelab/commit/8eef9fb7dae64cb960abfbd01b28966c0c181ba0))
+* **ingress:** remove TLS configuration from multiple ingress resources ([e538202](https://github.com/Nebu2k/kubernetes-homelab/commit/e538202207522c9342a931e59999cc4277305a83))
+
 ## [3.37.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v3.36.0...v3.37.0) (2026-02-02)
 
 
