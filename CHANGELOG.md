@@ -1,3 +1,10 @@
+## [4.1.1](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.1.0...v4.1.1) (2026-02-03)
+
+
+### Bug Fixes
+
+* improve ingress service selection logic in sync-pangolin script ([1f8ef23](https://github.com/Nebu2k/kubernetes-homelab/commit/1f8ef23830bc390119565f915e843401ff6e5ee7))
+
 # [4.1.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.0.2...v4.1.0) (2026-02-03)
 
 
