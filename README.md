@@ -21,7 +21,7 @@ Production-ready K3s cluster managed via GitOps using ArgoCD App-of-Apps pattern
 |------|-----------|
 | 0 | Sealed Secrets, Coredns Config |
 | 1 | Reloader, Kured, Metallb |
-| 2 | Pangolin Sync |
+| 2 | Cloudflare Sync, Pangolin Sync |
 | 3 | Traefik |
 | 4 | Longhorn |
 | 5 | Landing Page, Portainer, Teslamate, Nfs Storage |
@@ -48,6 +48,7 @@ homelab/
 │   ├── kured.yaml                     # Wave 1
 │   ├── metallb.yaml                   # Wave 1
 │   ├── reloader.yaml                  # Wave 1
+│   ├── cloudflare-sync.yaml           # Wave 2
 │   ├── pangolin-sync.yaml             # Wave 2
 │   ├── traefik.yaml                   # Wave 3
 │   ├── longhorn.yaml                  # Wave 4
@@ -85,6 +86,11 @@ homelab/
     │   ├── secret-sealed.yaml
     │   ├── secret-unsealed.yaml.example
     │   └── service.yaml
+    ├── cloudflare-sync/
+    │   ├── cloudflare-sync-credentials-sealed.yaml
+    │   ├── cloudflare-sync-job.yaml
+    │   ├── cloudflare-sync-rbac.yaml
+    │   └── kustomization.yaml
     ├── coredns/
     │   ├── coredns-custom.yaml
     │   └── kustomization.yaml

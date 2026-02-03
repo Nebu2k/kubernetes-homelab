@@ -1,0 +1,12 @@
+FROM alpine:3.23
+
+RUN apk add --no-cache --no-progress \
+    curl \
+    jq
+
+COPY sync-cloudflare.sh /usr/local/bin/sync-cloudflare.sh
+RUN chmod +x /usr/local/bin/sync-cloudflare.sh
+
+USER nobody
+
+ENTRYPOINT ["/usr/local/bin/sync-cloudflare.sh"]

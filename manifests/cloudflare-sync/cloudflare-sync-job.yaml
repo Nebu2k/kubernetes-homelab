@@ -1,0 +1,48 @@
+---
+# PostSync Hook: Runs after every ArgoCD sync
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: cloudflare-sync-postsync
+  namespace: cloudflare-sync
+  annotations:
+    argocd.argoproj.io/hook: PostSync
+    argocd.argoproj.io/hook-delete-policy: BeforeHookCreation
+spec:
+  ttlSecondsAfterFinished: 300
+  template:
+    spec:
+      serviceAccountName: cloudflare-sync
+      restartPolicy: OnFailure
+      containers:
+        - name: sync
+          image: nebu2k/cloudflare-sync:latest
+          envFrom:
+            - secretRef:
+                name: cloudflare-sync-credentials
+---
+# CronJob: Runs every 15 minutes
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: cloudflare-sync
+  namespace: cloudflare-sync
+spec:
+  schedule: "*/15 * * * *"
+  concurrencyPolicy: Forbid
+  startingDeadlineSeconds: 300
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      ttlSecondsAfterFinished: 3600
+      template:
+        spec:
+          serviceAccountName: cloudflare-sync
+          restartPolicy: OnFailure
+          containers:
+            - name: sync
+              image: nebu2k/cloudflare-sync:latest
+              envFrom:
+                - secretRef:
+                    name: cloudflare-sync-credentials

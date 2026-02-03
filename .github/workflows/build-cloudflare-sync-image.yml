@@ -1,0 +1,90 @@
+name: Build Cloudflare Sync Image
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'manifests/cloudflare-sync/Dockerfile.cloudflare-sync'
+      - 'manifests/cloudflare-sync/sync-cloudflare.sh'
+      - '.github/workflows/build-cloudflare-sync-image.yml'
+  workflow_dispatch:
+
+env:
+  IMAGE_NAME: nebu2k/cloudflare-sync
+  PLATFORMS: linux/amd64,linux/arm64
+
+permissions:
+  contents: read
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+        with:
+          platforms: arm64,amd64
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to DockerHub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Generate version tags
+        id: version
+        run: |
+          ALPINE_VERSION=$(grep -oP 'FROM alpine:\K[0-9.]+' manifests/cloudflare-sync/Dockerfile.cloudflare-sync)
+          BUILD_DATE=$(date +%Y%m%d)
+          SHORT_SHA=$(echo "${{ github.sha }}" | cut -c1-7)
+
+          if git describe --tags --exact-match 2>/dev/null; then
+            VERSION=$(git describe --tags --exact-match)
+          else
+            VERSION="dev-${SHORT_SHA}"
+          fi
+
+          echo "alpine_version=${ALPINE_VERSION}" >> $GITHUB_OUTPUT
+          echo "build_date=${BUILD_DATE}" >> $GITHUB_OUTPUT
+          echo "version=${VERSION}" >> $GITHUB_OUTPUT
+          echo "short_sha=${SHORT_SHA}" >> $GITHUB_OUTPUT
+
+      - name: Build and push
+        uses: docker/build-push-action@v5
+        with:
+          context: manifests/cloudflare-sync
+          file: manifests/cloudflare-sync/Dockerfile.cloudflare-sync
+          platforms: ${{ env.PLATFORMS }}
+          push: true
+          tags: |
+            ${{ env.IMAGE_NAME }}:latest
+            ${{ env.IMAGE_NAME }}:${{ steps.version.outputs.version }}
+            ${{ env.IMAGE_NAME }}:${{ steps.version.outputs.short_sha }}
+            ${{ env.IMAGE_NAME }}:alpine${{ steps.version.outputs.alpine_version }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          labels: |
+            org.opencontainers.image.title=Cloudflare DNS Sync
+            org.opencontainers.image.description=Alpine-based image with curl and jq for Cloudflare DNS record synchronization
+            org.opencontainers.image.version=${{ steps.version.outputs.version }}
+            org.opencontainers.image.created=${{ steps.version.outputs.build_date }}
+            org.opencontainers.image.source=${{ github.repositoryUrl }}
+
+      - name: Image digest
+        run: |
+          echo "Successfully built and pushed multi-arch image:"
+          echo "   - ${{ env.IMAGE_NAME }}:latest"
+          echo "   - ${{ env.IMAGE_NAME }}:${{ steps.version.outputs.version }}"
+          echo "   - ${{ env.IMAGE_NAME }}:${{ steps.version.outputs.short_sha }}"
+          echo "   - ${{ env.IMAGE_NAME }}:alpine${{ steps.version.outputs.alpine_version }}"
+          echo ""
+          echo "Platforms: ${{ env.PLATFORMS }}"
+          echo "Alpine version: ${{ steps.version.outputs.alpine_version }}"

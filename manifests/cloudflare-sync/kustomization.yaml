@@ -1,0 +1,7 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: cloudflare-sync
+resources:
+  - cloudflare-sync-credentials-sealed.yaml
+  - cloudflare-sync-rbac.yaml
+  - cloudflare-sync-job.yaml

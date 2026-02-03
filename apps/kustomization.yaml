@@ -26,4 +26,5 @@ resources:
   - paperless-ngx.yaml
   - newt.yaml
   - pangolin-sync.yaml
+  - cloudflare-sync.yaml
 
