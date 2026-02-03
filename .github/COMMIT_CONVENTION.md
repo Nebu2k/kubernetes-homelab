@@ -14,16 +14,14 @@ Dieses Projekt verwendet [Conventional Commits](https://www.conventionalcommits.
 
 ## Types
 
-- **feat**: Neue Funktion (→ minor version bump, z.B. 1.0.0 → 1.1.0)
-- **fix**: Bug Fix (→ patch version bump, z.B. 1.0.0 → 1.0.1)
-- **perf**: Performance Verbesserung (→ patch)
-- **docs**: Dokumentationsänderung (→ patch)
-- **style**: Code-Formatierung, keine funktionale Änderung (→ patch)
-- **refactor**: Code-Refactoring (→ patch)
-- **test**: Tests hinzugefügt/geändert (→ patch)
-- **build**: Build-System Änderungen (→ patch)
-- **ci**: CI/CD Konfigurationsänderungen (→ patch)
-- **chore**: Sonstige Änderungen, z.B. Dependencies (→ kein Release)
+Dieses Projekt verwendet die Standard-Regeln von [Conventional Commits](https://www.conventionalcommits.org/):
+
+- **feat**: Neue Funktion (→ **minor** version bump, z.B. 1.0.0 → 1.1.0)
+- **fix**: Bug Fix (→ **patch** version bump, z.B. 1.0.0 → 1.0.1)
+- **perf**: Performance Verbesserung (→ **patch**)
+- **docs**, **style**, **refactor**, **test**, **build**, **ci**, **chore**: → **kein Release**
+
+> ⚠️ Nur `feat`, `fix` und `perf` erstellen automatisch einen Release. Alle anderen Types werden im CHANGELOG dokumentiert, aber erstellen keinen neuen Release.
 
 ## Breaking Changes
 
