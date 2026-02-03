@@ -38,11 +38,12 @@ CA="/var/run/secrets/kubernetes.io/serviceaccount/ca.crt"
 
 CF_API="https://api.cloudflare.com/client/v4"
 
-# Counter files for summary
+# Counter files for summary (also used for hosts list, subshell-safe)
 COUNTER_DIR=$(mktemp -d)
 echo "0" > "${COUNTER_DIR}/created"
 echo "0" > "${COUNTER_DIR}/updated"
 echo "0" > "${COUNTER_DIR}/skipped"
+echo "0" > "${COUNTER_DIR}/removed"
 
 # Helper: ensure A and AAAA records exist for a given hostname
 sync_records() {
@@ -70,7 +71,7 @@ sync_records() {
       curl -s -X PUT "${CF_API}/zones/${CF_ZONE_ID}/dns_records/${A_ID}" \
         -H "Authorization: Bearer ${CF_API_TOKEN}" \
         -H "Content-Type: application/json" \
-        -d "{\"type\":\"A\",\"name\":\"${HOST}\",\"content\":\"${CF_IPV4}\",\"ttl\":1,\"proxied\":false}" > /dev/null
+        -d "{\"type\":\"A\",\"name\":\"${HOST}\",\"content\":\"${CF_IPV4}\",\"ttl\":1,\"proxied\":false,\"comment\":\"managed-by: cloudflare-sync\"}" > /dev/null
       echo "    ✓ A ${HOST} → ${CF_IPV4} (updated)"
       CHANGED=true
     fi
@@ -91,7 +92,7 @@ sync_records() {
       curl -s -X PUT "${CF_API}/zones/${CF_ZONE_ID}/dns_records/${AAAA_ID}" \
         -H "Authorization: Bearer ${CF_API_TOKEN}" \
         -H "Content-Type: application/json" \
-        -d "{\"type\":\"AAAA\",\"name\":\"${HOST}\",\"content\":\"${CF_IPV6}\",\"ttl\":1,\"proxied\":false}" > /dev/null
+        -d "{\"type\":\"AAAA\",\"name\":\"${HOST}\",\"content\":\"${CF_IPV6}\",\"ttl\":1,\"proxied\":false,\"comment\":\"managed-by: cloudflare-sync\"}" > /dev/null
       echo "    ✓ AAAA ${HOST} → ${CF_IPV6} (updated)"
       CHANGED=true
     fi
@@ -127,14 +128,15 @@ echo "📡 Fetching Services with pangolin.io/expose annotation..."
 ALL_SERVICES=$(curl -s --cacert "${CA}" -H "Authorization: Bearer ${TOKEN}" \
   "${K8S_API}/api/v1/services")
 
-SERVICE_HOSTS=$(echo "${ALL_SERVICES}" | jq -r '
+SERVICE_HOSTS=$(echo "${ALL_SERVICES}" | jq -r --arg domain "${CF_DOMAIN}" '
   .items[] |
   select(.metadata.annotations["pangolin.io/expose"] == "true") |
-  .metadata.annotations["pangolin.io/host"]
+  select(.metadata.annotations["pangolin.io/subdomain"] != null) |
+  .metadata.annotations["pangolin.io/subdomain"] + "." + $domain
 ' 2>/dev/null || echo "")
 
 # --- Merge and deduplicate ---
-HOSTS=$(printf "%s\n%s\n" "${INGRESS_HOSTS}" "${SERVICE_HOSTS}" | sort -u | grep -v '^$')
+HOSTS=$(printf "%s\n%s\n" "${INGRESS_HOSTS}" "${SERVICE_HOSTS}" | grep -v '^$' | grep -v '^null$' | sort -u)
 
 HOST_COUNT=$(echo "${HOSTS}" | wc -l | tr -d ' ')
 echo "✓ Found ${HOST_COUNT} unique hosts to sync"
@@ -145,6 +147,8 @@ echo "━━━━━━━━━━━━━━━━━━━━━━━━�
 echo "📤 Syncing DNS records..."
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
+printf "%s\n" "${HOSTS}" > "${COUNTER_DIR}/desired_hosts"
+
 echo "${HOSTS}" | while IFS= read -r HOST; do
   [ -z "${HOST}" ] && continue
   # Extract subdomain from host (strip .elmstreet79.de)
@@ -153,9 +157,39 @@ echo "${HOSTS}" | while IFS= read -r HOST; do
   sync_records "${HOST}" "${SUBDOMAIN}"
 done
 
+# --- Remove stale records (A/AAAA pointing to our IPs but no longer in desired hosts) ---
+echo ""
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo "🗑️  Checking for stale records..."
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+# Fetch all A and AAAA records with our managed comment (paginated: up to 1000)
+CF_ALL_A=$(curl -s "${CF_API}/zones/${CF_ZONE_ID}/dns_records?type=A&per_page=1000&comment=managed-by%3A+cloudflare-sync" \
+  -H "Authorization: Bearer ${CF_API_TOKEN}")
+CF_ALL_AAAA=$(curl -s "${CF_API}/zones/${CF_ZONE_ID}/dns_records?type=AAAA&per_page=1000&comment=managed-by%3A+cloudflare-sync" \
+  -H "Authorization: Bearer ${CF_API_TOKEN}")
+
+# Output as "id name"
+MANAGED_RECORDS=$(echo "${CF_ALL_A}" | jq -r '.result[] | "\(.id) \(.name)"'; \
+  echo "${CF_ALL_AAAA}" | jq -r '.result[] | "\(.id) \(.name)"')
+
+echo "${MANAGED_RECORDS}" | while IFS= read -r LINE; do
+  [ -z "${LINE}" ] && continue
+  REC_ID=$(echo "${LINE}" | cut -d' ' -f1)
+  REC_NAME=$(echo "${LINE}" | cut -d' ' -f2-)
+
+  if ! grep -qx "${REC_NAME}" "${COUNTER_DIR}/desired_hosts"; then
+    curl -s -X DELETE "${CF_API}/zones/${CF_ZONE_ID}/dns_records/${REC_ID}" \
+      -H "Authorization: Bearer ${CF_API_TOKEN}" > /dev/null
+    echo "    🗑️  Removed ${REC_NAME} (${REC_ID})"
+    echo "$(($(cat "${COUNTER_DIR}/removed") + 1))" > "${COUNTER_DIR}/removed"
+  fi
+done
+
 # --- Summary ---
 SKIPPED=$(cat "${COUNTER_DIR}/skipped")
 UPDATED=$(cat "${COUNTER_DIR}/updated")
+REMOVED=$(cat "${COUNTER_DIR}/removed")
 
 echo ""
 echo "═══════════════════════════════════════════════════════"
@@ -163,6 +197,7 @@ echo "📊 DNS Sync Summary"
 echo "═══════════════════════════════════════════════════════"
 echo "   ✓ Skipped (unchanged):  ${SKIPPED}"
 echo "   🔄 Updated/Created:     ${UPDATED}"
+echo "   🗑️  Removed (stale):     ${REMOVED}"
 echo "═══════════════════════════════════════════════════════"
 echo "✅ Cloudflare DNS sync complete!"
 echo ""
