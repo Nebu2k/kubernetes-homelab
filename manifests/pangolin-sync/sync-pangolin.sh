@@ -20,6 +20,22 @@ echo "   Domain: *.${DOMAIN_SUFFIX}"
 echo "═══════════════════════════════════════════════════════"
 echo ""
 
+# Resolve cluster egress IPs via DynDNS (IPv4 + IPv6)
+NSLOOKUP_OUT=$(nslookup nebu2k.ipv64.net)
+EGRESS_IPV4=$(echo "${NSLOOKUP_OUT}" | grep -E '^Address: [0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$' | awk '{print $2}')
+EGRESS_IPV6=$(echo "${NSLOOKUP_OUT}" | grep -E '^Address: [0-9a-fA-F:]+$' | awk '{print $2}')
+if [ -z "${EGRESS_IPV4}" ] && [ -z "${EGRESS_IPV6}" ]; then
+  echo "❌ Failed to resolve nebu2k.ipv64.net, aborting"
+  exit 1
+fi
+# Build space-separated list of CIDR values for rule management
+EGRESS_CIDRS=""
+[ -n "${EGRESS_IPV4}" ] && EGRESS_CIDRS="${EGRESS_IPV4}/32"
+[ -n "${EGRESS_IPV6}" ] && EGRESS_CIDRS="${EGRESS_CIDRS} ${EGRESS_IPV6}/128"
+echo "   Egress IPv4: ${EGRESS_IPV4:-none} (nebu2k.ipv64.net)"
+echo "   Egress IPv6: ${EGRESS_IPV6:-none} (nebu2k.ipv64.net)"
+echo ""
+
 # Get service account token
 TOKEN=$(cat /var/run/secrets/kubernetes.io/serviceaccount/token)
 
@@ -247,7 +263,69 @@ echo "${ALL_SERVICES}" | jq -c '.[]' | while IFS= read -r service; do
     # If we have exactly 1 correct target and no other targets, we're done
     if [ "${EXISTING_TARGET_COUNT}" = "1" ] && [ "${CORRECT_TARGET_COUNT}" = "1" ]; then
       echo "    ✓ ${HOST} (already correct)"
-      echo "$(($(cat "${COUNTER_DIR}/skipped") + 1))" > "${COUNTER_DIR}/skipped"
+      RULES_CHANGED=false
+
+      # Ensure egress CIDR rules exist for auth: true services
+      if [ "${REQUIRE_AUTH}" = "true" ]; then
+        EXISTING_RULES=$(curl -s -H "Authorization: Bearer ${API_KEY}" \
+          "${API_BASE_URL}/resource/${EXISTING_RESOURCE_ID}/rules")
+
+        # Remove stale CIDR rules (not in current EGRESS_CIDRS)
+        for LINE in $(echo "${EXISTING_RULES}" | jq -r '.data.rules[] | select(.match == "CIDR") | .ruleId | tostring'); do
+          RULE_VAL=$(echo "${EXISTING_RULES}" | jq -r --arg id "${LINE}" '.data.rules[] | select((.ruleId | tostring) == $id) | .value')
+          KEEP=false
+          for CIDR in ${EGRESS_CIDRS}; do
+            [ "${RULE_VAL}" = "${CIDR}" ] && KEEP=true
+          done
+          if [ "${KEEP}" = "false" ]; then
+            curl -s -X DELETE \
+              -H "Authorization: Bearer ${API_KEY}" \
+              "${API_BASE_URL}/resource/${EXISTING_RESOURCE_ID}/rule/${LINE}" > /dev/null
+            echo "    🗑️  Removed stale CIDR rule (${RULE_VAL})"
+            RULES_CHANGED=true
+          fi
+        done
+
+        # Add missing egress CIDR rules
+        PRIO=10
+        for CIDR in ${EGRESS_CIDRS}; do
+          HAS=$(echo "${EXISTING_RULES}" | jq -r --arg c "${CIDR}" '[.data.rules[] | select(.match == "CIDR" and .value == $c)] | length')
+          if [ "${HAS}" = "0" ]; then
+            curl -s -X PUT \
+              -H "Authorization: Bearer ${API_KEY}" \
+              -H "Content-Type: application/json" \
+              "${API_BASE_URL}/resource/${EXISTING_RESOURCE_ID}/rule" \
+              -d "{
+                \"action\": \"ACCEPT\",
+                \"match\": \"CIDR\",
+                \"value\": \"${CIDR}\",
+                \"priority\": ${PRIO},
+                \"enabled\": true
+              }" > /dev/null
+            echo "    ✓ Egress CIDR rule added (${CIDR})"
+            RULES_CHANGED=true
+          fi
+          PRIO=$((PRIO + 1))
+        done
+
+        # Ensure applyRules is enabled
+        APPLY_RULES_CURRENT=$(echo "${PANGOLIN_RESOURCES}" | jq -r --arg id "${EXISTING_RESOURCE_ID}" '.[] | select(.resourceId == $id) | .applyRules // false')
+        if [ "${APPLY_RULES_CURRENT}" != "true" ]; then
+          curl -s -X POST \
+            -H "Authorization: Bearer ${API_KEY}" \
+            -H "Content-Type: application/json" \
+            "${API_BASE_URL}/resource/${EXISTING_RESOURCE_ID}" \
+            -d '{"applyRules": true}' > /dev/null
+          echo "    ✓ applyRules enabled"
+          RULES_CHANGED=true
+        fi
+      fi
+
+      if [ "${RULES_CHANGED}" = "true" ]; then
+        echo "$(($(cat "${COUNTER_DIR}/updated") + 1))" > "${COUNTER_DIR}/updated"
+      else
+        echo "$(($(cat "${COUNTER_DIR}/skipped") + 1))" > "${COUNTER_DIR}/skipped"
+      fi
     else
       # Need to reconcile - API doesn't support deleting individual targets
       # So we delete the entire resource and recreate it with correct target
@@ -335,41 +413,36 @@ echo "${ALL_SERVICES}" | jq -c '.[]' | while IFS= read -r service; do
           echo "    ✓ SSO disabled"
         fi
       else
-        # For protected services (auth: true), create CIDR rules to allow internal access without auth
-        echo "    → Creating internal access rules (bypass auth for cluster IPs)"
+        # For protected services (auth: true), create egress CIDR rules
+        PRIO=10
+        for CIDR in ${EGRESS_CIDRS}; do
+          RULE_RESPONSE=$(curl -s -X PUT \
+            -H "Authorization: Bearer ${API_KEY}" \
+            -H "Content-Type: application/json" \
+            "${API_BASE_URL}/resource/${RESOURCE_ID}/rule" \
+            -d "{
+              \"action\": \"ACCEPT\",
+              \"match\": \"CIDR\",
+              \"value\": \"${CIDR}\",
+              \"priority\": ${PRIO},
+              \"enabled\": true
+            }")
 
-        # Rule 1: Allow Pod CIDR (10.42.0.0/16) - priority 10
-        RULE1_RESPONSE=$(curl -s -X PUT \
+          if echo "${RULE_RESPONSE}" | jq -e '.success' > /dev/null 2>&1; then
+            echo "    ✓ Egress CIDR rule created (${CIDR})"
+          else
+            echo "    ⚠️  Failed to create egress CIDR rule (${CIDR}): $(echo ${RULE_RESPONSE} | jq -r '.message // "unknown"')"
+          fi
+          PRIO=$((PRIO + 1))
+        done
+
+        # Enable applyRules on the resource
+        curl -s -X POST \
           -H "Authorization: Bearer ${API_KEY}" \
           -H "Content-Type: application/json" \
-          "${API_BASE_URL}/resource/${RESOURCE_ID}/rule" \
-          -d '{
-            "action": "ACCEPT",
-            "match": "CIDR",
-            "value": "10.42.0.0/16",
-            "priority": 10,
-            "enabled": true
-          }')
-
-        # Rule 2: Allow Service CIDR (10.43.0.0/16) - priority 11
-        RULE2_RESPONSE=$(curl -s -X PUT \
-          -H "Authorization: Bearer ${API_KEY}" \
-          -H "Content-Type: application/json" \
-          "${API_BASE_URL}/resource/${RESOURCE_ID}/rule" \
-          -d '{
-            "action": "ACCEPT",
-            "match": "CIDR",
-            "value": "10.43.0.0/16",
-            "priority": 11,
-            "enabled": true
-          }')
-
-        if echo "${RULE1_RESPONSE}" | jq -e '.success' > /dev/null && \
-           echo "${RULE2_RESPONSE}" | jq -e '.success' > /dev/null; then
-          echo "    ✓ Internal access rules created (10.42.0.0/16, 10.43.0.0/16)"
-        else
-          echo "    ⚠️  Failed to create internal access rules (may already exist)"
-        fi
+          "${API_BASE_URL}/resource/${RESOURCE_ID}" \
+          -d '{"applyRules": true}' > /dev/null
+        echo "    ✓ applyRules enabled"
       fi
       
       # Create target (backend)
