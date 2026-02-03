@@ -1,3 +1,15 @@
+# [4.0.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v3.38.0...v4.0.0) (2026-02-03)
+
+
+### Features
+
+* pangolin migration ([df4f9fa](https://github.com/Nebu2k/kubernetes-homelab/commit/df4f9fa3e37969db39c310cc2ea563cbdfc8aa0f))
+
+
+### BREAKING CHANGES
+
+* migrated to new pangolin setup
+
 ## [3.38.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v3.37.0...v3.38.0) (2026-02-03)
 
 
