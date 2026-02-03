@@ -1,3 +1,10 @@
+## [4.0.1](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.0.0...v4.0.1) (2026-02-03)
+
+
+### Bug Fixes
+
+* enhance cloudflare-sync script to manage stale DNS records ([e5d08dc](https://github.com/Nebu2k/kubernetes-homelab/commit/e5d08dcece8eeb63ef58973dd5bd0144a084a6ed))
+
 # [4.0.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v3.38.0...v4.0.0) (2026-02-03)
 
 
