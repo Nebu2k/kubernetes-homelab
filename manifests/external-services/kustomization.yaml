@@ -1,0 +1,22 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: external-services
+resources:
+  # Service files (extracted from ingress/deployment files)
+  - adguard-macmini-service.yaml
+  - adguard-pve-service.yaml
+  - adguardhome-sync-service.yaml
+  - dreambox-service.yaml
+  - glances-macmini-service.yaml
+  - minio-service.yaml
+  - minio-api-service.yaml
+  - nextcloud-service.yaml
+  - plex-service.yaml
+  - proxmox-service.yaml
+  - unifi-service.yaml
+  - unifi-nas-service.yaml
+  - vscode-service.yaml
+  # Other resources
+  - adguardhome-sync-config.yaml
+  - adguardhome-sync-credentials-sealed.yaml
+  - adguardhome-sync-deployment.yaml

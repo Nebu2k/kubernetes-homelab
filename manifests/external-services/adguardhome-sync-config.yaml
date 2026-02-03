@@ -1,0 +1,55 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: adguardhome-sync-config
+  namespace: external-services
+data:
+  adguardhome-sync.yaml: |
+    # AdGuard Home Sync Configuration
+    # Synchronisiert alle Einstellungen von Origin (Primary) zu Replicas (Secondary)
+
+    # Cron expression für automatische Synchronisation (jede Minute)
+    cron: "* * * * *"
+
+    # Synchronisation beim Start ausführen
+    runOnStart: true
+
+    # Bei Fehlern fortfahren statt abzubrechen
+    continueOnError: false
+
+    # Origin = Primary Instance auf raspi5
+    origin:
+      url: http://192.168.2.16
+      username: ${ADGUARD_USERNAME}
+      password: ${ADGUARD_PASSWORD}
+
+    # Replicas = Secondary Instances
+    replicas:
+     # adguard2 auf macmini
+      - url: http://192.168.2.4
+        username: ${ADGUARD_USERNAME}
+        password: ${ADGUARD_PASSWORD}
+
+    # Sync API Server Konfiguration
+    api:
+      # Port für Web UI und API
+      port: 8080
+      # Dark Mode für Web UI
+      darkMode: true
+
+    # Sync Features - alle aktiviert für vollständige Synchronisation
+    features:
+      generalSettings: true      # Allgemeine Einstellungen
+      queryLogConfig: true       # Query Log Konfiguration
+      statsConfig: true          # Statistik Konfiguration
+      clientSettings: true       # Client Einstellungen
+      services: true             # Blocked Services
+      filters: true              # Filter-Listen (vollständig)
+      dhcp:
+        serverConfig: false      # DHCP Server Config (meist deaktiviert)
+        staticLeases: false      # DHCP Static Leases (meist deaktiviert)
+      dns:
+        serverConfig: true       # DNS Server Einstellungen
+        accessLists: true        # DNS Access Lists
+        rewrites: true           # DNS Rewrites

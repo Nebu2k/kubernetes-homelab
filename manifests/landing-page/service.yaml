@@ -3,30 +3,6 @@ kind: Service
 metadata:
   name: landing-page
   namespace: landing-page
-  annotations:
-    pangolin.io/expose: "true"
-    pangolin.io/subdomain: "www"
-    pangolin.io/auth: "false"
-spec:
-  selector:
-    app: landing-page
-  ports:
-  - name: http
-    port: 80
-    targetPort: 80
-    protocol: TCP
-  type: ClusterIP
----
-# Second service for root domain elmstreet79.de
-apiVersion: v1
-kind: Service
-metadata:
-  name: landing-page-root
-  namespace: landing-page
-  annotations:
-    pangolin.io/expose: "true"
-    pangolin.io/subdomain: "@"
-    pangolin.io/auth: "false"
 spec:
   selector:
     app: landing-page

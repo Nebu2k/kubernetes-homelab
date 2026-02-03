@@ -4,7 +4,8 @@ metadata:
   name: landing-page
   namespace: landing-page
   annotations:
-    cert-manager.io/cluster-issuer: letsencrypt-prod
+    pangolin.io/expose: "true"
+    pangolin.io/auth: "false"
     gethomepage.dev/enabled: "true"
     gethomepage.dev/name: "Landing Page"
     gethomepage.dev/icon: "nginx.png"
@@ -14,11 +15,6 @@ metadata:
     gethomepage.dev/pod-selector: "app=landing-page"
 spec:
   ingressClassName: traefik
-  tls:
-    - hosts:
-        - www.elmstreet79.de
-        - elmstreet79.de
-      secretName: landing-page-tls
   rules:
     - host: www.elmstreet79.de
       http:

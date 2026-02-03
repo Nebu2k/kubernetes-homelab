@@ -1,0 +1,7 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: pangolin-sync
+resources:
+  - pangolin-api-credentials-sealed.yaml
+  - pangolin-sync-rbac.yaml
+  - pangolin-sync-job.yaml

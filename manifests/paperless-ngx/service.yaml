@@ -3,10 +3,6 @@ kind: Service
 metadata:
   name: paperless-ngx
   namespace: paperless-ngx
-  annotations:
-    pangolin.io/expose: "true"
-    pangolin.io/subdomain: "paperless"
-    pangolin.io/auth: "true"
   labels:
     app.kubernetes.io/name: paperless-ngx
 spec:

@@ -46,8 +46,6 @@ ingressRoute:
     enabled: true
     matchRule: Host(`traefik.elmstreet79.de`)
     entryPoints: ["websecure"]
-    tls:
-      secretName: traefik-dashboard-tls
 
 # Ports
 ports:

@@ -6,7 +6,6 @@ resources:
   - kured.yaml
   - coredns-config.yaml
   - metallb.yaml
-  - cert-manager.yaml
   - traefik.yaml
   - nfs-storage.yaml
   - longhorn.yaml
@@ -18,7 +17,7 @@ resources:
   - homepage.yaml
   - n8n.yaml
   - argocd-config.yaml
-  - private-services.yaml
+  - external-services.yaml
   - home-assistant.yaml
   - teslamate.yaml
   - landing-page.yaml
@@ -26,5 +25,6 @@ resources:
   - fr24.yaml
   - paperless-ngx.yaml
   - newt.yaml
+  - pangolin-sync.yaml
 ---
 

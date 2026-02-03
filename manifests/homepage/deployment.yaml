@@ -57,8 +57,6 @@ spec:
         env:
         - name: HOMEPAGE_ALLOWED_HOSTS
           value: "*"
-        - name: NODE_EXTRA_CA_CERTS
-          value: "/certs/ca.crt"
         - name: HOMEPAGE_VAR_PROXMOX_USER
           valueFrom:
             secretKeyRef:
@@ -139,9 +137,6 @@ spec:
           mountPath: /app/config
         - name: logs
           mountPath: /app/config/logs
-        - name: internal-ca
-          mountPath: /certs
-          readOnly: true
         livenessProbe:
           httpGet:
             path: /api/healthcheck
@@ -172,7 +167,3 @@ spec:
         emptyDir: {}
       - name: logs
         emptyDir: {}
-      - name: internal-ca
-        secret:
-          secretName: internal-ca-secret
-          defaultMode: 292  # 0444 in decimal
