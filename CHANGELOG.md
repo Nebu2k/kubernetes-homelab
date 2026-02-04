@@ -1,3 +1,10 @@
+## [4.2.1](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.2.0...v4.2.1) (2026-02-04)
+
+
+### Bug Fixes
+
+* update paths for pangolin-sync Dockerfile and scripts in workflow ([3daffae](https://github.com/Nebu2k/kubernetes-homelab/commit/3daffaee8f97dfdcc2bca223c8633adbfa93509e))
+
 # [4.2.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.1.6...v4.2.0) (2026-02-04)
 
 
