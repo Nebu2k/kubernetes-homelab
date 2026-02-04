@@ -15,7 +15,6 @@ resources:
   - portainer.yaml
   - uptime-kuma.yaml
   - homepage.yaml
-  - kubernetes-dashboard.yaml
   - n8n.yaml
   - argocd-config.yaml
   - external-services.yaml

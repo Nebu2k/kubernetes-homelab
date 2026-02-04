@@ -27,7 +27,7 @@ Production-ready K3s cluster managed via GitOps using ArgoCD App-of-Apps pattern
 | 5 | Landing Page, Portainer, Teslamate, Nfs Storage |
 | 6 | Kube Prometheus Stack |
 | 7 | Unifi Poller, Home Assistant |
-| 8 | Uptime Kuma, Newt, Kubernetes Dashboard |
+| 8 | Uptime Kuma, Newt |
 | 9 | N8n, Paperless Ngx, Homepage |
 | 10 | Beszel |
 | 11 | Proxmox Exporter |
@@ -59,7 +59,6 @@ homelab/
 │   ├── kube-prometheus-stack.yaml     # Wave 6
 │   ├── home-assistant.yaml            # Wave 7
 │   ├── unifi-poller.yaml              # Wave 7
-│   ├── kubernetes-dashboard.yaml      # Wave 8
 │   ├── newt.yaml                      # Wave 8
 │   ├── uptime-kuma.yaml               # Wave 8
 │   ├── homepage.yaml                  # Wave 9
@@ -168,13 +167,6 @@ homelab/
     │   ├── kustomization.yaml
     │   ├── prometheus-ingress.yaml
     │   ├── prometheus-rules.yaml
-    │   └── values.yaml
-    ├── kubernetes-dashboard/
-    │   ├── clusterrolebinding.yaml
-    │   ├── ingress.yaml
-    │   ├── kustomization.yaml
-    │   ├── secret.yaml
-    │   ├── serviceaccount.yaml
     │   └── values.yaml
     ├── kured/
     │   └── values.yaml
@@ -902,7 +894,6 @@ FlightRadar24: https://fr24.elmstreet79.de
 Glances Macmini: https://glances-macmini.elmstreet79.de
 Grafana: https://grafana.elmstreet79.de
 Homepage: https://home.elmstreet79.de
-Kubernetes Dashboard: https://k8s-dashboard.elmstreet79.de
 Longhorn: https://longhorn.elmstreet79.de
 Minio: https://minio.elmstreet79.de
 Minio Api: https://minio-api.elmstreet79.de
@@ -1109,7 +1100,6 @@ kubectl get secret -n monitoring grafana-admin-credentials \
 | Fr24 | latest-build-825 | Fr24 |
 | Newt | 1.1.0 | Newt |
 | Teslamate | 2.2.0 | Teslamate |
-| Kubernetes Dashboard | 7.14.0 | Kubernetes Dashboard |
 | Home Assistant | 2026.1.2 | Home Assistant |
 | Nfs Subdir External Provisioner | 4.0.18 | Nfs Storage |
 | Homepage | v1.8.0 | Homepage |
@@ -1124,7 +1114,6 @@ kubectl get secret -n monitoring grafana-admin-credentials \
 - [Homepage](https://gethomepage.dev/latest/)
 - [K3s](https://docs.k3s.io/)
 - [Kube Prometheus Stack](https://prometheus-community.github.io/helm-charts)
-- [Kubernetes Dashboard](https://kubernetes.github.io/dashboard/)
 - [Kured](https://kubereboot.github.io/charts)
 - [Landing Page](https://github.com/nginx/nginx)
 - [Longhorn](https://charts.longhorn.io)
