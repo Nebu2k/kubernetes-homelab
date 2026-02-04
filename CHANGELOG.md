@@ -1,3 +1,10 @@
+## [4.1.6](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.1.5...v4.1.6) (2026-02-04)
+
+
+### Bug Fixes
+
+* update encrypted data for cloudflare-sync credentials ([681a5dc](https://github.com/Nebu2k/kubernetes-homelab/commit/681a5dcd9533532abb7c6842295157b14220bfeb))
+
 ## [4.1.5](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.1.4...v4.1.5) (2026-02-04)
 
 
