@@ -1,3 +1,10 @@
+# [4.3.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.2.2...v4.3.0) (2026-02-04)
+
+
+### Features
+
+* add Kubernetes Dashboard manifests and configuration ([9e92dfd](https://github.com/Nebu2k/kubernetes-homelab/commit/9e92dfd7073484c638ccf35e36dd902e37c04d95))
+
 ## [4.2.2](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.2.1...v4.2.2) (2026-02-04)
 
 
