@@ -1,3 +1,10 @@
+## [4.3.3](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.3.2...v4.3.3) (2026-02-04)
+
+
+### Bug Fixes
+
+* remove trailing slash from dashboard repo URL ([330efc3](https://github.com/Nebu2k/kubernetes-homelab/commit/330efc30456c5e6017af02ea567c561c3203e41e))
+
 ## [4.3.2](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.3.1...v4.3.2) (2026-02-04)
 
 
