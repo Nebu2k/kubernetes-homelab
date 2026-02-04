@@ -1,3 +1,10 @@
+## [4.2.2](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.2.1...v4.2.2) (2026-02-04)
+
+
+### Bug Fixes
+
+* change default value for method annotation to null in ingress and service processing ([12b2789](https://github.com/Nebu2k/kubernetes-homelab/commit/12b2789649f5c39adcd89eb510dc9af2a8e94a55))
+
 ## [4.2.1](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.2.0...v4.2.1) (2026-02-04)
 
 
