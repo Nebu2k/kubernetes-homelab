@@ -18,7 +18,7 @@ global:
   image:
     registry: "docker.io"
     repository: "fosrl/newt"
-    tag: "1.7.0"  # Override chart default (1.5.0) with latest version
+    tag: "1.9.0"  # Override chart default (1.5.0) with latest version
   nativeMode:
     enabled: true
   nodeSelector:
