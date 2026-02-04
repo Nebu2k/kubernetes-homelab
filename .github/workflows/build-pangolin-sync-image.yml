@@ -5,8 +5,8 @@ on:
     branches:
       - main
     paths:
-      - 'manifests/cert-manager/Dockerfile.pangolin-sync'
-      - 'manifests/cert-manager/sync-pangolin.sh'
+      - 'manifests/pangolin-sync/Dockerfile.pangolin-sync'
+      - 'manifests/pangolin-sync/sync-pangolin.sh'
       - '.github/workflows/build-pangolin-sync-image.yml'
   workflow_dispatch:  # Manual trigger option
 
@@ -42,7 +42,7 @@ jobs:
       - name: Generate version tags
         id: version
         run: |
-          ALPINE_VERSION=$(grep -oP 'FROM alpine:\K[0-9.]+' manifests/cert-manager/Dockerfile.pangolin-sync)
+          ALPINE_VERSION=$(grep -oP 'FROM alpine:\K[0-9.]+' manifests/pangolin-sync/Dockerfile.pangolin-sync)
           BUILD_DATE=$(date +%Y%m%d)
           SHORT_SHA=$(echo "${{ github.sha }}" | cut -c1-7)
           
@@ -61,8 +61,8 @@ jobs:
       - name: Build and push
         uses: docker/build-push-action@v5
         with:
-          context: manifests/cert-manager
-          file: manifests/cert-manager/Dockerfile.pangolin-sync
+          context: manifests/pangolin-sync
+          file: manifests/pangolin-sync/Dockerfile.pangolin-sync
           platforms: ${{ env.PLATFORMS }}
           push: true
           tags: |
