@@ -1124,7 +1124,7 @@ kubectl get secret -n monitoring grafana-admin-credentials \
 - [Homepage](https://gethomepage.dev/latest/)
 - [K3s](https://docs.k3s.io/)
 - [Kube Prometheus Stack](https://prometheus-community.github.io/helm-charts)
-- [Kubernetes Dashboard](https://kubernetes.github.io/dashboard/)
+- [Kubernetes Dashboard](https://kubernetes.github.io/dashboard)
 - [Kured](https://kubereboot.github.io/charts)
 - [Landing Page](https://github.com/nginx/nginx)
 - [Longhorn](https://charts.longhorn.io)
