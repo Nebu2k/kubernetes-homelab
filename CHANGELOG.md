@@ -1,3 +1,10 @@
+# [4.2.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.1.6...v4.2.0) (2026-02-04)
+
+
+### Features
+
+* add support for method annotation in ingress and service processing ([9c49c3f](https://github.com/Nebu2k/kubernetes-homelab/commit/9c49c3f45d2e12480a9f14ca6696577dd2f2e35e))
+
 ## [4.1.6](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.1.5...v4.1.6) (2026-02-04)
 
 
