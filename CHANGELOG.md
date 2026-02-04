@@ -1,3 +1,10 @@
+## [4.1.5](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.1.4...v4.1.5) (2026-02-04)
+
+
+### Bug Fixes
+
+* update image tag for newt to 1.9.0 ([0d5df5c](https://github.com/Nebu2k/kubernetes-homelab/commit/0d5df5ca01a6a9c4e6e2778a6c16590d5bd2dc3a))
+
 ## [4.1.4](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.1.3...v4.1.4) (2026-02-04)
 
 
