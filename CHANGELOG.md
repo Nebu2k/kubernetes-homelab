@@ -1,3 +1,10 @@
+## [4.1.4](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.1.3...v4.1.4) (2026-02-04)
+
+
+### Bug Fixes
+
+* update encrypted data for newt-auth SealedSecret ([bc50fbb](https://github.com/Nebu2k/kubernetes-homelab/commit/bc50fbbb87a2e89a20937032978fe7a085296d7c))
+
 ## [4.1.3](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.1.2...v4.1.3) (2026-02-04)
 
 
