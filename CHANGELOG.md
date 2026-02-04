@@ -1,3 +1,10 @@
+## [4.3.1](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.3.0...v4.3.1) (2026-02-04)
+
+
+### Bug Fixes
+
+* update encrypted data for unifi-poller configuration ([ed0a0b5](https://github.com/Nebu2k/kubernetes-homelab/commit/ed0a0b5f6c268a3092318bdb48d314d726dfdd29))
+
 # [4.3.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.2.2...v4.3.0) (2026-02-04)
 
 
