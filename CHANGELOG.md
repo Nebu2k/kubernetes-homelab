@@ -1,3 +1,10 @@
+## [4.1.3](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.1.2...v4.1.3) (2026-02-04)
+
+
+### Bug Fixes
+
+* update encrypted data for newt-auth and pangolin-api-credentials SealedSecrets ([0463e3e](https://github.com/Nebu2k/kubernetes-homelab/commit/0463e3eec87e25499dbf235581af552f633ddeff))
+
 ## [4.1.2](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.1.1...v4.1.2) (2026-02-03)
 
 
