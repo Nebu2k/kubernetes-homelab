@@ -59,6 +59,7 @@ if echo "${ALL_INGRESSES_RAW}" | jq -e '.items' > /dev/null 2>&1; then
       auth: (($ing.metadata.annotations["pangolin.io/auth"] // "true") == "true"),
       port: (.http.paths[0].backend.service.port.number // .http.paths[0].backend.service.port.name),
       host: .host,
+      method: ($ing.metadata.annotations["pangolin.io/method"] // empty),
       source: "ingress"
     }]')
 else
@@ -82,6 +83,7 @@ SERVICE_SERVICES=$(curl -s --cacert /var/run/secrets/kubernetes.io/serviceaccoun
       auth: ((.metadata.annotations["pangolin.io/auth"] // "true") == "true"),
       port: (.spec.ports[0].port // .spec.ports[0].name),
       host: ((.metadata.annotations["pangolin.io/subdomain"] // .metadata.name) as $sub | if $sub == "@" then $suffix else ($sub + "." + $suffix) end),
+      method: (.metadata.annotations["pangolin.io/method"] // empty),
       source: "service"
     }] // []')
 
@@ -253,9 +255,18 @@ echo "${ALL_SERVICES}" | jq -c '.[]' | while IFS= read -r service; do
   EXISTING_RESOURCE_ID=$(echo "${PANGOLIN_RESOURCES}" | jq -r ".[] | select(.fullDomain == \"${HOST}\") | .resourceId")
   EXISTING_TARGETS_JSON=$(echo "${PANGOLIN_RESOURCES}" | jq -r ".[] | select(.fullDomain == \"${HOST}\") | .targets")
 
-  # Determine expected method based on Service port (not targetPort — e.g. Proxmox: port 443, targetPort 8006)
+  # Determine expected method:
+  # - Internal cluster services routed via Traefik LB (192.168.2.250:443) → always https
+  # - External services: use Service port (443 → https, else http)
+  # - Annotation pangolin.io/method overrides everything
+  ANNOTATION_METHOD=$(echo "${service}" | jq -r '.method // empty')
   SVC_PORT_NUM=$(echo "${PORT_SPEC}" | jq -r '.port')
-  if [ "${SVC_PORT_NUM}" = "443" ]; then
+
+  if [ -n "${ANNOTATION_METHOD}" ]; then
+    EXPECTED_METHOD="${ANNOTATION_METHOD}"
+  elif [ "${TARGET_IP}" = "192.168.2.250" ]; then
+    EXPECTED_METHOD="https"
+  elif [ "${SVC_PORT_NUM}" = "443" ]; then
     EXPECTED_METHOD="https"
   else
     EXPECTED_METHOD="http"
@@ -265,9 +276,9 @@ echo "${ALL_SERVICES}" | jq -c '.[]' | while IFS= read -r service; do
   if [ -n "${EXISTING_RESOURCE_ID}" ]; then
     # Resource exists - reconcile ALL targets
     EXISTING_TARGET_COUNT=$(echo "${EXISTING_TARGETS_JSON}" | jq 'length')
-    # Check if we have exactly one target with correct IP and port
-    CORRECT_TARGET_COUNT=$(echo "${EXISTING_TARGETS_JSON}" | jq --arg ip "${TARGET_IP}" --argjson port "${TARGET_PORT}" \
-      '[.[] | select(.ip == $ip and .port == $port)] | length')
+    # Check if we have exactly one target with correct IP, port and method
+    CORRECT_TARGET_COUNT=$(echo "${EXISTING_TARGETS_JSON}" | jq --arg ip "${TARGET_IP}" --argjson port "${TARGET_PORT}" --arg method "${EXPECTED_METHOD}" \
+      '[.[] | select(.ip == $ip and .port == $port and .method == $method)] | length')
 
     # If we have exactly 1 correct target and no other targets, we're done
     if [ "${EXISTING_TARGET_COUNT}" = "1" ] && [ "${CORRECT_TARGET_COUNT}" = "1" ]; then
