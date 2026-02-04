@@ -59,7 +59,7 @@ if echo "${ALL_INGRESSES_RAW}" | jq -e '.items' > /dev/null 2>&1; then
       auth: (($ing.metadata.annotations["pangolin.io/auth"] // "true") == "true"),
       port: (.http.paths[0].backend.service.port.number // .http.paths[0].backend.service.port.name),
       host: .host,
-      method: ($ing.metadata.annotations["pangolin.io/method"] // empty),
+      method: ($ing.metadata.annotations["pangolin.io/method"] // null),
       source: "ingress"
     }]')
 else
@@ -83,7 +83,7 @@ SERVICE_SERVICES=$(curl -s --cacert /var/run/secrets/kubernetes.io/serviceaccoun
       auth: ((.metadata.annotations["pangolin.io/auth"] // "true") == "true"),
       port: (.spec.ports[0].port // .spec.ports[0].name),
       host: ((.metadata.annotations["pangolin.io/subdomain"] // .metadata.name) as $sub | if $sub == "@" then $suffix else ($sub + "." + $suffix) end),
-      method: (.metadata.annotations["pangolin.io/method"] // empty),
+      method: (.metadata.annotations["pangolin.io/method"] // null),
       source: "service"
     }] // []')
 
