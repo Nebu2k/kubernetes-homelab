@@ -1,3 +1,10 @@
+## [4.3.2](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.3.1...v4.3.2) (2026-02-04)
+
+
+### Bug Fixes
+
+* add internal network CIDRs to egress configuration ([6fb322d](https://github.com/Nebu2k/kubernetes-homelab/commit/6fb322d5cf43a90598ca472fa9843ad736b80ec3))
+
 ## [4.3.1](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.3.0...v4.3.1) (2026-02-04)
 
 
