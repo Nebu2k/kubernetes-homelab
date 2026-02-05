@@ -148,6 +148,7 @@ echo "${ALL_SERVICES}" | jq -c '.[]' | while IFS= read -r service; do
   SERVICE_PORT=$(echo "${service}" | jq -r '.port')
   REQUIRE_AUTH=$(echo "${service}" | jq -r '.auth')
   NEEDS_RECONCILE=false
+  IS_EXTERNAL_SERVICE=false
 
   # Resolve service backend IP
   echo "  Resolving ${NAMESPACE}/${NAME}:${SERVICE_PORT}..."
