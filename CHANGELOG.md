@@ -1,3 +1,10 @@
+# [4.5.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.4.0...v4.5.0) (2026-02-05)
+
+
+### Features
+
+* add external service flag to service reconciliation logic ([6d5a321](https://github.com/Nebu2k/kubernetes-homelab/commit/6d5a321eb55a300ed8987e633945799ffe9bd33a))
+
 # [4.4.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.3.4...v4.4.0) (2026-02-05)
 
 
