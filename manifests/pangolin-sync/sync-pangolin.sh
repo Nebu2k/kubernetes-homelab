@@ -388,56 +388,28 @@ echo "${ALL_SERVICES}" | jq -c '.[]' | while IFS= read -r service; do
     # Build JSON payload - conditionally include subdomain field
     if [ "${SUBDOMAIN}" = "" ]; then
       # Root domain - omit subdomain field
-      if [ "${IS_EXTERNAL_SERVICE}" = "true" ]; then
-        JSON_PAYLOAD=$(jq -n \
-          --arg name "${NAME}" \
-          --arg domainId "${DOMAIN_ID}" \
-          '{
-            name: $name,
-            http: true,
-            protocol: "tcp",
-            domainId: $domainId,
-            hcEnabled: true
-          }')
-      else
-        JSON_PAYLOAD=$(jq -n \
-          --arg name "${NAME}" \
-          --arg domainId "${DOMAIN_ID}" \
-          '{
-            name: $name,
-            http: true,
-            protocol: "tcp",
-            domainId: $domainId
-          }')
-      fi
+      JSON_PAYLOAD=$(jq -n \
+        --arg name "${NAME}" \
+        --arg domainId "${DOMAIN_ID}" \
+        '{
+          name: $name,
+          http: true,
+          protocol: "tcp",
+          domainId: $domainId
+        }')
     else
       # Subdomain - include subdomain field
-      if [ "${IS_EXTERNAL_SERVICE}" = "true" ]; then
-        JSON_PAYLOAD=$(jq -n \
-          --arg name "${NAME}" \
-          --arg subdomain "${SUBDOMAIN}" \
-          --arg domainId "${DOMAIN_ID}" \
-          '{
-            name: $name,
-            subdomain: $subdomain,
-            http: true,
-            protocol: "tcp",
-            domainId: $domainId,
-            hcEnabled: true
-          }')
-      else
-        JSON_PAYLOAD=$(jq -n \
-          --arg name "${NAME}" \
-          --arg subdomain "${SUBDOMAIN}" \
-          --arg domainId "${DOMAIN_ID}" \
-          '{
-            name: $name,
-            subdomain: $subdomain,
-            http: true,
-            protocol: "tcp",
-            domainId: $domainId
-          }')
-      fi
+      JSON_PAYLOAD=$(jq -n \
+        --arg name "${NAME}" \
+        --arg subdomain "${SUBDOMAIN}" \
+        --arg domainId "${DOMAIN_ID}" \
+        '{
+          name: $name,
+          subdomain: $subdomain,
+          http: true,
+          protocol: "tcp",
+          domainId: $domainId
+        }')
     fi
     
     # Use /org/:orgId/resource endpoint (domain-based HTTP resources)
@@ -498,16 +470,38 @@ echo "${ALL_SERVICES}" | jq -c '.[]' | while IFS= read -r service; do
       fi
       
       # Create target (backend)
+      if [ "${IS_EXTERNAL_SERVICE}" = "true" ]; then
+        TARGET_PAYLOAD=$(jq -n \
+          --argjson siteId "${SITE_ID}" \
+          --arg ip "${TARGET_IP}" \
+          --argjson port "${TARGET_PORT}" \
+          --arg method "${EXPECTED_METHOD}" \
+          '{
+            siteId: $siteId,
+            ip: $ip,
+            port: $port,
+            method: $method,
+            hcEnabled: true
+          }')
+      else
+        TARGET_PAYLOAD=$(jq -n \
+          --argjson siteId "${SITE_ID}" \
+          --arg ip "${TARGET_IP}" \
+          --argjson port "${TARGET_PORT}" \
+          --arg method "${EXPECTED_METHOD}" \
+          '{
+            siteId: $siteId,
+            ip: $ip,
+            port: $port,
+            method: $method
+          }')
+      fi
+      
       TARGET_RESPONSE=$(curl -s -X PUT \
         -H "Authorization: Bearer ${API_KEY}" \
         -H "Content-Type: application/json" \
         "${API_BASE_URL}/resource/${RESOURCE_ID}/target" \
-        -d "{
-          \"siteId\": ${SITE_ID},
-          \"ip\": \"${TARGET_IP}\",
-          \"port\": ${TARGET_PORT},
-          \"method\": \"${EXPECTED_METHOD}\"
-        }")
+        -d "${TARGET_PAYLOAD}")
       
       if echo "${TARGET_RESPONSE}" | jq -e '.success' > /dev/null; then
         if [ "${NEEDS_RECONCILE}" = "true" ]; then
