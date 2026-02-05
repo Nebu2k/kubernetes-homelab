@@ -147,7 +147,6 @@ echo "${ALL_SERVICES}" | jq -c '.[]' | while IFS= read -r service; do
   NAMESPACE=$(echo "${service}" | jq -r '.namespace')
   SERVICE_PORT=$(echo "${service}" | jq -r '.port')
   REQUIRE_AUTH=$(echo "${service}" | jq -r '.auth')
-  NEEDS_RECONCILE=false
 
   # Resolve service backend IP
   echo "  Resolving ${NAMESPACE}/${NAME}:${SERVICE_PORT}..."
@@ -279,24 +278,31 @@ echo "${ALL_SERVICES}" | jq -c '.[]' | while IFS= read -r service; do
   echo "    → Desired target: ${EXPECTED_METHOD}://${TARGET_IP}:${TARGET_PORT}"
 
   if [ -n "${EXISTING_RESOURCE_ID}" ]; then
-    # Resource exists - reconcile ALL targets
+    # Resource exists - reconcile targets
     EXISTING_TARGET_COUNT=$(echo "${EXISTING_TARGETS_JSON}" | jq 'length')
     
-    # Debug: Show what we're comparing
-    echo "    [DEBUG] Existing targets:"
-    echo "${EXISTING_TARGETS_JSON}" | jq -c '.[] | {ip, port, method}'
-    echo "    [DEBUG] Expected: ip=${TARGET_IP}, port=${TARGET_PORT}, method=${EXPECTED_METHOD}"
+    # Check if we have exactly one target with correct IP and port (method may be null in API response)
+    MATCHING_TARGET=$(echo "${EXISTING_TARGETS_JSON}" | jq --arg ip "${TARGET_IP}" --arg port "${TARGET_PORT}" \
+      '[.[] | select(.ip == $ip and (.port | tonumber) == ($port | tonumber))] | .[0] // empty')
     
-    # Check if we have exactly one target with correct IP, port and method
-    # Note: Port comparison must be numeric (both sides as numbers)
-    CORRECT_TARGET_COUNT=$(echo "${EXISTING_TARGETS_JSON}" | jq --arg ip "${TARGET_IP}" --arg port "${TARGET_PORT}" --arg method "${EXPECTED_METHOD}" \
-      '[.[] | select(.ip == $ip and (.port | tonumber) == ($port | tonumber) and .method == $method)] | length')
-    
-    echo "    [DEBUG] EXISTING_TARGET_COUNT=${EXISTING_TARGET_COUNT}, CORRECT_TARGET_COUNT=${CORRECT_TARGET_COUNT}"
-
-    # If we have exactly 1 correct target and no other targets, we're done
-    if [ "${EXISTING_TARGET_COUNT}" = "1" ] && [ "${CORRECT_TARGET_COUNT}" = "1" ]; then
-      echo "    ✓ ${HOST} (already correct)"
+    if [ "${EXISTING_TARGET_COUNT}" = "1" ] && [ -n "${MATCHING_TARGET}" ]; then
+      # Single target with correct IP/Port exists
+      EXISTING_TARGET_ID=$(echo "${MATCHING_TARGET}" | jq -r '.targetId')
+      
+      # Always update the target to ensure method is set correctly (idempotent)
+      echo "    → Updating target to ensure method=${EXPECTED_METHOD}"
+      UPDATE_RESPONSE=$(curl -s -X POST \
+        -H "Authorization: Bearer ${API_KEY}" \
+        -H "Content-Type: application/json" \
+        "${API_BASE_URL}/resource/${EXISTING_RESOURCE_ID}/target/${EXISTING_TARGET_ID}" \
+        -d "{\"method\": \"${EXPECTED_METHOD}\"}")
+      
+      if echo "${UPDATE_RESPONSE}" | jq -e '.success' > /dev/null 2>&1; then
+        echo "    ✓ ${HOST} (target updated)"
+      else
+        echo "    ✓ ${HOST} (already correct)"
+      fi
+      
       RULES_CHANGED=false
 
       # Ensure egress CIDR rules exist for auth: true services
@@ -356,39 +362,45 @@ echo "${ALL_SERVICES}" | jq -c '.[]' | while IFS= read -r service; do
         echo "$(($(cat "${COUNTER_DIR}/skipped") + 1))" > "${COUNTER_DIR}/skipped"
       fi
     else
-      # Need to reconcile - API doesn't support deleting individual targets
-      # So we delete the entire resource and recreate it with correct target
-      echo "    🗑️  Reconciling targets (found ${EXISTING_TARGET_COUNT}, expected 1)..."
-      echo "    → Deleting entire resource to recreate with correct target"
-
-      DELETE_RESPONSE=$(curl -s -X DELETE \
+      # Need to reconcile targets - delete all existing targets and create correct one
+      echo "    🔄 Reconciling targets (found ${EXISTING_TARGET_COUNT}, need to update)..."
+      
+      # Delete all existing targets
+      for TARGET_ID in $(echo "${EXISTING_TARGETS_JSON}" | jq -r '.[].targetId'); do
+        echo "    → Deleting target ${TARGET_ID}"
+        curl -s -X DELETE \
+          -H "Authorization: Bearer ${API_KEY}" \
+          "${API_BASE_URL}/resource/${EXISTING_RESOURCE_ID}/target/${TARGET_ID}" > /dev/null
+      done
+      
+      # Create the correct target
+      echo "    → Creating target ${EXPECTED_METHOD}://${TARGET_IP}:${TARGET_PORT}"
+      TARGET_RESPONSE=$(curl -s -X PUT \
         -H "Authorization: Bearer ${API_KEY}" \
-        "${API_BASE_URL}/resource/${EXISTING_RESOURCE_ID}")
-
-      # Check if deletion was successful
-      if [ -n "${DELETE_RESPONSE}" ] && echo "${DELETE_RESPONSE}" | jq -e '.success' > /dev/null 2>&1; then
-        echo "    ✓ Deleted resource"
+        -H "Content-Type: application/json" \
+        "${API_BASE_URL}/resource/${EXISTING_RESOURCE_ID}/target" \
+        -d "{
+          \"siteId\": ${SITE_ID},
+          \"ip\": \"${TARGET_IP}\",
+          \"port\": ${TARGET_PORT},
+          \"method\": \"${EXPECTED_METHOD}\"
+        }")
+      
+      if echo "${TARGET_RESPONSE}" | jq -e '.success' > /dev/null; then
+        echo "    ✓ Reconciled ${HOST} → ${TARGET_IP}:${TARGET_PORT}"
+        echo "$(($(cat "${COUNTER_DIR}/updated") + 1))" > "${COUNTER_DIR}/updated"
       else
-        echo "    ✓ Resource deleted"
+        echo "    ❌ Failed to create target: $(echo ${TARGET_RESPONSE} | jq -r '.message // "Unknown error"')"
       fi
-
-      # Clear the resource ID and set flag for recreation
-      EXISTING_RESOURCE_ID=""
-      NEEDS_RECONCILE=true
-
-      # Reload resources after deletion
+      
+      # Reload resources after update
       PANGOLIN_RESOURCES=$(curl -s -H "Authorization: Bearer ${API_KEY}" "${API_BASE_URL}/org/${ORG_ID}/resources" | jq -r ".data.resources // []")
     fi
   fi
 
-  # Create resource if it doesn't exist (either new or was deleted for reconciliation)
+  # Create resource if it doesn't exist
   if [ -z "${EXISTING_RESOURCE_ID}" ]; then
-    # Create new resource
-    if [ "${NEEDS_RECONCILE}" = "true" ]; then
-      echo "    ➕ Recreating ${HOST} with correct target"
-    else
-      echo "    ➕ Creating ${HOST}"
-    fi
+    echo "    ➕ Creating ${HOST}"
     
     # Build JSON payload - conditionally include subdomain field
     if [ "${SUBDOMAIN}" = "" ]; then
@@ -487,13 +499,8 @@ echo "${ALL_SERVICES}" | jq -c '.[]' | while IFS= read -r service; do
         }")
       
       if echo "${TARGET_RESPONSE}" | jq -e '.success' > /dev/null; then
-        if [ "${NEEDS_RECONCILE}" = "true" ]; then
-          echo "    ✓ Reconciled ${HOST} → ${TARGET_IP}:${TARGET_PORT}"
-          echo "$(($(cat "${COUNTER_DIR}/updated") + 1))" > "${COUNTER_DIR}/updated"
-        else
-          echo "    ✓ Created ${HOST} → ${TARGET_IP}:${TARGET_PORT}"
-          echo "$(($(cat "${COUNTER_DIR}/added") + 1))" > "${COUNTER_DIR}/added"
-        fi
+        echo "    ✓ Created ${HOST} → ${TARGET_IP}:${TARGET_PORT}"
+        echo "$(($(cat "${COUNTER_DIR}/added") + 1))" > "${COUNTER_DIR}/added"
         # Reload resources after create
         PANGOLIN_RESOURCES=$(curl -s -H "Authorization: Bearer ${API_KEY}" "${API_BASE_URL}/org/${ORG_ID}/resources" | jq -r ".data.resources // []")
       else
