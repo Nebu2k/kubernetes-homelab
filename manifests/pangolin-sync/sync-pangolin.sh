@@ -281,9 +281,18 @@ echo "${ALL_SERVICES}" | jq -c '.[]' | while IFS= read -r service; do
   if [ -n "${EXISTING_RESOURCE_ID}" ]; then
     # Resource exists - reconcile ALL targets
     EXISTING_TARGET_COUNT=$(echo "${EXISTING_TARGETS_JSON}" | jq 'length')
+    
+    # Debug: Show what we're comparing
+    echo "    [DEBUG] Existing targets:"
+    echo "${EXISTING_TARGETS_JSON}" | jq -c '.[] | {ip, port, method}'
+    echo "    [DEBUG] Expected: ip=${TARGET_IP}, port=${TARGET_PORT}, method=${EXPECTED_METHOD}"
+    
     # Check if we have exactly one target with correct IP, port and method
-    CORRECT_TARGET_COUNT=$(echo "${EXISTING_TARGETS_JSON}" | jq --arg ip "${TARGET_IP}" --argjson port "${TARGET_PORT}" --arg method "${EXPECTED_METHOD}" \
-      '[.[] | select(.ip == $ip and .port == $port and .method == $method)] | length')
+    # Note: Port comparison must be numeric (both sides as numbers)
+    CORRECT_TARGET_COUNT=$(echo "${EXISTING_TARGETS_JSON}" | jq --arg ip "${TARGET_IP}" --arg port "${TARGET_PORT}" --arg method "${EXPECTED_METHOD}" \
+      '[.[] | select(.ip == $ip and (.port | tonumber) == ($port | tonumber) and .method == $method)] | length')
+    
+    echo "    [DEBUG] EXISTING_TARGET_COUNT=${EXISTING_TARGET_COUNT}, CORRECT_TARGET_COUNT=${CORRECT_TARGET_COUNT}"
 
     # If we have exactly 1 correct target and no other targets, we're done
     if [ "${EXISTING_TARGET_COUNT}" = "1" ] && [ "${CORRECT_TARGET_COUNT}" = "1" ]; then
