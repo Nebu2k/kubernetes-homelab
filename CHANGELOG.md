@@ -1,3 +1,10 @@
+# [4.7.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.6.0...v4.7.0) (2026-02-05)
+
+
+### Features
+
+* enable health checks for external services during target reconciliation ([a32acd8](https://github.com/Nebu2k/kubernetes-homelab/commit/a32acd86ad45f2937ed2eec9d3799ee79007b0f6))
+
 # [4.6.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.5.0...v4.6.0) (2026-02-05)
 
 
