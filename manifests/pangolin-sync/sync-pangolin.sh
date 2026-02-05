@@ -183,6 +183,7 @@ echo "${ALL_SERVICES}" | jq -c '.[]' | while IFS= read -r service; do
   if [ "${SVC_TYPE}" = "LoadBalancer" ]; then
     # LoadBalancer services use their own external IP
     TARGET_IP=$(echo "${SVC_DATA}" | jq -r '.status.loadBalancer.ingress[0].ip // empty')
+    IS_EXTERNAL_SERVICE=false
     
     # For LoadBalancer, use the targetPort from service spec
     if echo "${TARGET_PORT_VALUE}" | grep -qE '^[0-9]+$'; then
@@ -213,6 +214,7 @@ echo "${ALL_SERVICES}" | jq -c '.[]' | while IFS= read -r service; do
     if [ -n "${ENDPOINT_IP}" ] && ! echo "${ENDPOINT_IP}" | grep -qE '^10\.(42|43)\.' && [ "${ENDPOINT_IS_POD}" != "Pod" ]; then
       # External endpoint - use it directly (e.g., dreambox, proxmox)
       TARGET_IP="${ENDPOINT_IP}"
+      IS_EXTERNAL_SERVICE=true
 
       # Match endpoint port
       if echo "${TARGET_PORT_VALUE}" | grep -qE '^[0-9]+$'; then
@@ -235,6 +237,7 @@ echo "${ALL_SERVICES}" | jq -c '.[]' | while IFS= read -r service; do
       # Internal cluster service (or hostNetwork pod) - route via Traefik LoadBalancer
       TARGET_IP="192.168.2.250"
       TARGET_PORT="443"
+      IS_EXTERNAL_SERVICE=false
       echo "    → Internal cluster service - routing via Traefik LB: ${TARGET_IP}:${TARGET_PORT}"
     fi
     
@@ -384,28 +387,56 @@ echo "${ALL_SERVICES}" | jq -c '.[]' | while IFS= read -r service; do
     # Build JSON payload - conditionally include subdomain field
     if [ "${SUBDOMAIN}" = "" ]; then
       # Root domain - omit subdomain field
-      JSON_PAYLOAD=$(jq -n \
-        --arg name "${NAME}" \
-        --arg domainId "${DOMAIN_ID}" \
-        '{
-          name: $name,
-          http: true,
-          protocol: "tcp",
-          domainId: $domainId
-        }')
+      if [ "${IS_EXTERNAL_SERVICE}" = "true" ]; then
+        JSON_PAYLOAD=$(jq -n \
+          --arg name "${NAME}" \
+          --arg domainId "${DOMAIN_ID}" \
+          '{
+            name: $name,
+            http: true,
+            protocol: "tcp",
+            domainId: $domainId,
+            hcEnabled: true
+          }')
+      else
+        JSON_PAYLOAD=$(jq -n \
+          --arg name "${NAME}" \
+          --arg domainId "${DOMAIN_ID}" \
+          '{
+            name: $name,
+            http: true,
+            protocol: "tcp",
+            domainId: $domainId
+          }')
+      fi
     else
       # Subdomain - include subdomain field
-      JSON_PAYLOAD=$(jq -n \
-        --arg name "${NAME}" \
-        --arg subdomain "${SUBDOMAIN}" \
-        --arg domainId "${DOMAIN_ID}" \
-        '{
-          name: $name,
-          subdomain: $subdomain,
-          http: true,
-          protocol: "tcp",
-          domainId: $domainId
-        }')
+      if [ "${IS_EXTERNAL_SERVICE}" = "true" ]; then
+        JSON_PAYLOAD=$(jq -n \
+          --arg name "${NAME}" \
+          --arg subdomain "${SUBDOMAIN}" \
+          --arg domainId "${DOMAIN_ID}" \
+          '{
+            name: $name,
+            subdomain: $subdomain,
+            http: true,
+            protocol: "tcp",
+            domainId: $domainId,
+            hcEnabled: true
+          }')
+      else
+        JSON_PAYLOAD=$(jq -n \
+          --arg name "${NAME}" \
+          --arg subdomain "${SUBDOMAIN}" \
+          --arg domainId "${DOMAIN_ID}" \
+          '{
+            name: $name,
+            subdomain: $subdomain,
+            http: true,
+            protocol: "tcp",
+            domainId: $domainId
+          }')
+      fi
     fi
     
     # Use /org/:orgId/resource endpoint (domain-based HTTP resources)
