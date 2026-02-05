@@ -286,13 +286,30 @@ echo "${ALL_SERVICES}" | jq -c '.[]' | while IFS= read -r service; do
     # Resource exists - reconcile ALL targets
     EXISTING_TARGET_COUNT=$(echo "${EXISTING_TARGETS_JSON}" | jq 'length')
     # Check if we have exactly one target with correct IP, port and method
-    CORRECT_TARGET_COUNT=$(echo "${EXISTING_TARGETS_JSON}" | jq --arg ip "${TARGET_IP}" --argjson port "${TARGET_PORT}" --arg method "${EXPECTED_METHOD}" \
-      '[.[] | select(.ip == $ip and .port == $port and .method == $method)] | length')
+    # Note: Port comparison must be numeric (both sides as numbers)
+    CORRECT_TARGET_COUNT=$(echo "${EXISTING_TARGETS_JSON}" | jq --arg ip "${TARGET_IP}" --arg port "${TARGET_PORT}" --arg method "${EXPECTED_METHOD}" \
+      '[.[] | select(.ip == $ip and (.port | tonumber) == ($port | tonumber) and .method == $method)] | length')
 
     # If we have exactly 1 correct target and no other targets, we're done
     if [ "${EXISTING_TARGET_COUNT}" = "1" ] && [ "${CORRECT_TARGET_COUNT}" = "1" ]; then
       echo "    ✓ ${HOST} (already correct)"
       RULES_CHANGED=false
+
+      # For external services, ensure health check is enabled on the target
+      if [ "${IS_EXTERNAL_SERVICE}" = "true" ]; then
+        EXISTING_TARGET_ID=$(echo "${EXISTING_TARGETS_JSON}" | jq -r '.[0].targetId')
+        EXISTING_HC_ENABLED=$(echo "${EXISTING_TARGETS_JSON}" | jq -r '.[0].hcEnabled // false')
+        
+        if [ "${EXISTING_HC_ENABLED}" != "true" ]; then
+          echo "    → Enabling health check for external service"
+          curl -s -X POST \
+            -H "Authorization: Bearer ${API_KEY}" \
+            -H "Content-Type: application/json" \
+            "${API_BASE_URL}/resource/${EXISTING_RESOURCE_ID}/target/${EXISTING_TARGET_ID}" \
+            -d '{"hcEnabled": true}' > /dev/null
+          RULES_CHANGED=true
+        fi
+      fi
 
       # Ensure egress CIDR rules exist for auth: true services
       if [ "${REQUIRE_AUTH}" = "true" ]; then
@@ -471,6 +488,7 @@ echo "${ALL_SERVICES}" | jq -c '.[]' | while IFS= read -r service; do
       
       # Create target (backend)
       if [ "${IS_EXTERNAL_SERVICE}" = "true" ]; then
+        echo "    → Creating target with health check enabled (external service)"
         TARGET_PAYLOAD=$(jq -n \
           --argjson siteId "${SITE_ID}" \
           --arg ip "${TARGET_IP}" \
@@ -484,6 +502,7 @@ echo "${ALL_SERVICES}" | jq -c '.[]' | while IFS= read -r service; do
             hcEnabled: true
           }')
       else
+        echo "    → Creating target (internal service, no health check)"
         TARGET_PAYLOAD=$(jq -n \
           --argjson siteId "${SITE_ID}" \
           --arg ip "${TARGET_IP}" \
@@ -496,6 +515,8 @@ echo "${ALL_SERVICES}" | jq -c '.[]' | while IFS= read -r service; do
             method: $method
           }')
       fi
+      
+      echo "    → Target payload: ${TARGET_PAYLOAD}"
       
       TARGET_RESPONSE=$(curl -s -X PUT \
         -H "Authorization: Bearer ${API_KEY}" \
