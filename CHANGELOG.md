@@ -1,3 +1,10 @@
+# [4.4.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.3.4...v4.4.0) (2026-02-05)
+
+
+### Features
+
+* enhance JSON payload for external services with health check option ([40f43fc](https://github.com/Nebu2k/kubernetes-homelab/commit/40f43fce370961982cf4ed744fd783ea8bd3f777))
+
 ## [4.3.4](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.3.3...v4.3.4) (2026-02-04)
 
 
