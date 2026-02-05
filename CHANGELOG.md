@@ -1,3 +1,10 @@
+# [4.6.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.5.0...v4.6.0) (2026-02-05)
+
+
+### Features
+
+* simplify JSON payload construction for external and internal services ([ef7485c](https://github.com/Nebu2k/kubernetes-homelab/commit/ef7485cb8b37783441acb399baeb3bdb63536f2e))
+
 # [4.5.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.4.0...v4.5.0) (2026-02-05)
 
 
