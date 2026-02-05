@@ -148,7 +148,6 @@ echo "${ALL_SERVICES}" | jq -c '.[]' | while IFS= read -r service; do
   SERVICE_PORT=$(echo "${service}" | jq -r '.port')
   REQUIRE_AUTH=$(echo "${service}" | jq -r '.auth')
   NEEDS_RECONCILE=false
-  IS_EXTERNAL_SERVICE=false
 
   # Resolve service backend IP
   echo "  Resolving ${NAMESPACE}/${NAME}:${SERVICE_PORT}..."
@@ -184,7 +183,6 @@ echo "${ALL_SERVICES}" | jq -c '.[]' | while IFS= read -r service; do
   if [ "${SVC_TYPE}" = "LoadBalancer" ]; then
     # LoadBalancer services use their own external IP
     TARGET_IP=$(echo "${SVC_DATA}" | jq -r '.status.loadBalancer.ingress[0].ip // empty')
-    IS_EXTERNAL_SERVICE=false
     
     # For LoadBalancer, use the targetPort from service spec
     if echo "${TARGET_PORT_VALUE}" | grep -qE '^[0-9]+$'; then
@@ -215,7 +213,6 @@ echo "${ALL_SERVICES}" | jq -c '.[]' | while IFS= read -r service; do
     if [ -n "${ENDPOINT_IP}" ] && ! echo "${ENDPOINT_IP}" | grep -qE '^10\.(42|43)\.' && [ "${ENDPOINT_IS_POD}" != "Pod" ]; then
       # External endpoint - use it directly (e.g., dreambox, proxmox)
       TARGET_IP="${ENDPOINT_IP}"
-      IS_EXTERNAL_SERVICE=true
 
       # Match endpoint port
       if echo "${TARGET_PORT_VALUE}" | grep -qE '^[0-9]+$'; then
@@ -238,7 +235,6 @@ echo "${ALL_SERVICES}" | jq -c '.[]' | while IFS= read -r service; do
       # Internal cluster service (or hostNetwork pod) - route via Traefik LoadBalancer
       TARGET_IP="192.168.2.250"
       TARGET_PORT="443"
-      IS_EXTERNAL_SERVICE=false
       echo "    → Internal cluster service - routing via Traefik LB: ${TARGET_IP}:${TARGET_PORT}"
     fi
     
@@ -286,30 +282,13 @@ echo "${ALL_SERVICES}" | jq -c '.[]' | while IFS= read -r service; do
     # Resource exists - reconcile ALL targets
     EXISTING_TARGET_COUNT=$(echo "${EXISTING_TARGETS_JSON}" | jq 'length')
     # Check if we have exactly one target with correct IP, port and method
-    # Note: Port comparison must be numeric (both sides as numbers)
-    CORRECT_TARGET_COUNT=$(echo "${EXISTING_TARGETS_JSON}" | jq --arg ip "${TARGET_IP}" --arg port "${TARGET_PORT}" --arg method "${EXPECTED_METHOD}" \
-      '[.[] | select(.ip == $ip and (.port | tonumber) == ($port | tonumber) and .method == $method)] | length')
+    CORRECT_TARGET_COUNT=$(echo "${EXISTING_TARGETS_JSON}" | jq --arg ip "${TARGET_IP}" --argjson port "${TARGET_PORT}" --arg method "${EXPECTED_METHOD}" \
+      '[.[] | select(.ip == $ip and .port == $port and .method == $method)] | length')
 
     # If we have exactly 1 correct target and no other targets, we're done
     if [ "${EXISTING_TARGET_COUNT}" = "1" ] && [ "${CORRECT_TARGET_COUNT}" = "1" ]; then
       echo "    ✓ ${HOST} (already correct)"
       RULES_CHANGED=false
-
-      # For external services, ensure health check is enabled on the target
-      if [ "${IS_EXTERNAL_SERVICE}" = "true" ]; then
-        EXISTING_TARGET_ID=$(echo "${EXISTING_TARGETS_JSON}" | jq -r '.[0].targetId')
-        EXISTING_HC_ENABLED=$(echo "${EXISTING_TARGETS_JSON}" | jq -r '.[0].hcEnabled // false')
-        
-        if [ "${EXISTING_HC_ENABLED}" != "true" ]; then
-          echo "    → Enabling health check for external service"
-          curl -s -X POST \
-            -H "Authorization: Bearer ${API_KEY}" \
-            -H "Content-Type: application/json" \
-            "${API_BASE_URL}/resource/${EXISTING_RESOURCE_ID}/target/${EXISTING_TARGET_ID}" \
-            -d '{"hcEnabled": true}' > /dev/null
-          RULES_CHANGED=true
-        fi
-      fi
 
       # Ensure egress CIDR rules exist for auth: true services
       if [ "${REQUIRE_AUTH}" = "true" ]; then
@@ -487,42 +466,16 @@ echo "${ALL_SERVICES}" | jq -c '.[]' | while IFS= read -r service; do
       fi
       
       # Create target (backend)
-      if [ "${IS_EXTERNAL_SERVICE}" = "true" ]; then
-        echo "    → Creating target with health check enabled (external service)"
-        TARGET_PAYLOAD=$(jq -n \
-          --argjson siteId "${SITE_ID}" \
-          --arg ip "${TARGET_IP}" \
-          --argjson port "${TARGET_PORT}" \
-          --arg method "${EXPECTED_METHOD}" \
-          '{
-            siteId: $siteId,
-            ip: $ip,
-            port: $port,
-            method: $method,
-            hcEnabled: true
-          }')
-      else
-        echo "    → Creating target (internal service, no health check)"
-        TARGET_PAYLOAD=$(jq -n \
-          --argjson siteId "${SITE_ID}" \
-          --arg ip "${TARGET_IP}" \
-          --argjson port "${TARGET_PORT}" \
-          --arg method "${EXPECTED_METHOD}" \
-          '{
-            siteId: $siteId,
-            ip: $ip,
-            port: $port,
-            method: $method
-          }')
-      fi
-      
-      echo "    → Target payload: ${TARGET_PAYLOAD}"
-      
       TARGET_RESPONSE=$(curl -s -X PUT \
         -H "Authorization: Bearer ${API_KEY}" \
         -H "Content-Type: application/json" \
         "${API_BASE_URL}/resource/${RESOURCE_ID}/target" \
-        -d "${TARGET_PAYLOAD}")
+        -d "{
+          \"siteId\": ${SITE_ID},
+          \"ip\": \"${TARGET_IP}\",
+          \"port\": ${TARGET_PORT},
+          \"method\": \"${EXPECTED_METHOD}\"
+        }")
       
       if echo "${TARGET_RESPONSE}" | jq -e '.success' > /dev/null; then
         if [ "${NEEDS_RECONCILE}" = "true" ]; then
