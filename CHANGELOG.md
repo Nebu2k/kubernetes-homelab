@@ -1,3 +1,10 @@
+# [4.8.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.7.0...v4.8.0) (2026-02-05)
+
+
+### Features
+
+* add debug output for target reconciliation process ([408a16d](https://github.com/Nebu2k/kubernetes-homelab/commit/408a16d226542a7dbadb7941211cec83a9d5e3eb))
+
 # [4.7.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.6.0...v4.7.0) (2026-02-05)
 
 
