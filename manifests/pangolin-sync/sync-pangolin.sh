@@ -21,9 +21,8 @@ echo "════════════════════════�
 echo ""
 
 # Resolve cluster egress IPs via DynDNS (IPv4 + IPv6)
-NSLOOKUP_OUT=$(nslookup nebu2k.ipv64.net)
-EGRESS_IPV4=$(echo "${NSLOOKUP_OUT}" | grep -E '^Address: [0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$' | awk '{print $2}')
-EGRESS_IPV6=$(echo "${NSLOOKUP_OUT}" | grep -E '^Address: [0-9a-fA-F:]+$' | awk '{print $2}')
+EGRESS_IPV4=$(nslookup -type=A nebu2k.ipv64.net | grep -E '^Address: [0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$' | awk '{print $2}')
+EGRESS_IPV6=$(nslookup -type=AAAA nebu2k.ipv64.net | grep -E 'has AAAA address' | awk '{print $NF}')
 if [ -z "${EGRESS_IPV4}" ] && [ -z "${EGRESS_IPV6}" ]; then
   echo "❌ Failed to resolve nebu2k.ipv64.net, aborting"
   exit 1
