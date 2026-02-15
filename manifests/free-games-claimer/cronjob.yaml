@@ -1,0 +1,106 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: free-games-claimer
+  namespace: free-games-claimer
+  labels:
+    app: free-games-claimer
+spec:
+  # Täglich um 10:00 Uhr
+  schedule: "0 10 * * *"
+
+  # Behalte letzte 3 erfolgreiche und 1 fehlgeschlagene Jobs
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 1
+
+  jobTemplate:
+    metadata:
+      labels:
+        app: free-games-claimer
+    spec:
+      template:
+        metadata:
+          labels:
+            app: free-games-claimer
+        spec:
+          nodeSelector:
+            node-role.kubernetes.io/worker: "worker"
+
+          restartPolicy: OnFailure
+
+          containers:
+          - name: free-games-claimer
+            image: ghcr.io/vogler/free-games-claimer:latest
+            imagePullPolicy: Always
+
+            env:
+            - name: TZ
+              value: "Europe/Berlin"
+
+            # Epic Games
+            - name: EG_EMAIL
+              valueFrom:
+                secretKeyRef:
+                  name: free-games-claimer-secret
+                  key: epic-email
+            - name: EG_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: free-games-claimer-secret
+                  key: epic-password
+
+            # Amazon Prime Gaming
+            - name: PG_EMAIL
+              valueFrom:
+                secretKeyRef:
+                  name: free-games-claimer-secret
+                  key: prime-email
+            - name: PG_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: free-games-claimer-secret
+                  key: prime-password
+
+            # GOG
+            - name: GOG_EMAIL
+              valueFrom:
+                secretKeyRef:
+                  name: free-games-claimer-secret
+                  key: gog-email
+            - name: GOG_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: free-games-claimer-secret
+                  key: gog-password
+
+            # Notifications
+            - name: NOTIFY
+              valueFrom:
+                secretKeyRef:
+                  name: free-games-claimer-secret
+                  key: notify-url
+
+            # Browser Settings
+            - name: SHOW
+              value: "0"  # Headless mode
+            - name: TIMEOUT
+              value: "60"
+            - name: LOGIN_TIMEOUT
+              value: "180"
+
+            volumeMounts:
+            - name: data
+              mountPath: /fgc/data
+
+            resources:
+              requests:
+                cpu: 500m
+                memory: 512Mi
+              limits:
+                cpu: 1000m
+                memory: 1Gi
+
+          volumes:
+          - name: data
+            persistentVolumeClaim:
+              claimName: free-games-claimer-data
