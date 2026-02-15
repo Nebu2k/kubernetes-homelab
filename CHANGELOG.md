@@ -1,3 +1,10 @@
+## [4.8.1](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.8.0...v4.8.1) (2026-02-15)
+
+
+### Bug Fixes
+
+* improve egress IP resolution logic in sync script ([f9035c7](https://github.com/Nebu2k/kubernetes-homelab/commit/f9035c78e0ae9af9df500edc437b3ffbb98959b6))
+
 # [4.8.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.7.0...v4.8.0) (2026-02-05)
 
 
