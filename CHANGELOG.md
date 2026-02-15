@@ -1,3 +1,10 @@
+## [4.8.2](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.8.1...v4.8.2) (2026-02-15)
+
+
+### Bug Fixes
+
+* handle DNS resolution failures gracefully in sync script ([d34c86a](https://github.com/Nebu2k/kubernetes-homelab/commit/d34c86a4cc3c62c4759c2bfed45dd37295fa83c5))
+
 ## [4.8.1](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.8.0...v4.8.1) (2026-02-15)
 
 
