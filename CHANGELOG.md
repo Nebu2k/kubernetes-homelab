@@ -1,3 +1,10 @@
+## [4.8.6](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.8.5...v4.8.6) (2026-02-18)
+
+
+### Bug Fixes
+
+* update internal IPv6 CIDR in sync-pangolin script for accuracy ([1a51418](https://github.com/Nebu2k/kubernetes-homelab/commit/1a514182071ba46db9daf33f1b196600b3a997d5))
+
 ## [4.8.5](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.8.4...v4.8.5) (2026-02-18)
 
 
