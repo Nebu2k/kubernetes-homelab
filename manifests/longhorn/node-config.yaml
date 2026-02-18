@@ -2,7 +2,7 @@
 # Longhorn Node Configuration
 # Exclude low-storage nodes from replica scheduling
 
-# Mark storage-capable nodes
+# Storage-capable nodes
 apiVersion: longhorn.io/v1beta2
 kind: Node
 metadata:
@@ -16,27 +16,6 @@ spec:
   evictionRequested: false
   disks:
     default-disk-k3s-worker-1:
-      allowScheduling: true
-      diskType: filesystem
-      evictionRequested: false
-      path: /var/lib/longhorn/
-      tags:
-        - storage
-
----
-apiVersion: longhorn.io/v1beta2
-kind: Node
-metadata:
-  name: raspi4
-  namespace: longhorn-system
-spec:
-  name: raspi4
-  tags:
-    - storage
-  allowScheduling: true
-  evictionRequested: false
-  disks:
-    default-disk-raspi4:
       allowScheduling: true
       diskType: filesystem
       evictionRequested: false
@@ -66,7 +45,19 @@ spec:
         - storage
 
 ---
-# Exclude low-storage nodes
+# Low-storage nodes (excluded from replica scheduling)
+apiVersion: longhorn.io/v1beta2
+kind: Node
+metadata:
+  name: k3s-cp-1
+  namespace: longhorn-system
+spec:
+  name: k3s-cp-1
+  tags: []  # No storage tag
+  allowScheduling: false  # Disable storage scheduling
+  evictionRequested: false
+
+---
 apiVersion: longhorn.io/v1beta2
 kind: Node
 metadata:
@@ -82,10 +73,10 @@ spec:
 apiVersion: longhorn.io/v1beta2
 kind: Node
 metadata:
-  name: k3s-cp-1
+  name: raspi4
   namespace: longhorn-system
 spec:
-  name: k3s-cp-1
+  name: raspi4
   tags: []  # No storage tag
   allowScheduling: false  # Disable storage scheduling
   evictionRequested: false

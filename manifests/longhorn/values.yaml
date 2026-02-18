@@ -1,7 +1,7 @@
 # Longhorn distributed storage values
 persistence:
   defaultClass: true
-  defaultClassReplicaCount: 3  # Konsistent mit defaultReplicaCount
+  defaultClassReplicaCount: 2
   defaultNodeSelector:
     enable: true
     selector: "storage"
@@ -15,7 +15,7 @@ defaultBackupStore:
     backupTargetCredentialSecret: longhorn-minio-secret
 # Default settings
 defaultSettings:
-  defaultReplicaCount: "3"
+  defaultReplicaCount: "2"
   # RWX (ReadWriteMany) Support via NFS
   rwxVolumeFastFailover: "true"
   # Automatic replica rebalancing across nodes
