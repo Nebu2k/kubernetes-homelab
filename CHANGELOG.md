@@ -1,3 +1,10 @@
+## [4.8.5](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.8.4...v4.8.5) (2026-02-18)
+
+
+### Bug Fixes
+
+* comment out unused raspi4 node configuration in Longhorn ([462fed6](https://github.com/Nebu2k/kubernetes-homelab/commit/462fed626836e8578ebf7440e672ffc64ec558ad))
+
 ## [4.8.4](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.8.3...v4.8.4) (2026-02-18)
 
 
