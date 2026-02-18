@@ -1,3 +1,10 @@
+## [4.8.4](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.8.3...v4.8.4) (2026-02-18)
+
+
+### Bug Fixes
+
+* update Longhorn node configuration and values for consistency ([2fa4d99](https://github.com/Nebu2k/kubernetes-homelab/commit/2fa4d9982f8e125e42b6ffa81fc7f2a0586111d9))
+
 ## [4.8.3](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.8.2...v4.8.3) (2026-02-15)
 
 
