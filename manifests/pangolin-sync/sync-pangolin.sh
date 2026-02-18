@@ -33,11 +33,11 @@ EGRESS_CIDRS=""
 [ -n "${EGRESS_IPV4}" ] && EGRESS_CIDRS="${EGRESS_IPV4}/32"
 [ -n "${EGRESS_IPV6}" ] && EGRESS_CIDRS="${EGRESS_CIDRS} ${EGRESS_IPV6}/128"
 # Add internal networks
-EGRESS_CIDRS="${EGRESS_CIDRS} 192.168.2.0/24 2a00:1e:7c41:df00::/64"
+EGRESS_CIDRS="${EGRESS_CIDRS} 192.168.2.0/24 2a00:1e:7c40:8800::/64"
 echo "   Egress IPv4: ${EGRESS_IPV4:-none} (nebu2k.ipv64.net)"
 echo "   Egress IPv6: ${EGRESS_IPV6:-none} (nebu2k.ipv64.net)"
 echo "   Internal IPv4: 192.168.2.0/24"
-echo "   Internal IPv6: 2a00:1e:7c41:df00::/64"
+echo "   Internal IPv6: 2a00:1e:7c40:8800::/64"
 echo ""
 
 # Get service account token
