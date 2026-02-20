@@ -53,8 +53,8 @@ metadata:
   namespace: longhorn-system
 spec:
   name: k3s-cp-1
-  tags: []  # No storage tag
-  allowScheduling: false  # Disable storage scheduling
+  tags: [] # No storage tag
+  allowScheduling: false # Disable storage scheduling
   evictionRequested: false
 
 ---
@@ -65,18 +65,18 @@ metadata:
   namespace: longhorn-system
 spec:
   name: prodesk
-  tags: []  # No storage tag
-  allowScheduling: false  # Disable storage scheduling
+  tags: [] # No storage tag
+  allowScheduling: false # Disable storage scheduling
   evictionRequested: false
 
 ---
-# apiVersion: longhorn.io/v1beta2
-# kind: Node
-# metadata:
-#   name: raspi4
-#   namespace: longhorn-system
-# spec:
-#   name: raspi4
-#   tags: []  # No storage tag
-#   allowScheduling: false  # Disable storage scheduling
-#   evictionRequested: false
+apiVersion: longhorn.io/v1beta2
+kind: Node
+metadata:
+  name: raspi4
+  namespace: longhorn-system
+spec:
+  name: raspi4
+  tags: [] # No storage tag
+  allowScheduling: false # Disable storage scheduling
+  evictionRequested: false
