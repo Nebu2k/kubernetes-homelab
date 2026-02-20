@@ -1,3 +1,10 @@
+# [4.9.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.8.6...v4.9.0) (2026-02-20)
+
+
+### Features
+
+* config raspi4 not storage ([4ae7dbf](https://github.com/Nebu2k/kubernetes-homelab/commit/4ae7dbfe126f97af38d070319b75a18f8ed40771))
+
 ## [4.8.6](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.8.5...v4.8.6) (2026-02-18)
 
 
