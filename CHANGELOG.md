@@ -1,3 +1,10 @@
+## [4.9.1](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.9.0...v4.9.1) (2026-02-23)
+
+
+### Bug Fixes
+
+* **adguard:** update targetPort to 3000 for service and endpoints ([3cb7bff](https://github.com/Nebu2k/kubernetes-homelab/commit/3cb7bff4343a1ef564b417625eabb448f6d8f1fc))
+
 # [4.9.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.8.6...v4.9.0) (2026-02-20)
 
 
