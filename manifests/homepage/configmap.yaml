@@ -52,17 +52,6 @@ data:
             url: https://portainer.elmstreet79.de
             env: 2
             key: {{HOMEPAGE_VAR_PORTAINER_TOKEN}}
-
-      - Container (Pi4):
-          href: https://portainer.elmstreet79.de
-          description: Portainer Docker Pi4
-          icon: docker.png
-          weight: 40
-          widget:
-            type: portainer
-            url: https://portainer.elmstreet79.de
-            env: 4
-            key: {{HOMEPAGE_VAR_PORTAINER_TOKEN}}
     
       - AWS Console:
           href: https://d-99675baf99.awsapps.com/start/#/console?account_id=077448369105&role_name=AdministratorAccess
@@ -240,10 +229,6 @@ data:
     mode: cluster
 
   docker.yaml: |
-    raspi4:
-      host: 192.168.2.2
-      port: 2375
-      
     raspi5:
       host: 192.168.2.9
       port: 2375
