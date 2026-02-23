@@ -13,6 +13,9 @@ spec:
   successfulJobsHistoryLimit: 3
   failedJobsHistoryLimit: 1
 
+  # Verhindere parallele Ausführungen
+  concurrencyPolicy: Forbid
+
   jobTemplate:
     metadata:
       labels:
@@ -48,6 +51,12 @@ spec:
                 secretKeyRef:
                   name: free-games-claimer-secret
                   key: epic-password
+            - name: EG_OTPKEY
+              valueFrom:
+                secretKeyRef:
+                  name: free-games-claimer-secret
+                  key: epic-otpkey
+                  optional: true
 
             # Amazon Prime Gaming
             - name: PG_EMAIL
@@ -60,6 +69,12 @@ spec:
                 secretKeyRef:
                   name: free-games-claimer-secret
                   key: prime-password
+            - name: PG_OTPKEY
+              valueFrom:
+                secretKeyRef:
+                  name: free-games-claimer-secret
+                  key: prime-otpkey
+                  optional: true
 
             # GOG
             - name: GOG_EMAIL
