@@ -1,3 +1,13 @@
+# [4.10.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.9.2...v4.10.0) (2026-02-23)
+
+
+### Features
+
+* add free-games-claimer application and related resources ([e0557d7](https://github.com/Nebu2k/kubernetes-homelab/commit/e0557d714417afee6f11d25d09f491d055b56b0b))
+* add free-games-claimer application and related resources ([eada262](https://github.com/Nebu2k/kubernetes-homelab/commit/eada262879af96b7c0bb99a3438ee1fe816c9bee))
+* **free-games-claimer:** add concurrency policy and additional environment variables ([25d2f59](https://github.com/Nebu2k/kubernetes-homelab/commit/25d2f59d0343b92a06add2d970a246901a7e6d10))
+* **free-games-claimer:** add sealed secret for application credentials ([1da1a76](https://github.com/Nebu2k/kubernetes-homelab/commit/1da1a7642f825c255623410783c857d4af382c24))
+
 ## [4.9.2](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.9.1...v4.9.2) (2026-02-23)
 
 
