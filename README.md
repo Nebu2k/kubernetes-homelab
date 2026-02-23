@@ -28,7 +28,7 @@ Production-ready K3s cluster managed via GitOps using ArgoCD App-of-Apps pattern
 | 6 | Kube Prometheus Stack |
 | 7 | Unifi Poller, Home Assistant |
 | 8 | Uptime Kuma, Newt |
-| 9 | N8n, Paperless Ngx, Homepage |
+| 9 | Free Games Claimer, N8n, Paperless Ngx, Homepage |
 | 10 | Beszel |
 | 11 | Proxmox Exporter |
 | 12 | Argocd Config |
@@ -61,6 +61,7 @@ homelab/
 │   ├── unifi-poller.yaml              # Wave 7
 │   ├── newt.yaml                      # Wave 8
 │   ├── uptime-kuma.yaml               # Wave 8
+│   ├── free-games-claimer.yaml        # Wave 9
 │   ├── homepage.yaml                  # Wave 9
 │   ├── n8n.yaml                       # Wave 9
 │   ├── paperless-ngx.yaml             # Wave 9
@@ -121,6 +122,12 @@ homelab/
     │   ├── kustomization.yaml
     │   ├── namespace.yaml
     │   └── service.yaml
+    ├── free-games-claimer/
+    │   ├── cronjob.yaml
+    │   ├── kustomization.yaml
+    │   ├── namespace.yaml
+    │   ├── pvc.yaml
+    │   └── secret-unsealed.yaml.example
     ├── home-assistant/
     │   ├── configmap-configuration.yaml
     │   ├── deployment.yaml
