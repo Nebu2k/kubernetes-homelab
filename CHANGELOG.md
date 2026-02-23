@@ -1,3 +1,10 @@
+## [4.9.2](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.9.1...v4.9.2) (2026-02-23)
+
+
+### Bug Fixes
+
+* **adguard:** correct targetPort and port to 80 for service and endpoints ([1560411](https://github.com/Nebu2k/kubernetes-homelab/commit/156041100af690ada64c8b1bfa08c6ad0497daf9))
+
 ## [4.9.1](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.9.0...v4.9.1) (2026-02-23)
 
 
