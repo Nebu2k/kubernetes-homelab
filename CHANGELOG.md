@@ -1,3 +1,10 @@
+## [4.10.1](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.10.0...v4.10.1) (2026-02-24)
+
+
+### Bug Fixes
+
+* **apps:** remove free-games-claimer application and related resources ([d6f4696](https://github.com/Nebu2k/kubernetes-homelab/commit/d6f469664fab898332858e87faf958ca66238ace))
+
 # [4.10.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.9.2...v4.10.0) (2026-02-23)
 
 
