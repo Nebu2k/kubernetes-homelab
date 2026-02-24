@@ -27,5 +27,4 @@ resources:
   - newt.yaml
   - pangolin-sync.yaml
   - cloudflare-sync.yaml
-  - free-games-claimer.yaml
 
