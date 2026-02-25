@@ -25,6 +25,9 @@ defaultSettings:
   # Reduce backup concurrency to prevent overwhelming ARM nodes during nightly backups
   backupConcurrentLimit: "1"  # Default is 2, reduce to 1 to prevent raspi5 overload
   concurrentVolumeBackupRestorePerNodeLimit: "2"  # Default is 5, reduce to 2
+  # Allow node drain even if volumes are attached - prevents kured from getting stuck
+  # on PodDisruptionBudgets of instance-manager pods during automated reboots
+  nodeDrainPolicy: "allow-if-replica-is-stopped"
 
 # Disable preUpgrade hook (causes issues with ArgoCD)
 preUpgradeChecker:
