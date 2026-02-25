@@ -15,7 +15,6 @@ configuration:
   
   # Drain settings
   drainGracePeriod: -1  # Respect pod terminationGracePeriodSeconds
-  drainTimeout: 300  # Abort drain after 5 minutes to prevent infinite PDB loops
   drainPodSelector: ""  # Drain all pods
   skipWaitForDeleteTimeoutSeconds: 60
   
