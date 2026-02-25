@@ -1,3 +1,10 @@
+## [4.10.3](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.10.2...v4.10.3) (2026-02-25)
+
+
+### Bug Fixes
+
+* **kured:** remove drainTimeout to prevent infinite PDB loops ([07eb9da](https://github.com/Nebu2k/kubernetes-homelab/commit/07eb9da77f813e7d566be5fe3c7be23d1a9b5d77))
+
 ## [4.10.2](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.10.1...v4.10.2) (2026-02-25)
 
 
