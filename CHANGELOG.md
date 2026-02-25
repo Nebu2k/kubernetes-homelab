@@ -1,3 +1,10 @@
+## [4.10.2](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.10.1...v4.10.2) (2026-02-25)
+
+
+### Bug Fixes
+
+* **longhorn:** update node drain policy to allow draining with attached volumes ([305ff7b](https://github.com/Nebu2k/kubernetes-homelab/commit/305ff7b4f657b22af84ebbb47de2e4950f926069))
+
 ## [4.10.1](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.10.0...v4.10.1) (2026-02-24)
 
 
