@@ -1,3 +1,10 @@
+# [4.11.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.10.3...v4.11.0) (2026-02-27)
+
+
+### Features
+
+* **training-engine:** add Kubernetes manifests for training engine application ([fc589d6](https://github.com/Nebu2k/kubernetes-homelab/commit/fc589d6b5c30bf5d5c00ad4f266f90e6461748bd))
+
 ## [4.10.3](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.10.2...v4.10.3) (2026-02-25)
 
 
