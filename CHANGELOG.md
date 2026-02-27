@@ -1,3 +1,10 @@
+# [4.12.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.11.0...v4.12.0) (2026-02-27)
+
+
+### Features
+
+* **training-engine:** add to apps kustomization ([02f2fda](https://github.com/Nebu2k/kubernetes-homelab/commit/02f2fda658284393e1d4af00de0c10d86be6b5df))
+
 # [4.11.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.10.3...v4.11.0) (2026-02-27)
 
 
