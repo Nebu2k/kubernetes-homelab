@@ -6,6 +6,7 @@ namespace: training-engine
 resources:
   - namespace.yaml
   - secret-sealed.yaml
+  - ghcr-secret-sealed.yaml
   - postgresql-pvc.yaml
   - postgresql-statefulset.yaml
   - postgresql-service.yaml

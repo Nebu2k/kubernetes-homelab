@@ -21,6 +21,8 @@ spec:
     spec:
       nodeSelector:
         node-role.kubernetes.io/worker: "worker"
+      imagePullSecrets:
+        - name: ghcr-credentials
       containers:
         - name: frontend
           image: ghcr.io/christ0ph82/training-engine-frontend:latest
