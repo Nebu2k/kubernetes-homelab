@@ -1,3 +1,10 @@
+# [4.13.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.12.0...v4.13.0) (2026-02-28)
+
+
+### Features
+
+* **training-engine:** add GHCR image pull secret ([ced8ca1](https://github.com/Nebu2k/kubernetes-homelab/commit/ced8ca1e96e23ea959788f67b7004a792cdb2950))
+
 # [4.12.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.11.0...v4.12.0) (2026-02-27)
 
 
