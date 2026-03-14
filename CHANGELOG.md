@@ -1,3 +1,10 @@
+# [4.14.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.13.0...v4.14.0) (2026-03-14)
+
+
+### Features
+
+* **training-engine:** remove training engine manifests and update kustomization ([5887c82](https://github.com/Nebu2k/kubernetes-homelab/commit/5887c8202921560b776e364b5ac0b16785219731))
+
 # [4.13.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.12.0...v4.13.0) (2026-02-28)
 
 
