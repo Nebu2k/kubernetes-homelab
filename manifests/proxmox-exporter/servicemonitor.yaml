@@ -12,5 +12,5 @@ spec:
       app: proxmox-exporter
   endpoints:
     - port: metrics
-      interval: 60s
-      scrapeTimeout: 30s
+      interval: 120s
+      scrapeTimeout: 60s
