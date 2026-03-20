@@ -190,6 +190,13 @@ alertmanager:
         - match:
             alertname: InfoInhibitor
           receiver: 'null'
+        # Proxmox exporter - mute during Proxmox backup window (03:00-04:00 CET)
+        - match:
+            alertname: TargetDown
+            job: proxmox-exporter
+          receiver: 'sns-receiver'
+          mute_time_intervals:
+            - proxmox-backup-window
         # Critical alerts - immediate notification
         - match:
             severity: critical
@@ -200,6 +207,14 @@ alertmanager:
             severity: warning
           receiver: 'sns-receiver'
           group_wait: 30s
+
+    time_intervals:
+      - name: proxmox-backup-window
+        time_intervals:
+          - times:
+              - start_time: '03:00'
+                end_time: '04:00'
+            location: 'Europe/Berlin'
     
     receivers:
       - name: 'null'  # No notifications (for Watchdog)
