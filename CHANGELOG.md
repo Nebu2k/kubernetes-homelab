@@ -1,3 +1,10 @@
+## [4.14.1](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.14.0...v4.14.1) (2026-03-18)
+
+
+### Bug Fixes
+
+* **servicemonitor:** update scrape interval and timeout for proxmox-exporter ([a63fc0e](https://github.com/Nebu2k/kubernetes-homelab/commit/a63fc0efccf0d5acfcb3bd11624b19a038aaea08))
+
 # [4.14.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.13.0...v4.14.0) (2026-03-14)
 
 
