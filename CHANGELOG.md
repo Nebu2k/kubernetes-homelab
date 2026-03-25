@@ -1,3 +1,10 @@
+# [4.15.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.14.1...v4.15.0) (2026-03-20)
+
+
+### Features
+
+* **alertmanager:** add mute time interval for Proxmox backup window ([f564eea](https://github.com/Nebu2k/kubernetes-homelab/commit/f564eea7f9d8903248daf06b480c37eed9c0108a))
+
 ## [4.14.1](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.14.0...v4.14.1) (2026-03-18)
 
 
