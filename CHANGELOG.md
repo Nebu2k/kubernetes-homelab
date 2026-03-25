@@ -1,3 +1,10 @@
+# [4.16.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.15.0...v4.16.0) (2026-03-25)
+
+
+### Features
+
+* increase memory ([4446275](https://github.com/Nebu2k/kubernetes-homelab/commit/444627576e972de93384dc63c80e5dfe885fb894))
+
 # [4.15.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.14.1...v4.15.0) (2026-03-20)
 
 
