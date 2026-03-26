@@ -1,3 +1,10 @@
+# [4.17.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.16.0...v4.17.0) (2026-03-26)
+
+
+### Features
+
+* update HA version ([2e7180f](https://github.com/Nebu2k/kubernetes-homelab/commit/2e7180ff6bef54f23bd69d7111e21f69163d2ad8))
+
 # [4.16.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.15.0...v4.16.0) (2026-03-25)
 
 
