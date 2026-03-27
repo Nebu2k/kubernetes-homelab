@@ -1,3 +1,10 @@
+## [4.17.1](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.17.0...v4.17.1) (2026-03-27)
+
+
+### Bug Fixes
+
+* matter service ([bdce5a9](https://github.com/Nebu2k/kubernetes-homelab/commit/bdce5a931360c1dfda0318b8cc33ad18016473c1))
+
 # [4.17.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.16.0...v4.17.0) (2026-03-26)
 
 
