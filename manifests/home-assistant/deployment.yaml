@@ -103,7 +103,7 @@ spec:
             memory: "2Gi"
             cpu: "2000m"
       - name: matter-server
-        image: ghcr.io/home-assistant-libs/python-matter-server:8.1.2
+        image: ghcr.io/home-assistant-libs/python-matter-server:8.1.0
         imagePullPolicy: IfNotPresent
         ports:
         - name: matter
