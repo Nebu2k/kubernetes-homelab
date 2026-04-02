@@ -1,3 +1,10 @@
+## [4.18.2](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.18.1...v4.18.2) (2026-04-02)
+
+
+### Bug Fixes
+
+* **kured:** correct drainTimeout format in values.yaml ([14696f4](https://github.com/Nebu2k/kubernetes-homelab/commit/14696f40b3fa059a4dafe783e8cb8f13065d1e23))
+
 ## [4.18.1](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.18.0...v4.18.1) (2026-04-02)
 
 
