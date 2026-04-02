@@ -14,7 +14,7 @@ configuration:
   rebootDelay: 0
 
   # Drain settings
-  drainTimeout: 300  # 5 min max - prevents endless wait on PDB blocks
+  drainTimeout: 300s  # 5 min max - prevents endless wait on PDB blocks
   drainGracePeriod: -1  # Respect pod terminationGracePeriodSeconds
   drainPodSelector: ""  # Drain all pods
   skipWaitForDeleteTimeoutSeconds: 60
