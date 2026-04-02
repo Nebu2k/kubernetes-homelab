@@ -1,3 +1,10 @@
+## [4.18.1](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.18.0...v4.18.1) (2026-04-02)
+
+
+### Bug Fixes
+
+* **kured:** restore reboot window configuration in values.yaml ([53c85e2](https://github.com/Nebu2k/kubernetes-homelab/commit/53c85e23cdf28050420a5e17fdf169096e85567e))
+
 # [4.18.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.17.1...v4.18.0) (2026-03-27)
 
 
