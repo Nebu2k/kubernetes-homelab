@@ -17,7 +17,7 @@ configuration:
   drainTimeout: 300s  # 5 min max - prevents endless wait on PDB blocks
   drainGracePeriod: -1  # Respect pod terminationGracePeriodSeconds
   drainPodSelector: ""  # Drain all pods
-  skipWaitForDeleteTimeoutSeconds: 60
+  skipWaitForDeleteTimeout: 60
   
   # Prometheus metrics
   metricsHost: "0.0.0.0"
