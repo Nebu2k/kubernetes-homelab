@@ -1,3 +1,10 @@
+## [4.18.3](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.18.2...v4.18.3) (2026-04-04)
+
+
+### Bug Fixes
+
+* **kured:** correct skipWaitForDeleteTimeout key in values.yaml ([9f366b0](https://github.com/Nebu2k/kubernetes-homelab/commit/9f366b0f4c19a031753e7d1960cff02065e69fdf))
+
 ## [4.18.2](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.18.1...v4.18.2) (2026-04-02)
 
 
