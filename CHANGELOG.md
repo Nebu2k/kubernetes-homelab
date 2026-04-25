@@ -1,3 +1,10 @@
+## [4.18.4](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.18.3...v4.18.4) (2026-04-25)
+
+
+### Bug Fixes
+
+* **longhorn:** update system backup job to disable volume backup policy and improve snapshot management ([86d9f57](https://github.com/Nebu2k/kubernetes-homelab/commit/86d9f57479d18341dd81e6de62bcaff6c4492bea))
+
 ## [4.18.3](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.18.2...v4.18.3) (2026-04-04)
 
 
