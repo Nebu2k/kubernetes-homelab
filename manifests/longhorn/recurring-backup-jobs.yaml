@@ -124,6 +124,13 @@ spec:
 # === SYSTEM BACKUPS (Longhorn System) ===
 # Sichert Longhorn-Systemkonfiguration selbst
 # Tägliches System-Backup um 6:00 Uhr (behält 7 Tage)
+#
+# WICHTIG: volume-backup-policy=disabled
+# Ohne diesen Parameter erzeugt jeder System-Backup-Lauf zusätzlich pro Volume
+# einen Snapshot + Volume-Backup, die NICHT vom retain aufgeräumt werden
+# (siehe Prometheus-Volume: 47 Snapshots, 390 GB actualSize bei 40 GB nominal).
+# Volume-Daten werden bereits über backup-daily/weekly/monthly gesichert,
+# das System-Backup muss nur die Longhorn-Konfiguration mitnehmen.
 apiVersion: longhorn.io/v1beta2
 kind: RecurringJob
 metadata:
@@ -134,4 +141,6 @@ spec:
   task: "system-backup"
   retain: 7
   concurrency: 1
+  parameters:
+    volume-backup-policy: "disabled"
   labels: {}

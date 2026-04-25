@@ -30,6 +30,11 @@ defaultSettings:
   # "allow-if-replica-is-stopped" only handles replicas, not engines of attached
   # volumes. "always-allow" force-detaches volumes so drains always complete.
   nodeDrainPolicy: "always-allow"
+  # Reclaim space from removed snapshots during filesystem-trim.
+  # Without this, the weekly trim only releases free filesystem blocks but leaves
+  # marked-removed snapshots on disk — high-churn volumes (Prometheus) bloat to
+  # 10x their nominal size.
+  removeSnapshotsDuringFilesystemTrim: "true"
 
 # Disable preUpgrade hook (causes issues with ArgoCD)
 preUpgradeChecker:
