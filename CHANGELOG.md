@@ -1,3 +1,10 @@
+## [4.18.5](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.18.4...v4.18.5) (2026-05-04)
+
+
+### Bug Fixes
+
+* **prometheus:** add Longhorn recurring-job labels to storageSpec for improved backup management ([75ed3e4](https://github.com/Nebu2k/kubernetes-homelab/commit/75ed3e424bd66e656c225f585be633223c38e2c0))
+
 ## [4.18.4](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.18.3...v4.18.4) (2026-04-25)
 
 
