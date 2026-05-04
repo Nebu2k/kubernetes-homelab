@@ -56,8 +56,16 @@ prometheus:
     terminationGracePeriodSeconds: 120
     
     # Storage configuration
+    # Labels select the Longhorn recurring-job groups (backup-daily/weekly/monthly,
+    # snapshot-daily, snapshot-cleanup-daily, filesystem-trim-weekly).
+    # Without these, the volume falls into the "default" group, which has no jobs.
     storageSpec:
       volumeClaimTemplate:
+        metadata:
+          labels:
+            recurring-job-group.longhorn.io/backup: enabled
+            recurring-job-group.longhorn.io/snapshot: enabled
+            recurring-job-group.longhorn.io/maintenance: enabled
         spec:
           storageClassName: longhorn
           accessModes: ["ReadWriteOnce"]
