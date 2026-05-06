@@ -1,0 +1,65 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ripe-atlas
+  namespace: ripe-atlas
+  labels:
+    app.kubernetes.io/name: ripe-atlas
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: ripe-atlas
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: ripe-atlas
+    spec:
+      nodeSelector:
+        node-role.kubernetes.io/worker: "worker"
+      containers:
+        - name: ripe-atlas
+          image: jamesits/ripe-atlas:latest
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: RXTXRPT
+              value: "yes"
+          securityContext:
+            runAsNonRoot: false
+            runAsUser: 0
+            allowPrivilegeEscalation: true
+            capabilities:
+              drop:
+                - ALL
+              add:
+                - NET_RAW
+                - KILL
+                - SETUID
+                - SETGID
+                - CHOWN
+                - FOWNER
+                - DAC_OVERRIDE
+          volumeMounts:
+            - name: etc
+              mountPath: /etc/ripe-atlas
+            - name: spool
+              mountPath: /var/spool/ripe-atlas
+            - name: run
+              mountPath: /run/ripe-atlas
+          resources:
+            requests:
+              cpu: 20m
+              memory: 64Mi
+            limits:
+              memory: 128Mi
+      volumes:
+        - name: etc
+          persistentVolumeClaim:
+            claimName: ripe-atlas-etc
+        - name: spool
+          persistentVolumeClaim:
+            claimName: ripe-atlas-spool
+        - name: run
+          emptyDir: {}
