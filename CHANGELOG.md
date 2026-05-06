@@ -1,3 +1,10 @@
+# [4.19.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.18.5...v4.19.0) (2026-05-06)
+
+
+### Features
+
+* **ripe-atlas:** add Ripe Atlas application with deployment, PVCs, and kustomization ([e4d7ceb](https://github.com/Nebu2k/kubernetes-homelab/commit/e4d7cebc568ee6777a83ad35a2acac0516811674))
+
 ## [4.18.5](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.18.4...v4.18.5) (2026-05-04)
 
 
