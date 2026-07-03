@@ -2,7 +2,8 @@ FROM alpine:3.23
 
 RUN apk add --no-cache --no-progress \
     curl \
-    jq
+    jq \
+    bind-tools
 
 COPY sync-cloudflare.sh /usr/local/bin/sync-cloudflare.sh
 RUN chmod +x /usr/local/bin/sync-cloudflare.sh

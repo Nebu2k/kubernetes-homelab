@@ -4,8 +4,9 @@ metadata:
   name: alertmanager
   namespace: monitoring
   annotations:
-    pangolin.io/expose: "true"
-    pangolin.io/auth: "true"
+    homelab.io/expose: "internal"
+    traefik.ingress.kubernetes.io/router.entrypoints: "websecure"
+    traefik.ingress.kubernetes.io/router.tls: "true"
     # Homepage integration
     gethomepage.dev/enabled: "true"
     gethomepage.dev/group: "Monitoring"

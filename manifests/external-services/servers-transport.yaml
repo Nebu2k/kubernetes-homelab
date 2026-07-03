@@ -1,0 +1,11 @@
+---
+# Shared transport for HTTPS backends with self-signed certificates
+# (Proxmox, UniFi, UNAS, Dreambox).
+apiVersion: traefik.io/v1alpha1
+kind: ServersTransport
+metadata:
+  name: insecure-transport
+  namespace: external-services
+spec:
+  insecureSkipVerify: true
+  serverName: "*"

@@ -5,8 +5,9 @@ metadata:
   name: adguardhome-sync-web
   namespace: private-services
   annotations:
-    pangolin.io/expose: "true"
-    pangolin.io/auth: "true"
+    homelab.io/expose: "internal"
+    traefik.ingress.kubernetes.io/router.entrypoints: "websecure"
+    traefik.ingress.kubernetes.io/router.tls: "true"
     gethomepage.dev/enabled: "true"
     gethomepage.dev/group: Infrastructure
     gethomepage.dev/name: AdGuard Sync (k8s)

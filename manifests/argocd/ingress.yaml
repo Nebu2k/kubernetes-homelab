@@ -5,8 +5,9 @@ metadata:
   name: argocd-server
   namespace: argocd
   annotations:
-    pangolin.io/expose: "true"
-    pangolin.io/auth: "true"
+    homelab.io/expose: "internal"
+    traefik.ingress.kubernetes.io/router.entrypoints: "websecure"
+    traefik.ingress.kubernetes.io/router.tls: "true"
     gethomepage.dev/enabled: "true"
     gethomepage.dev/name: "ArgoCD"
     gethomepage.dev/description: "GitOps Continuous Delivery"

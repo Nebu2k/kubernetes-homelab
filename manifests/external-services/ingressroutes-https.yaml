@@ -1,0 +1,71 @@
+# Traefik routing for external services with self-signed HTTPS backends.
+# Uses the shared insecure-transport ServersTransport (see servers-transport.yaml).
+# DNS sync discovery happens via the Service carriers (homelab.io/expose + host).
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: dreambox
+  namespace: external-services
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - match: Host(`dreambox.elmstreet79.de`)
+      kind: Rule
+      services:
+        - name: dreambox-external
+          port: 443
+          scheme: https
+          serversTransport: insecure-transport
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: proxmox
+  namespace: external-services
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - match: Host(`pve.elmstreet79.de`)
+      kind: Rule
+      services:
+        - name: proxmox
+          port: 443
+          scheme: https
+          serversTransport: insecure-transport
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: unifi
+  namespace: external-services
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - match: Host(`unifi.elmstreet79.de`)
+      kind: Rule
+      services:
+        - name: unifi
+          port: 443
+          scheme: https
+          serversTransport: insecure-transport
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: unifi-nas
+  namespace: external-services
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - match: Host(`nas.elmstreet79.de`)
+      kind: Rule
+      services:
+        - name: unifi-nas
+          port: 443
+          scheme: https
+          serversTransport: insecure-transport

@@ -17,6 +17,10 @@ resources:
   - unifi-service.yaml
   - unifi-nas-service.yaml
   - vscode-service.yaml
+  # Traefik routing for external services
+  - servers-transport.yaml
+  - ingresses-http.yaml
+  - ingressroutes-https.yaml
   # Other resources
   - adguardhome-sync-config.yaml
   - adguardhome-sync-credentials-sealed.yaml

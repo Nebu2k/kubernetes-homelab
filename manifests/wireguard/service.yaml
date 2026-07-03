@@ -1,0 +1,37 @@
+---
+# WireGuard UDP endpoint via MetalLB. externalTrafficPolicy: Local preserves the
+# client source IP (needed for WireGuard roaming/handshakes).
+apiVersion: v1
+kind: Service
+metadata:
+  name: wireguard
+  namespace: wireguard
+  annotations:
+    metallb.universe.tf/loadBalancerIPs: 192.168.2.251
+spec:
+  type: LoadBalancer
+  loadBalancerIP: 192.168.2.251
+  externalTrafficPolicy: Local
+  selector:
+    app: wireguard
+  ports:
+    - name: wireguard
+      port: 51820
+      targetPort: 51820
+      protocol: UDP
+---
+# Internal-only UI (reached via Ingress / VPN).
+apiVersion: v1
+kind: Service
+metadata:
+  name: wireguard-ui
+  namespace: wireguard
+spec:
+  type: ClusterIP
+  selector:
+    app: wireguard
+  ports:
+    - name: ui
+      port: 51821
+      targetPort: 51821
+      protocol: TCP

@@ -4,8 +4,9 @@ metadata:
   name: homepage
   namespace: homepage
   annotations:
-    pangolin.io/expose: "true"
-    pangolin.io/auth: "true"
+    homelab.io/expose: "internal"
+    traefik.ingress.kubernetes.io/router.entrypoints: "websecure"
+    traefik.ingress.kubernetes.io/router.tls: "true"
     gethomepage.dev/enabled: "false"
 spec:
   ingressClassName: traefik

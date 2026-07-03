@@ -1,0 +1,74 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: wireguard
+  namespace: wireguard
+  labels:
+    app: wireguard
+  annotations:
+    reloader.stakater.com/auto: "true"
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: wireguard
+  template:
+    metadata:
+      labels:
+        app: wireguard
+    spec:
+      nodeSelector:
+        node-role.kubernetes.io/worker: "worker"
+      containers:
+        - name: wg-easy
+          image: ghcr.io/wg-easy/wg-easy:14
+          env:
+            # Public endpoint clients connect to (DynDNS of the home connection).
+            - name: WG_HOST
+              value: "nebu2k.ipv64.net"
+            - name: WG_PORT
+              value: "51820"
+            # DNS handed to clients → AdGuard primary (resolves internal hosts).
+            - name: WG_DEFAULT_DNS
+              value: "192.168.2.16"
+            # Route only the home LAN through the tunnel (split tunnel).
+            - name: WG_ALLOWED_IPS
+              value: "192.168.2.0/24"
+            - name: WG_DEFAULT_ADDRESS
+              value: "10.8.0.x"
+            - name: UI_TRAFFIC_STATS
+              value: "true"
+            - name: PASSWORD_HASH
+              valueFrom:
+                secretKeyRef:
+                  name: wireguard-credentials
+                  key: PASSWORD_HASH
+          ports:
+            - name: wireguard
+              containerPort: 51820
+              protocol: UDP
+            - name: ui
+              containerPort: 51821
+              protocol: TCP
+          securityContext:
+            capabilities:
+              add:
+                - NET_ADMIN
+                - SYS_MODULE
+          volumeMounts:
+            - name: config
+              mountPath: /etc/wireguard
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 500m
+              memory: 256Mi
+      volumes:
+        - name: config
+          persistentVolumeClaim:
+            claimName: wireguard-config

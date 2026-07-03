@@ -1,26 +1,26 @@
-name: Build Pangolin Sync Image
+name: Build AdGuard Sync Image
 
 on:
   push:
     branches:
       - main
     paths:
-      - 'manifests/pangolin-sync/Dockerfile.pangolin-sync'
-      - 'manifests/pangolin-sync/sync-pangolin.sh'
-      - '.github/workflows/build-pangolin-sync-image.yml'
-  workflow_dispatch:  # Manual trigger option
+      - 'manifests/adguard-sync/Dockerfile.adguard-sync'
+      - 'manifests/adguard-sync/sync-adguard.sh'
+      - '.github/workflows/build-adguard-sync-image.yml'
+  workflow_dispatch:
 
 env:
-  IMAGE_NAME: nebu2k/pangolin-sync
+  IMAGE_NAME: nebu2k/adguard-sync
   PLATFORMS: linux/amd64,linux/arm64
 
 permissions:
-  contents: read  # Required to checkout repository
+  contents: read
 
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -42,17 +42,16 @@ jobs:
       - name: Generate version tags
         id: version
         run: |
-          ALPINE_VERSION=$(grep -oP 'FROM alpine:\K[0-9.]+' manifests/pangolin-sync/Dockerfile.pangolin-sync)
+          ALPINE_VERSION=$(grep -oP 'FROM alpine:\K[0-9.]+' manifests/adguard-sync/Dockerfile.adguard-sync)
           BUILD_DATE=$(date +%Y%m%d)
           SHORT_SHA=$(echo "${{ github.sha }}" | cut -c1-7)
-          
-          # Check if tag exists, otherwise use git describe or commit SHA
+
           if git describe --tags --exact-match 2>/dev/null; then
             VERSION=$(git describe --tags --exact-match)
           else
             VERSION="dev-${SHORT_SHA}"
           fi
-          
+
           echo "alpine_version=${ALPINE_VERSION}" >> $GITHUB_OUTPUT
           echo "build_date=${BUILD_DATE}" >> $GITHUB_OUTPUT
           echo "version=${VERSION}" >> $GITHUB_OUTPUT
@@ -61,8 +60,8 @@ jobs:
       - name: Build and push
         uses: docker/build-push-action@v5
         with:
-          context: manifests/pangolin-sync
-          file: manifests/pangolin-sync/Dockerfile.pangolin-sync
+          context: manifests/adguard-sync
+          file: manifests/adguard-sync/Dockerfile.adguard-sync
           platforms: ${{ env.PLATFORMS }}
           push: true
           tags: |
@@ -73,19 +72,15 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
           labels: |
-            org.opencontainers.image.title=Pangolin Sync
-            org.opencontainers.image.description=Alpine-based image with curl and jq for Pangolin reverse proxy synchronization
-            org.opencontainers.image.version=${{ steps.version.outputs.full_tag }}
+            org.opencontainers.image.title=AdGuard DNS Sync
+            org.opencontainers.image.description=Alpine-based image with curl and jq for AdGuard Home DNS rewrite synchronization
+            org.opencontainers.image.version=${{ steps.version.outputs.version }}
             org.opencontainers.image.created=${{ steps.version.outputs.build_date }}
             org.opencontainers.image.source=${{ github.repositoryUrl }}
 
       - name: Image digest
         run: |
-          echo "🎉 Successfully built and pushed multi-arch image:"
+          echo "Successfully built and pushed multi-arch image:"
           echo "   - ${{ env.IMAGE_NAME }}:latest"
           echo "   - ${{ env.IMAGE_NAME }}:${{ steps.version.outputs.version }}"
-          echo "   - ${{ env.IMAGE_NAME }}:${{ steps.version.outputs.short_sha }}"
-          echo "   - ${{ env.IMAGE_NAME }}:alpine${{ steps.version.outputs.alpine_version }}"
-          echo ""
           echo "Platforms: ${{ env.PLATFORMS }}"
-          echo "Alpine version: ${{ steps.version.outputs.alpine_version }}"

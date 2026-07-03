@@ -5,9 +5,8 @@ metadata:
   name: proxmox
   namespace: external-services
   annotations:
-    pangolin.io/expose: "true"
-    pangolin.io/subdomain: "pve"
-    pangolin.io/auth: "true"
+    homelab.io/expose: "internal"
+    homelab.io/host: "pve.elmstreet79.de"
 
 spec:
   type: ClusterIP

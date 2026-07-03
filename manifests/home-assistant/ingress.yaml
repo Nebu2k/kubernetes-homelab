@@ -4,9 +4,9 @@ metadata:
   name: home-assistant
   namespace: home-assistant
   annotations:
-    pangolin.io/expose: "true"
-    pangolin.io/auth: "false"
-    traefik.ingress.kubernetes.io/router.middlewares: home-assistant-real-ip@kubernetescrd
+    homelab.io/expose: "public"
+    traefik.ingress.kubernetes.io/router.entrypoints: "websecure"
+    traefik.ingress.kubernetes.io/router.tls: "true"
     gethomepage.dev/enabled: "true"
     gethomepage.dev/name: "Home Assistant"
     gethomepage.dev/description: "Smart Home Hub"

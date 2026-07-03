@@ -1,35 +1,51 @@
 #!/bin/sh
 # Cloudflare DNS A/AAAA Sync Script
-# Reads pangolin.io/expose annotations from Ingresses and Services,
-# creates/updates A and AAAA records in Cloudflare pointing to the Pangolin VPS.
+# Publishes PUBLIC services directly under the home connection's public IP.
+#
+# Reads `homelab.io/expose: public` from Ingresses and Services and creates/updates
+# A and AAAA records in Cloudflare pointing at the home public IP, which is resolved
+# at runtime from a DynDNS hostname (the router keeps that hostname up to date).
+#
+# Internal services are NOT published here — they are only reachable via VPN and get
+# their DNS from AdGuard (see adguard-sync).
 #
 # Environment variables (from SealedSecret):
 #   CF_API_TOKEN    - Cloudflare API token
 #   CF_ZONE_ID      - Cloudflare Zone ID
 #   CF_DOMAIN       - Base domain (e.g. elmstreet79.de)
-#   CF_IPV4         - A record target IP (Pangolin VPS)
-#   CF_IPV6         - AAAA record target IP (Pangolin VPS)
+#   DDNS_HOSTNAME   - DynDNS hostname tracking the home public IP (e.g. nebu2k.ipv64.net)
 
 set -e
 
 echo "═══════════════════════════════════════════════════════"
-echo "🌐 Cloudflare DNS Sync"
+echo "🌐 Cloudflare DNS Sync (public services → home IP)"
 echo "═══════════════════════════════════════════════════════"
-echo "   Zone: ${CF_ZONE_ID}"
-echo "   Domain: ${CF_DOMAIN}"
-echo "   A target: ${CF_IPV4}"
-echo "   AAAA target: ${CF_IPV6}"
-echo "═══════════════════════════════════════════════════════"
-echo ""
 
 # Validate required env vars
-for VAR in CF_API_TOKEN CF_ZONE_ID CF_DOMAIN CF_IPV4 CF_IPV6; do
+for VAR in CF_API_TOKEN CF_ZONE_ID CF_DOMAIN DDNS_HOSTNAME; do
   eval "VAL=\${${VAR}}"
   if [ -z "${VAL}" ]; then
     echo "❌ Missing required environment variable: ${VAR}"
     exit 1
   fi
 done
+
+# Resolve the home public IP from the DynDNS hostname (IPv4 + IPv6)
+CF_IPV4=$(dig +short A "${DDNS_HOSTNAME}" | grep -E '^[0-9]+\.' | head -n1)
+CF_IPV6=$(dig +short AAAA "${DDNS_HOSTNAME}" | grep -E '^[0-9a-fA-F:]+$' | head -n1)
+
+if [ -z "${CF_IPV4}" ] && [ -z "${CF_IPV6}" ]; then
+  echo "❌ Failed to resolve ${DDNS_HOSTNAME}, aborting"
+  exit 1
+fi
+
+echo "   Zone: ${CF_ZONE_ID}"
+echo "   Domain: ${CF_DOMAIN}"
+echo "   DynDNS: ${DDNS_HOSTNAME}"
+echo "   A target (home IPv4):  ${CF_IPV4:-none}"
+echo "   AAAA target (home IPv6): ${CF_IPV6:-none}"
+echo "═══════════════════════════════════════════════════════"
+echo ""
 
 # Get service account token for Kubernetes API
 TOKEN=$(cat /var/run/secrets/kubernetes.io/serviceaccount/token)
@@ -40,109 +56,86 @@ CF_API="https://api.cloudflare.com/client/v4"
 
 # Counter files for summary (also used for hosts list, subshell-safe)
 COUNTER_DIR=$(mktemp -d)
-echo "0" > "${COUNTER_DIR}/created"
 echo "0" > "${COUNTER_DIR}/updated"
 echo "0" > "${COUNTER_DIR}/skipped"
 echo "0" > "${COUNTER_DIR}/removed"
 
-# Helper: ensure A and AAAA records exist for a given hostname
+# Helper: upsert a single record type for a host. Skips when target IP is empty.
+# Returns 0 when a change was made, 1 when unchanged/skipped.
+upsert_record() {
+  TYPE="$1"   # A | AAAA
+  HOST="$2"
+  CONTENT="$3"
+
+  [ -z "${CONTENT}" ] && return 1
+
+  EXISTING=$(curl -s "${CF_API}/zones/${CF_ZONE_ID}/dns_records?name=${HOST}&type=${TYPE}" \
+    -H "Authorization: Bearer ${CF_API_TOKEN}" | jq -r '.result[0] // empty')
+  REC_ID=$(echo "${EXISTING}" | jq -r '.id // empty')
+  REC_CONTENT=$(echo "${EXISTING}" | jq -r '.content // empty')
+
+  BODY="{\"type\":\"${TYPE}\",\"name\":\"${HOST}\",\"content\":\"${CONTENT}\",\"ttl\":1,\"proxied\":false,\"comment\":\"managed-by: cloudflare-sync\"}"
+
+  if [ -n "${REC_ID}" ]; then
+    if [ "${REC_CONTENT}" = "${CONTENT}" ]; then
+      echo "    ✓ ${TYPE} ${HOST} → ${CONTENT} (unchanged)"
+      return 1
+    fi
+    curl -s -X PUT "${CF_API}/zones/${CF_ZONE_ID}/dns_records/${REC_ID}" \
+      -H "Authorization: Bearer ${CF_API_TOKEN}" -H "Content-Type: application/json" \
+      -d "${BODY}" > /dev/null
+    echo "    ✓ ${TYPE} ${HOST} → ${CONTENT} (updated)"
+    return 0
+  fi
+  curl -s -X POST "${CF_API}/zones/${CF_ZONE_ID}/dns_records" \
+    -H "Authorization: Bearer ${CF_API_TOKEN}" -H "Content-Type: application/json" \
+    -d "${BODY}" > /dev/null
+  echo "    ✓ ${TYPE} ${HOST} → ${CONTENT} (created)"
+  return 0
+}
+
 sync_records() {
-  local HOST="$1"
-  local SUBDOMAIN="$2"
-
-  # Fetch existing A and AAAA records for this name
-  local EXISTING_A=$(curl -s "${CF_API}/zones/${CF_ZONE_ID}/dns_records?name=${HOST}&type=A" \
-    -H "Authorization: Bearer ${CF_API_TOKEN}" | jq -r '.result[0] // empty')
-  local EXISTING_AAAA=$(curl -s "${CF_API}/zones/${CF_ZONE_ID}/dns_records?name=${HOST}&type=AAAA" \
-    -H "Authorization: Bearer ${CF_API_TOKEN}" | jq -r '.result[0] // empty')
-
-  local A_ID=$(echo "${EXISTING_A}" | jq -r '.id // empty')
-  local A_CONTENT=$(echo "${EXISTING_A}" | jq -r '.content // empty')
-  local AAAA_ID=$(echo "${EXISTING_AAAA}" | jq -r '.id // empty')
-  local AAAA_CONTENT=$(echo "${EXISTING_AAAA}" | jq -r '.content // empty')
-
-  local CHANGED=false
-
-  # --- A Record ---
-  if [ -n "${A_ID}" ]; then
-    if [ "${A_CONTENT}" = "${CF_IPV4}" ]; then
-      echo "    ✓ A ${HOST} → ${CF_IPV4} (unchanged)"
-    else
-      curl -s -X PUT "${CF_API}/zones/${CF_ZONE_ID}/dns_records/${A_ID}" \
-        -H "Authorization: Bearer ${CF_API_TOKEN}" \
-        -H "Content-Type: application/json" \
-        -d "{\"type\":\"A\",\"name\":\"${HOST}\",\"content\":\"${CF_IPV4}\",\"ttl\":1,\"proxied\":false,\"comment\":\"managed-by: cloudflare-sync\"}" > /dev/null
-      echo "    ✓ A ${HOST} → ${CF_IPV4} (updated)"
-      CHANGED=true
-    fi
-  else
-    curl -s -X POST "${CF_API}/zones/${CF_ZONE_ID}/dns_records" \
-      -H "Authorization: Bearer ${CF_API_TOKEN}" \
-      -H "Content-Type: application/json" \
-      -d "{\"type\":\"A\",\"name\":\"${HOST}\",\"content\":\"${CF_IPV4}\",\"ttl\":1,\"proxied\":false,\"comment\":\"managed-by: cloudflare-sync\"}" > /dev/null
-    echo "    ✓ A ${HOST} → ${CF_IPV4} (created)"
-    CHANGED=true
-  fi
-
-  # --- AAAA Record ---
-  if [ -n "${AAAA_ID}" ]; then
-    if [ "${AAAA_CONTENT}" = "${CF_IPV6}" ]; then
-      echo "    ✓ AAAA ${HOST} → ${CF_IPV6} (unchanged)"
-    else
-      curl -s -X PUT "${CF_API}/zones/${CF_ZONE_ID}/dns_records/${AAAA_ID}" \
-        -H "Authorization: Bearer ${CF_API_TOKEN}" \
-        -H "Content-Type: application/json" \
-        -d "{\"type\":\"AAAA\",\"name\":\"${HOST}\",\"content\":\"${CF_IPV6}\",\"ttl\":1,\"proxied\":false,\"comment\":\"managed-by: cloudflare-sync\"}" > /dev/null
-      echo "    ✓ AAAA ${HOST} → ${CF_IPV6} (updated)"
-      CHANGED=true
-    fi
-  else
-    curl -s -X POST "${CF_API}/zones/${CF_ZONE_ID}/dns_records" \
-      -H "Authorization: Bearer ${CF_API_TOKEN}" \
-      -H "Content-Type: application/json" \
-      -d "{\"type\":\"AAAA\",\"name\":\"${HOST}\",\"content\":\"${CF_IPV6}\",\"ttl\":1,\"proxied\":false,\"comment\":\"managed-by: cloudflare-sync\"}" > /dev/null
-    echo "    ✓ AAAA ${HOST} → ${CF_IPV6} (created)"
-    CHANGED=true
-  fi
-
-  if [ "${CHANGED}" = "true" ]; then
+  HOST="$1"
+  CHANGED=1
+  upsert_record "A" "${HOST}" "${CF_IPV4}" && CHANGED=0
+  upsert_record "AAAA" "${HOST}" "${CF_IPV6}" && CHANGED=0
+  if [ "${CHANGED}" = "0" ]; then
     echo "$(($(cat "${COUNTER_DIR}/updated") + 1))" > "${COUNTER_DIR}/updated"
   else
     echo "$(($(cat "${COUNTER_DIR}/skipped") + 1))" > "${COUNTER_DIR}/skipped"
   fi
 }
 
-# --- Fetch Ingresses with pangolin.io/expose ---
-echo "📡 Fetching Ingresses with pangolin.io/expose annotation..."
+# --- Fetch Ingresses with homelab.io/expose=public ---
+echo "📡 Fetching Ingresses with homelab.io/expose=public ..."
 ALL_INGRESSES=$(curl -s --cacert "${CA}" -H "Authorization: Bearer ${TOKEN}" \
   "${K8S_API}/apis/networking.k8s.io/v1/ingresses")
 
 INGRESS_HOSTS=$(echo "${ALL_INGRESSES}" | jq -r '
   .items[] |
-  select(.metadata.annotations["pangolin.io/expose"] == "true") |
+  select(.metadata.annotations["homelab.io/expose"] == "public") |
   .spec.rules[].host
 ' 2>/dev/null || echo "")
 
-# --- Fetch Services with pangolin.io/expose ---
-echo "📡 Fetching Services with pangolin.io/expose annotation..."
+# --- Fetch Services with homelab.io/expose=public and an explicit homelab.io/host ---
+echo "📡 Fetching Services with homelab.io/expose=public ..."
 ALL_SERVICES=$(curl -s --cacert "${CA}" -H "Authorization: Bearer ${TOKEN}" \
   "${K8S_API}/api/v1/services")
 
-SERVICE_HOSTS=$(echo "${ALL_SERVICES}" | jq -r --arg domain "${CF_DOMAIN}" '
+SERVICE_HOSTS=$(echo "${ALL_SERVICES}" | jq -r '
   .items[] |
-  select(.metadata.annotations["pangolin.io/expose"] == "true") |
-  select(.metadata.annotations["pangolin.io/subdomain"] != null) |
-  .metadata.annotations["pangolin.io/subdomain"] + "." + $domain
+  select(.metadata.annotations["homelab.io/expose"] == "public") |
+  select(.metadata.annotations["homelab.io/host"] != null) |
+  .metadata.annotations["homelab.io/host"]
 ' 2>/dev/null || echo "")
 
 # --- Merge and deduplicate ---
 HOSTS=$(printf "%s\n%s\n" "${INGRESS_HOSTS}" "${SERVICE_HOSTS}" | grep -v '^$' | grep -v '^null$' | sort -u)
 
-HOST_COUNT=$(echo "${HOSTS}" | wc -l | tr -d ' ')
-echo "✓ Found ${HOST_COUNT} unique hosts to sync"
+HOST_COUNT=$(echo "${HOSTS}" | grep -c . || echo 0)
+echo "✓ Found ${HOST_COUNT} public hosts to sync"
 echo ""
 
-# --- Sync each host ---
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo "📤 Syncing DNS records..."
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
@@ -151,25 +144,21 @@ printf "%s\n" "${HOSTS}" > "${COUNTER_DIR}/desired_hosts"
 
 echo "${HOSTS}" | while IFS= read -r HOST; do
   [ -z "${HOST}" ] && continue
-  # Extract subdomain from host (strip .elmstreet79.de)
-  SUBDOMAIN=$(echo "${HOST}" | sed "s/\.${CF_DOMAIN}$//")
   echo "  ${HOST}..."
-  sync_records "${HOST}" "${SUBDOMAIN}"
+  sync_records "${HOST}"
 done
 
-# --- Remove stale records (A/AAAA pointing to our IPs but no longer in desired hosts) ---
+# --- Remove stale records (managed by us but no longer desired) ---
 echo ""
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo "🗑️  Checking for stale records..."
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
-# Fetch all A and AAAA records with our managed comment (paginated: up to 1000)
 CF_ALL_A=$(curl -s "${CF_API}/zones/${CF_ZONE_ID}/dns_records?type=A&per_page=1000&comment=managed-by%3A+cloudflare-sync" \
   -H "Authorization: Bearer ${CF_API_TOKEN}")
 CF_ALL_AAAA=$(curl -s "${CF_API}/zones/${CF_ZONE_ID}/dns_records?type=AAAA&per_page=1000&comment=managed-by%3A+cloudflare-sync" \
   -H "Authorization: Bearer ${CF_API_TOKEN}")
 
-# Output as "id name"
 MANAGED_RECORDS=$(echo "${CF_ALL_A}" | jq -r '.result[] | "\(.id) \(.name)"'; \
   echo "${CF_ALL_AAAA}" | jq -r '.result[] | "\(.id) \(.name)"')
 
@@ -187,19 +176,10 @@ echo "${MANAGED_RECORDS}" | while IFS= read -r LINE; do
 done
 
 # --- Summary ---
-SKIPPED=$(cat "${COUNTER_DIR}/skipped")
-UPDATED=$(cat "${COUNTER_DIR}/updated")
-REMOVED=$(cat "${COUNTER_DIR}/removed")
-
 echo ""
 echo "═══════════════════════════════════════════════════════"
 echo "📊 DNS Sync Summary"
 echo "═══════════════════════════════════════════════════════"
-echo "   ✓ Skipped (unchanged):  ${SKIPPED}"
-echo "   🔄 Updated/Created:     ${UPDATED}"
-echo "   🗑️  Removed (stale):     ${REMOVED}"
-echo "═══════════════════════════════════════════════════════"
-echo "✅ Cloudflare DNS sync complete!"
-echo ""
-
-rm -rf "${COUNTER_DIR}"
+echo "   ✓ Skipped (unchanged):  $(cat "${COUNTER_DIR}/skipped")"
+echo "   🔄 Updated/Created:     $(cat "${COUNTER_DIR}/updated")"
+echo "   🗑️  Removed (stale):     $(cat "${COUNTER_DIR}/removed")"

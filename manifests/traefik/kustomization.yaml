@@ -3,3 +3,5 @@ kind: Kustomization
 namespace: traefik
 resources:
   - dashboard-service.yaml
+  - wildcard-certificate.yaml
+  - tls-store.yaml

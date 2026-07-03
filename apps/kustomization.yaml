@@ -6,6 +6,7 @@ resources:
   - kured.yaml
   - coredns-config.yaml
   - metallb.yaml
+  - cert-manager.yaml
   - traefik.yaml
   - nfs-storage.yaml
   - longhorn.yaml
@@ -24,8 +25,8 @@ resources:
   - beszel.yaml
   - fr24.yaml
   - paperless-ngx.yaml
-  - newt.yaml
-  - pangolin-sync.yaml
   - cloudflare-sync.yaml
+  - adguard-sync.yaml
+  - wireguard.yaml
   - ripe-atlas.yaml
 

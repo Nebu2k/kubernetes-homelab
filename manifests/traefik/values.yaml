@@ -54,6 +54,10 @@ ports:
     exposedPort: 80
     expose:
       default: true
+    # Redirect all plain HTTP to HTTPS
+    redirectTo:
+      port: websecure
+      priority: 10
   websecure:
     port: 443
     exposedPort: 443

@@ -1,0 +1,19 @@
+---
+# Wildcard certificate for *.elmstreet79.de, issued via DNS-01 (Cloudflare).
+# Used as Traefik's default certificate (see tls-store.yaml), so every Ingress
+# served on the websecure entrypoint gets a valid certificate without needing
+# its own spec.tls block.
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: wildcard-elmstreet79
+  namespace: traefik
+spec:
+  secretName: wildcard-elmstreet79-tls
+  issuerRef:
+    name: letsencrypt-prod
+    kind: ClusterIssuer
+  commonName: "*.elmstreet79.de"
+  dnsNames:
+    - "elmstreet79.de"
+    - "*.elmstreet79.de"

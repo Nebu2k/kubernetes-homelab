@@ -21,13 +21,13 @@ Production-ready K3s cluster managed via GitOps using ArgoCD App-of-Apps pattern
 |------|-----------|
 | 0 | Sealed Secrets, Coredns Config |
 | 1 | Reloader, Kured, Metallb |
-| 2 | Cloudflare Sync, Pangolin Sync |
+| 2 | Cert-Manager, Cloudflare Sync, Adguard Sync |
 | 3 | Traefik |
 | 4 | Longhorn |
 | 5 | Landing Page, Portainer, Teslamate, Nfs Storage |
 | 6 | Kube Prometheus Stack |
 | 7 | Unifi Poller, Home Assistant |
-| 8 | Uptime Kuma, Newt |
+| 8 | Uptime Kuma, WireGuard |
 | 9 | Free Games Claimer, N8n, Paperless Ngx, Homepage |
 | 10 | Beszel |
 | 11 | Proxmox Exporter |
@@ -48,8 +48,9 @@ homelab/
 │   ├── kured.yaml                     # Wave 1
 │   ├── metallb.yaml                   # Wave 1
 │   ├── reloader.yaml                  # Wave 1
+│   ├── cert-manager.yaml             # Wave 2
 │   ├── cloudflare-sync.yaml           # Wave 2
-│   ├── pangolin-sync.yaml             # Wave 2
+│   ├── adguard-sync.yaml             # Wave 2
 │   ├── traefik.yaml                   # Wave 3
 │   ├── longhorn.yaml                  # Wave 4
 │   ├── landing-page.yaml              # Wave 5
@@ -59,7 +60,7 @@ homelab/
 │   ├── kube-prometheus-stack.yaml     # Wave 6
 │   ├── home-assistant.yaml            # Wave 7
 │   ├── unifi-poller.yaml              # Wave 7
-│   ├── newt.yaml                      # Wave 8
+│   ├── wireguard.yaml                 # Wave 8
 │   ├── uptime-kuma.yaml               # Wave 8
 │   ├── free-games-claimer.yaml        # Wave 9
 │   ├── homepage.yaml                  # Wave 9
@@ -71,6 +72,13 @@ homelab/
 │   ├── fr24.yaml                      # Wave 15
 │   └── external-services.yaml         # Wave 16
 └── manifests/
+    ├── adguard-sync/
+    │   ├── Dockerfile.adguard-sync
+    │   ├── adguard-sync-credentials-sealed.yaml
+    │   ├── adguard-sync-job.yaml
+    │   ├── adguard-sync-rbac.yaml
+    │   ├── kustomization.yaml
+    │   └── sync-adguard.sh
     ├── argocd/
     │   ├── argocd-cm-patch.yaml
     │   ├── argocd-rbac-cm-patch.yaml
@@ -87,11 +95,18 @@ homelab/
     │   ├── secret-sealed.yaml
     │   ├── secret-unsealed.yaml.example
     │   └── service.yaml
+    ├── cert-manager/
+    │   ├── cloudflare-api-token-sealed.yaml
+    │   ├── cluster-issuer.yaml
+    │   ├── kustomization.yaml
+    │   └── values.yaml
     ├── cloudflare-sync/
+    │   ├── Dockerfile.cloudflare-sync
     │   ├── cloudflare-sync-credentials-sealed.yaml
     │   ├── cloudflare-sync-job.yaml
     │   ├── cloudflare-sync-rbac.yaml
-    │   └── kustomization.yaml
+    │   ├── kustomization.yaml
+    │   └── sync-cloudflare.sh
     ├── coredns/
     │   ├── coredns-custom.yaml
     │   └── kustomization.yaml
@@ -105,12 +120,15 @@ homelab/
     │   ├── adguardhome-sync-web-ingress.yaml
     │   ├── dreambox-service.yaml
     │   ├── glances-macmini-service.yaml
+    │   ├── ingresses-http.yaml
+    │   ├── ingressroutes-https.yaml
     │   ├── kustomization.yaml
     │   ├── minio-api-service.yaml
     │   ├── minio-service.yaml
     │   ├── nextcloud-service.yaml
     │   ├── plex-service.yaml
     │   ├── proxmox-service.yaml
+    │   ├── servers-transport.yaml
     │   ├── unifi-nas-service.yaml
     │   ├── unifi-service.yaml
     │   └── vscode-service.yaml
@@ -134,7 +152,6 @@ homelab/
     │   ├── ingress.yaml
     │   ├── kustomization.yaml
     │   ├── matter-pvc.yaml
-    │   ├── middleware-real-ip.yaml
     │   ├── namespace.yaml
     │   ├── pvc.yaml
     │   └── service.yaml
@@ -210,19 +227,8 @@ homelab/
     │   ├── postgresql-statefulset.yaml
     │   ├── pvc.yaml
     │   └── service.yaml
-    ├── newt/
-    │   ├── kustomization.yaml
-    │   ├── newt-auth-sealed.yaml
-    │   ├── newt-auth-unsealed.yaml.example
-    │   └── values.yaml
     ├── nfs-subdir-external-provisioner/
     │   └── values.yaml
-    ├── pangolin-sync/
-    │   ├── kustomization.yaml
-    │   ├── pangolin-api-credentials-sealed.yaml
-    │   ├── pangolin-api-credentials-unsealed.yaml.example
-    │   ├── pangolin-sync-job.yaml
-    │   └── pangolin-sync-rbac.yaml
     ├── paperless-ngx/
     │   ├── backup-cronjob.yaml
     │   ├── db-pvc.yaml
@@ -276,7 +282,9 @@ homelab/
     ├── traefik/
     │   ├── dashboard-service.yaml
     │   ├── kustomization.yaml
-    │   └── values.yaml
+    │   ├── tls-store.yaml
+    │   ├── values.yaml
+    │   └── wildcard-certificate.yaml
     ├── unifi-poller/
     │   ├── deployment.yaml
     │   ├── kustomization.yaml
@@ -284,13 +292,20 @@ homelab/
     │   ├── servicemonitor.yaml
     │   ├── unifi-config-sealed.yaml
     │   └── unifi-config-unsealed.yaml.example
-    └── uptime-kuma/
+    ├── uptime-kuma/
+    │   ├── deployment.yaml
+    │   ├── ingress.yaml
+    │   ├── kustomization.yaml
+    │   ├── namespace.yaml
+    │   ├── pvc.yaml
+    │   └── service.yaml
+    └── wireguard/
         ├── deployment.yaml
         ├── ingress.yaml
         ├── kustomization.yaml
-        ├── namespace.yaml
         ├── pvc.yaml
-        └── service.yaml
+        ├── service.yaml
+        └── wireguard-credentials-sealed.yaml
 ```
 
 ## 🚀 Fresh Installation
@@ -298,8 +313,9 @@ homelab/
 ### Prerequisites
 
 - 2+ nodes
-- Domain (any DNS provider)
-- Pangolin API credentials (for SSL/TLS certificates)
+- Domain on Cloudflare + API token (DNS edit) — used for DNS records and cert-manager DNS-01
+- DynDNS hostname tracking the home public IP (e.g. ipv64.net)
+- Router able to forward TCP 80/443 (Traefik) and UDP 51820 (WireGuard)
 - S3-compatible storage for Longhorn backups (optional)
 
 ### Step 1: Install K3s Cluster (**on raspi4**)
@@ -535,19 +551,24 @@ cd kubernetes-homelab
    # Change: 192.168.2.250-192.168.2.253
    ```
 
-2. **Pangolin API Credentials** (required):
+2. **Cloudflare credentials** (required for DNS + certificates):
 
    ```bash
-   # Create from example
-   cp manifests/pangolin-sync/pangolin-api-credentials-unsealed.yaml.example \
-      manifests/pangolin-sync/pangolin-api-credentials-unsealed.yaml
-   
-   # Add your Pangolin API credentials
-   vim manifests/pangolin-sync/pangolin-api-credentials-unsealed.yaml
-   # Update: API_KEY, ORG_ID, SITE_ID, DOMAIN_ID, DOMAIN_SUFFIX
-   
+   # cloudflare-sync: public DNS records → home IP
+   vim manifests/cloudflare-sync/cloudflare-sync-credentials-unsealed.yaml
+   # Update: CF_API_TOKEN, CF_ZONE_ID, CF_DOMAIN, DDNS_HOSTNAME
+
+   # cert-manager: same Cloudflare token for DNS-01 (wildcard cert)
+   vim manifests/cert-manager/cloudflare-api-token-unsealed.yaml
+
+   # adguard-sync: AdGuard primary creds + Traefik LB IP target
+   vim manifests/adguard-sync/adguard-sync-credentials-unsealed.yaml
+
+   # wireguard: set the wg-easy UI password hash
+   vim manifests/wireguard/wireguard-credentials-unsealed.yaml
+
    # Note: Sealing happens AFTER cluster bootstrap (Step 7+)
-   # For now, keep it unsealed locally (gitignored)
+   # For now, keep them unsealed locally (gitignored)
    ```
 
 3. **Longhorn S3 Backup** (optional):
@@ -598,7 +619,7 @@ kubectl get applications -n argocd -w
 **What happens:**
 
 - Sealed Secrets Controller installs first (Sync-Wave 0)
-- MetalLB, Pangolin, Traefik, etc. follow in order
+- MetalLB, cert-manager, Traefik, etc. follow in order
 - Some apps will stay "Progressing" until secrets are sealed (next step)
 
 ### Step 7.5: Seal Secrets (**on your laptop** - AFTER Step 7)
@@ -619,10 +640,12 @@ This allows you to seal secrets even when not connected to the cluster:
 # Download the public certificate (one-time setup)
 kubeseal --fetch-cert --controller-namespace=kube-system > sealed-secrets-pub-cert.pem
 
-# Seal Pangolin API credentials
-kubeseal --cert sealed-secrets-pub-cert.pem --format=yaml \
-  < manifests/pangolin-sync/pangolin-api-credentials-unsealed.yaml \
-  > manifests/pangolin-sync/pangolin-api-credentials-sealed.yaml
+# Seal the core credentials (Cloudflare, AdGuard, WireGuard)
+for f in cloudflare-sync/cloudflare-sync-credentials cert-manager/cloudflare-api-token \
+         adguard-sync/adguard-sync-credentials wireguard/wireguard-credentials; do
+  kubeseal --cert sealed-secrets-pub-cert.pem --format=yaml \
+    < "manifests/${f}-unsealed.yaml" > "manifests/${f}-sealed.yaml"
+done
 
 # If using Longhorn S3 backup:
 kubeseal --cert sealed-secrets-pub-cert.pem --format=yaml \
@@ -633,10 +656,12 @@ kubeseal --cert sealed-secrets-pub-cert.pem --format=yaml \
 **Option B: Seal directly from cluster** (requires cluster access):
 
 ```bash
-# Seal Pangolin API credentials
-kubeseal --format=yaml --controller-namespace=kube-system \
-  < manifests/pangolin-sync/pangolin-api-credentials-unsealed.yaml \
-  > manifests/pangolin-sync/pangolin-api-credentials-sealed.yaml
+# Seal the core credentials (Cloudflare, AdGuard, WireGuard)
+for f in cloudflare-sync/cloudflare-sync-credentials cert-manager/cloudflare-api-token \
+         adguard-sync/adguard-sync-credentials wireguard/wireguard-credentials; do
+  kubeseal --format=yaml --controller-namespace=kube-system \
+    < "manifests/${f}-unsealed.yaml" > "manifests/${f}-sealed.yaml"
+done
 
 # If using Longhorn S3 backup:
 kubeseal --format=yaml --controller-namespace=kube-system \
@@ -808,10 +833,11 @@ kubectl get ingress -A
 
 ### Step 9: Access UIs (**from your laptop browser**)
 
-⚠️ **All Services**: Services annotated with `pangolin.io/expose: "true"` are automatically registered in Pangolin for external HTTPS access with SSL certificates!
+⚠️ **Exposure model**: Services are annotated with `homelab.io/expose`:
 
-- **With Authentication**: Services with `pangolin.io/auth: "true"` require Pangolin authentication
-- **Without Authentication**: Services without auth annotation are directly accessible from the internet
+- `homelab.io/expose: "public"` → published in public DNS (Cloudflare A/AAAA → home IP) and reachable directly from the internet via Traefik. Only the app's own login applies (no extra SSO layer).
+- `homelab.io/expose: "internal"` → **no** public DNS; reachable **only over the WireGuard VPN** (split-horizon DNS via AdGuard → Traefik).
+- TLS for both is a wildcard Let's Encrypt certificate (`*.elmstreet79.de`) issued by cert-manager via DNS-01 and served as Traefik's default certificate.
 
 **ArgoCD:**
 
@@ -848,7 +874,7 @@ kubectl delete pod -n portainer -l app.kubernetes.io/name=portainer
 
 ```text
 URL: https://longhorn.elmstreet79.de
-(via Pangolin)
+(internal — VPN only)
 ```
 
 **Homepage (Homelab Dashboard):**
@@ -869,60 +895,50 @@ URL: https://uptime.elmstreet79.de
 
 **Service Access Architecture:**
 
-All services are accessible via Pangolin's secure network infrastructure:
+Two sync jobs keep DNS in sync (the same "sync the IP" approach as before, just split):
 
-**Pangolin-Exposed Services:**
+- **cloudflare-sync** (PostSync hook + CronJob): reads `homelab.io/expose: "public"` and writes Cloudflare A/AAAA records pointing at the **home public IP** (resolved at runtime from the DynDNS hostname `nebu2k.ipv64.net`). The router forwards TCP 80/443 to Traefik (192.168.2.250).
+- **adguard-sync** (PostSync hook + CronJob): reads **all** exposed hosts (public + internal) and creates AdGuard DNS rewrites `host → 192.168.2.250` on the AdGuard primary (replicated to the others by adguardhome-sync). LAN and VPN clients therefore reach every service via the internal Traefik IP (no NAT hairpin); internal hosts exist **only** here.
+- **WireGuard** (wg-easy, MetalLB UDP 192.168.2.251:51820): the only way in for internal services. Clients get AdGuard as DNS, so internal hostnames resolve over the tunnel.
 
-- **Filter Logic**: Ingresses/Services WITH `pangolin.io/expose: "true"` annotation
-- **Access**: Publicly accessible from the internet with automatic SSL/TLS certificates
-- **Authentication**:
-  - `pangolin.io/auth: "true"` → Requires Pangolin authentication (secure, private access)
-  - `pangolin.io/auth: "false"` or no auth annotation → Directly accessible without authentication
-
-**Pangolin Sync Automation:**
-
-- **PostSync Hook**: Runs automatically after every ArgoCD sync
-- **CronJob**: Fallback every 5 minutes
-- **Pangolin API**: Registers resources in Pangolin network for secure external access
-- **Auto-Cleanup**: Removes orphaned resources when Ingresses/Services are deleted
-- **SSL/TLS**: Pangolin provides automatic SSL certificates for all exposed services
-
-**All Pangolin-Exposed Services:**
+**Public services** (internet, app login only):
 
 ```text
-# Services with Pangolin authentication required (pangolin.io/auth: "true"):
-AdGuard Sync (k8s): https://adguardhome-sync-web.elmstreet79.de
-Adguard Macmini: https://adguard-macmini.elmstreet79.de
-Adguard Pve: https://adguard.elmstreet79.de
-AlertManager: https://alertmanager.elmstreet79.de
-ArgoCD: https://argocd.elmstreet79.de
-Beszel Hub: https://beszel.elmstreet79.de
-FlightRadar24: https://fr24.elmstreet79.de
-Glances Macmini: https://glances-macmini.elmstreet79.de
-Grafana: https://grafana.elmstreet79.de
-Homepage: https://home.elmstreet79.de
-Longhorn: https://longhorn.elmstreet79.de
-Minio: https://minio.elmstreet79.de
-Minio Api: https://minio-api.elmstreet79.de
-Paperless-ngx: https://paperless.elmstreet79.de
-Prometheus: https://prometheus.elmstreet79.de
-Proxmox: https://pve.elmstreet79.de
-TeslaMate Settings: https://teslamate-settings.elmstreet79.de
-Traefik Dashboard: https://traefik.elmstreet79.de
-Unifi: https://unifi.elmstreet79.de
-Unifi Nas: https://nas.elmstreet79.de
-Uptime Kuma: https://uptime.elmstreet79.de
-Vscode: https://vscode.elmstreet79.de
-n8n: https://n8n.elmstreet79.de
-
-# Services publicly accessible without authentication (pangolin.io/auth: "false"):
-Dreambox: https://dreambox.elmstreet79.de
-Home Assistant: https://homeassistant.elmstreet79.de
-Landing Page: https://www.elmstreet79.de
-Nextcloud Aio: https://nextcloud.elmstreet79.de
-Plex: https://plex.elmstreet79.de
+Dreambox:          https://dreambox.elmstreet79.de
+Home Assistant:    https://homeassistant.elmstreet79.de
+Landing Page:      https://www.elmstreet79.de
+Nextcloud AIO:     https://nextcloud.elmstreet79.de
+Plex:              https://plex.elmstreet79.de
 TeslaMate Grafana: https://teslamate.elmstreet79.de
+```
 
+**Internal services** (VPN-only):
+
+```text
+AdGuard Sync (k8s):  https://adguardhome-sync-web.elmstreet79.de
+Adguard Macmini:     https://adguard-macmini.elmstreet79.de
+Adguard Pve:         https://adguard.elmstreet79.de
+AlertManager:        https://alertmanager.elmstreet79.de
+ArgoCD:              https://argocd.elmstreet79.de
+Beszel Hub:          https://beszel.elmstreet79.de
+FlightRadar24:       https://fr24.elmstreet79.de
+Glances Macmini:     https://glances-macmini.elmstreet79.de
+Grafana:             https://grafana.elmstreet79.de
+Homepage:            https://home.elmstreet79.de
+Longhorn:            https://longhorn.elmstreet79.de
+Minio:               https://minio.elmstreet79.de
+Minio Api:           https://minio-api.elmstreet79.de
+Paperless-ngx:       https://paperless.elmstreet79.de
+Prometheus:          https://prometheus.elmstreet79.de
+Proxmox:             https://pve.elmstreet79.de
+TeslaMate Settings:  https://teslamate-settings.elmstreet79.de
+Traefik Dashboard:   https://traefik.elmstreet79.de
+Unifi:               https://unifi.elmstreet79.de
+Unifi Nas:           https://nas.elmstreet79.de
+Uptime Kuma:         https://uptime.elmstreet79.de
+Vscode:              https://vscode.elmstreet79.de
+WireGuard:           https://wireguard.elmstreet79.de
+n8n:                 https://n8n.elmstreet79.de
 ```
 
 ## 🔧 Management
@@ -960,16 +976,16 @@ kubectl get application traefik -n argocd -w
 
 ```bash
 # 1. Edit unsealed secret
-vim manifests/pangolin-sync/pangolin-api-credentials-unsealed.yaml
+vim manifests/cloudflare-sync/cloudflare-sync-credentials-unsealed.yaml
 
 # 2. Re-seal (using offline certificate)
 kubeseal --cert sealed-secrets-pub-cert.pem --format=yaml \
-  < manifests/pangolin-sync/pangolin-api-credentials-unsealed.yaml \
-  > manifests/pangolin-sync/pangolin-api-credentials-sealed.yaml
+  < manifests/cloudflare-sync/cloudflare-sync-credentials-unsealed.yaml \
+  > manifests/cloudflare-sync/cloudflare-sync-credentials-sealed.yaml
 
 # 3. Commit and push
-git add manifests/pangolin-sync/pangolin-api-credentials-sealed.yaml
-git commit -m "Rotate Pangolin API credentials"
+git add manifests/cloudflare-sync/cloudflare-sync-credentials-sealed.yaml
+git commit -m "Rotate Cloudflare sync credentials"
 git push
 ```
 
@@ -978,8 +994,8 @@ git push
 ```bash
 # Re-seal (requires cluster connection)
 kubeseal --format=yaml --controller-namespace=kube-system \
-  < manifests/pangolin-sync/pangolin-api-credentials-unsealed.yaml \
-  > manifests/pangolin-sync/pangolin-api-credentials-sealed.yaml
+  < manifests/cloudflare-sync/cloudflare-sync-credentials-unsealed.yaml \
+  > manifests/cloudflare-sync/cloudflare-sync-credentials-sealed.yaml
 ```
 
 ### Force Sync Application
@@ -1105,7 +1121,8 @@ kubectl get secret -n monitoring grafana-admin-credentials \
 | Uptime Kuma | 2.0.2 | Uptime Kuma |
 | Traefik | 38.0.2 | Traefik |
 | Fr24 | latest-build-825 | Fr24 |
-| Newt | 1.1.0 | Newt |
+| Cert-Manager | v1.16.2 | TLS certificates (Let's Encrypt DNS-01) |
+| WireGuard | wg-easy:14 | VPN gateway for internal services |
 | Teslamate | 2.2.0 | Teslamate |
 | Home Assistant | 2026.1.2 | Home Assistant |
 | Nfs Subdir External Provisioner | 4.0.18 | Nfs Storage |
@@ -1125,9 +1142,10 @@ kubectl get secret -n monitoring grafana-admin-credentials \
 - [Landing Page](https://github.com/nginx/nginx)
 - [Longhorn](https://charts.longhorn.io)
 - [Metallb](https://metallb.github.io/metallb)
+- [cert-manager](https://cert-manager.io/docs/)
 - [n8n](https://docs.n8n.io/)
-- [Newt](https://charts.fossorial.io)
 - [NFS Subdir External Provisioner](https://kubernetes-sigs.github.io/nfs-subdir-external-provisioner)
+- [wg-easy](https://github.com/wg-easy/wg-easy)
 - [Portainer](https://portainer.github.io/k8s)
 - [Proxmox Exporter](https://github.com/prometheus-pve/prometheus-pve-exporter)
 - [Reloader](https://stakater.github.io/stakater-charts)

@@ -1,29 +1,28 @@
+---
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: paperless-ngx
-  namespace: paperless-ngx
+  name: wireguard
+  namespace: wireguard
   annotations:
     homelab.io/expose: "internal"
     traefik.ingress.kubernetes.io/router.entrypoints: "websecure"
     traefik.ingress.kubernetes.io/router.tls: "true"
     gethomepage.dev/enabled: "true"
-    gethomepage.dev/name: "Paperless-ngx"
-    gethomepage.dev/description: "Document Management"
-    gethomepage.dev/group: "Applications"
-    gethomepage.dev/icon: "paperless-ngx.png"
-    gethomepage.dev/weight: "60"
-    gethomepage.dev/pod-selector: "app=paperless-ngx"
+    gethomepage.dev/name: "WireGuard"
+    gethomepage.dev/description: "VPN Gateway"
+    gethomepage.dev/group: "Management"
+    gethomepage.dev/icon: "wireguard.png"
 spec:
   ingressClassName: traefik
   rules:
-    - host: paperless.elmstreet79.de
+    - host: wireguard.elmstreet79.de
       http:
         paths:
           - path: /
             pathType: Prefix
             backend:
               service:
-                name: paperless-ngx
+                name: wireguard-ui
                 port:
-                  number: 80
+                  number: 51821

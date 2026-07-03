@@ -6,8 +6,9 @@ metadata:
   labels:
     app: beszel-hub
   annotations:
-    pangolin.io/expose: "true"
-    pangolin.io/auth: "true"
+    homelab.io/expose: "internal"
+    traefik.ingress.kubernetes.io/router.entrypoints: "websecure"
+    traefik.ingress.kubernetes.io/router.tls: "true"
 spec:
   ingressClassName: traefik
   rules:

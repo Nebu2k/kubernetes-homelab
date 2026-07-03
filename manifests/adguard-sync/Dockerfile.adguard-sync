@@ -1,0 +1,12 @@
+FROM alpine:3.23
+
+RUN apk add --no-cache --no-progress \
+    curl \
+    jq
+
+COPY sync-adguard.sh /usr/local/bin/sync-adguard.sh
+RUN chmod +x /usr/local/bin/sync-adguard.sh
+
+USER nobody
+
+ENTRYPOINT ["/usr/local/bin/sync-adguard.sh"]
