@@ -1,3 +1,10 @@
+# [4.20.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.19.0...v4.20.0) (2026-07-06)
+
+
+### Features
+
+* **test:** add initial test file ([59643c1](https://github.com/Nebu2k/kubernetes-homelab/commit/59643c143a1d976e1853b82a703db87d39c7dbab))
+
 # [4.19.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.18.5...v4.19.0) (2026-05-06)
 
 
