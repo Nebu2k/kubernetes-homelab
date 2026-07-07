@@ -1131,7 +1131,7 @@ kubectl get secret -n monitoring grafana-admin-credentials \
 - [Portainer](https://portainer.github.io/k8s)
 - [Proxmox Exporter](https://github.com/prometheus-pve/prometheus-pve-exporter)
 - [Reloader](https://stakater.github.io/stakater-charts)
-- [Sealed Secrets](https://bitnami-labs.github.io/sealed-secrets)
+- [Sealed Secrets](https://bitnami.github.io/sealed-secrets)
 - [Teslamate](https://docs.teslamate.org/)
 - [Traefik](https://traefik.github.io/charts)
 - [Unifi Poller](https://unpoller.com/)
