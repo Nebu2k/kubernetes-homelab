@@ -1,3 +1,10 @@
+## [4.20.2](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.20.1...v4.20.2) (2026-07-07)
+
+
+### Bug Fixes
+
+* **sealed-secrets:** update repoURL to correct GitHub repository ([3e5da01](https://github.com/Nebu2k/kubernetes-homelab/commit/3e5da01fdbfacf4eb9f99219a5e929825ccb5ec4))
+
 ## [4.20.1](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.20.0...v4.20.1) (2026-07-07)
 
 
