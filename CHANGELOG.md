@@ -1,3 +1,10 @@
+## [4.20.3](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.20.2...v4.20.3) (2026-07-07)
+
+
+### Bug Fixes
+
+* **sealed-secrets:** update targetRevision to 2.18.6 ([ed83ebd](https://github.com/Nebu2k/kubernetes-homelab/commit/ed83ebd3c07214ec00ba0538f19093cc9fdb0711))
+
 ## [4.20.2](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.20.1...v4.20.2) (2026-07-07)
 
 
