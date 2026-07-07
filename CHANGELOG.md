@@ -1,3 +1,10 @@
+## [4.20.4](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.20.3...v4.20.4) (2026-07-07)
+
+
+### Bug Fixes
+
+* **sealed-secrets:** update chart repoURL after bitnami-labs org move ([6e40b05](https://github.com/Nebu2k/kubernetes-homelab/commit/6e40b0523c01664f3294ac1eeff497573dce5133))
+
 ## [4.20.3](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.20.2...v4.20.3) (2026-07-07)
 
 
