@@ -1,3 +1,10 @@
+# [4.21.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.20.4...v4.21.0) (2026-07-11)
+
+
+### Features
+
+* **homepage:** remove nextcloud from homepage and landing page ([263852d](https://github.com/Nebu2k/kubernetes-homelab/commit/263852d19c5329d48844dfc2fd44f46946b640ca))
+
 ## [4.20.4](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.20.3...v4.20.4) (2026-07-07)
 
 
