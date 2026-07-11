@@ -55,11 +55,6 @@ data:
                         <h3>TeslaMate</h3>
                         <p>Tesla Analytics</p>
                     </a>
-                    <a href="https://nextcloud.elmstreet79.de" class="service-card" target="_blank">
-                        <div class="icon">☁️</div>
-                        <h3>Nextcloud</h3>
-                        <p>Cloud Storage</p>
-                    </a>
                     <a href="https://dreambox.elmstreet79.de" class="service-card" target="_blank">
                         <div class="icon">📺</div>
                         <h3>Dreambox</h3>

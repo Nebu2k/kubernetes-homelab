@@ -154,8 +154,6 @@ homelab/
     │   ├── ingress.yaml
     │   ├── kustomization.yaml
     │   ├── namespace.yaml
-    │   ├── nextcloud-token-sealed.yaml
-    │   ├── nextcloud-token-unsealed.yaml.example
     │   ├── plex-token-sealed.yaml
     │   ├── plex-token-unsealed.yaml.example
     │   ├── portainer-token-sealed.yaml
@@ -719,20 +717,7 @@ kubeseal --cert sealed-secrets-pub-cert.pem --format=yaml \
   > manifests/homepage/grafana-credentials-sealed.yaml
 
 
-# 5. Nextcloud Token
-cp manifests/homepage/nextcloud-token-unsealed.yaml.example \
-   manifests/homepage/nextcloud-token-unsealed.yaml
-
-# Edit the file and replace placeholder values with your actual credentials
-vim manifests/homepage/nextcloud-token-unsealed.yaml
-
-# Seal the secret (using offline certificate)
-kubeseal --cert sealed-secrets-pub-cert.pem --format=yaml \
-  < manifests/homepage/nextcloud-token-unsealed.yaml \
-  > manifests/homepage/nextcloud-token-sealed.yaml
-
-
-# 6. Plex Token
+# 5. Plex Token
 cp manifests/homepage/plex-token-unsealed.yaml.example \
    manifests/homepage/plex-token-unsealed.yaml
 
@@ -745,7 +730,7 @@ kubeseal --cert sealed-secrets-pub-cert.pem --format=yaml \
   > manifests/homepage/plex-token-sealed.yaml
 
 
-# 7. Portainer Token
+# 6. Portainer Token
 cp manifests/homepage/portainer-token-unsealed.yaml.example \
    manifests/homepage/portainer-token-unsealed.yaml
 
@@ -758,7 +743,7 @@ kubeseal --cert sealed-secrets-pub-cert.pem --format=yaml \
   > manifests/homepage/portainer-token-sealed.yaml
 
 
-# 8. Proxmox Secret
+# 7. Proxmox Secret
 cp manifests/homepage/proxmox-secret-unsealed.yaml.example \
    manifests/homepage/proxmox-secret-unsealed.yaml
 
@@ -771,7 +756,7 @@ kubeseal --cert sealed-secrets-pub-cert.pem --format=yaml \
   > manifests/homepage/proxmox-secret-sealed.yaml
 
 
-# 9. Unifi Token
+# 8. Unifi Token
 cp manifests/homepage/unifi-token-unsealed.yaml.example \
    manifests/homepage/unifi-token-unsealed.yaml
 

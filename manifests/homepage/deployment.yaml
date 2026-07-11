@@ -112,16 +112,6 @@ spec:
             secretKeyRef:
               name: homepage-plex
               key: token
-        - name: HOMEPAGE_VAR_NEXTCLOUD_USER
-          valueFrom:
-            secretKeyRef:
-              name: homepage-nextcloud
-              key: username
-        - name: HOMEPAGE_VAR_NEXTCLOUD_PASS
-          valueFrom:
-            secretKeyRef:
-              name: homepage-nextcloud
-              key: password
         - name: HOMEPAGE_VAR_BESZEL_USERNAME
           valueFrom:
             secretKeyRef:
