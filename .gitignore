@@ -1,5 +1,6 @@
 # Ignore secrets and sensitive config
 .env
+ROADMAP.md
 *.secret.yaml
 *.secrets.yaml
 *-unsealed.yaml
