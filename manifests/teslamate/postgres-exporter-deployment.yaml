@@ -1,0 +1,81 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: teslamate-postgres-exporter-queries
+  namespace: teslamate
+data:
+  queries.yaml: |
+    teslamate:
+      # Seconds since the most recent recorded position, per car.
+      # Grows while the car is asleep (no positions), so alert thresholds
+      # must tolerate normal sleep periods.
+      query: >
+        SELECT car_id::text AS car_id,
+               EXTRACT(EPOCH FROM (now() - max(date)))::bigint AS last_data_age_seconds
+        FROM positions
+        GROUP BY car_id
+      master: true
+      metrics:
+        - car_id:
+            usage: "LABEL"
+            description: "TeslaMate car id"
+        - last_data_age_seconds:
+            usage: "GAUGE"
+            description: "Seconds since the most recent recorded position for this car"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: teslamate-postgres-exporter
+  namespace: teslamate
+  labels:
+    app: teslamate-postgres-exporter
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: teslamate-postgres-exporter
+  template:
+    metadata:
+      labels:
+        app: teslamate-postgres-exporter
+    spec:
+      nodeSelector:
+        node-role.kubernetes.io/worker: "worker"
+      containers:
+      - name: postgres-exporter
+        image: quay.io/prometheuscommunity/postgres-exporter:v0.17.1
+        args:
+          - "--extend.query-path=/etc/postgres_exporter/queries.yaml"
+        env:
+        - name: DATA_SOURCE_URI
+          value: "teslamate-database:5432/teslamate?sslmode=disable"
+        - name: DATA_SOURCE_USER
+          valueFrom:
+            secretKeyRef:
+              name: teslamate-secrets
+              key: DATABASE_USER
+        - name: DATA_SOURCE_PASS
+          valueFrom:
+            secretKeyRef:
+              name: teslamate-secrets
+              key: DATABASE_PASS
+        ports:
+        - name: metrics
+          containerPort: 9187
+        volumeMounts:
+        - name: queries
+          mountPath: /etc/postgres_exporter
+          readOnly: true
+        resources:
+          requests:
+            memory: "32Mi"
+            cpu: "10m"
+          limits:
+            memory: "64Mi"
+            cpu: "100m"
+      volumes:
+      - name: queries
+        configMap:
+          name: teslamate-postgres-exporter-queries

@@ -198,7 +198,7 @@ spec:
         - alert: NodeHighMemory
           expr: |
             (
-              (node_memory_MemTotal_bytes - node_memory_MemAvailable_bytes) / 
+              (node_memory_MemTotal_bytes - node_memory_MemAvailable_bytes) /
               node_memory_MemTotal_bytes
             ) > 0.85
           for: 10m
@@ -207,3 +207,30 @@ spec:
           annotations:
             summary: "Node memory usage is high"
             description: "Node {{ $labels.instance }} memory usage is {{ $value | humanizePercentage }} (threshold: 85%)."
+
+    # TeslaMate data freshness alerts
+    - name: teslamate
+      interval: 60s
+      rules:
+        # Fires when TeslaMate stopped recording data (e.g. expired Tesla API
+        # token). Threshold is generous to tolerate a car sleeping while parked;
+        # raise it if you get false positives during long idle periods.
+        - alert: TeslaMateNoData
+          expr: max by (car_id) (teslamate_last_data_age_seconds) > 86400
+          for: 1h
+          labels:
+            severity: warning
+          annotations:
+            summary: "TeslaMate hat seit über 24h keine Daten empfangen"
+            description: "Auto {{ $labels.car_id }}: letzter Datenpunkt vor {{ $value | humanizeDuration }}. Tesla-API-Token prüfen (Sign-in in der TeslaMate-Web-UI) und teslamate-Logs kontrollieren."
+
+        # Safety net: if the exporter itself is down the metric disappears, which
+        # would otherwise silence TeslaMateNoData without anyone noticing.
+        - alert: TeslaMateFreshnessExporterDown
+          expr: absent(teslamate_last_data_age_seconds)
+          for: 30m
+          labels:
+            severity: warning
+          annotations:
+            summary: "TeslaMate Freshness-Exporter liefert keine Metrik"
+            description: "teslamate_last_data_age_seconds fehlt seit >30m. Der No-Data-Alert ist damit blind. Deployment teslamate/teslamate-postgres-exporter prüfen."
