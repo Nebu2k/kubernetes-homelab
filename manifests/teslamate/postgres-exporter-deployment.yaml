@@ -73,8 +73,9 @@ spec:
             memory: "32Mi"
             cpu: "10m"
           limits:
+            # No CPU limit on purpose: a hard limit causes CFS throttling on
+            # short scrape spikes (CPUThrottlingHigh alert) despite tiny usage.
             memory: "64Mi"
-            cpu: "100m"
       volumes:
       - name: queries
         configMap:
