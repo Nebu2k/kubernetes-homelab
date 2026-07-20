@@ -28,11 +28,12 @@ prometheus:
     # Use EndpointSlice instead of deprecated Endpoints API (required for Kubernetes v1.33+)
     discoveryRole: endpointslice
     
-    # Resource limits (conservative for Pi)
+    # Request reflects real TSDB usage (~1.3Gi) so the scheduler accounts
+    # honestly for this pod instead of over-packing the node.
     resources:
       requests:
         cpu: 200m
-        memory: 512Mi
+        memory: 1280Mi
       limits:
         cpu: 1000m
         memory: 2Gi
