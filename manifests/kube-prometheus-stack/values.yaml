@@ -93,6 +93,11 @@ grafana:
   nodeSelector:
     node-role.kubernetes.io/worker: worker
   
+  # RWO Longhorn volume: use Recreate so the old pod releases the volume
+  # before the new one starts. RollingUpdate deadlocks on Multi-Attach.
+  deploymentStrategy:
+    type: Recreate
+
   # Persistence
   persistence:
     enabled: true
