@@ -103,11 +103,11 @@ grafana:
   ingress:
     enabled: false
   
-  # Resources (conservative for Pi)
+  # Request reflects real usage (~300Mi) for honest scheduling.
   resources:
     requests:
       cpu: 100m
-      memory: 256Mi
+      memory: 320Mi
     limits:
       cpu: 500m
       memory: 512Mi
