@@ -1,3 +1,10 @@
+## [4.21.1](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.21.0...v4.21.1) (2026-07-23)
+
+
+### Bug Fixes
+
+* **paperless-ngx:** smb-sync zurück auf privileged (F3 revert) ([cd7ba5b](https://github.com/Nebu2k/kubernetes-homelab/commit/cd7ba5ba405eee4e7ef50c36a8c513ee89eb2ce1))
+
 # [4.21.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.20.4...v4.21.0) (2026-07-11)
 
 
