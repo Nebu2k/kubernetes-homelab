@@ -1,0 +1,22 @@
+---
+# cert-manager Helm values.
+# Install CRDs together with the chart (managed by ArgoCD).
+crds:
+  enabled: true
+  keep: true
+
+# Run on worker nodes, consistent with the rest of the cluster.
+nodeSelector:
+  node-role.kubernetes.io/worker: "worker"
+
+webhook:
+  nodeSelector:
+    node-role.kubernetes.io/worker: "worker"
+
+cainjector:
+  nodeSelector:
+    node-role.kubernetes.io/worker: "worker"
+
+startupapicheck:
+  nodeSelector:
+    node-role.kubernetes.io/worker: "worker"

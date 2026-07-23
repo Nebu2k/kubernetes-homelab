@@ -1,0 +1,18 @@
+---
+# Single wildcard certificate for the whole zone. Traefik serves it as the
+# default certificate via the TLSStore below, so individual Ingresses/IngressRoutes
+# need no per-host cert-manager annotation.
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: wildcard-elmstreet79
+  namespace: traefik
+spec:
+  secretName: wildcard-elmstreet79-tls
+  issuerRef:
+    name: letsencrypt-prod
+    kind: ClusterIssuer
+  commonName: "*.elmstreet79.de"
+  dnsNames:
+    - "elmstreet79.de"
+    - "*.elmstreet79.de"

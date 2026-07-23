@@ -1,0 +1,20 @@
+---
+# Let's Encrypt production issuer using DNS-01 challenge via Cloudflare.
+# DNS-01 works for both public and internal hosts (no public A record required),
+# so internal/VPN-only services also get valid certificates.
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: letsencrypt-prod
+spec:
+  acme:
+    server: https://acme-v02.api.letsencrypt.org/directory
+    email: acme@elmstreet79.de
+    privateKeySecretRef:
+      name: letsencrypt-prod-account-key
+    solvers:
+      - dns01:
+          cloudflare:
+            apiTokenSecretRef:
+              name: cloudflare-api-token
+              key: api-token

@@ -1,0 +1,12 @@
+---
+# Traefik default certificate. Any TLS route without an explicit certificate
+# falls back to this wildcard, so we terminate every *.elmstreet79.de host with
+# one Let's Encrypt cert.
+apiVersion: traefik.io/v1alpha1
+kind: TLSStore
+metadata:
+  name: default
+  namespace: traefik
+spec:
+  defaultCertificate:
+    secretName: wildcard-elmstreet79-tls

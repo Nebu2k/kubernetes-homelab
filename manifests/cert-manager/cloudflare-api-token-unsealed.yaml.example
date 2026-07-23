@@ -1,0 +1,15 @@
+---
+# Template. Copy to cloudflare-api-token-unsealed.yaml, insert the real token,
+# then run ../../reseal-all-secrets.sh to produce cloudflare-api-token-sealed.yaml.
+# The unsealed file is gitignored.
+#
+# Cloudflare token scope: Zone:DNS:Edit + Zone:Read on elmstreet79.de.
+# The existing cloudflare-sync token already has DNS:Edit and can be reused.
+apiVersion: v1
+kind: Secret
+metadata:
+  name: cloudflare-api-token
+  namespace: cert-manager
+type: Opaque
+stringData:
+  api-token: "REPLACE_WITH_CLOUDFLARE_API_TOKEN"
