@@ -44,7 +44,7 @@ spec:
       containers:
       # Sidecar: Sync files from SMB share to consume folder
       - name: smb-sync
-        image: nebu2k/paperless-smb-sync:latest
+        image: nebu2k/paperless-smb-sync:82d4523
         imagePullPolicy: IfNotPresent
         command:
         - sh
@@ -94,7 +94,12 @@ spec:
         - name: consume
           mountPath: /consume
         securityContext:
-          privileged: true  # Required for CIFS mount
+          # CIFS-Mount braucht SYS_ADMIN (mount syscall) + DAC_READ_SEARCH (Zugriff),
+          # aber kein volles privileged. Falls der Mount fehlschlägt: Fallback privileged: true.
+          capabilities:
+            add:
+              - SYS_ADMIN
+              - DAC_READ_SEARCH
         resources:
           requests:
             cpu: 50m

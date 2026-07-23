@@ -42,18 +42,28 @@ spec:
         - name: config-cm
           mountPath: /tmp/config
       - name: install-hacs
-        image: ghcr.io/home-assistant/home-assistant:stable
+        image: ghcr.io/home-assistant/home-assistant:2026.3.3
+        env:
+        - name: HACS_VERSION
+          value: "2.0.5"
+        - name: HACS_SHA256
+          value: "97be6b824a4f38e683728cc6dd72367f6b8bad0a43428b1b3b987a3087adf413"
         command:
         - /bin/bash
         - -c
         - |
-          if [ ! -d "/config/custom_components/hacs" ]; then
-            echo "Installing HACS..."
-            wget -q -O - https://get.hacs.xyz | bash -
-            echo "HACS installed successfully"
-          else
+          set -euo pipefail
+          if [ -d "/config/custom_components/hacs" ]; then
             echo "HACS already installed, skipping"
+            exit 0
           fi
+          echo "Installing pinned HACS ${HACS_VERSION}..."
+          python3 -c "import os,urllib.request; open('/tmp/hacs.zip','wb').write(urllib.request.urlopen('https://github.com/hacs/integration/releases/download/'+os.environ['HACS_VERSION']+'/hacs.zip', timeout=60).read())"
+          python3 -c "import hashlib,sys; d=open('/tmp/hacs.zip','rb').read(); sys.exit(0 if hashlib.sha256(d).hexdigest()=='${HACS_SHA256}' else 'HACS checksum mismatch')"
+          mkdir -p /config/custom_components/hacs
+          python3 -c "import zipfile; zipfile.ZipFile('/tmp/hacs.zip').extractall('/config/custom_components/hacs')"
+          rm -f /tmp/hacs.zip
+          echo "HACS ${HACS_VERSION} installed and verified"
         volumeMounts:
         - name: config
           mountPath: /config

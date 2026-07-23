@@ -54,3 +54,17 @@ spec:
           limits:
             memory: "512Mi"
             cpu: "500m"
+        readinessProbe:
+          tcpSocket:
+            port: 4000
+          initialDelaySeconds: 20
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 6
+        livenessProbe:
+          tcpSocket:
+            port: 4000
+          initialDelaySeconds: 40
+          periodSeconds: 20
+          timeoutSeconds: 5
+          failureThreshold: 6

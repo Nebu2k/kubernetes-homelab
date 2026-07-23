@@ -16,7 +16,7 @@ spec:
       restartPolicy: OnFailure
       containers:
         - name: sync
-          image: nebu2k/cloudflare-sync:latest
+          image: nebu2k/cloudflare-sync:12281ff
           envFrom:
             - secretRef:
                 name: cloudflare-sync-credentials
@@ -42,7 +42,7 @@ spec:
           restartPolicy: OnFailure
           containers:
             - name: sync
-              image: nebu2k/cloudflare-sync:latest
+              image: nebu2k/cloudflare-sync:12281ff
               envFrom:
                 - secretRef:
                     name: cloudflare-sync-credentials

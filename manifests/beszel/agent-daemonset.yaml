@@ -47,6 +47,20 @@ spec:
           limits:
             cpu: 200m
             memory: 128Mi
+        readinessProbe:
+          tcpSocket:
+            port: 45876
+          initialDelaySeconds: 15
+          periodSeconds: 15
+          timeoutSeconds: 5
+          failureThreshold: 6
+        livenessProbe:
+          tcpSocket:
+            port: 45876
+          initialDelaySeconds: 30
+          periodSeconds: 30
+          timeoutSeconds: 5
+          failureThreshold: 6
         volumeMounts:
         - name: agent-data
           mountPath: /var/lib/beszel-agent  # Agent speichert Daten hier, nicht in /app/data

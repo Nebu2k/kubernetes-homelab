@@ -21,7 +21,7 @@ spec:
         node-role.kubernetes.io/worker: "worker"
       containers:
         - name: ripe-atlas
-          image: jamesits/ripe-atlas:latest
+          image: jamesits/ripe-atlas:5120
           imagePullPolicy: IfNotPresent
           env:
             - name: RXTXRPT

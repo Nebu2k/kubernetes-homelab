@@ -1,0 +1,89 @@
+---
+# Ingress-only default-deny: nichts von außerhalb des Namespace erreicht die Pods,
+# außer den unten explizit erlaubten Pfaden. Egress bleibt offen (Tesla-API, DNS).
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny-ingress
+  namespace: teslamate
+spec:
+  podSelector: {}
+  policyTypes:
+    - Ingress
+---
+# Intra-Namespace frei: teslamate/grafana/exporter <-> database, teslamate <-> mosquitto.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-same-namespace
+  namespace: teslamate
+spec:
+  podSelector: {}
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - podSelector: {}
+---
+# Traefik (ns traefik) darf die TeslaMate-UI auf 4000 erreichen.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-traefik-teslamate
+  namespace: teslamate
+spec:
+  podSelector:
+    matchLabels:
+      app: teslamate
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: traefik
+      ports:
+        - protocol: TCP
+          port: 4000
+---
+# Traefik (ns traefik) darf die Grafana-UI auf 3000 erreichen.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-traefik-grafana
+  namespace: teslamate
+spec:
+  podSelector:
+    matchLabels:
+      app: teslamate-grafana
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: traefik
+      ports:
+        - protocol: TCP
+          port: 3000
+---
+# Prometheus (ns monitoring) darf den postgres-exporter auf 9187 scrapen.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-monitoring-exporter
+  namespace: teslamate
+spec:
+  podSelector:
+    matchLabels:
+      app: teslamate-postgres-exporter
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: monitoring
+      ports:
+        - protocol: TCP
+          port: 9187

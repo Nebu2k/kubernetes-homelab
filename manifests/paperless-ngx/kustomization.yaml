@@ -14,3 +14,4 @@ resources:
   - smb-credentials-sealed.yaml
   - backup-cronjob.yaml
   - s3-backup-credentials-sealed.yaml
+  - networkpolicy.yaml

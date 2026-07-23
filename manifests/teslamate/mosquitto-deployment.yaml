@@ -35,6 +35,20 @@ spec:
           limits:
             memory: "128Mi"
             cpu: "100m"
+        readinessProbe:
+          tcpSocket:
+            port: 1883
+          initialDelaySeconds: 10
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 6
+        livenessProbe:
+          tcpSocket:
+            port: 1883
+          initialDelaySeconds: 20
+          periodSeconds: 20
+          timeoutSeconds: 5
+          failureThreshold: 6
       volumes:
       - name: conf
         persistentVolumeClaim:
