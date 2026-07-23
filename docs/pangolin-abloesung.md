@@ -86,16 +86,18 @@ Vorerst **kein Cluster-SSO**:
 ## Public-Set
 
 Öffentlich (Cloudflare-CNAME + über Portforward erreichbar):
-`www, dreambox, homeassistant, plex, teslamate, paperless`.
+`www, dreambox, homeassistant, plex, teslamate`.
 
 - `nextcloud` existiert nicht mehr, das tote external-service-Manifest wurde
   entfernt.
 - `n8n` bleibt **VPN-only** (aktuell ungenutzt, kein externer Bedarf). Bleibt
   deployed, siehe ROADMAP (Use-Case finden).
+- `paperless` bleibt **VPN-only**: enthält sensible persönliche Dokumente, bewusst
+  nicht öffentlich.
 
-Alles andere (unifi, pve, argocd, grafana, portainer, n8n, longhorn, uptime,
-beszel, fr24, minio, nas, adguard*, vscode, glances, prometheus, alertmanager,
-traefik, homepage, teslamate-settings) wird **VPN-only**.
+Alles andere (unifi, pve, argocd, grafana, portainer, n8n, paperless, longhorn,
+uptime, beszel, fr24, minio, nas, adguard*, vscode, glances, prometheus,
+alertmanager, traefik, homepage, teslamate-settings) wird **VPN-only**.
 
 ## Migrationsreihenfolge (parallel zu Pangolin, Cutover per DNS, kein Downtime)
 
