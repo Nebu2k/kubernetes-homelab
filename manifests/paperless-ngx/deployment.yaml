@@ -94,12 +94,12 @@ spec:
         - name: consume
           mountPath: /consume
         securityContext:
-          # CIFS-Mount braucht SYS_ADMIN (mount syscall) + DAC_READ_SEARCH (Zugriff),
-          # aber kein volles privileged. Falls der Mount fehlschlägt: Fallback privileged: true.
-          capabilities:
-            add:
-              - SYS_ADMIN
-              - DAC_READ_SEARCH
+          # CIFS-Mount getestet mit capabilities SYS_ADMIN + DAC_READ_SEARCH:
+          # schlägt fehl ("mount ... Permission denied"), da der mount-Syscall vom
+          # AppArmor/seccomp-Default des Containerd geblockt wird. privileged schaltet
+          # das ab -> hier notwendig. Sauberer wäre langfristig ein SMB-CSI-Driver
+          # (csi-driver-smb) statt in-Container-Mount, dann ganz ohne privileged.
+          privileged: true
         resources:
           requests:
             cpu: 50m
