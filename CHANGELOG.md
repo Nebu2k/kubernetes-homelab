@@ -1,3 +1,10 @@
+# [4.23.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.22.0...v4.23.0) (2026-07-23)
+
+
+### Features
+
+* **external-services:** IngressRoutes für externe Hosts (Pangolin-Ablösung Phase 2) ([6386e51](https://github.com/Nebu2k/kubernetes-homelab/commit/6386e510332e015a4427a0d4dc57b7cc04b7e5a7))
+
 # [4.22.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.21.2...v4.22.0) (2026-07-23)
 
 
