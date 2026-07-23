@@ -1,3 +1,10 @@
+## [4.21.2](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.21.1...v4.21.2) (2026-07-23)
+
+
+### Bug Fixes
+
+* **beszel:** TCP-Probe wieder entfernen (F4-Korrektur) ([754df60](https://github.com/Nebu2k/kubernetes-homelab/commit/754df60893faa64526afeeb39876e21d35c74ebd))
+
 ## [4.21.1](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.21.0...v4.21.1) (2026-07-23)
 
 
