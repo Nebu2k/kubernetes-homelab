@@ -16,6 +16,8 @@ resources:
   - unifi-service.yaml
   - unifi-nas-service.yaml
   - vscode-service.yaml
+  # IngressRoutes für die externen Hosts (Traefik direkt, parallel zu Pangolin)
+  - external-ingressroutes.yaml
   # Other resources
   - adguardhome-sync-config.yaml
   - adguardhome-sync-credentials-sealed.yaml
