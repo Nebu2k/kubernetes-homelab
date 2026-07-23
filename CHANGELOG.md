@@ -1,3 +1,10 @@
+# [4.22.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.21.2...v4.22.0) (2026-07-23)
+
+
+### Features
+
+* **cert-manager:** Let's Encrypt Wildcard-TLS (Pangolin-Ablösung Phase 1) ([4a28f30](https://github.com/Nebu2k/kubernetes-homelab/commit/4a28f300453dbd2e290af3a33bde4795fb878d75))
+
 ## [4.21.2](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.21.1...v4.21.2) (2026-07-23)
 
 
