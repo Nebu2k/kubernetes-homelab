@@ -1,3 +1,10 @@
+## [4.27.1](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.27.0...v4.27.1) (2026-07-24)
+
+
+### Bug Fixes
+
+* **home-assistant:** Update auf 2026.7.4 ([d2cd74f](https://github.com/Nebu2k/kubernetes-homelab/commit/d2cd74f146cc4bd73c1f6acb198b73500dea65c2))
+
 # [4.27.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.26.0...v4.27.0) (2026-07-24)
 
 
