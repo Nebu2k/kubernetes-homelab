@@ -1,3 +1,10 @@
+## [4.25.1](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.25.0...v4.25.1) (2026-07-24)
+
+
+### Bug Fixes
+
+* **coredns:** Split-Horizon-Match auf einzelne Sub-Labels beschränken ([da19c99](https://github.com/Nebu2k/kubernetes-homelab/commit/da19c99b17e6664c3870c18eb2b72e97c173100f))
+
 # [4.25.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.24.1...v4.25.0) (2026-07-24)
 
 
