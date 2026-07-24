@@ -6,8 +6,8 @@ metadata:
   namespace: metallb-system
 spec:
   addresses:
-    - 192.168.2.250-192.168.2.253                  # IPv4
-    - 2a00:1e:7c41:fb00::250-2a00:1e:7c41:fb00::253  # IPv6 ISP Prefix (extern erreichbar)
+    - 192.168.2.250-192.168.2.253  # IPv4-only. Kein v6-Pool: Traefik ist SingleStack v4
+                                    # und die ISP-GUA (2a00:1e:...) rotiert, deshalb intern ULA.
 ---
 apiVersion: metallb.io/v1beta1
 kind: L2Advertisement

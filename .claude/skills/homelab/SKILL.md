@@ -169,15 +169,16 @@ Getrennte Stacks, je eigener S3-State (AWS, Bucket
 
 ## Netzwerk / Nodes (Eckdaten)
 
-- Traefik LB `192.168.2.250` (MetalLB-Pool `.250-.253`, es gibt auch einen v6-Pool
-  `2a00:1e:7c41:fb00::250-253`, aber Traefik ist aktuell SingleStack v4).
-- Öffentliche IP über UniFi-DynDNS `nebu2k.ipv64.net` (v4+v6).
+- Traefik LB `192.168.2.250`, MetalLB-Pool `.250-.253` (**IPv4-only**). Der frühere
+  v6-Pool `2a00:1e:7c41:fb00::250-253` wurde entfernt: war unbenutzt (Traefik
+  SingleStack v4) und der ISP-GUA-Präfix rotiert.
+- Öffentliche IP über UniFi-DynDNS `nebu2k.ipv64.net`.
 - **VPN:** UniFi-WireGuard (bestehend), trägt den internen Zugriff. KEIN
   WireGuard im Cluster gewünscht.
-- **IPv6:** Public-CNAMEs liefern eine AAAA (Router-v6), die aber nicht zu Traefik
-  durchreicht (Traefik v4-only) -> Dual-Stack-Clients fallen per Happy-Eyeballs
-  unmerklich auf v4 zurück. Roadmap-Thema, ISP-Präfix-Stabilität ist der Blocker
-  (intern wird deshalb ULA `fd2e:9a71:c3b5::/64` genutzt).
+- **IPv6:** Public-v6 bewusst deaktiviert (Blocker: instabiler ISP-GUA-Präfix,
+  intern deshalb ULA `fd2e:9a71:c3b5::/64`). Offen nur noch die manuelle
+  UniFi-Aufgabe, den ipv64-Updater auf IPv4-only zu stellen, damit die tote AAAA
+  verschwindet (siehe ROADMAP).
 - k3s: 3 etcd-Member (cp-1 + raspi4 + raspi5), Worker `worker-1` + `prodesk`.
   Node-DNS hat Eigenheiten (cloud-init-Nodes brauchen statische DNS/`UseDNS=no`,
   sonst kommen tote RA-v6-Resolver zurück).
