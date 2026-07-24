@@ -4,11 +4,6 @@ kind: Service
 metadata:
   name: proxmox
   namespace: external-services
-  annotations:
-    pangolin.io/expose: "true"
-    pangolin.io/subdomain: "pve"
-    pangolin.io/auth: "true"
-
 spec:
   type: ClusterIP
   ports:

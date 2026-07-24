@@ -4,10 +4,6 @@ kind: Service
 metadata:
   name: minio-external
   namespace: external-services
-  annotations:
-    pangolin.io/expose: "true"
-    pangolin.io/subdomain: "minio"
-    pangolin.io/auth: "true"
 spec:
   type: ClusterIP
   clusterIP: None

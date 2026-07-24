@@ -5,9 +5,6 @@ metadata:
   namespace: beszel
   labels:
     app: beszel-hub
-  annotations:
-    pangolin.io/expose: "true"
-    pangolin.io/auth: "true"
 spec:
   ingressClassName: traefik
   rules:

@@ -4,10 +4,6 @@ kind: Service
 metadata:
   name: dreambox-external
   namespace: external-services
-  annotations:
-    pangolin.io/expose: "true"
-    pangolin.io/subdomain: "dreambox"
-    pangolin.io/auth: "false"
 spec:
   clusterIP: None
   ports:

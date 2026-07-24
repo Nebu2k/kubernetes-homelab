@@ -4,10 +4,6 @@ kind: Service
 metadata:
   name: adguard-pve
   namespace: external-services
-  annotations:
-    pangolin.io/expose: "true"
-    pangolin.io/subdomain: "adguard"
-    pangolin.io/auth: "true"
 spec:
   type: ClusterIP
   ports:

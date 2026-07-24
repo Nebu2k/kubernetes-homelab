@@ -5,8 +5,6 @@ metadata:
   name: adguardhome-sync-web
   namespace: external-services
   annotations:
-    pangolin.io/expose: "true"
-    pangolin.io/auth: "true"
     gethomepage.dev/enabled: "true"
     gethomepage.dev/group: Infrastructure
     gethomepage.dev/name: AdGuard Sync (k8s)

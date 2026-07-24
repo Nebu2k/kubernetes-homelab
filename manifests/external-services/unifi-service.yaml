@@ -4,10 +4,6 @@ kind: Service
 metadata:
   name: unifi
   namespace: external-services
-  annotations:
-    pangolin.io/expose: "true"
-    pangolin.io/subdomain: "unifi"
-    pangolin.io/auth: "true"
 spec:
   type: ClusterIP
   ports:
