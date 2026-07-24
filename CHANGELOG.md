@@ -1,3 +1,10 @@
+# [4.25.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.24.1...v4.25.0) (2026-07-24)
+
+
+### Features
+
+* **landing-page:** 301-Redirect Apex-Domain auf www ([9f48f1f](https://github.com/Nebu2k/kubernetes-homelab/commit/9f48f1f22ccac8bb606e40671711a76b02cea42a))
+
 ## [4.24.1](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.24.0...v4.24.1) (2026-07-24)
 
 
