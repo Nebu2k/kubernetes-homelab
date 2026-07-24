@@ -1,3 +1,10 @@
+## [4.24.1](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.24.0...v4.24.1) (2026-07-24)
+
+
+### Bug Fixes
+
+* **coredns:** Split-Horizon für *.elmstreet79.de auf Traefik ([dde6519](https://github.com/Nebu2k/kubernetes-homelab/commit/dde6519febea69826240cc74f62c465e82896538))
+
 # [4.24.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.23.0...v4.24.0) (2026-07-24)
 
 
