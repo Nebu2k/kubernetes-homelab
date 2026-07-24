@@ -183,12 +183,14 @@ Getrennte Stacks, je eigener S3-State (AWS, Bucket
   Node-DNS hat Eigenheiten (cloud-init-Nodes brauchen statische DNS/`UseDNS=no`,
   sonst kommen tote RA-v6-Resolver zurück).
 
-## Pangolin-Ablösung (Status)
+## Pangolin-Ablösung (abgeschlossen, 2026-07-24)
 
 Das Homelab lief früher hinter Pangolin (Hetzner-VPS + Newt-WireGuard-Tunnel +
-SSO). Die Migration auf Direkt-Exposure via Traefik ist LIVE (Phase 1-3). Offen:
-**Phase 4 (Teardown)** = `pangolin.io/*`-Annotationen raus, `manifests/newt` +
-`pangolin-sync` + `cloudflare-sync` + deren Apps löschen, dann Pangolin-VPS
-`terraform destroy` (Hetzner-Stack). Achtung: Hetzner berechnet auch
-ausgeschaltete Server voll, nur destroy stoppt Kosten. Details im Memory-Eintrag
-`project_homelab_pangolin_abloesung`.
+SSO). Die Migration auf Direkt-Exposure via Traefik ist **vollständig
+abgeschlossen** (Phase 1-4). Phase 4 (Teardown) erledigt: `pangolin.io/*`-
+Annotationen clusterweit raus, `manifests/newt` + `pangolin-sync` +
+`cloudflare-sync` + deren Apps + die CI-Workflows gelöscht (ArgoCD hat `newt` +
+`pangolin-sync` geprunt), Pangolin-VPS via `terraform destroy` abgebaut (inkl.
+`pangolin.*`-Cloudflare-Records), der ganze `terraform/hetzner/`-Stack entfernt.
+Es gibt keinen Hetzner-Stack und keine Pangolin-Reste mehr. Details im
+Memory-Eintrag `project_homelab_pangolin_abloesung`.
