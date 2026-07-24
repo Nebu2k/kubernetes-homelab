@@ -13,14 +13,18 @@ data:
   # (intern-only-Hosts sind extern NXDOMAIN). Self-contained, unabhängig von AdGuard.
   elmstreet79.server: |
     elmstreet79.de:53 {
+        # Nur einzelne Sub-Labels matchen (^[^.]+): argocd.elmstreet79.de JA,
+        # github.com.elmstreet79.de NEIN. Sonst fängt die Search-Domain-Expansion
+        # der Pods (ndots:5 + search elmstreet79.de) JEDEN externen Host ab.
         template IN A {
-            match ".+\.elmstreet79\.de\.$"
+            match "^[^.]+\.elmstreet79\.de\.$"
             answer "{{ .Name }} 60 IN A 192.168.2.250"
             fallthrough
         }
         template IN AAAA {
-            match ".+\.elmstreet79\.de\.$"
+            match "^[^.]+\.elmstreet79\.de\.$"
             rcode NOERROR
+            fallthrough
         }
         forward . 1.1.1.1 2606:4700:4700::1111
     }
