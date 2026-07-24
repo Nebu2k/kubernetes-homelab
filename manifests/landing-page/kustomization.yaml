@@ -8,4 +8,5 @@ resources:
   - deployment.yaml
   - service.yaml
   - ingress.yaml
+  - apex-redirect.yaml
   - configmap.yaml
