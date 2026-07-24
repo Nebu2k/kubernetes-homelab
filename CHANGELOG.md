@@ -1,3 +1,10 @@
+# [4.24.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.23.0...v4.24.0) (2026-07-24)
+
+
+### Features
+
+* **dns:** cloudflare-sync abschalten, Public-DNS via Terraform-CNAMEs ([48b37bd](https://github.com/Nebu2k/kubernetes-homelab/commit/48b37bd04ee2cae3c1c619d5c9d7cd4d7e239153))
+
 # [4.23.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.22.0...v4.23.0) (2026-07-23)
 
 
