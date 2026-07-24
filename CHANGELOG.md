@@ -1,3 +1,10 @@
+# [4.26.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.25.1...v4.26.0) (2026-07-24)
+
+
+### Features
+
+* **landing-page:** reflect real public services and add fitting icons ([d0effd0](https://github.com/Nebu2k/kubernetes-homelab/commit/d0effd07f1e25768f19ab66f7b1e992329b4bec2))
+
 ## [4.25.1](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.25.0...v4.25.1) (2026-07-24)
 
 
