@@ -1,3 +1,10 @@
+# [4.27.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.26.0...v4.27.0) (2026-07-24)
+
+
+### Features
+
+* **landing-page:** use seb-it.com favicon for the website link ([a19c21c](https://github.com/Nebu2k/kubernetes-homelab/commit/a19c21cc149a2d7d7c19af779854600332e88f39))
+
 # [4.26.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.25.1...v4.26.0) (2026-07-24)
 
 
