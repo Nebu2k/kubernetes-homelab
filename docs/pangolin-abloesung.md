@@ -119,10 +119,18 @@ alertmanager, traefik, homepage, teslamate-settings) wird **VPN-only**.
   + `tls`-Hosts (nutzen den Wildcard-Default).
 - [ ] Läuft parallel neben Pangolin.
 
-### Phase 3: DNS umstellen
-- [ ] Interner Resolver: Wildcard-Rewrite `*.elmstreet79.de → 192.168.2.250`.
-- [ ] Terraform-Cloudflare: CNAMEs für Public-Set → `nebu2k.ipv64.net`, DNS-only.
-- [ ] UniFi Portforward 80 + 443 → 192.168.2.250.
+### Phase 3: DNS umstellen (erledigt 2026-07-24)
+- [x] Interner Resolver: Wildcard-Rewrite `*.elmstreet79.de → 192.168.2.250`
+  (AdGuard, beide Instanzen). Alte per-Host-Rewrites mussten weg (exakter
+  Match schlägt Wildcard in AGH).
+- [x] Terraform-Cloudflare: neuer Stack `homelab-terraform/terraform/cloudflare/`,
+  CNAMEs für Public-Set → `nebu2k.ipv64.net`, DNS-only.
+- [x] cloudflare-sync aus GitOps entfernt, alle 58 sync-Records gelöscht.
+- [x] UniFi Portforward 80 + 443 → 192.168.2.250.
+- [ ] **Offen: IPv6.** AAAA (via CNAME) zeigt auf die Home-Router-v6, Traefik hat
+  aber nur eine v4-MetalLB-IP → inbound-v6 erreicht Traefik vermutlich nicht.
+  Extern per LTE testen; ggf. AAAA unterdrücken (v4-only) oder v6 zu Traefik
+  durchreichen.
 
 ### Phase 4: Cutover + Cleanup
 - [ ] Extern testen (Handy ohne WLAN) + intern/VPN testen.
