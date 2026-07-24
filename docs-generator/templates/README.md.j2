@@ -33,8 +33,8 @@ Production-ready K3s cluster managed via GitOps using ArgoCD App-of-Apps pattern
 ### Prerequisites
 
 - 2+ nodes
-- Domain (any DNS provider)
-- Pangolin API credentials (for SSL/TLS certificates)
+- Domain on Cloudflare (DNS-01 challenge + public records)
+- Cloudflare API token (for cert-manager DNS-01 wildcard TLS certificates)
 - S3-compatible storage for Longhorn backups (optional)
 
 ### Step 1: Install K3s Cluster (**on raspi4**)
@@ -270,17 +270,16 @@ cd kubernetes-homelab
    # Change: 192.168.2.250-192.168.2.253
    ```
 
-2. **Pangolin API Credentials** (required):
+2. **Cloudflare API Token** (required, for cert-manager DNS-01):
 
    ```bash
    # Create from example
-   cp manifests/pangolin-sync/pangolin-api-credentials-unsealed.yaml.example \
-      manifests/pangolin-sync/pangolin-api-credentials-unsealed.yaml
-   
-   # Add your Pangolin API credentials
-   vim manifests/pangolin-sync/pangolin-api-credentials-unsealed.yaml
-   # Update: API_KEY, ORG_ID, SITE_ID, DOMAIN_ID, DOMAIN_SUFFIX
-   
+   cp manifests/cert-manager/cloudflare-api-token-unsealed.yaml.example \
+      manifests/cert-manager/cloudflare-api-token-unsealed.yaml
+
+   # Add your Cloudflare API token (Zone:DNS:Edit on your zone)
+   vim manifests/cert-manager/cloudflare-api-token-unsealed.yaml
+
    # Note: Sealing happens AFTER cluster bootstrap (Step 7+)
    # For now, keep it unsealed locally (gitignored)
    ```
@@ -333,7 +332,7 @@ kubectl get applications -n argocd -w
 **What happens:**
 
 - Sealed Secrets Controller installs first (Sync-Wave 0)
-- MetalLB, Pangolin, Traefik, etc. follow in order
+- MetalLB, Traefik, cert-manager, etc. follow in order
 - Some apps will stay "Progressing" until secrets are sealed (next step)
 
 ### Step 7.5: Seal Secrets (**on your laptop** - AFTER Step 7)
@@ -354,10 +353,10 @@ This allows you to seal secrets even when not connected to the cluster:
 # Download the public certificate (one-time setup)
 kubeseal --fetch-cert --controller-namespace=kube-system > sealed-secrets-pub-cert.pem
 
-# Seal Pangolin API credentials
+# Seal Cloudflare API token (cert-manager)
 kubeseal --cert sealed-secrets-pub-cert.pem --format=yaml \
-  < manifests/pangolin-sync/pangolin-api-credentials-unsealed.yaml \
-  > manifests/pangolin-sync/pangolin-api-credentials-sealed.yaml
+  < manifests/cert-manager/cloudflare-api-token-unsealed.yaml \
+  > manifests/cert-manager/cloudflare-api-token-sealed.yaml
 
 # If using Longhorn S3 backup:
 kubeseal --cert sealed-secrets-pub-cert.pem --format=yaml \
@@ -368,10 +367,10 @@ kubeseal --cert sealed-secrets-pub-cert.pem --format=yaml \
 **Option B: Seal directly from cluster** (requires cluster access):
 
 ```bash
-# Seal Pangolin API credentials
+# Seal Cloudflare API token (cert-manager)
 kubeseal --format=yaml --controller-namespace=kube-system \
-  < manifests/pangolin-sync/pangolin-api-credentials-unsealed.yaml \
-  > manifests/pangolin-sync/pangolin-api-credentials-sealed.yaml
+  < manifests/cert-manager/cloudflare-api-token-unsealed.yaml \
+  > manifests/cert-manager/cloudflare-api-token-sealed.yaml
 
 # If using Longhorn S3 backup:
 kubeseal --format=yaml --controller-namespace=kube-system \
@@ -439,10 +438,10 @@ kubectl get ingress -A
 
 ### Step 9: Access UIs (**from your laptop browser**)
 
-⚠️ **All Services**: Services annotated with `pangolin.io/expose: "true"` are automatically registered in Pangolin for external HTTPS access with SSL certificates!
+ℹ️ **Exposure model**: Traefik (MetalLB LoadBalancer `192.168.2.250`) is the single ingress for cluster and external hosts, routing by SNI/Host. TLS is one wildcard cert `*.elmstreet79.de` from cert-manager (Let's Encrypt DNS-01 via Cloudflare), served as the Traefik default.
 
-- **With Authentication**: Services with `pangolin.io/auth: "true"` require Pangolin authentication
-- **Without Authentication**: Services without auth annotation are directly accessible from the internet
+- **Public**: host has a Cloudflare CNAME → `nebu2k.ipv64.net`, managed in Terraform. One router port-forward (80+443 → `192.168.2.250`) covers all public hosts.
+- **Internal/VPN-only**: no Cloudflare record. Reached via split-horizon DNS (wildcard rewrite `*.elmstreet79.de → 192.168.2.250`) over LAN/WireGuard.
 
 **ArgoCD:**
 
@@ -479,7 +478,7 @@ kubectl delete pod -n portainer -l app.kubernetes.io/name=portainer
 
 ```text
 URL: https://longhorn.elmstreet79.de
-(via Pangolin)
+(internal-only)
 ```
 
 **Homepage (Homelab Dashboard):**
@@ -500,36 +499,12 @@ URL: https://uptime.elmstreet79.de
 
 **Service Access Architecture:**
 
-All services are accessible via Pangolin's secure network infrastructure:
+Everything goes through Traefik (single reverse proxy) with the wildcard TLS default cert. A service is **public exactly when it has a Cloudflare record**. There is no wildcard A-record.
 
-**Pangolin-Exposed Services:**
+- **Public** (Cloudflare CNAME → `nebu2k.ipv64.net`, managed in the `homelab-terraform` Cloudflare stack): `www`, `homeassistant`, `teslamate`, `plex`, `dreambox`. Apex `elmstreet79.de` 301-redirects to `www`. Plex additionally has a direct `32400` port-forward for native apps.
+- **Internal/VPN-only** (no Cloudflare record): everything else, e.g. `argocd`, `grafana`, `prometheus`, `alertmanager`, `longhorn`, `portainer`, `uptime`, `home`, `paperless`, `n8n`, plus the external hosts (`unifi`, `pve`, `minio`, `nas`, `vscode`, …).
 
-- **Filter Logic**: Ingresses/Services WITH `pangolin.io/expose: "true"` annotation
-- **Access**: Publicly accessible from the internet with automatic SSL/TLS certificates
-- **Authentication**:
-  - `pangolin.io/auth: "true"` → Requires Pangolin authentication (secure, private access)
-  - `pangolin.io/auth: "false"` or no auth annotation → Directly accessible without authentication
-
-**Pangolin Sync Automation:**
-
-- **PostSync Hook**: Runs automatically after every ArgoCD sync
-- **CronJob**: Fallback every 5 minutes
-- **Pangolin API**: Registers resources in Pangolin network for secure external access
-- **Auto-Cleanup**: Removes orphaned resources when Ingresses/Services are deleted
-- **SSL/TLS**: Pangolin provides automatic SSL certificates for all exposed services
-
-**All Pangolin-Exposed Services:**
-
-```text
-# Services with Pangolin authentication required (pangolin.io/auth: "true"):
-{% for service in pangolin_services.with_auth -%}
-{{ service.name }}: {{ service.url }}
-{% endfor %}
-# Services publicly accessible without authentication (pangolin.io/auth: "false"):
-{% for service in pangolin_services.without_auth -%}
-{{ service.name }}: {{ service.url }}
-{% endfor %}
-```
+To make a service public: add its host to `public_hosts` in `homelab-terraform/terraform/cloudflare/` and `terraform apply`. Nothing else needed, the single port-forward covers all.
 
 ## 🔧 Management
 
@@ -565,17 +540,17 @@ kubectl get application traefik -n argocd -w
 ### Update Secrets
 
 ```bash
-# 1. Edit unsealed secret
-vim manifests/pangolin-sync/pangolin-api-credentials-unsealed.yaml
+# 1. Edit unsealed secret (example: Cloudflare API token)
+vim manifests/cert-manager/cloudflare-api-token-unsealed.yaml
 
 # 2. Re-seal (using offline certificate)
 kubeseal --cert sealed-secrets-pub-cert.pem --format=yaml \
-  < manifests/pangolin-sync/pangolin-api-credentials-unsealed.yaml \
-  > manifests/pangolin-sync/pangolin-api-credentials-sealed.yaml
+  < manifests/cert-manager/cloudflare-api-token-unsealed.yaml \
+  > manifests/cert-manager/cloudflare-api-token-sealed.yaml
 
 # 3. Commit and push
-git add manifests/pangolin-sync/pangolin-api-credentials-sealed.yaml
-git commit -m "Rotate Pangolin API credentials"
+git add manifests/cert-manager/cloudflare-api-token-sealed.yaml
+git commit -m "Rotate Cloudflare API token"
 git push
 ```
 
@@ -584,8 +559,8 @@ git push
 ```bash
 # Re-seal (requires cluster connection)
 kubeseal --format=yaml --controller-namespace=kube-system \
-  < manifests/pangolin-sync/pangolin-api-credentials-unsealed.yaml \
-  > manifests/pangolin-sync/pangolin-api-credentials-sealed.yaml
+  < manifests/cert-manager/cloudflare-api-token-unsealed.yaml \
+  > manifests/cert-manager/cloudflare-api-token-sealed.yaml
 ```
 
 ### Force Sync Application
