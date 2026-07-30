@@ -1,3 +1,11 @@
+## [4.28.2](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.28.1...v4.28.2) (2026-07-30)
+
+
+### Bug Fixes
+
+* **deps:** update helm release reloader to v2.2.14 ([#18](https://github.com/Nebu2k/kubernetes-homelab/issues/18)) ([3546427](https://github.com/Nebu2k/kubernetes-homelab/commit/35464273a820fae7b1b86a7b488d4ab2c8d1a497))
+* **deps:** update henrygd/beszel docker tag to v0.18.7 ([#19](https://github.com/Nebu2k/kubernetes-homelab/issues/19)) ([c828add](https://github.com/Nebu2k/kubernetes-homelab/commit/c828add9787afa7a94eac826cbfbccdb72ce2dee))
+
 ## [4.28.1](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.28.0...v4.28.1) (2026-07-30)
 
 
