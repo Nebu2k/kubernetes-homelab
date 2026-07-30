@@ -18,6 +18,15 @@
 
   semanticCommits: 'enabled',
 
+  // PR sofort oeffnen, nicht auf einen gruenen Branch-Status warten.
+  // config:recommended bringt prNotPending mit: Renovate wuerde erst den
+  // Branch pushen, auf dessen Status-Checks warten und den PR erst danach
+  // oeffnen. Unser validate.yml laeuft aber nur auf pull_request, nie auf
+  // Branch-Push. Die Branches warten damit auf einen Check, der nie kommt,
+  // und landen dauerhaft unter "Pending Status Checks" im Dashboard.
+  // Mit "immediate" entsteht der PR sofort und die CI laeuft an ihm.
+  prCreation: 'immediate',
+
   // Phase 1: kein Automerge. Es gibt noch keine CI, die Manifeste validiert, und
   // ArgoCD laeuft mit selfHeal + prune. Ein gemergter Fehler waere sofort im
   // Cluster. Automerge fuer patch/minor erst, wenn kubeconform/helm-template in
