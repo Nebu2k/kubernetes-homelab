@@ -1,0 +1,48 @@
+name: Renovate
+
+on:
+  schedule:
+    # Montags 04:00 UTC. Einzige Zeitsteuerung, die Renovate-Config selbst hat
+    # bewusst kein "schedule:".
+    - cron: '0 4 * * 1'
+  workflow_dispatch:
+    inputs:
+      dryRun:
+        description: 'Nur analysieren, keine Branches/PRs anlegen'
+        type: boolean
+        default: false
+      logLevel:
+        description: 'Log-Level'
+        type: choice
+        options:
+          - info
+          - debug
+        default: info
+
+permissions:
+  contents: read
+
+concurrency:
+  group: renovate
+  cancel-in-progress: false
+
+jobs:
+  renovate:
+    name: Run Renovate
+    runs-on: ubuntu-latest
+    steps:
+      - name: Renovate
+        uses: renovatebot/github-action@v46.2.0
+        with:
+          # Fine-grained PAT, nur auf dieses Repo eingeschraenkt, als
+          # Repo-Secret RENOVATE_TOKEN hinterlegt. Noetige Permissions:
+          # Contents RW, Pull requests RW, Issues RW (Dependency Dashboard),
+          # Workflows RW (sonst blocken Action-Updates), Commit statuses RW.
+          # Der Default-GITHUB_TOKEN reicht nicht: von ihm erzeugte PRs starten
+          # keine Workflows, semantic-release wuerde also nie greifen.
+          token: ${{ secrets.RENOVATE_TOKEN }}
+        env:
+          RENOVATE_REPOSITORIES: ${{ github.repository }}
+          # Die Action erwartet fuer "aus" den String "null", nicht leer.
+          RENOVATE_DRY_RUN: ${{ inputs.dryRun == true && 'full' || 'null' }}
+          LOG_LEVEL: ${{ inputs.logLevel || 'info' }}

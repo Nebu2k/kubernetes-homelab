@@ -1,0 +1,123 @@
+{
+  $schema: 'https://docs.renovatebot.com/renovate-schema.json',
+
+  extends: [
+    'config:recommended',
+    ':dependencyDashboard',
+  ],
+
+  timezone: 'Europe/Berlin',
+
+  // Bewusst KEIN "schedule:" hier. Wann Renovate laeuft, steuert allein der Cron
+  // in .github/workflows/renovate.yml. Sonst wuerde ein manueller
+  // workflow_dispatch ausserhalb des Zeitfensters kommentarlos nichts tun.
+
+  semanticCommits: 'enabled',
+
+  // Phase 1: kein Automerge. Es gibt noch keine CI, die Manifeste validiert, und
+  // ArgoCD laeuft mit selfHeal + prune. Ein gemergter Fehler waere sofort im
+  // Cluster. Automerge fuer patch/minor erst, wenn kubeconform/helm-template in
+  // CI haengen.
+  automerge: false,
+
+  // Kein PR-Schwall beim ersten Lauf. Das Dependency Dashboard zeigt trotzdem
+  // alles auf einmal, es werden nur weniger PRs gleichzeitig offen gehalten.
+  prConcurrentLimit: 5,
+  prHourlyLimit: 2,
+
+  // Frische Tags drei Tage abhaengen lassen. Faengt zurueckgezogene und
+  // offensichtlich kaputte Releases ab, bevor sie im Cluster landen.
+  minimumReleaseAge: '3 days',
+
+  // --- Manager ---
+  // Beide brauchen explizite Pfade, keiner von beiden greift per Default.
+  // (Der github-actions-Manager dagegen findet .github/workflows/ von selbst.)
+
+  // ArgoCD-Applications: Helm-Charts ueber chart: + targetRevision:
+  argocd: {
+    managerFilePatterns: ['apps/**/*.yaml'],
+  },
+
+  // Kustomize-Manifeste: image:-Tags in Deployments/StatefulSets/CronJobs
+  kubernetes: {
+    managerFilePatterns: ['manifests/**/*.yaml'],
+  },
+
+  packageRules: [
+    // Cluster-relevante Updates als "fix(deps): ...". Der angular-Preset in
+    // .releaserc.json macht daraus einen Patch-Release plus CHANGELOG-Eintrag,
+    // genau wie die bisherigen manuellen Update-Commits.
+    //
+    // Das MUSS eine packageRule sein und darf nicht als Top-Level
+    // semanticCommitType stehen: config:recommended zieht
+    // :semanticPrefixFixDepsChoreOthers mit rein, und das setzt den Typ per
+    // packageRule auf "chore". packageRules schlagen Top-Level-Config, ein
+    // Top-Level-Wert wuerde also still ueberschrieben.
+    {
+      matchManagers: ['argocd', 'kubernetes'],
+      semanticCommitType: 'fix',
+      semanticCommitScope: 'deps',
+    },
+
+    // Workflow-Actions sind Repo-Tooling, kein Cluster-Zustand. Als chore
+    // committen, damit sie keinen Release ausloesen.
+    {
+      matchManagers: ['github-actions'],
+      semanticCommitType: 'chore',
+      semanticCommitScope: 'ci',
+    },
+
+    // WICHTIG: Die ArgoCD-Applications referenzieren dieses Repo selbst als
+    // zusaetzliche source (path:/ref: values, targetRevision: main). Renovate
+    // erkennt das als git-tags-Dependency und wuerde "main" durch den neuesten
+    // semantic-release-Tag ersetzen wollen (v4.27.1 o.ae.). Das wuerde ArgoCD
+    // auf einen festen Tag pinnen und das Tracking von main zerstoeren.
+    {
+      matchPackageNames: [
+        'https://github.com/Nebu2k/kubernetes-homelab',
+        'https://github.com/Nebu2k/kubernetes-homelab.git',
+      ],
+      enabled: false,
+    },
+
+    // Eigenes Image, gebaut von .github/workflows/build-smb-sync-image.yml.
+    // Der Tag ist ein git-SHA, es gibt nichts Upstream zu vergleichen.
+    {
+      matchPackageNames: ['nebu2k/paperless-smb-sync'],
+      enabled: false,
+    },
+
+    // fr24 taggt mit einem monoton hochzaehlenden Build-Counter
+    // (latest-build-858 zum Zeitpunkt der Einrichtung). Kein Semver, aber
+    // eindeutig vergleichbar, sobald man Renovate sagt wo die Zahl steht.
+    // Nebeneffekt des Ankers: die parallelen Upstream-Schemata (1.0.30-1,
+    // latest_arm64, *_nohealthcheck) matchen nicht und fallen raus, wir bleiben
+    // also sicher in der latest-build-Linie.
+    // Achtung: die Zahl landet als "major", jedes Update ist damit formal ein
+    // Major-Bump und wuerde in Phase 3 nie automergen. Ist so gewollt.
+    {
+      matchPackageNames: ['ghcr.io/sdr-enthusiasts/docker-flightradar24'],
+      versioning: 'regex:^latest-build-(?<major>\\d+)$',
+    },
+
+    // Ein Postgres-Update soll eine Entscheidung sein, nicht drei PRs.
+    // Betrifft teslamate, n8n und paperless (dort die -alpine-Variante).
+    {
+      matchDatasources: ['docker'],
+      matchPackageNames: ['postgres'],
+      groupName: 'postgres',
+    },
+
+    // Beszel-Server und -Agent muessen versionsgleich bleiben.
+    {
+      matchPackageNames: ['henrygd/beszel', 'henrygd/beszel-agent'],
+      groupName: 'beszel',
+    },
+
+    // teslamate und sein vorkonfiguriertes Grafana werden zusammen released.
+    {
+      matchPackageNames: ['teslamate/teslamate', 'teslamate/grafana'],
+      groupName: 'teslamate',
+    },
+  ],
+}
