@@ -1,3 +1,10 @@
+# [4.30.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.29.0...v4.30.0) (2026-07-30)
+
+
+### Features
+
+* **longhorn:** Upgrade auf 1.11.3, Engine-Auto-Upgrade aktivieren ([ec3f7aa](https://github.com/Nebu2k/kubernetes-homelab/commit/ec3f7aa5660d47facfecb4ae81a69e9e0d479b69))
+
 # [4.29.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.28.2...v4.29.0) (2026-07-30)
 
 
