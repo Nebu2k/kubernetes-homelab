@@ -24,6 +24,15 @@ defaultSettings:
   concurrentReplicaRebuildPerNodeLimit: "2"
   # Reduce backup concurrency to prevent overwhelming ARM nodes during nightly backups
   backupConcurrentLimit: "1"  # Default is 2, reduce to 1 to prevent raspi5 overload
+  # Volume-Engines automatisch mit der Manager-Version mitziehen.
+  # Stand vorher auf 0, dadurch liefen alle Volumes noch auf Engine v1.10.1,
+  # waehrend der Manager schon weiter war. Longhorn erlaubt nur einen
+  # Minor-Schritt am Stueck (1.10 -> 1.11 -> 1.12); bleiben die Engines
+  # zurueck, ist der naechste Schritt nicht mehr sauber abgedeckt.
+  # 1 statt hoeher, gleiche Ruecksicht auf die ARM-Nodes wie oben.
+  # Live-Upgrade greift nur bei gesunden Volumes ohne iSCSI-Frontend,
+  # beides erfuellt (22x blockdev, alle healthy).
+  concurrentAutomaticEngineUpgradePerNodeLimit: "1"
   concurrentVolumeBackupRestorePerNodeLimit: "2"  # Default is 5, reduce to 2
   # Always allow node drain - prevents kured from getting stuck on
   # PodDisruptionBudgets of instance-manager pods during automated reboots.
