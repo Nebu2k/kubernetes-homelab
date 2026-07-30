@@ -1,3 +1,10 @@
+# [4.31.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.30.0...v4.31.0) (2026-07-30)
+
+
+### Features
+
+* **longhorn:** Upgrade auf 1.12.0 ([5539ced](https://github.com/Nebu2k/kubernetes-homelab/commit/5539ced3af9592aa30924a5fe0638d1c60dd43c4))
+
 # [4.30.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.29.0...v4.30.0) (2026-07-30)
 
 
