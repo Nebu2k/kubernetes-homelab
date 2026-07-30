@@ -1,3 +1,10 @@
+## [4.33.3](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.33.2...v4.33.3) (2026-07-30)
+
+
+### Bug Fixes
+
+* **deps:** update helm release metallb to v0.16.1 ([#25](https://github.com/Nebu2k/kubernetes-homelab/issues/25)) ([ec6c586](https://github.com/Nebu2k/kubernetes-homelab/commit/ec6c586f2b63f19bad21de8f6be25ea9e056e992))
+
 ## [4.33.2](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.33.1...v4.33.2) (2026-07-30)
 
 
