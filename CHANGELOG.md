@@ -1,3 +1,10 @@
+## [4.28.1](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.28.0...v4.28.1) (2026-07-30)
+
+
+### Bug Fixes
+
+* **beszel:** Agent-Image exakt pinnen statt floatendem 0.18-Tag ([fdf2d6f](https://github.com/Nebu2k/kubernetes-homelab/commit/fdf2d6fe2f7840ecf1f54724c26c7a505abe780e))
+
 # [4.28.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.27.1...v4.28.0) (2026-07-30)
 
 
