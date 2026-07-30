@@ -5,5 +5,15 @@ controller:
 speaker:
   nodeSelector:
     node-role.kubernetes.io/worker: "worker"
+  # FRR-Sidecar im Speaker, altes Schema. Bleibt aus.
   frr:
     enabled: false
+
+# FRR als eigenständiges DaemonSet, seit Chart 0.16 ein separater Schalter und
+# per Default AN. Das ist NICHT dasselbe wie speaker.frr oben: nach dem Upgrade
+# auf 0.16.1 liefen dadurch plötzlich metallb-frr-k8s auf allen 5 Nodes plus
+# ein statuscleaner-Deployment, obwohl speaker.frr.enabled seit jeher false ist.
+# Wir fahren reines Layer2 und kein BGP, FRR ist hier nutzlos. Auf den Raspis
+# sind sechs überflüssige Pods nicht egal.
+frrk8s:
+  enabled: false
