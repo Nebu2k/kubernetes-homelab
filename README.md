@@ -1028,7 +1028,7 @@ kubectl get secret -n monitoring grafana-admin-credentials \
 | Ripe Atlas | 5120 | Ripe Atlas |
 | Kured | 5.10.0 | Kured |
 | Metallb | 0.15.3 | Metallb |
-| Longhorn | 1.11.3 | Longhorn |
+| Longhorn | 1.12.0 | Longhorn |
 | Unifi Poller | v2.21.0 | Unifi Poller |
 | Portainer | 2.33.6 | Portainer |
 | Paperless Ngx | 82d4523 | Paperless Ngx |
