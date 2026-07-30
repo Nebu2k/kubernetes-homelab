@@ -1,3 +1,18 @@
+## [4.33.1](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.33.0...v4.33.1) (2026-07-30)
+
+
+### Bug Fixes
+
+* **deps:** update alpine docker tag to v3.24 ([#21](https://github.com/Nebu2k/kubernetes-homelab/issues/21)) ([186df0d](https://github.com/Nebu2k/kubernetes-homelab/commit/186df0df5416683dcee745b015946e8c674b9a97))
+* **deps:** update amazon/aws-cli docker tag to v2.36.9 ([#22](https://github.com/Nebu2k/kubernetes-homelab/issues/22)) ([4d4c50b](https://github.com/Nebu2k/kubernetes-homelab/commit/4d4c50b357db1071d7e222d765f855dce2c6576d))
+* **deps:** update busybox docker tag to v1.38.0 ([#23](https://github.com/Nebu2k/kubernetes-homelab/issues/23)) ([29433af](https://github.com/Nebu2k/kubernetes-homelab/commit/29433afcbb0fa4cf208ab1e1b5d50a1bd69d4a68))
+* **deps:** update louislam/uptime-kuma docker tag to v2.4.0 ([#27](https://github.com/Nebu2k/kubernetes-homelab/issues/27)) ([041d4d3](https://github.com/Nebu2k/kubernetes-homelab/commit/041d4d31b2ee4fd7cc119a8643d47dd0074cab06))
+* **deps:** update n8nio/n8n docker tag to v2.32.5 ([#28](https://github.com/Nebu2k/kubernetes-homelab/issues/28)) ([fea6a78](https://github.com/Nebu2k/kubernetes-homelab/commit/fea6a78d8437365eb96c14ab66fdc88d37ecd815))
+* **deps:** update nginx docker tag to v1.31.3 ([#29](https://github.com/Nebu2k/kubernetes-homelab/issues/29)) ([8c8ae93](https://github.com/Nebu2k/kubernetes-homelab/commit/8c8ae93e3adc358afb9b614b4504e86b03d66787))
+* **deps:** update postgres docker tag to v18.4 ([#30](https://github.com/Nebu2k/kubernetes-homelab/issues/30)) ([a7e2aa6](https://github.com/Nebu2k/kubernetes-homelab/commit/a7e2aa661dd836bdc2ace68563f6d166c518b2ba))
+* **deps:** update redis docker tag to v8.8.1 ([#31](https://github.com/Nebu2k/kubernetes-homelab/issues/31)) ([6dabdd6](https://github.com/Nebu2k/kubernetes-homelab/commit/6dabdd6a6451be7710eadffcbed3c24f1b624aa9))
+* **renovate:** PRs sofort öffnen statt auf Branch-Status zu warten ([dec9b34](https://github.com/Nebu2k/kubernetes-homelab/commit/dec9b344f3aaf1d3d3ae776abd6b9e94ac326316))
+
 # [4.33.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.32.0...v4.33.0) (2026-07-30)
 
 
