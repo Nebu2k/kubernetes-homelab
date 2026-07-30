@@ -58,7 +58,7 @@ jobs:
           echo "short_sha=${SHORT_SHA}" >> $GITHUB_OUTPUT
 
       - name: Build and push
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v7
         with:
           context: manifests/paperless-ngx
           file: manifests/paperless-ngx/Dockerfile.smb-sync
