@@ -45,7 +45,7 @@ spec:
         node-role.kubernetes.io/worker: "worker"
       containers:
       - name: postgres-exporter
-        image: quay.io/prometheuscommunity/postgres-exporter:v0.17.1
+        image: quay.io/prometheuscommunity/postgres-exporter:v0.20.1
         args:
           - "--extend.query-path=/etc/postgres_exporter/queries.yaml"
         env:
