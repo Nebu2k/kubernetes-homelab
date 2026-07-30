@@ -1,3 +1,10 @@
+## [4.33.4](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.33.3...v4.33.4) (2026-07-30)
+
+
+### Bug Fixes
+
+* **metallb:** FRR-DaemonSet abschalten, das 0.16 neu einführt ([220316e](https://github.com/Nebu2k/kubernetes-homelab/commit/220316e0e765c603e51c4c3b1ae90cd5b050ce9f))
+
 ## [4.33.3](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.33.2...v4.33.3) (2026-07-30)
 
 
