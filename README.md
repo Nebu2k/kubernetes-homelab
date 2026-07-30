@@ -1019,7 +1019,7 @@ kubectl get secret -n monitoring grafana-admin-credentials \
 
 | Component | Version | Purpose |
 |-----------|---------|---------|
-| Reloader | 2.2.7 | Reloader |
+| Reloader | 2.2.14 | Reloader |
 | Kube Prometheus Stack | 80.13.2 | Kube Prometheus Stack |
 | Sealed Secrets | 2.18.6 | Sealed Secrets |
 | Proxmox Exporter | 1.0.8 | Proxmox Exporter |
@@ -1034,13 +1034,13 @@ kubectl get secret -n monitoring grafana-admin-credentials \
 | Paperless Ngx | 82d4523 | Paperless Ngx |
 | Cert Manager | v1.18.2 | Cert Manager |
 | Uptime Kuma | 2.0.2 | Uptime Kuma |
-| Traefik | 38.0.2 | Traefik |
+| Traefik | 41.1.0 | Traefik |
 | Fr24 | latest-build-825 | Fr24 |
 | Teslamate | 4.0.1 | Teslamate |
 | Home Assistant | 2026.7.4 | Home Assistant |
 | Nfs Subdir External Provisioner | 4.0.18 | Nfs Storage |
 | Homepage | v1.8.0 | Homepage |
-| Beszel | 0.18.2 | Beszel |
+| Beszel | 0.18.7 | Beszel |
 | K3s | v1.33.5 | Lightweight Kubernetes |
 | Kube-VIP | v1.0.1 | Control plane HA |
 | ArgoCD | v3.2.3 | Continuous Delivery |

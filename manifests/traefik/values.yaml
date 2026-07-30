@@ -26,7 +26,10 @@ providers:
 service:
   annotations:
     metallb.io/loadBalancerIPs: "192.168.2.250"
-  type: LoadBalancer
+  # Ab Chart 41 liegt type unter spec, das fruehere top-level service.type
+  # gibt es nicht mehr.
+  spec:
+    type: LoadBalancer
 
 # Prometheus metrics
 metrics:
@@ -37,18 +40,22 @@ metrics:
     serviceMonitor:
       enabled: true
 
-# Access logs
-logs:
-  general:
-    level: INFO
-  access:
-    enabled: true
+# Logs. Chart 41 folgt der Traefik-Syntax: aus logs.general wurde log,
+# aus logs.access wurde accessLog.
+log:
+  level: INFO
+accessLog:
+  enabled: true
 
-# Security headers
-globalArguments:
-  - "--api.dashboard=true"
-  - "--ping=true"
-  - "--entrypoints.websecure.transport.respondingTimeouts.readTimeout=24h"
+# Frueher stand hier ein globalArguments-Block mit --api.dashboard=true,
+# --ping=true und einem readTimeout von 24h. Der war nachweislich
+# wirkungslos: das Chart kennt globalArguments nicht mehr (seit dem Wechsel
+# auf global.xx), und im gerenderten wie im laufenden Pod tauchte keines
+# der drei Argumente aus diesem Block auf.
+# api.dashboard und ping setzt das Chart ohnehin selbst.
+# Der readTimeout war damit nie aktiv, Traefik laeuft auf seinem Default
+# von 60s. Bewusst NICHT mitmigriert, damit dieses Upgrade das Verhalten
+# nicht aendert. Siehe ROADMAP.md, ob wir die 24h ueberhaupt wollen.
 
 # Dashboard
 ingressRoute:
@@ -71,8 +78,10 @@ ports:
       default: true
     http3:
       enabled: false
-    tls:
-      enabled: true
+    # Ab Chart 41 liegt tls unter http.
+    http:
+      tls:
+        enabled: true
   metrics:
     port: 9100
     expose:
