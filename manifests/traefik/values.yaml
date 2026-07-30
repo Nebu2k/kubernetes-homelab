@@ -13,9 +13,19 @@ providers:
   kubernetesIngress:
     enabled: true
 
-# MetalLB LoadBalancer IP
+# MetalLB LoadBalancer IP.
+# MUSS als Annotation gesetzt werden. Das Traefik-Chart kennt keinen
+# service.loadBalancerIP-Wert, Helm hat den Key bisher stillschweigend
+# ignoriert (im gerenderten Service stand nie eine IP). Traefik bekam die
+# .250 nur deshalb, weil es der einzige LoadBalancer im Cluster ist und
+# MetalLB die erste freie Adresse aus dem Pool .250-.253 vergibt.
+# An der .250 haengen der UniFi-Portforward (80/443) und der
+# Split-Horizon-Wildcard *.elmstreet79.de, sie darf also nicht wandern.
+# metallb.io/ ist der aktuelle Prefix, metallb.universe.tf/ ist seit 0.14.9
+# deprecated.
 service:
-  loadBalancerIP: 192.168.2.250
+  annotations:
+    metallb.io/loadBalancerIPs: "192.168.2.250"
   type: LoadBalancer
 
 # Prometheus metrics
