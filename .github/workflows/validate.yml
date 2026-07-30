@@ -1,0 +1,56 @@
+name: Validate
+
+# Gate fuer Renovate-Automerge (Phase 3): erst wenn dieser Workflow gruen ist,
+# darf ein Update nach main. Grund: ArgoCD rollt main mit selfHeal + prune
+# sofort aus, ein kaputter Merge waere unmittelbar im Cluster.
+#
+# Die eigentliche Logik steht in .github/scripts/validate.sh, damit lokal und in CI
+# derselbe Code laeuft. Lokal: ./.github/scripts/validate.sh
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+concurrency:
+  group: validate-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  # renovate: datasource=github-releases depName=yannh/kubeconform
+  KUBECONFORM_VERSION: v0.8.0
+  # renovate: datasource=github-releases depName=kubernetes-sigs/kustomize
+  KUSTOMIZE_VERSION: v5.8.1
+
+jobs:
+  validate:
+    name: Manifeste und Charts
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Helm
+        uses: azure/setup-helm@v5.0.1
+
+      - name: Install kubeconform + kustomize
+        run: |
+          set -euo pipefail
+          curl -sSfL \
+            "https://github.com/yannh/kubeconform/releases/download/${KUBECONFORM_VERSION}/kubeconform-linux-amd64.tar.gz" \
+            | sudo tar xz -C /usr/local/bin kubeconform
+          curl -sSfL \
+            "https://github.com/kubernetes-sigs/kustomize/releases/download/kustomize%2F${KUSTOMIZE_VERSION}/kustomize_${KUSTOMIZE_VERSION}_linux_amd64.tar.gz" \
+            | sudo tar xz -C /usr/local/bin kustomize
+          kubeconform -v
+          kustomize version
+
+      - name: Install PyYAML
+        run: python3 -m pip install --quiet pyyaml
+
+      - name: Validate
+        run: ./.github/scripts/validate.sh

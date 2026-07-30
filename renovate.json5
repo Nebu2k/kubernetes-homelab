@@ -4,6 +4,10 @@
   extends: [
     'config:recommended',
     ':dependencyDashboard',
+    // Haelt die per curl installierten Tool-Versionen in
+    // .github/workflows/validate.yml aktuell. Greift auf das Muster
+    // "# renovate: datasource=... depName=..." ueber einer *_VERSION-Zeile.
+    'customManagers:githubActionsVersions',
   ],
 
   timezone: 'Europe/Berlin',
