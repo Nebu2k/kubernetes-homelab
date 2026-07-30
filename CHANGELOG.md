@@ -1,3 +1,15 @@
+# [4.28.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.27.1...v4.28.0) (2026-07-30)
+
+
+### Bug Fixes
+
+* **githooks:** hooksPath relativ setzen, damit Hooks Repo-Umzüge überleben ([a72dea5](https://github.com/Nebu2k/kubernetes-homelab/commit/a72dea5ac6c1a7853a207ae9d870d71e92753db0))
+
+
+### Features
+
+* **ci:** Renovate für automatische Dependency-Updates ([ad29409](https://github.com/Nebu2k/kubernetes-homelab/commit/ad294095deba13528a7d35c0214851e1efe99b26))
+
 ## [4.27.1](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.27.0...v4.27.1) (2026-07-24)
 
 
