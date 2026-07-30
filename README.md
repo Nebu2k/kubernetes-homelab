@@ -1026,11 +1026,11 @@ kubectl get secret -n monitoring grafana-admin-credentials \
 | N8n | 2.4.4 | N8n |
 | Landing Page | 1.29.4-alpine | Landing Page |
 | Ripe Atlas | 5120 | Ripe Atlas |
-| Kured | 5.10.0 | Kured |
+| Kured | 6.1.0 | Kured |
 | Metallb | 0.15.3 | Metallb |
 | Longhorn | 1.12.0 | Longhorn |
 | Unifi Poller | v2.21.0 | Unifi Poller |
-| Portainer | 2.33.6 | Portainer |
+| Portainer | 239.5.0 | Portainer |
 | Paperless Ngx | 82d4523 | Paperless Ngx |
 | Cert Manager | v1.18.2 | Cert Manager |
 | Uptime Kuma | 2.0.2 | Uptime Kuma |
