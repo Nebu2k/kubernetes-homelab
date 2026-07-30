@@ -18,7 +18,7 @@ spec:
       dnsPolicy: ClusterFirstWithHostNet  # Use cluster DNS despite hostNetwork
       containers:
       - name: beszel-agent
-        image: henrygd/beszel-agent:0.18
+        image: henrygd/beszel-agent:0.18.7
         imagePullPolicy: IfNotPresent
         ports:
         - name: agent
