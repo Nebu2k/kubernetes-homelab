@@ -10,8 +10,12 @@ HOOKS_DIR="$REPO_ROOT/.githooks"
 
 echo "🔧 Installing Git hooks..."
 
-# Configure Git to use .githooks directory
-git config core.hooksPath "$HOOKS_DIR"
+# Configure Git to use .githooks directory.
+# Bewusst RELATIV: Git loest core.hooksPath vom Wurzelverzeichnis des Working
+# Tree auf. Ein absoluter Pfad ueberlebt kein Verschieben/Umbenennen des Repos,
+# und ein toter hooksPath wird von Git kommentarlos ignoriert - die Hooks waeren
+# dann still aus, ohne Fehlermeldung.
+git config core.hooksPath ".githooks"
 
 echo "✅ Git hooks installed successfully!"
 echo ""
