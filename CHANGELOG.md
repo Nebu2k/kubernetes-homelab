@@ -1,3 +1,11 @@
+# [4.33.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.32.0...v4.33.0) (2026-07-30)
+
+
+### Features
+
+* **kured:** Chart-Upgrade 5.10.0 auf 6.1.0 ([c6ee901](https://github.com/Nebu2k/kubernetes-homelab/commit/c6ee901a8bfdc453ec25733a5a7b71628bd01c17))
+* **portainer:** Chart 2.33.6 auf 239.5.0, wirkungslose values entfernt ([112bb7f](https://github.com/Nebu2k/kubernetes-homelab/commit/112bb7f555af78a93d7eda5536ae240c0f34e9ea))
+
 # [4.32.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.31.0...v4.32.0) (2026-07-30)
 
 
