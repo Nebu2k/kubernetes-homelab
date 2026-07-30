@@ -1,3 +1,15 @@
+# [4.29.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.28.2...v4.29.0) (2026-07-30)
+
+
+### Bug Fixes
+
+* **traefik:** LoadBalancer-IP per MetalLB-Annotation festnageln ([e5d5297](https://github.com/Nebu2k/kubernetes-homelab/commit/e5d52978cdc66f25dd7b12882686dcabb1a69eff))
+
+
+### Features
+
+* **traefik:** Chart-Upgrade 38.0.2 auf 41.1.0 mit values-Migration ([80ade5a](https://github.com/Nebu2k/kubernetes-homelab/commit/80ade5a924979f820e3147bd4a1a0bce90ec1b9c))
+
 ## [4.28.2](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.28.1...v4.28.2) (2026-07-30)
 
 
