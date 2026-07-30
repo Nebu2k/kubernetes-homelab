@@ -1,3 +1,10 @@
+# [4.32.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.31.0...v4.32.0) (2026-07-30)
+
+
+### Features
+
+* **monitoring:** kube-prometheus-stack 80.13.2 auf 87.21.0 ([fbd6612](https://github.com/Nebu2k/kubernetes-homelab/commit/fbd6612be98ecdab5282317d45c8080faf91f499))
+
 # [4.31.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.30.0...v4.31.0) (2026-07-30)
 
 
