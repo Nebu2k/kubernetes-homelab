@@ -1,3 +1,17 @@
+## [4.33.5](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.33.4...v4.33.5) (2026-07-30)
+
+
+### Bug Fixes
+
+* **deps:** update amazon/aws-cli docker tag to v2.36.12 ([#38](https://github.com/Nebu2k/kubernetes-homelab/issues/38)) ([b24e836](https://github.com/Nebu2k/kubernetes-homelab/commit/b24e8368867cb2d1bbd8820960e69c3e5f22c5ba))
+* **deps:** update ghcr.io/bakito/adguardhome-sync docker tag to v0.9.2 ([#41](https://github.com/Nebu2k/kubernetes-homelab/issues/41)) ([8d15b53](https://github.com/Nebu2k/kubernetes-homelab/commit/8d15b53a6cde132ddf9f12c7394b8d5033ba0349))
+* **deps:** update ghcr.io/gethomepage/homepage docker tag to v1.13.2 ([#42](https://github.com/Nebu2k/kubernetes-homelab/issues/42)) ([91174cd](https://github.com/Nebu2k/kubernetes-homelab/commit/91174cd60d281014febc4ccbd20b8f132678fac5))
+* **deps:** update ghcr.io/paperless-ngx/paperless-ngx docker tag to v2.20.15 ([#39](https://github.com/Nebu2k/kubernetes-homelab/issues/39)) ([5994f61](https://github.com/Nebu2k/kubernetes-homelab/commit/5994f615e6fbfaaf3bb115128dad6de438ad84fa))
+* **deps:** update ghcr.io/unpoller/unpoller docker tag to v2.39.0 ([#43](https://github.com/Nebu2k/kubernetes-homelab/issues/43)) ([be50bbf](https://github.com/Nebu2k/kubernetes-homelab/commit/be50bbf494a6f1463f1cd3c3a587ad4df105bcc8))
+* **deps:** update helm release cert-manager to v1.21.1 ([#40](https://github.com/Nebu2k/kubernetes-homelab/issues/40)) ([b1eb403](https://github.com/Nebu2k/kubernetes-homelab/commit/b1eb403b18ed7103ba85b48517db76bc73217444))
+* **deps:** update n8nio/n8n docker tag to v2.33.2 ([#44](https://github.com/Nebu2k/kubernetes-homelab/issues/44)) ([5c3f5c9](https://github.com/Nebu2k/kubernetes-homelab/commit/5c3f5c92e8e685726c6b6e6fdabaaadde726838d))
+* **deps:** update quay.io/prometheuscommunity/postgres-exporter docker tag to v0.20.1 ([#45](https://github.com/Nebu2k/kubernetes-homelab/issues/45)) ([47078cd](https://github.com/Nebu2k/kubernetes-homelab/commit/47078cd1bab9ff03244e13a828446cf39f6a06a9))
+
 ## [4.33.4](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.33.3...v4.33.4) (2026-07-30)
 
 
