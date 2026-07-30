@@ -1,3 +1,11 @@
+## [4.33.2](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.33.1...v4.33.2) (2026-07-30)
+
+
+### Bug Fixes
+
+* **deps:** update helm release cert-manager to v1.21.0 ([#24](https://github.com/Nebu2k/kubernetes-homelab/issues/24)) ([e8947a9](https://github.com/Nebu2k/kubernetes-homelab/commit/e8947a9429e59f486c43fb9d067545a0a86da801))
+* **deps:** update helm release sealed-secrets to v2.19.1 ([#26](https://github.com/Nebu2k/kubernetes-homelab/issues/26)) ([f8c8fb8](https://github.com/Nebu2k/kubernetes-homelab/commit/f8c8fb8ca2c4243c015becb2af2ac19173617c81))
+
 ## [4.33.1](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.33.0...v4.33.1) (2026-07-30)
 
 
