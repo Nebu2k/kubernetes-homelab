@@ -1020,7 +1020,7 @@ kubectl get secret -n monitoring grafana-admin-credentials \
 | Component | Version | Purpose |
 |-----------|---------|---------|
 | Reloader | 2.2.14 | Reloader |
-| Kube Prometheus Stack | 80.13.2 | Kube Prometheus Stack |
+| Kube Prometheus Stack | 87.21.0 | Kube Prometheus Stack |
 | Sealed Secrets | 2.18.6 | Sealed Secrets |
 | Proxmox Exporter | 1.0.8 | Proxmox Exporter |
 | N8n | 2.4.4 | N8n |
