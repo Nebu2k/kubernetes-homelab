@@ -21,7 +21,7 @@ spec:
           restartPolicy: OnFailure
           containers:
           - name: backup-trigger
-            image: alpine:3.23
+            image: alpine:3.24
             command:
             - /bin/sh
             - -c
