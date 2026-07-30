@@ -8,9 +8,16 @@ replicaCount: 1
 nodeSelector:
   node-role.kubernetes.io/worker: "worker"
 
-# Reloader auto-reload on ConfigMap/Secret changes
-annotations:
-  reloader.stakater.com/auto: "true"
+# Hier standen frueher "annotations" (Reloader) sowie "livenessProbe" und
+# "readinessProbe" mit auf die Raspis abgestimmten Timings. Alle drei waren
+# wirkungslos: das Portainer-Chart hardcodiert die Probes im
+# Deployment-Template und kennt weder einen Probe- noch einen
+# podAnnotations-Wert. Am laufenden Deployment standen entsprechend die
+# Chart-Defaults (initialDelaySeconds 45 statt der gewuenschten 60) und keine
+# Reloader-Annotation.
+# Die Annotation haette ohnehin nichts bewirkt, Portainer mountet weder
+# Secrets noch ConfigMaps. Entfernt, damit die Datei nicht laenger etwas
+# behauptet, was nicht passiert.
 
 # Persistent storage
 persistence:
@@ -18,23 +25,3 @@ persistence:
   size: 1Gi
   storageClass: longhorn  # Use Longhorn for replicated storage
 
-# Health check probes - relaxed timeouts for Raspberry Pi
-livenessProbe:
-  httpGet:
-    path: /
-    port: 9443
-    scheme: HTTPS
-  initialDelaySeconds: 60  # Give Portainer time to start
-  periodSeconds: 30        # Check every 30s
-  timeoutSeconds: 5        # Allow 5s for response (was 1s - too aggressive)
-  failureThreshold: 5      # 5 failures before restart (5 * 30s = 2.5min)
-
-readinessProbe:
-  httpGet:
-    path: /
-    port: 9443
-    scheme: HTTPS
-  initialDelaySeconds: 60  # Give Portainer time to start
-  periodSeconds: 30        # Check every 30s
-  timeoutSeconds: 5        # Allow 5s for response (was 1s - too aggressive)
-  failureThreshold: 3      # 3 failures before marking unready (3 * 30s = 1.5min)
