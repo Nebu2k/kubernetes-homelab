@@ -1,3 +1,13 @@
+## [4.39.2](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.39.1...v4.39.2) (2026-07-31)
+
+
+### Bug Fixes
+
+* **deps:** update helm release kube-prometheus-stack to v88 ([#51](https://github.com/Nebu2k/kubernetes-homelab/issues/51)) ([f610026](https://github.com/Nebu2k/kubernetes-homelab/commit/f610026443fab38fced8ac8d79513a831a72bb07))
+* **deps:** update n8nio/n8n docker tag to v2.33.3 ([#49](https://github.com/Nebu2k/kubernetes-homelab/issues/49)) ([752f1fb](https://github.com/Nebu2k/kubernetes-homelab/commit/752f1fb395aa7534b78b9f0ca8462023e897cb3e))
+* **deps:** update redis docker tag to v8.10.0 ([#50](https://github.com/Nebu2k/kubernetes-homelab/issues/50)) ([86e3888](https://github.com/Nebu2k/kubernetes-homelab/commit/86e388859af92048c14616a379682a6b95589446))
+* **kured:** forceReboot setzen, sonst rebootet kured nie ([c632e95](https://github.com/Nebu2k/kubernetes-homelab/commit/c632e9591d1ea79087905d26922ae64f7a812823))
+
 ## [4.39.1](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.39.0...v4.39.1) (2026-07-31)
 
 
