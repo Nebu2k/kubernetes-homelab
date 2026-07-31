@@ -1,3 +1,10 @@
+# [4.39.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.38.0...v4.39.0) (2026-07-31)
+
+
+### Features
+
+* **paperless-ngx:** smb-sync-Sidecar durch den SMB-Share als Consume-Dir ersetzen ([7e14e27](https://github.com/Nebu2k/kubernetes-homelab/commit/7e14e2731af43b49f3ec7b146f5144002b676b8a))
+
 # [4.38.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.37.0...v4.38.0) (2026-07-31)
 
 
