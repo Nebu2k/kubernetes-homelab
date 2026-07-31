@@ -37,6 +37,10 @@ spec:
     requests:
       storage: 10Gi
 ---
+# UNBENUTZT seit dem Umstieg auf csi-driver-smb: paperless konsumiert direkt
+# vom Scanner-Share, siehe smb-consume-pv.yaml. Bleibt vorerst nur als Netz
+# stehen, um ohne NAS-Abhaengigkeit zurueckwechseln zu koennen.
+# Nach dem ersten echten Scan ueber den neuen Pfad ersatzlos loeschen.
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
