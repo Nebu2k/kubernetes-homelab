@@ -1029,7 +1029,7 @@ kubectl get secret -n monitoring grafana-admin-credentials \
 |-----------|---------|---------|
 | Beszel | 0.18.7 | Beszel |
 | Cert Manager | v1.21.1 | Cert Manager |
-| Fr24 | latest-build-825 | Fr24 |
+| Fr24 | latest-build-858 | Fr24 |
 | Home Assistant | 2026.7.4 | Home Assistant |
 | Homepage | v1.13.2 | Homepage |
 | Kube Prometheus Stack | 87.21.0 | Kube Prometheus Stack |
