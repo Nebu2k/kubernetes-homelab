@@ -1,3 +1,10 @@
+# [4.37.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.36.2...v4.37.0) (2026-07-31)
+
+
+### Features
+
+* **csi-driver-smb:** SMB CSI Driver einfuehren ([66a954b](https://github.com/Nebu2k/kubernetes-homelab/commit/66a954b510f3e438c4c0f035488d45f914ccb677))
+
 ## [4.36.2](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.36.1...v4.36.2) (2026-07-31)
 
 
