@@ -1021,25 +1021,25 @@ kubectl get secret -n monitoring grafana-admin-credentials \
 |-----------|---------|---------|
 | Reloader | 2.2.14 | Reloader |
 | Kube Prometheus Stack | 87.21.0 | Kube Prometheus Stack |
-| Sealed Secrets | 2.18.6 | Sealed Secrets |
+| Sealed Secrets | 2.19.1 | Sealed Secrets |
 | Proxmox Exporter | 1.0.8 | Proxmox Exporter |
-| N8n | 2.4.4 | N8n |
-| Landing Page | 1.29.4-alpine | Landing Page |
+| N8n | 2.33.2 | N8n |
+| Landing Page | 1.31.3-alpine | Landing Page |
 | Ripe Atlas | 5120 | Ripe Atlas |
 | Kured | 6.1.0 | Kured |
-| Metallb | 0.15.3 | Metallb |
+| Metallb | 0.16.1 | Metallb |
 | Longhorn | 1.12.0 | Longhorn |
-| Unifi Poller | v2.21.0 | Unifi Poller |
+| Unifi Poller | v2.39.0 | Unifi Poller |
 | Portainer | 239.5.0 | Portainer |
 | Paperless Ngx | 82d4523 | Paperless Ngx |
-| Cert Manager | v1.18.2 | Cert Manager |
-| Uptime Kuma | 2.0.2 | Uptime Kuma |
+| Cert Manager | v1.21.1 | Cert Manager |
+| Uptime Kuma | 2.4.0 | Uptime Kuma |
 | Traefik | 41.1.0 | Traefik |
 | Fr24 | latest-build-825 | Fr24 |
 | Teslamate | 4.0.1 | Teslamate |
 | Home Assistant | 2026.7.4 | Home Assistant |
 | Nfs Subdir External Provisioner | 4.0.18 | Nfs Storage |
-| Homepage | v1.8.0 | Homepage |
+| Homepage | v1.13.2 | Homepage |
 | Beszel | 0.18.7 | Beszel |
 | K3s | v1.33.5 | Lightweight Kubernetes |
 | Kube-VIP | v1.0.1 | Control plane HA |

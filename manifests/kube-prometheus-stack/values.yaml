@@ -1,6 +1,33 @@
 # kube-prometheus-stack Helm values
 # Optimized for Raspberry Pi homelab
 
+# CRDs vor dem Operator aktualisieren.
+#
+# Helm aktualisiert CRDs grundsaetzlich nicht, ArgoCD rendert sie zwar mit
+# (--include-crds) und wendet sie an, kommt beim Major-Upgrade aber nicht dazu:
+# beim Sprung 80.13.2 -> 87.21.0 blockierte der Diff mit
+#   ComparisonError: .spec.hostNetwork: field not declared in schema
+# Die alertmanagers-CRD im Cluster kannte das Feld noch nicht, Chart 87 rendert
+# es. ArgoCD diffed gegen das Cluster-Schema, scheitert, und wendet deshalb auch
+# die neue CRD nie an. Henne-Ei, aufgeloest nur per manuellem
+# kubectl apply --server-side aus dem Chart-Tarball.
+#
+# Der Job des crds-Subcharts nimmt genau diesen Schritt vorweg: PreSync-Hook,
+# entpackt die mitgelieferten CRDs und wendet sie server-side an, bevor der
+# Operator kommt. Mechanisch nichts Neues fuer uns, ArgoCD faehrt fuer diese App
+# schon die admission-create/patch-Hooks derselben Bauart.
+#
+# forceConflicts ist Pflicht: ArgoCD ist durch ServerSideApply=true bereits
+# Field-Manager der CRDs, ohne --force-conflicts scheitert der Job daran.
+# Die Felder wandern dabei kurz an den Manager "kubectl" und beim folgenden
+# Sync zurueck an ArgoCD. Inhaltlich identisch, also kein Dauer-Diff.
+#
+# Upstream markiert das Feature als preview. Bei Chart-Upgrades im Blick behalten.
+crds:
+  upgradeJob:
+    enabled: true
+    forceConflicts: true
+
 # Global settings
 defaultRules:
   create: true
