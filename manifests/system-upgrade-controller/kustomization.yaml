@@ -24,10 +24,11 @@ namespace: system-upgrade
 resources:
   - crd.yaml
   - deployment.yaml
-  # Scharf geschaltet wird in einem eigenen Commit: sobald die Plans hier
-  # stehen, faengt der Controller an, Nodes zu drainen und k3s zu tauschen.
-  # Erst pruefen, dass der Controller sauber laeuft.
-  # - plan-server.yaml
+  - plan-server.yaml
+  # Der Agent-Plan kommt bewusst in einem eigenen Schritt dazu. Der
+  # Server-Plan fasst nur die Control-Plane-Nodes an und cordoned lediglich,
+  # dort liegt keine Anwendungslast. Erst wenn das sauber durch ist, die
+  # Worker drainen.
   # - plan-agent.yaml
 patches:
   - path: patch-controller-env.yaml
