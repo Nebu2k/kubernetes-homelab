@@ -1,3 +1,10 @@
+# [4.35.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.34.0...v4.35.0) (2026-07-31)
+
+
+### Features
+
+* **system-upgrade-controller:** Server-Plan scharf schalten, Ziel v1.34.9+k3s1 ([8abd16a](https://github.com/Nebu2k/kubernetes-homelab/commit/8abd16a95a2cb05dd699534e8c10873f686d202c))
+
 # [4.34.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.33.6...v4.34.0) (2026-07-31)
 
 
