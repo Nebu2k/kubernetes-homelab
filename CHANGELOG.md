@@ -1,3 +1,10 @@
+## [4.33.6](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.33.5...v4.33.6) (2026-07-31)
+
+
+### Bug Fixes
+
+* **kube-prometheus-stack:** CRDs per upgradeJob vor dem Operator anwenden ([29031e0](https://github.com/Nebu2k/kubernetes-homelab/commit/29031e097d722f3a9b0f3617eee7ffa6a5a77355))
+
 ## [4.33.5](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.33.4...v4.33.5) (2026-07-30)
 
 
