@@ -1,3 +1,10 @@
+# [4.36.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.35.0...v4.36.0) (2026-07-31)
+
+
+### Features
+
+* **system-upgrade-controller:** Agent-Plan scharf schalten ([2210947](https://github.com/Nebu2k/kubernetes-homelab/commit/22109476be8cc76b5c94183b62a9f83a3c9ff3c2))
+
 # [4.35.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.34.0...v4.35.0) (2026-07-31)
 
 
