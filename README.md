@@ -225,7 +225,6 @@ homelab/
     │   ├── s3-backup-credentials-sealed.yaml
     │   ├── s3-backup-credentials-unsealed.yaml.example
     │   ├── service.yaml
-    │   ├── smb-consume-pv.yaml
     │   ├── smb-credentials-sealed.yaml
     │   └── smb-credentials-unsealed.yaml.example
     ├── portainer/
@@ -1044,7 +1043,7 @@ kubectl get secret -n monitoring grafana-admin-credentials \
 | Metallb | 0.16.1 | Metallb |
 | N8n | 2.33.2 | N8n |
 | Nfs Subdir External Provisioner | 4.0.18 | Nfs Storage |
-| Paperless Ngx | 2.20.15 | Paperless Ngx |
+| Paperless Ngx | 82d4523 | Paperless Ngx |
 | Portainer | 239.5.0 | Portainer |
 | Proxmox Exporter | 1.0.8 | Proxmox Exporter |
 | Reloader | 2.2.14 | Reloader |
