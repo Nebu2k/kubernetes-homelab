@@ -1,3 +1,10 @@
+## [4.36.2](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.36.1...v4.36.2) (2026-07-31)
+
+
+### Bug Fixes
+
+* **deps:** update ghcr.io/sdr-enthusiasts/docker-flightradar24 docker tag to v858 ([#46](https://github.com/Nebu2k/kubernetes-homelab/issues/46)) ([387a6f8](https://github.com/Nebu2k/kubernetes-homelab/commit/387a6f84ab09935f1c808ac2e77c3b55e63a8b6a))
+
 ## [4.36.1](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.36.0...v4.36.1) (2026-07-31)
 
 
