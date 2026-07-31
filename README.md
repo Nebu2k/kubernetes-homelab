@@ -225,6 +225,7 @@ homelab/
     │   ├── s3-backup-credentials-sealed.yaml
     │   ├── s3-backup-credentials-unsealed.yaml.example
     │   ├── service.yaml
+    │   ├── smb-consume-pv.yaml
     │   ├── smb-credentials-sealed.yaml
     │   └── smb-credentials-unsealed.yaml.example
     ├── portainer/
