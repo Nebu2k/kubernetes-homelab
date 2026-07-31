@@ -28,8 +28,11 @@ ACRONYMS = {'nfs', 's3', 'api', 'dns', 'tls', 'ssl', 'http', 'https',
 def get_sync_waves():
     """Extract sync-wave annotations from ArgoCD Applications."""
     sync_waves = defaultdict(list)
-    
-    for app_file in APPS_DIR.glob("*.yaml"):
+
+    # sorted(), weil Path.glob() die Reihenfolge des Dateisystems durchreicht.
+    # Ohne das erzeugen macOS (APFS) und der CI-Runner (ext4) unterschiedliche
+    # READMEs, und lokaler Hook und Docs-Workflow ueberschreiben sich abwechselnd.
+    for app_file in sorted(APPS_DIR.glob("*.yaml")):
         if app_file.name == "kustomization.yaml":
             continue
             
@@ -45,7 +48,8 @@ def get_sync_waves():
         
         sync_waves[int(sync_wave)].append(app_name)
     
-    return dict(sorted(sync_waves.items()))
+    # Waves nach Nummer, Komponenten innerhalb einer Wave alphabetisch.
+    return {wave: sorted(apps) for wave, apps in sorted(sync_waves.items())}
 
 
 def get_component_versions():
@@ -55,7 +59,10 @@ def get_component_versions():
     versions = {}
     base_dir = REPO_ROOT / "base"
 
-    for app_file in APPS_DIR.glob("*.yaml"):
+    # sorted() bestimmt hier die Zeilenfolge der Versionstabelle, siehe
+    # get_sync_waves(). Ohne das ist sie zufaellig und driftet zwischen
+    # lokalem Hook und CI.
+    for app_file in sorted(APPS_DIR.glob("*.yaml")):
         if app_file.name == "kustomization.yaml":
             continue
 
@@ -198,7 +205,8 @@ def get_documentation_links():
     }
 
     # Extract unique charts from applications
-    for app_file in APPS_DIR.glob("*.yaml"):
+    # sorted() aus demselben Grund, siehe get_sync_waves().
+    for app_file in sorted(APPS_DIR.glob("*.yaml")):
         if app_file.name == "kustomization.yaml":
             continue
 

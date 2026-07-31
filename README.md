@@ -19,11 +19,11 @@ Production-ready K3s cluster managed via GitOps using ArgoCD App-of-Apps pattern
 
 | Wave | Component |
 |------|-----------|
-| 0 | Sealed Secrets, Coredns Config |
+| 0 | Coredns Config, Sealed Secrets |
 | 1 | Kured, Metallb, Reloader |
 | 3 | Traefik |
-| 4 | Longhorn, Cert Manager |
-| 5 | Teslamate, Nfs Storage, Portainer, Landing Page |
+| 4 | Cert Manager, Longhorn |
+| 5 | Landing Page, Nfs Storage, Portainer, Teslamate |
 | 6 | Kube Prometheus Stack |
 | 7 | Home Assistant, Unifi Poller |
 | 8 | Ripe Atlas, Uptime Kuma |
@@ -1019,28 +1019,28 @@ kubectl get secret -n monitoring grafana-admin-credentials \
 
 | Component | Version | Purpose |
 |-----------|---------|---------|
+| Beszel | 0.18.7 | Beszel |
+| Cert Manager | v1.21.1 | Cert Manager |
+| Fr24 | latest-build-825 | Fr24 |
+| Home Assistant | 2026.7.4 | Home Assistant |
 | Homepage | v1.13.2 | Homepage |
-| Traefik | 41.1.0 | Traefik |
+| Kube Prometheus Stack | 87.21.0 | Kube Prometheus Stack |
+| Kured | 6.1.0 | Kured |
+| Landing Page | 1.31.3-alpine | Landing Page |
+| Longhorn | 1.12.0 | Longhorn |
+| Metallb | 0.16.1 | Metallb |
+| N8n | 2.33.2 | N8n |
+| Nfs Subdir External Provisioner | 4.0.18 | Nfs Storage |
+| Paperless Ngx | 82d4523 | Paperless Ngx |
+| Portainer | 239.5.0 | Portainer |
+| Proxmox Exporter | 1.0.8 | Proxmox Exporter |
+| Reloader | 2.2.14 | Reloader |
+| Ripe Atlas | 5120 | Ripe Atlas |
 | Sealed Secrets | 2.19.1 | Sealed Secrets |
 | Teslamate | 4.0.1 | Teslamate |
-| Proxmox Exporter | 1.0.8 | Proxmox Exporter |
-| N8n | 2.33.2 | N8n |
-| Home Assistant | 2026.7.4 | Home Assistant |
-| Beszel | 0.18.7 | Beszel |
-| Kube Prometheus Stack | 87.21.0 | Kube Prometheus Stack |
-| Paperless Ngx | 82d4523 | Paperless Ngx |
-| Ripe Atlas | 5120 | Ripe Atlas |
-| Nfs Subdir External Provisioner | 4.0.18 | Nfs Storage |
-| Uptime Kuma | 2.4.0 | Uptime Kuma |
-| Portainer | 239.5.0 | Portainer |
-| Fr24 | latest-build-825 | Fr24 |
-| Longhorn | 1.12.0 | Longhorn |
+| Traefik | 41.1.0 | Traefik |
 | Unifi Poller | v2.39.0 | Unifi Poller |
-| Cert Manager | v1.21.1 | Cert Manager |
-| Kured | 6.1.0 | Kured |
-| Metallb | 0.16.1 | Metallb |
-| Reloader | 2.2.14 | Reloader |
-| Landing Page | 1.31.3-alpine | Landing Page |
+| Uptime Kuma | 2.4.0 | Uptime Kuma |
 | K3s | v1.33.5 | Lightweight Kubernetes |
 | Kube-VIP | v1.0.1 | Control plane HA |
 | ArgoCD | v3.2.3 | Continuous Delivery |
