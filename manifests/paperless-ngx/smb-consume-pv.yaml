@@ -1,0 +1,62 @@
+# Der Scanner-Share des UniFi-NAS wird direkt als paperless-Consume-Verzeichnis
+# gemountet. Damit entfaellt der fruehere smb-sync-Sidecar komplett: kein
+# privileged-Container, kein Eigenbau-Image und keine Kopie ueber ein
+# Longhorn-Zwischenvolume mehr. Paperless raeumt den Share selbst auf, es
+# loescht konsumierte Dateien - genau das, was vorher rsync
+# --remove-source-files gemacht hat.
+#
+# Statisches PV (kein StorageClass-Provisioning): der Share existiert bereits
+# und wir wollen genau sein Wurzelverzeichnis, nicht ein pro-PV angelegtes
+# Unterverzeichnis.
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: paperless-consume-smb
+spec:
+  capacity:
+    # Bei SMB bedeutungslos, das Feld ist aber Pflicht.
+    storage: 100Gi
+  accessModes:
+    - ReadWriteMany
+  # Retain: das PV zeigt auf echte Daten auf dem NAS. Ein geloeschtes PVC darf
+  # hier niemals irgendetwas anfassen.
+  persistentVolumeReclaimPolicy: Retain
+  # Leerer String = kein StorageClass, sonst wuerde der Default-Provisioner
+  # das PVC an sich reissen.
+  storageClassName: ""
+  mountOptions:
+    - vers=3.0
+    - uid=1000
+    - gid=1000
+    - dir_mode=0770
+    - file_mode=0660
+    # Upstream-Empfehlung: manche NAS liefern doppelte Inode-Nummern, was zu
+    # Datenkorruption fuehren kann.
+    - noserverino
+  csi:
+    driver: smb.csi.k8s.io
+    # Muss clusterweit eindeutig sein.
+    volumeHandle: paperless-consume-smb
+    volumeAttributes:
+      source: //192.168.2.6/scans
+    # Dasselbe Secret wie frueher der Sidecar: Keys username + password sind
+    # genau die, die der Treiber erwartet.
+    nodeStageSecretRef:
+      name: smb-credentials
+      namespace: paperless-ngx
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: paperless-consume-smb
+  namespace: paperless-ngx
+spec:
+  accessModes:
+    - ReadWriteMany
+  # Bindet fest an das PV oben, nicht ueber einen Selector.
+  volumeName: paperless-consume-smb
+  storageClassName: ""
+  resources:
+    requests:
+      storage: 100Gi

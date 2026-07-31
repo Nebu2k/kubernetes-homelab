@@ -4,6 +4,7 @@ namespace: paperless-ngx
 resources:
   - namespace.yaml
   - pvc.yaml
+  - smb-consume-pv.yaml
   - db-pvc.yaml
   - postgresql.yaml
   - redis.yaml
