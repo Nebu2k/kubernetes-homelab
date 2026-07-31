@@ -1,0 +1,33 @@
+# Rancher system-upgrade-controller — k3s-Updates deklarativ statt per Hand.
+#
+# crd.yaml und deployment.yaml sind UNVERAENDERT aus dem Upstream-Release
+# uebernommen (deployment.yaml heisst dort "system-upgrade-controller.yaml",
+# umbenannt damit der docs-generator die Version fuer die README-Tabelle
+# findet). Bewusst byte-identisch gelassen, damit ein Re-Vendoring ein
+# sauberer Diff bleibt. Alle eigenen Aenderungen laufen ueber Patches hier.
+#
+#   Quelle:  https://github.com/rancher/system-upgrade-controller/releases
+#   Vendorn: make vendor-suc
+#
+# Die Version steckt im Image-Tag in deployment.yaml, den Renovate pflegt.
+# WICHTIG: Nach einem Renovate-PR auf das Image muss crd.yaml aus demselben
+# Release nachgezogen werden, sonst driften CRD und Controller auseinander.
+# Genau dafuer ist "make vendor-suc" da, es leitet die Version aus dem
+# Image-Tag ab.
+#
+# Die Plans (plan-server.yaml / plan-agent.yaml) liegen bewusst hier im Repo
+# und nicht im Cluster von Hand: die Zielversion ist damit reviewbar, und
+# Renovate kann sie ueber den customManager in renovate.json5 aktuell halten.
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: system-upgrade
+resources:
+  - crd.yaml
+  - deployment.yaml
+  # Scharf geschaltet wird in einem eigenen Commit: sobald die Plans hier
+  # stehen, faengt der Controller an, Nodes zu drainen und k3s zu tauschen.
+  # Erst pruefen, dass der Controller sauber laeuft.
+  # - plan-server.yaml
+  # - plan-agent.yaml
+patches:
+  - path: patch-controller-env.yaml

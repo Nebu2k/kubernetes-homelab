@@ -56,6 +56,36 @@
     managerFilePatterns: ['manifests/**/*.yaml'],
   },
 
+  // Zwei Versionen im system-upgrade-controller-Verzeichnis stehen NICHT in
+  // einem image:-Feld und sind fuer den kubernetes-Manager damit unsichtbar:
+  // die k3s-Zielversion in den Plans (spec.version, der Controller macht daraus
+  // selbst den Image-Tag) und das kubectl-Image im ConfigMap-Patch. Beide
+  // werden ueber die "# renovate:"-Kommentarzeile darueber angebunden, genauso
+  // wie es das githubActionsVersions-Preset fuer die Workflows macht.
+  customManagers: [
+    // Die k3s-Zielversion der Plans. Steht als reine Version da, das Repo
+    // k3s-io/k3s taggt genau so ("v1.34.9+k3s1").
+    {
+      customType: 'regex',
+      // Glob, kein Regex. managerFilePatterns nimmt beides, aber ein Regex
+      // muss in Slashes stehen (/.../); ohne sie wird der Ausdruck still als
+      // Glob gelesen und matcht dann nichts.
+      managerFilePatterns: ['manifests/system-upgrade-controller/plan-*.yaml'],
+      matchStrings: [
+        '# renovate: datasource=(?<datasource>\\S+) depName=(?<depName>\\S+)\\s+version:\\s*(?<currentValue>\\S+)',
+      ],
+    },
+    // Das kubectl-Image im ConfigMap-Patch. Hier steht eine volle Image-Referenz,
+    // depName und Version kommen deshalb aus dem Wert selbst.
+    {
+      customType: 'regex',
+      managerFilePatterns: ['manifests/system-upgrade-controller/patch-*.yaml'],
+      matchStrings: [
+        '# renovate: datasource=(?<datasource>\\S+)\\s+\\S+:\\s*(?<depName>[^:\\s]+):(?<currentValue>\\S+)',
+      ],
+    },
+  ],
+
   packageRules: [
     // Cluster-relevante Updates als "fix(deps): ...". Der angular-Preset in
     // .releaserc.json macht daraus einen Patch-Release plus CHANGELOG-Eintrag,
@@ -135,6 +165,30 @@
     {
       matchPackageNames: ['ghcr.io/unpoller/unpoller'],
       matchUpdateTypes: ['major'],
+      enabled: false,
+    },
+
+    // k3s selbst (Zielversion der Plans) und das kubectl-Image, das die
+    // Drain-Schritte faehrt: nur Patches automatisch.
+    //
+    // Grund ist NICHT Vorsicht im Allgemeinen, sondern die Skip-Level-Regel von
+    // Kubernetes: man darf immer nur EINEN Minor am Stueck springen. Renovate
+    // kennt diese Regel nicht und wuerde von v1.34 direkt den neuesten Stand
+    // anbieten (aktuell v1.36.2), also v1.35 ueberspringen. Dieselbe Klasse
+    // Problem wie bei Longhorn. Minor-Spruenge bleiben deshalb Handarbeit:
+    // Version in beiden Plans UND rancher/kubectl gemeinsam hochziehen, dazu
+    // KUBE_VERSION in .github/scripts/validate.sh.
+    {
+      matchPackageNames: ['k3s-io/k3s', 'rancher/kubectl'],
+      matchUpdateTypes: ['minor', 'major'],
+      enabled: false,
+    },
+
+    // Der Tag von rancher/k3s-upgrade wird vom Controller aus spec.version des
+    // Plans erzeugt, im Manifest steht das Image absichtlich ohne Tag. Nichts,
+    // was Renovate hier zu bumpen haette.
+    {
+      matchPackageNames: ['rancher/k3s-upgrade'],
       enabled: false,
     },
 

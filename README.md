@@ -20,7 +20,7 @@ Production-ready K3s cluster managed via GitOps using ArgoCD App-of-Apps pattern
 | Wave | Component |
 |------|-----------|
 | 0 | Coredns Config, Sealed Secrets |
-| 1 | Kured, Metallb, Reloader |
+| 1 | Kured, Metallb, Reloader, System Upgrade Controller |
 | 3 | Traefik |
 | 4 | Cert Manager, Longhorn |
 | 5 | Landing Page, Nfs Storage, Portainer, Teslamate |
@@ -47,6 +47,7 @@ homelab/
 │   ├── kured.yaml                     # Wave 1
 │   ├── metallb.yaml                   # Wave 1
 │   ├── reloader.yaml                  # Wave 1
+│   ├── system-upgrade-controller.yaml # Wave 1
 │   ├── traefik.yaml                   # Wave 3
 │   ├── cert-manager.yaml              # Wave 4
 │   ├── longhorn.yaml                  # Wave 4
@@ -242,6 +243,13 @@ homelab/
     │   ├── kustomization.yaml
     │   ├── namespace.yaml
     │   └── pvc.yaml
+    ├── system-upgrade-controller/
+    │   ├── crd.yaml
+    │   ├── deployment.yaml
+    │   ├── kustomization.yaml
+    │   ├── patch-controller-env.yaml
+    │   ├── plan-agent.yaml
+    │   └── plan-server.yaml
     ├── teslamate/
     │   ├── database-deployment.yaml
     │   ├── database-pdb.yaml
@@ -1037,6 +1045,7 @@ kubectl get secret -n monitoring grafana-admin-credentials \
 | Reloader | 2.2.14 | Reloader |
 | Ripe Atlas | 5120 | Ripe Atlas |
 | Sealed Secrets | 2.19.1 | Sealed Secrets |
+| System Upgrade Controller | v0.20.1 | System Upgrade Controller |
 | Teslamate | 4.0.1 | Teslamate |
 | Traefik | 41.1.0 | Traefik |
 | Unifi Poller | v2.39.0 | Unifi Poller |
@@ -1062,6 +1071,7 @@ kubectl get secret -n monitoring grafana-admin-credentials \
 - [Proxmox Exporter](https://github.com/prometheus-pve/prometheus-pve-exporter)
 - [Reloader](https://stakater.github.io/stakater-charts)
 - [Sealed Secrets](https://bitnami.github.io/sealed-secrets/)
+- [System Upgrade Controller](https://docs.k3s.io/upgrades/automated)
 - [Teslamate](https://docs.teslamate.org/)
 - [Traefik](https://traefik.github.io/charts)
 - [Unifi Poller](https://unpoller.com/)

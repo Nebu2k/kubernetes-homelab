@@ -4,6 +4,7 @@ resources:
   - sealed-secrets.yaml
   - reloader.yaml
   - kured.yaml
+  - system-upgrade-controller.yaml
   - coredns-config.yaml
   - metallb.yaml
   - traefik.yaml

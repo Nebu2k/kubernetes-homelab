@@ -202,6 +202,7 @@ def get_documentation_links():
         'landing-page': 'https://github.com/nginx/nginx',
         'proxmox-exporter': 'https://github.com/prometheus-pve/prometheus-pve-exporter',
         'unifi-poller': 'https://unpoller.com/',
+        'system-upgrade-controller': 'https://docs.k3s.io/upgrades/automated',
     }
 
     # Extract unique charts from applications
