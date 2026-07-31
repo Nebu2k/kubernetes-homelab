@@ -1,5 +1,4 @@
-# Agent-Plan: die beiden Worker (k3s-worker-1, prodesk). Hier laeuft die
-# gesamte Anwendungslast, deshalb im Gegensatz zum Server-Plan mit drain.
+# Agent-Plan: die beiden Worker (k3s-worker-1, prodesk).
 #
 # Der prepare-Schritt ist das Wichtigste an dieser Datei. Er blockiert, bis der
 # Server-Plan komplett durch ist, und serialisiert damit beide Plans. Ohne ihn
@@ -7,6 +6,26 @@
 # saemtliche 22 Longhorn-Volumes haben ihre beiden Replikate auf k3s-worker-1
 # (Agent) und raspi5 (Server). Gleichzeitig angefasst waere jedes Volume ohne
 # eine einzige laufende Replik.
+#
+# KEIN drain, obwohl das offizielle k3s-Beispiel fuer Agents eines vorsieht.
+# Am 2026-07-31 einmal mit drain versucht und live gescheitert:
+#
+#  - Longhorn legt pro instance-manager ein PDB mit minAvailable: 1 an, bei
+#    einer einzigen Replik also disruptionsAllowed: 0. Die Eviction-API lehnt
+#    diese Pods dauerhaft ab, kubectl drain wiederholt endlos und der Job
+#    stirbt an jobActiveDeadlineSecs. Ein hoeheres Timeout hilft nicht, der
+#    Drain ist nicht langsam sondern blockiert. (manifests/kured/values.yaml
+#    kennt dasselbe Problem und begrenzt deshalb drainTimeout auf 300s.)
+#  - Ein drain bringt hier ohnehin nichts. Alle Workloads sind Single-Replica
+#    mit RWO-Longhorn-Volume und strategy: Recreate, ein Umzug ist ein
+#    Detach/Attach-Zyklus und danach kommen sie wieder zurueck. Home Assistant
+#    kann sogar prinzipiell nicht ausweichen, es haengt per
+#    requiredDuringScheduling-Affinity an prodesk (hostNetwork + /run/dbus)
+#    und stand deshalb Pending, bis der Node wieder schedulable war.
+#
+# Ohne drain starten die Pods beim k3s-Neustart an Ort und Stelle neu: eine
+# kurze Unterbrechung statt eines Umzugs, und dieselbe Form wie der
+# Server-Plan, der sauber durchgelaufen ist.
 ---
 apiVersion: upgrade.cattle.io/v1
 kind: Plan
@@ -17,10 +36,8 @@ metadata:
     k3s-upgrade: agent
 spec:
   concurrency: 1
+  cordon: true
   postCompleteDelay: 5m
-  # Default sind 900s. Ein drain von k3s-worker-1 loest ueber 20 attachte
-  # Longhorn-Volumes ab, das kann laenger dauern als der Upgrade selbst.
-  jobActiveDeadlineSecs: 1800
   nodeSelector:
     matchExpressions:
       - key: node-role.kubernetes.io/control-plane
@@ -29,14 +46,6 @@ spec:
   prepare:
     image: rancher/k3s-upgrade
     args: ["prepare", "k3s-server"]
-  drain:
-    # force fuer Pods ohne Controller, deleteEmptydirData fuer die diversen
-    # emptyDir-Caches. Ohne beides bricht kubectl drain sofort ab.
-    force: true
-    deleteEmptydirData: true
-    ignoreDaemonSets: true
-    skipWaitForDeleteTimeout: 60
-    timeout: 15m
   upgrade:
     # Ohne Tag: der Controller haengt spec.version als Tag an (mit "+" -> "-").
     image: rancher/k3s-upgrade
