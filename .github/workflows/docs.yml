@@ -1,0 +1,80 @@
+name: Docs
+
+# Haelt README.md aktuell. Die Datei wird aus apps/ und manifests/ generiert
+# (docs-generator/generate_readme.py) und war bisher nur ueber den lokalen
+# pre-commit-Hook abgesichert. Der laeuft aber nur bei lokalen Commits, und
+# Renovate merged auf GitHub. Nach dem ersten Renovate-Zyklus (25 PRs) waren
+# dadurch acht Versionen in der Tabelle veraltet, aufgefallen erst beim
+# naechsten lokalen Commit. Mit Automerge (Phase 3) waere das der Dauerzustand,
+# weil dann gar keine lokalen Commits mehr noetig sind.
+#
+# Trigger ist bewusst workflow_run und nicht push:main. Semantic Release pusht
+# bei jedem Release per @semantic-release/git selbst einen Commit nach main.
+# Liefen beide auf demselben push-Event, wuerden sie gleichzeitig pushen und
+# einer scheitert mit non-fast-forward. So laeuft dieser Workflow garantiert
+# danach und sieht den fertigen Stand inklusive Release-Commit.
+#
+# Kein Commit-Loop: Pushes mit GITHUB_TOKEN loesen per GitHub-Design keine
+# weiteren Workflows aus, das [skip ci] im Commit ist zusaetzlicher Gurt.
+#
+# Der lokale Hook bleibt bestehen (schnelles Feedback beim Entwickeln), ist aber
+# nicht mehr die einzige Instanz.
+
+on:
+  workflow_run:
+    workflows: ["Semantic Release"]
+    types: [completed]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: docs-main
+  cancel-in-progress: false
+
+jobs:
+  readme:
+    name: README generieren
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          # Explizit main: bei workflow_run zeigt der Default auf den Stand,
+          # der den ausloesenden Workflow gestartet hat, nicht auf dessen
+          # Ergebnis. Wir wollen den Release-Commit mit drin haben.
+          ref: main
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Install dependencies
+        run: python3 -m pip install --quiet -r docs-generator/requirements.txt
+
+      - name: Generate README
+        run: python3 docs-generator/generate_readme.py
+
+      - name: Commit bei Aenderung
+        run: |
+          set -euo pipefail
+
+          if git diff --quiet README.md; then
+            echo "README.md unveraendert, nichts zu tun."
+            exit 0
+          fi
+
+          echo "README.md hat sich geaendert:"
+          git --no-pager diff --stat README.md
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add README.md
+          # docs() loest mit dem angular-Preset keinen Release aus.
+          git commit -m "docs(readme): Versionstabelle aktualisieren [skip ci]"
+
+          # Einmal nachfassen, falls zwischenzeitlich etwas anderes nach main
+          # gepusst hat (zwei Merges kurz hintereinander).
+          git push || {
+            echo "Push abgelehnt, rebase und zweiter Versuch."
+            git pull --rebase
+            git push
+          }
