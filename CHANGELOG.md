@@ -1,3 +1,10 @@
+# [4.38.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.37.0...v4.38.0) (2026-07-31)
+
+
+### Features
+
+* **paperless-ngx:** PV/PVC fuer den Scanner-Share per csi-driver-smb ([8d2a4bf](https://github.com/Nebu2k/kubernetes-homelab/commit/8d2a4bf0c7cefbf726a0412c7a13e2cf717e014a))
+
 # [4.37.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.36.2...v4.37.0) (2026-07-31)
 
 
