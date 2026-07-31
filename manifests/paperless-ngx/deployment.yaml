@@ -25,13 +25,17 @@ spec:
         node-role.kubernetes.io/worker: "worker"
       initContainers:
       - name: fix-permissions
+        # consume fehlt hier bewusst: das ist ein CIFS-Mount, dessen Eigentuemer
+        # ueber die uid/gid-Mountoptionen im PV festgelegt wird. chown/chmod
+        # darauf scheitert mit "Operation not permitted" und wuerde den Pod-Start
+        # blockieren.
         image: busybox:1.38.0
         command:
         - sh
         - -c
         - |
-          chown -R 1000:1000 /usr/src/paperless/data /usr/src/paperless/media /usr/src/paperless/export /usr/src/paperless/consume
-          chmod -R 755 /usr/src/paperless/data /usr/src/paperless/media /usr/src/paperless/export /usr/src/paperless/consume
+          chown -R 1000:1000 /usr/src/paperless/data /usr/src/paperless/media /usr/src/paperless/export
+          chmod -R 755 /usr/src/paperless/data /usr/src/paperless/media /usr/src/paperless/export
         volumeMounts:
         - name: data
           mountPath: /usr/src/paperless/data
@@ -39,85 +43,7 @@ spec:
           mountPath: /usr/src/paperless/media
         - name: export
           mountPath: /usr/src/paperless/export
-        - name: consume
-          mountPath: /usr/src/paperless/consume
       containers:
-      # Sidecar: Sync files from SMB share to consume folder
-      - name: smb-sync
-        image: nebu2k/paperless-smb-sync:82d4523
-        imagePullPolicy: IfNotPresent
-        command:
-        - sh
-        - -c
-        - |
-          while true; do
-            echo "$(date): Syncing from SMB share..."
-            
-            # Mount SMB share temporarily
-            mkdir -p /mnt/scanner
-            mount -t cifs "//${SMB_SERVER}/${SMB_SHARE}" /mnt/scanner \
-              -o username="${SMB_USER}",password="${SMB_PASS}",vers=3.0,uid=1000,gid=1000
-            
-            if [ $? -eq 0 ]; then
-              # Copy files to consume folder
-              rsync -av --remove-source-files /mnt/scanner/ /consume/
-              
-              # Remove empty directories
-              find /mnt/scanner -type d -empty -delete
-              
-              # Unmount
-              umount /mnt/scanner
-              echo "$(date): Sync completed"
-            else
-              echo "$(date): Failed to mount SMB share"
-            fi
-            
-            # Wait 10 minutes before next sync
-            sleep 600
-          done
-        env:
-        - name: SMB_SERVER
-          value: "192.168.2.6"  # Replace with your NAS IP
-        - name: SMB_SHARE
-          value: "scans"  # Replace with your SMB share name
-        - name: SMB_USER
-          valueFrom:
-            secretKeyRef:
-              name: smb-credentials
-              key: username
-        - name: SMB_PASS
-          valueFrom:
-            secretKeyRef:
-              name: smb-credentials
-              key: password
-        volumeMounts:
-        - name: consume
-          mountPath: /consume
-        securityContext:
-          # CIFS-Mount getestet mit capabilities SYS_ADMIN + DAC_READ_SEARCH:
-          # schlägt fehl ("mount ... Permission denied"), da der mount-Syscall vom
-          # AppArmor/seccomp-Default des Containerd geblockt wird. privileged schaltet
-          # das ab -> hier notwendig. Sauberer wäre langfristig ein SMB-CSI-Driver
-          # (csi-driver-smb) statt in-Container-Mount, dann ganz ohne privileged.
-          privileged: true
-        resources:
-          requests:
-            cpu: 50m
-            memory: 64Mi
-          limits:
-            cpu: 300m
-            memory: 128Mi
-        livenessProbe:
-          exec:
-            command:
-            - sh
-            - -c
-            - "pgrep -f 'sleep 600' || pgrep -f 'mount' || pgrep -f 'rsync'"
-          initialDelaySeconds: 30
-          periodSeconds: 60
-          timeoutSeconds: 5
-          failureThreshold: 3
-      
       - name: paperless-ngx
         image: ghcr.io/paperless-ngx/paperless-ngx:2.20.15
         imagePullPolicy: IfNotPresent
@@ -317,6 +243,7 @@ spec:
       - name: export
         persistentVolumeClaim:
           claimName: paperless-export
+      # Der Scanner-Share direkt, per csi-driver-smb. Siehe smb-consume-pv.yaml.
       - name: consume
         persistentVolumeClaim:
-          claimName: paperless-consume
+          claimName: paperless-consume-smb
