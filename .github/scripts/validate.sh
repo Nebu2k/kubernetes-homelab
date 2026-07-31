@@ -18,8 +18,9 @@ set -uo pipefail
 cd "$(git rev-parse --show-toplevel)"
 
 # Version des Clusters, gegen die validiert wird. Bei k3s-Upgrade mitziehen.
-# Aktuell: v1.34.3+k3s1
-KUBE_VERSION="1.34.3"
+# Die Zielversion steht in manifests/system-upgrade-controller/plan-*.yaml.
+# Aktuell: v1.34.9+k3s1
+KUBE_VERSION="1.34.9"
 
 # Helm-Charts, die Cluster-Capabilities abfragen, scheitern sonst beim Rendern.
 # traefik/templates/servicemonitor.yaml bricht z.B. hart ab ("You have to deploy
