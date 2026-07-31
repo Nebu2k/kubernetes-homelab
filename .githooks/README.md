@@ -16,7 +16,7 @@ This configures Git to use hooks from this directory instead of `.git/hooks/`.
 
 ### pre-commit
 
-Automatically regenerates `README.md` when relevant files change:
+Regenerates `README.md` on **every** commit. The file is generated from:
 
 - ArgoCD Application manifests (`apps/*.yaml`)
 - Helm values files (`manifests/*/values.yaml`)
@@ -26,9 +26,9 @@ Automatically regenerates `README.md` when relevant files change:
 
 **How it works:**
 
-1. Detects if trigger files are staged for commit
-2. Runs `make docs` to regenerate README
-3. Auto-stages the updated README if changed
+1. Checks that `python3` has `pyyaml`, `jinja2` and `pathspec`
+2. Runs `make docs`, the same entry point the CI uses
+3. Auto-stages `README.md` if it changed
 4. Continues with the commit
 
 **Bypass hook temporarily:**
@@ -37,21 +37,41 @@ Automatically regenerates `README.md` when relevant files change:
 git commit --no-verify
 ```
 
+## Relationship to CI
+
+`.github/workflows/docs.yml` regenerates the README after every push to `main`
+and commits it if it differs. That workflow, not this hook, is the last
+instance: it also covers Renovate PRs, which are merged on GitHub where no
+local hook runs.
+
+The hook still earns its keep. As long as it runs, the README is already
+correct in your own commit and CI has nothing to push. Without it, every local
+commit would be followed by a bot commit, forcing a rebase before your next
+push.
+
+Both call `make docs`, so they cannot drift apart.
+
 ## Requirements
 
-- Conda environment `jinja2` with dependencies installed
-- See `docs-generator/requirements.txt`
+A `python3` with the packages in `docs-generator/requirements.txt`:
+
+```bash
+python3 -m pip install -r docs-generator/requirements.txt
+```
+
+No conda environment is needed. Earlier versions of this hook required one
+named `jinja2` and aborted with `exit 1` when it was missing, which blocked
+every commit in the repository. The hook now skips generation with a warning
+instead, since CI regenerates the README after the push anyway.
+
+Use a different interpreter with `PYTHON=/path/to/python git commit ...`.
 
 ## Troubleshooting
 
-### Error: "Conda environment 'jinja2' not found"
+### "README-Generator übersprungen"
 
-Create the environment:
-
-```bash
-conda create -n jinja2 python=3.11 -y
-conda run -n jinja2 pip install -r docs-generator/requirements.txt
-```
+The interpreter is missing dependencies. Install them as shown above, or ignore
+it and let CI handle the README.
 
 ### Hook not running
 

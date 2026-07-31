@@ -1,38 +1,40 @@
 #!/bin/bash
 
-# Pre-commit hook to auto-generate README.md
-# Runs on EVERY commit to ensure single point of truth
+# Pre-commit hook: README.md aus apps/ und manifests/ neu generieren.
+#
+# Seit Juli 2026 macht .github/workflows/docs.yml dasselbe nach jedem Push auf
+# main und ist die letzte Instanz. Der Hook bleibt trotzdem, weil er die
+# Arbeitsteilung sauber haelt: solange er lokal laeuft, stimmt die README schon
+# im eigenen Commit und die CI hat nichts nachzuschieben. Ohne ihn kaeme nach
+# jedem Commit ein Bot-Commit hinterher, der vor dem naechsten Push einen Rebase
+# erzwingt. Die CI greift damit nur noch bei Renovate-Merges, wo lokal niemand
+# ist.
+#
+# Frueher lief das ueber eine conda-Umgebung namens "jinja2". Fehlte die, brach
+# der Hook mit exit 1 ab und blockierte damit *jeden* Commit im Repo. Jetzt
+# reicht ein python3 mit den drei Paketen aus docs-generator/requirements.txt,
+# und wenn die fehlen, wird uebersprungen statt blockiert.
 
 set -e
 
-echo "📝 Regenerating README.md (single point of truth)..."
+PYTHON="${PYTHON:-python3}"
 
-# Initialize conda for shell script
-eval "$(/opt/homebrew/bin/brew shellenv 2>/dev/null || true)"
-eval "$(conda shell.bash hook 2>/dev/null || /opt/homebrew/Caskroom/miniconda/base/bin/conda shell.bash hook 2>/dev/null || true)"
-
-# Check if conda environment exists
-if ! conda env list | grep -q "^jinja2 "; then
-    echo "❌ Error: Conda environment 'jinja2' not found"
-    echo "   Run: conda create -n jinja2 python=3.11 -y && conda run -n jinja2 pip install -r docs-generator/requirements.txt"
-    exit 1
+if ! "$PYTHON" -c "import yaml, jinja2, pathspec" 2>/dev/null; then
+    echo "⚠️  README-Generator übersprungen: $PYTHON fehlen Abhängigkeiten."
+    echo "   Installieren mit: $PYTHON -m pip install -r docs-generator/requirements.txt"
+    echo "   Die CI generiert die README nach dem Push ohnehin neu."
+    exit 0
 fi
 
-# Regenerate README
-cd docs-generator
-conda run -n jinja2 python generate_readme.py
-cd ..
+echo "📝 Regenerating README.md (single point of truth)..."
+# Ueber make, damit Hook und CI denselben Einstiegspunkt nutzen.
+PYTHON="$PYTHON" make --no-print-directory docs
 
-# Check if README.md was modified
 if git diff --name-only README.md | grep -q "README.md"; then
-    echo "✅ README.md regenerated"
-    
-    # Auto-stage the updated README
     git add README.md
-    
-    echo "✨ README.md auto-added to commit"
+    echo "✨ README.md aktualisiert und zum Commit hinzugefügt"
 else
-    echo "ℹ️  README.md unchanged"
+    echo "ℹ️  README.md unverändert"
 fi
 
 exit 0

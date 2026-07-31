@@ -51,7 +51,9 @@ jobs:
         run: python3 -m pip install --quiet -r docs-generator/requirements.txt
 
       - name: Generate README
-        run: python3 docs-generator/generate_readme.py
+        # Ueber make, damit CI und lokaler pre-commit-Hook denselben
+        # Einstiegspunkt nutzen und nicht auseinanderlaufen koennen.
+        run: make docs
 
       - name: Commit bei Aenderung
         run: |
