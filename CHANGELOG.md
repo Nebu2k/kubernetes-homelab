@@ -1,3 +1,10 @@
+## [4.36.1](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.36.0...v4.36.1) (2026-07-31)
+
+
+### Bug Fixes
+
+* **system-upgrade-controller:** Agent-Plan ohne drain, nur cordon ([c87bd38](https://github.com/Nebu2k/kubernetes-homelab/commit/c87bd38982a9d1450c5f8db555e4dc6de26cb6d6))
+
 # [4.36.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.35.0...v4.36.0) (2026-07-31)
 
 
