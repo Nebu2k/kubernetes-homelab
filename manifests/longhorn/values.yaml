@@ -34,10 +34,13 @@ defaultSettings:
   # beides erfuellt (22x blockdev, alle healthy).
   concurrentAutomaticEngineUpgradePerNodeLimit: "1"
   concurrentVolumeBackupRestorePerNodeLimit: "2"  # Default is 5, reduce to 2
-  # Always allow node drain - prevents kured from getting stuck on
-  # PodDisruptionBudgets of instance-manager pods during automated reboots.
+  # Do not block on replica availability when a node is drained.
   # "allow-if-replica-is-stopped" only handles replicas, not engines of attached
-  # volumes. "always-allow" force-detaches volumes so drains always complete.
+  # volumes. "always-allow" force-detaches volumes instead of holding the drain.
+  # NOTE: this does NOT remove the instance-manager PodDisruptionBudgets, which
+  # is what actually blocks a drain here. Verified live 2026-07-31: setting is
+  # active, and all 7 PDBs still sit at minAvailable: 1 / disruptionsAllowed: 0.
+  # kured therefore needs forceReboot, see manifests/kured/values.yaml.
   nodeDrainPolicy: "always-allow"
   # Reclaim space from removed snapshots during filesystem-trim.
   # Without this, the weekly trim only releases free filesystem blocks but leaves

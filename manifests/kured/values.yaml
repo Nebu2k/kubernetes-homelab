@@ -18,6 +18,21 @@ configuration:
   drainGracePeriod: -1  # Respect pod terminationGracePeriodSeconds
   drainPodSelector: ""  # Drain all pods
   skipWaitForDeleteTimeout: 60
+
+  # Reboot even when the drain times out. Without this kured never reboots any
+  # node in this cluster: Longhorn creates one PDB per instance-manager pod with
+  # minAvailable: 1, so disruptionsAllowed is 0 and the eviction API rejects
+  # those pods permanently. The drain then burns the 300s above, kured uncordons
+  # and releases the lock, and the same thing happens the next night. Measured on
+  # prodesk: pending kernel since 2026-07-08, uptime 24 days, failing nightly.
+  # Longhorn's nodeDrainPolicy: always-allow does NOT prevent this, the PDBs are
+  # there regardless (verified live, all 7 at disruptionsAllowed: 0).
+  # Safe here because every workload is single-replica on RWO Longhorn with
+  # strategy: Recreate — a node change is a detach/attach cycle either way, and
+  # the drain still evicts everything that is evictable before the timeout hits.
+  # kured 6.1.0 has no --drain-disable-eviction flag, --force-reboot is the
+  # supported way to handle a drain that cannot complete.
+  forceReboot: true
   
   # Prometheus metrics
   metricsHost: "0.0.0.0"
