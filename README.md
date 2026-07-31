@@ -1037,7 +1037,7 @@ kubectl get secret -n monitoring grafana-admin-credentials \
 | Fr24 | latest-build-858 | Fr24 |
 | Home Assistant | 2026.7.4 | Home Assistant |
 | Homepage | v1.13.2 | Homepage |
-| Kube Prometheus Stack | 87.21.0 | Kube Prometheus Stack |
+| Kube Prometheus Stack | 88.0.1 | Kube Prometheus Stack |
 | Kured | 6.1.0 | Kured |
 | Landing Page | 1.31.3-alpine | Landing Page |
 | Longhorn | 1.12.0 | Longhorn |
