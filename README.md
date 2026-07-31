@@ -1042,7 +1042,7 @@ kubectl get secret -n monitoring grafana-admin-credentials \
 | Landing Page | 1.31.3-alpine | Landing Page |
 | Longhorn | 1.12.0 | Longhorn |
 | Metallb | 0.16.1 | Metallb |
-| N8n | 2.33.2 | N8n |
+| N8n | 2.33.3 | N8n |
 | Nfs Subdir External Provisioner | 4.0.18 | Nfs Storage |
 | Paperless Ngx | 2.20.15 | Paperless Ngx |
 | Portainer | 239.5.0 | Portainer |
