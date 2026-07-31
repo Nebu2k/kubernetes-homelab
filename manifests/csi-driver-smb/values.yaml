@@ -1,0 +1,30 @@
+# SMB CSI Driver
+#
+# Ersetzt den frueheren in-Container-CIFS-Mount des paperless-smb-sync-Sidecars.
+# Der Mount passiert jetzt im Node-Plugin (das ist privilegiert, aber eine
+# abgegrenzte Infrastrukturkomponente), nicht mehr im Anwendungs-Pod.
+#
+# Die kubelet-Directory ist bei k3s der Default /var/lib/kubelet, deshalb bleibt
+# linux.kubelet unveraendert. Der cifs-Kernelmodul-Support reicht, cifs-utils
+# muss NICHT auf den Nodes installiert sein: die Mount-Tools liegen im
+# smbplugin-Image.
+
+# Keine Windows-Nodes im Cluster.
+windows:
+  enabled: false
+
+controller:
+  # Upstream-Default ist 5 (Debug) und flutet die Logs dauerhaft.
+  logLevel: 2
+  # Der Controller macht nur Provisioning/Resize, gehoert nicht auf die
+  # Control-Plane. Die Raspis sind ohnehin schon genug belastet.
+  runOnControlPlane: false
+
+node:
+  # Siehe oben, gleiche Begruendung.
+  logLevel: 2
+
+# Das Node-Plugin laeuft bewusst auf ALLEN Nodes (Default-Tolerations
+# "operator: Exists"). Sonst koennte ein Pod mit SMB-Volume auf einem Node
+# landen, auf dem kein Plugin registriert ist, und haenge in ContainerCreating.
+# Die Images sind multi-arch, laufen also auch auf den beiden Raspis.

@@ -23,7 +23,7 @@ Production-ready K3s cluster managed via GitOps using ArgoCD App-of-Apps pattern
 | 1 | Kured, Metallb, Reloader, System Upgrade Controller |
 | 3 | Traefik |
 | 4 | Cert Manager, Longhorn |
-| 5 | Landing Page, Nfs Storage, Portainer, Teslamate |
+| 5 | Csi Driver Smb, Landing Page, Nfs Storage, Portainer, Teslamate |
 | 6 | Kube Prometheus Stack |
 | 7 | Home Assistant, Unifi Poller |
 | 8 | Ripe Atlas, Uptime Kuma |
@@ -51,6 +51,7 @@ homelab/
 │   ├── traefik.yaml                   # Wave 3
 │   ├── cert-manager.yaml              # Wave 4
 │   ├── longhorn.yaml                  # Wave 4
+│   ├── csi-driver-smb.yaml            # Wave 5
 │   ├── landing-page.yaml              # Wave 5
 │   ├── nfs-storage.yaml               # Wave 5
 │   ├── portainer.yaml                 # Wave 5
@@ -96,6 +97,8 @@ homelab/
     ├── coredns/
     │   ├── coredns-custom.yaml
     │   └── kustomization.yaml
+    ├── csi-driver-smb/
+    │   └── values.yaml
     ├── external-services/
     │   ├── adguard-macmini-service.yaml
     │   ├── adguard-pve-service.yaml
@@ -222,6 +225,7 @@ homelab/
     │   ├── s3-backup-credentials-sealed.yaml
     │   ├── s3-backup-credentials-unsealed.yaml.example
     │   ├── service.yaml
+    │   ├── smb-consume-pv.yaml
     │   ├── smb-credentials-sealed.yaml
     │   └── smb-credentials-unsealed.yaml.example
     ├── portainer/
@@ -1029,6 +1033,7 @@ kubectl get secret -n monitoring grafana-admin-credentials \
 |-----------|---------|---------|
 | Beszel | 0.18.7 | Beszel |
 | Cert Manager | v1.21.1 | Cert Manager |
+| Csi Driver Smb | 1.20.3 | Csi Driver Smb |
 | Fr24 | latest-build-858 | Fr24 |
 | Home Assistant | 2026.7.4 | Home Assistant |
 | Homepage | v1.13.2 | Homepage |
@@ -1039,7 +1044,7 @@ kubectl get secret -n monitoring grafana-admin-credentials \
 | Metallb | 0.16.1 | Metallb |
 | N8n | 2.33.2 | N8n |
 | Nfs Subdir External Provisioner | 4.0.18 | Nfs Storage |
-| Paperless Ngx | 82d4523 | Paperless Ngx |
+| Paperless Ngx | 2.20.15 | Paperless Ngx |
 | Portainer | 239.5.0 | Portainer |
 | Proxmox Exporter | 1.0.8 | Proxmox Exporter |
 | Reloader | 2.2.14 | Reloader |
@@ -1057,6 +1062,7 @@ kubectl get secret -n monitoring grafana-admin-credentials \
 ## 📖 Documentation
 
 - [Cert Manager](https://charts.jetstack.io)
+- [Csi Driver Smb](https://raw.githubusercontent.com/kubernetes-csi/csi-driver-smb/master/charts)
 - [Home Assistant](https://www.home-assistant.io/docs/)
 - [Homepage](https://gethomepage.dev/latest/)
 - [K3s](https://docs.k3s.io/)
