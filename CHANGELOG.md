@@ -1,3 +1,10 @@
+# [4.43.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.42.1...v4.43.0) (2026-08-01)
+
+
+### Features
+
+* **monitoring:** Alerts fuers Longhorn-Backup-Ziel ([08c68d9](https://github.com/Nebu2k/kubernetes-homelab/commit/08c68d94da9f89900704a1206df356a498723fe0))
+
 ## [4.42.1](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.42.0...v4.42.1) (2026-08-01)
 
 
