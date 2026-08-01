@@ -126,6 +126,68 @@ spec:
             summary: "Longhorn node storage usage is critical"
             description: "Node {{ $labels.node }} storage is {{ $value | humanizePercentage }} full (threshold: 90%)."
 
+    # Backup-Ziel-Alerts (seit dem Wechsel MinIO -> SMB-Share am UniFi-NAS,
+    # 2026-08-01). Vorher gab es hier eine Luecke: die Longhorn-Alerts oben
+    # decken Volumes und Node-Disks ab, aber nichts davon haette gemeldet, dass
+    # Backups nicht mehr durchlaufen. Bei MinIO war das folgenlos (eigene VM mit
+    # 484 GB), beim NAS-Share mit 300 GB waere ein stiller Ausfall teuer.
+    - name: longhorn-backup
+      interval: 60s
+      rules:
+        # Hauptalert. Faengt JEDE Ursache, unter der Backups aufhoeren: Share
+        # voll, Auth kaputt, NAS aus, RecurringJob gescheitert, Target nicht
+        # erreichbar. Deshalb bewusst auf das Ergebnis gemuenzt statt auf einen
+        # bestimmten Fehlerzustand.
+        #
+        # Das "> 0" ist nicht kosmetisch: Volumes ohne jemals ein Backup melden
+        # last_backup_at = 0 und wuerden sonst dauerhaft feuern. Damit faellt
+        # auch das Prometheus-Volume automatisch raus, das bewusst nicht mehr
+        # gesichert wird. Preis: ein Volume, das faelschlich NIE gesichert wird,
+        # faellt durch dieses Netz. Das ist ein Konfigurationsfehler und wird
+        # ueber die Gruppenlabels geprueft, nicht ueber einen Alert.
+        #
+        # 36h statt 24h, damit ein einzelner ausgefallener Lauf (backup-daily
+        # laeuft 02:00) nicht sofort meldet, zwei aufeinanderfolgende aber schon.
+        - alert: LonghornBackupStale
+          expr: |
+            (
+              longhorn_volume_last_backup_at > 0
+              and
+              (time() - longhorn_volume_last_backup_at) > 129600
+            )
+          for: 30m
+          labels:
+            severity: warning
+          annotations:
+            summary: "Longhorn volume has not been backed up recently"
+            description: "Volume {{ $labels.volume }} had no successful backup for over 36h. Check the CIFS target //192.168.2.6/longhorn_backup (share full? NAS reachable? credentials still valid?)."
+
+        # Ergaenzung zum Alert oben, meldet frueher und nennt das konkrete
+        # Backup. longhorn_backup_state: 0=New 1=Pending 2=InProgress
+        # 3=Completed 4=Error 5=Unknown.
+        - alert: LonghornBackupFailed
+          expr: longhorn_backup_state == 4
+          for: 10m
+          labels:
+            severity: warning
+          annotations:
+            summary: "Longhorn backup failed"
+            description: "Backup {{ $labels.backup }} of volume {{ $labels.volume }} is in Error state."
+
+        # Fuellstand des Backup-Ziels. Der Share liegt auf dem UniFi-NAS und hat
+        # keinen eigenen Exporter, deshalb ueber die Summe der Backup-Groessen
+        # statt ueber echte Share-Statistik. Naeherung nach unten (Longhorn
+        # dedupliziert Bloecke), als Frueh-Warnung reicht das.
+        # 240 GiB = 80% der 300 GB des Shares.
+        - alert: LonghornBackupStoreSpaceWarning
+          expr: sum(longhorn_backup_actual_size_bytes) > 257698037760
+          for: 15m
+          labels:
+            severity: warning
+          annotations:
+            summary: "Longhorn backup store is filling up"
+            description: "Backups on //192.168.2.6/longhorn_backup total {{ $value | humanize1024 }}B (threshold: 240GiB of 300GB). Longhorn does NOT free space by itself when the share is full, backups just start failing. Reduce retain values or drop volumes from the backup group."
+
     # Pod and container alerts
     - name: pod-health
       interval: 30s
