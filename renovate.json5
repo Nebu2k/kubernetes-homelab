@@ -27,11 +27,26 @@
   // Mit "immediate" entsteht der PR sofort und die CI laeuft an ihm.
   prCreation: 'immediate',
 
-  // Phase 1: kein Automerge. Es gibt noch keine CI, die Manifeste validiert, und
-  // ArgoCD laeuft mit selfHeal + prune. Ein gemergter Fehler waere sofort im
-  // Cluster. Automerge fuer patch/minor erst, wenn kubeconform/helm-template in
-  // CI haengen.
+  // Default bleibt "kein Automerge". Freigeschaltet wird ausschliesslich per
+  // packageRule (siehe "Phase 3" unten), nie global. Grund: ArgoCD laeuft mit
+  // selfHeal + prune, ein gemergter Fehler ist unmittelbar im Cluster.
   automerge: false,
+
+  // Renovate merged SELBST per API, statt GitHubs Auto-Merge zu benutzen.
+  // Das ist hier kein Detail, sondern die Bedingung dafuer, dass das
+  // validate-Gate ueberhaupt wirkt:
+  //
+  // GitHubs Auto-Merge merged, sobald alle *required* Status-Checks gruen sind.
+  // Auf diesem Repo ist "main" aber nicht branch-protected, es gibt also gar
+  // keine required Checks. Auto-Merge wuerde damit sofort mergen und validate.yml
+  // komplett uebergehen: ein Gate, das auf dem Papier steht und praktisch nichts
+  // tut. (allow_auto_merge ist am Repo ohnehin false.)
+  //
+  // Renovate dagegen liest den Check-Status des Branches aktiv und merged nur
+  // bei gruen. Der Preis: gemerged wird nur WAEHREND eines Renovate-Laufs, nie
+  // dazwischen. Deshalb laeuft der Cron in renovate.yml taeglich statt
+  // woechentlich, sonst liegt ein fertiger PR bis zu sieben Tage herum.
+  platformAutomerge: false,
 
   // Kein PR-Schwall beim ersten Lauf. Das Dependency Dashboard zeigt trotzdem
   // alles auf einmal, es werden nur weniger PRs gleichzeitig offen gehalten.
@@ -210,6 +225,56 @@
     {
       matchPackageNames: ['teslamate/teslamate', 'teslamate/grafana'],
       groupName: 'teslamate',
+    },
+
+    // --- Phase 3: Automerge, bewusst eng zugeschnitten ---
+    //
+    // NUR Container-Image-Patches, und nur ueber den kubernetes-Manager. Dort
+    // ist der Blast Radius ein Pod-Neustart, und ArgoCD rollt das ohnehin
+    // sofort aus.
+    //
+    // Helm-Charts (Manager "argocd") sind bewusst NICHT dabei, unabhaengig vom
+    // Versionssprung. Der erste grosse Durchlauf am 2026-07-30 hat gezeigt,
+    // dass gruene CI bei Charts nichts ueber Upgrade-Pfade und Cluster-Schema
+    // aussagt: Longhorn 1.10 -> 1.12 rendert sauber und haette die
+    // Storage-Schicht beschaedigt, kube-prometheus-stack 80 -> 87 blockierte
+    // ArgoCD mit einem ComparisonError, MetalLB 0.15 -> 0.16 hat FRR auf allen
+    // Nodes eingeschaltet. Alle drei waeren gruen durchgelaufen. Details in
+    // ROADMAP.md.
+    //
+    // Die customManager-Deps (k3s-io/k3s, rancher/kubectl) fallen hier schon
+    // durch matchManagers raus. Das ist Absicht: ein k3s-Patch faehrt ein
+    // Upgrade ueber alle fuenf Nodes, das bleibt eine bewusste Handlung.
+    {
+      matchManagers: ['kubernetes'],
+      matchUpdateTypes: ['patch'],
+      automerge: true,
+      automergeType: 'pr',
+    },
+
+    // Ausnahmen vom Automerge. Stehen NACH der Regel oben, weil spaetere
+    // packageRules frueher gewinnen.
+    //
+    // Datenbanken und der Dokumentenbestand: hier ist der Blast Radius nicht
+    // mehr "Pod startet neu", sondern ein Schema- oder Datenzustand. Bei
+    // paperless kommt dazu, dass es persoenliche Dokumente haelt und auch
+    // Patch-Releases Migrationen mitbringen koennen.
+    {
+      matchPackageNames: [
+        'postgres',
+        'redis',
+        'ghcr.io/paperless-ngx/paperless-ngx',
+      ],
+      automerge: false,
+    },
+
+    // system-upgrade-controller braucht nach jedem Image-Bump ein
+    // "make vendor-suc", weil crd.yaml sonst still auf dem alten Release
+    // stehen bleibt (siehe ROADMAP.md, Abschnitt CRD-Drift). Ein Automerge
+    // wuerde genau diesen Handgriff ueberspringen, ohne dass es jemand merkt.
+    {
+      matchPackageNames: ['rancher/system-upgrade-controller'],
+      automerge: false,
     },
   ],
 }

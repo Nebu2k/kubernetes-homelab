@@ -2,9 +2,17 @@ name: Renovate
 
 on:
   schedule:
-    # Montags 04:00 UTC. Einzige Zeitsteuerung, die Renovate-Config selbst hat
+    # Taeglich 04:00 UTC. Einzige Zeitsteuerung, die Renovate-Config selbst hat
     # bewusst kein "schedule:".
-    - cron: '0 4 * * 1'
+    #
+    # Frueher woechentlich (montags). Umgestellt mit Phase 3 (Automerge), weil
+    # Renovate selbst merged statt GitHubs Auto-Merge zu nutzen (Begruendung in
+    # renovate.json5 bei platformAutomerge). Gemerged wird dadurch nur waehrend
+    # eines Laufs: Lauf N oeffnet den PR, die CI wird kurz danach gruen, Lauf
+    # N+1 merged. Bei woechentlichem Cron waere das eine Woche Latenz pro
+    # Image-Patch. minimumReleaseAge (3 Tage) bleibt der eigentliche Puffer
+    # gegen frische kaputte Releases, nicht der Cron.
+    - cron: '0 4 * * *'
   workflow_dispatch:
     inputs:
       dryRun:
