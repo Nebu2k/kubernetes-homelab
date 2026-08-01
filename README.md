@@ -317,11 +317,23 @@ curl -sfL https://get.k3s.io | INSTALL_K3S_CHANNEL=stable sh -s - server \
   --tls-san raspi4 \
   --tls-san 192.168.2.2 \
   --disable traefik \
-  --write-kubeconfig-mode 644
+  --disable servicelb \
+  --write-kubeconfig-mode 644 \
+  --node-ip 192.168.2.2
 
 # Save token for additional nodes
 sudo cat /var/lib/rancher/k3s/server/node-token
 ```
+
+⚠️ **`--node-ip` is mandatory on every node, control plane and worker alike.**
+
+The LAN carries three global SLAAC prefixes (ISP GUA `2a00:1e:7c40:f100::/64`, the manual ULA `fd2e:9a71:c3b5::/64` used for DNS, and the UniFi auto-ULA `fd83:da8b:a382:4973::/64`). Without an explicit `--node-ip`, kubelet picks up one of them as a **second** InternalIP on every restart. The pod network is IPv4-only (PodCIDRs `10.42.x.0/24`, pods only get a link-local v6), so the Prometheus Operator then builds kubelet endpoints that nothing in the cluster can reach, and `TargetDown` plus `KubeletInstanceUnreachable` start firing. Pin the node's v4 address and the cluster stays single-stack on purpose instead of by accident.
+
+Do not disable the auto-ULA in UniFi to work around this: LAN clients need it to reach IPv6 targets.
+
+`--disable servicelb` is required as well, otherwise K3s' built-in ServiceLB fights MetalLB over LoadBalancer services.
+
+ℹ️ **After installation these flags live only in `/etc/systemd/system/k3s.service`** (`k3s-agent.service` on workers), as quoted arguments in `ExecStart`. There is no `/etc/rancher/k3s/config.yaml`. Changing them later means editing the unit per node, `systemctl daemon-reload && systemctl restart k3s`, and verifying with `kubectl get nodes` plus `kubectl get --raw='/readyz?verbose'` before touching the next one, so etcd quorum never drops below 2 of 3. Keep this section in sync when you do, it is the only place the flags are tracked in git.
 
 ### Step 2: Install Kube-VIP (**on raspi4** - Control Plane HA)
 
@@ -402,8 +414,12 @@ curl -sfL https://get.k3s.io | INSTALL_K3S_CHANNEL=stable sh -s - server \
   --tls-san raspi5 \
   --tls-san 192.168.2.9 \
   --disable traefik \
-  --write-kubeconfig-mode 644
+  --disable servicelb \
+  --write-kubeconfig-mode 644 \
+  --node-ip 192.168.2.9
 ```
+
+Adjust `--tls-san` and `--node-ip` per node (k3s-cp-1 uses `192.168.2.19`).
 
 ### Step 4.5: Join Worker Nodes with Longhorn Storage (**on k3s-worker-1**)
 
@@ -448,12 +464,15 @@ df -h /var/lib/longhorn
 ```bash
 curl -sfL https://get.k3s.io | K3S_URL=https://192.168.2.249:6443 \
   K3S_TOKEN=<token-from-step-1> \
+  INSTALL_K3S_EXEC="--node-ip=192.168.2.18" \
   sh -
 ```
 
+`--node-ip` is mandatory here too, for the same reason as in Step 1. Use the node's own v4 address (k3s-worker-1 `192.168.2.18`, prodesk `192.168.2.7`).
+
 ⚠️ **For Multipass VMs with multiple network interfaces:**
 
-If the VM has both a NAT interface (e.g., 192.168.64.x) and a bridged interface (e.g., 192.168.2.x), explicitly specify the correct interface:
+If the VM has both a NAT interface (e.g., 192.168.64.x) and a bridged interface (e.g., 192.168.2.x), pin the flannel interface on top of `--node-ip`:
 
 ```bash
 curl -sfL https://get.k3s.io | K3S_URL=https://192.168.2.249:6443 \
