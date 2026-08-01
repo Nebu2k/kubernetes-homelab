@@ -1,6 +1,6 @@
 # Upstream liefert hier rancher/kubectl:v1.30.3 aus. Dieses Image fuehrt die
 # "kubectl drain"-Schritte der Plans aus und laege damit vier Minor-Versionen
-# unter dem Cluster (v1.34.x). Die kubectl-Skew-Policy erlaubt +/-1. Praktisch
+# unter dem Cluster (v1.35.x). Die kubectl-Skew-Policy erlaubt +/-1. Praktisch
 # wuerde es wohl funktionieren, weil drain nur die seit v1.22 stabile
 # Eviction-API benutzt, aber ausserhalb der unterstuetzten Spanne einen
 # Node-Drain zu fahren ist unnoetiges Risiko.
@@ -15,4 +15,4 @@ metadata:
   namespace: system-upgrade
 data:
   # renovate: datasource=docker
-  SYSTEM_UPGRADE_JOB_KUBECTL_IMAGE: rancher/kubectl:v1.34.9
+  SYSTEM_UPGRADE_JOB_KUBECTL_IMAGE: rancher/kubectl:v1.35.6

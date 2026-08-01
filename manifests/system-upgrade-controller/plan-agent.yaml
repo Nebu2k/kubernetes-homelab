@@ -3,9 +3,10 @@
 # Der prepare-Schritt ist das Wichtigste an dieser Datei. Er blockiert, bis der
 # Server-Plan komplett durch ist, und serialisiert damit beide Plans. Ohne ihn
 # laufen sie unabhaengig voneinander, und genau das waere hier gefaehrlich:
-# saemtliche 22 Longhorn-Volumes haben ihre beiden Replikate auf k3s-worker-1
+# saemtliche Longhorn-Volumes haben ihre beiden Replikate auf k3s-worker-1
 # (Agent) und raspi5 (Server). Gleichzeitig angefasst waere jedes Volume ohne
-# eine einzige laufende Replik.
+# eine einzige laufende Replik. Vor dem 1.35-Sprung am 2026-08-01 nachgemessen:
+# unveraendert, 21 von 21 Volumes verteilen sich auf genau diese zwei Nodes.
 #
 # KEIN drain, obwohl das offizielle k3s-Beispiel fuer Agents eines vorsieht.
 # Am 2026-07-31 einmal mit drain versucht und live gescheitert:
@@ -50,4 +51,4 @@ spec:
     # Ohne Tag: der Controller haengt spec.version als Tag an (mit "+" -> "-").
     image: rancher/k3s-upgrade
   # renovate: datasource=github-releases depName=k3s-io/k3s
-  version: v1.34.9+k3s1
+  version: v1.35.6+k3s1
