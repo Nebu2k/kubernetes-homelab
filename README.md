@@ -111,8 +111,6 @@ homelab/
     │   ├── external-ingressroutes.yaml
     │   ├── glances-macmini-service.yaml
     │   ├── kustomization.yaml
-    │   ├── minio-api-service.yaml
-    │   ├── minio-service.yaml
     │   ├── plex-service.yaml
     │   ├── proxmox-service.yaml
     │   ├── unifi-nas-service.yaml
