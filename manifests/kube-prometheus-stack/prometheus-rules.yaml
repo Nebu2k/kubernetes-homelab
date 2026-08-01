@@ -296,3 +296,49 @@ spec:
           annotations:
             summary: "TeslaMate Freshness-Exporter liefert keine Metrik"
             description: "teslamate_last_data_age_seconds fehlt seit >30m. Der No-Data-Alert ist damit blind. Deployment teslamate/teslamate-postgres-exporter prüfen."
+
+    # UniFi-Poller. Bis zum Sprung auf v3 gab es hier gar nichts: ein stiller
+    # unpoller hat die UniFi-Dashboards einfach leer laufen lassen, ohne dass
+    # es jemandem aufgefallen waere. v3 liefert zwei Selbstauskunfts-Metriken,
+    # auf denen sich das sauber aufsetzen laesst.
+    - name: unifi-poller
+      interval: 30s
+      rules:
+        # Der Hauptalert. Ab v3 bedient unpoller /metrics aus einem Cache, den
+        # ein Hintergrund-Poller alle 30s erneuert. Waechst das Alter, kommt
+        # unpoller nicht mehr an den Controller: die Werte sind dann zwar noch
+        # da, aber eingefroren, und genau das sieht man im Graphen nicht.
+        # 300s ist das Zehnfache des Intervalls, also weit jenseits von Jitter.
+        - alert: UnpollerCacheStale
+          expr: unpoller_prometheus_cache_age_seconds > 300
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            summary: "unpoller liefert eingefrorene UniFi-Daten"
+            description: "Der Metrik-Cache ist {{ $value | humanizeDuration }} alt (erwartet: <30s). unpoller erreicht den Controller https://192.168.2.1 nicht mehr oder wird abgewiesen. UniFi-Dashboards zeigen ab jetzt Standdaten."
+
+        # Zaehlt fehlgeschlagene Hintergrund-Aktualisierungen. Faengt den Fall,
+        # dass einzelne Polls scheitern, aber genug durchkommen, damit das
+        # Cache-Alter unter der Schwelle bleibt. Typisch: 429-Backoff oder ein
+        # abgelaufenes Controller-Passwort.
+        - alert: UnpollerRefreshFailing
+          expr: increase(unpoller_prometheus_refresh_failures_total[15m]) > 3
+          for: 15m
+          labels:
+            severity: warning
+          annotations:
+            summary: "unpoller scheitert wiederholt am UniFi-Controller"
+            description: "{{ $value | printf \"%.0f\" }} fehlgeschlagene Aktualisierungen in 15min. Zugangsdaten des Benutzers readonly und Erreichbarkeit des Controllers pruefen (kubectl logs -n monitoring -l app.kubernetes.io/name=unpoller)."
+
+        # Sicherheitsnetz, gleiche Logik wie bei TeslaMate: faellt unpoller
+        # ganz aus, verschwinden beide Metriken und die Alerts oben werden
+        # still, statt zu feuern.
+        - alert: UnpollerDown
+          expr: absent(unpoller_prometheus_cache_age_seconds)
+          for: 15m
+          labels:
+            severity: warning
+          annotations:
+            summary: "unpoller liefert keine Metriken mehr"
+            description: "unpoller_prometheus_cache_age_seconds fehlt seit >15m. Die beiden anderen unpoller-Alerts sind damit blind. Deployment monitoring/unifi-poller pruefen."
