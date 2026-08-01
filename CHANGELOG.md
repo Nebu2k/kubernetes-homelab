@@ -1,3 +1,10 @@
+## [4.42.1](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.42.0...v4.42.1) (2026-08-01)
+
+
+### Performance Improvements
+
+* **kube-prometheus-stack:** Prometheus-Volume aus der Longhorn-backup-Gruppe ([31ff497](https://github.com/Nebu2k/kubernetes-homelab/commit/31ff49782b72e96ce7667e0a38d4c1e8ef4cffb0))
+
 # [4.42.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.41.0...v4.42.0) (2026-08-01)
 
 
