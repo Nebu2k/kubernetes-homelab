@@ -1,3 +1,10 @@
+## [4.45.1](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.45.0...v4.45.1) (2026-08-01)
+
+
+### Bug Fixes
+
+* **system-upgrade-controller:** jobActiveDeadlineSecs im Agent-Plan anheben ([02d65c6](https://github.com/Nebu2k/kubernetes-homelab/commit/02d65c693bf4c5b3866c1330c5934456f3ca5013))
+
 # [4.45.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.44.0...v4.45.0) (2026-08-01)
 
 
