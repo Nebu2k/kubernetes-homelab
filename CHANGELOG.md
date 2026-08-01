@@ -1,3 +1,10 @@
+# [4.45.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.44.0...v4.45.0) (2026-08-01)
+
+
+### Features
+
+* **system-upgrade-controller:** k3s v1.34.9 auf v1.35.6 ([cd5672e](https://github.com/Nebu2k/kubernetes-homelab/commit/cd5672e4a9e6fd38797a3dc44bfa4dc9cd5480ff))
+
 # [4.44.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.43.0...v4.44.0) (2026-08-01)
 
 
