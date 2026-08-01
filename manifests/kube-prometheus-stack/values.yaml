@@ -87,11 +87,22 @@ prometheus:
     # Labels select the Longhorn recurring-job groups (backup-daily/weekly/monthly,
     # snapshot-daily, snapshot-cleanup-daily, filesystem-trim-weekly).
     # Without these, the volume falls into the "default" group, which has no jobs.
+    #
+    # BEWUSST OHNE die backup-Gruppe (2026-08-01). Dieses Volume war mit Abstand
+    # der teuerste Posten im Backup-Bestand: 97 GB von insgesamt 126 GB, bei nur
+    # 37 GiB Live-Daten. Grund ist die Kombination aus TSDB und Retention-Kette:
+    # Prometheus schreibt seine Blocks permanent um, und jeder der bis zu 18
+    # Behaltepunkte (7 daily + 4 weekly + 6 monthly + 1 yearly) haelt die
+    # geaenderten Bloecke fest.
+    #
+    # Metriken sind regenerierbar und ohnehin auf retention: 30d begrenzt, ein
+    # Restore aus einem Monate alten Backup waere wertlos. snapshot und
+    # maintenance bleiben: Snapshots sind lokal und billig, filesystem-trim gibt
+    # sogar Platz zurueck.
     storageSpec:
       volumeClaimTemplate:
         metadata:
           labels:
-            recurring-job-group.longhorn.io/backup: enabled
             recurring-job-group.longhorn.io/snapshot: enabled
             recurring-job-group.longhorn.io/maintenance: enabled
         spec:
