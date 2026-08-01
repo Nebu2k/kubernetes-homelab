@@ -1,3 +1,10 @@
+# [4.40.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.39.2...v4.40.0) (2026-08-01)
+
+
+### Features
+
+* **renovate:** Automerge fuer Container-Image-Patches (Phase 3) ([cfb971a](https://github.com/Nebu2k/kubernetes-homelab/commit/cfb971ab3a239b97107bd9014d88fa6f395ff536))
+
 ## [4.39.2](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.39.1...v4.39.2) (2026-07-31)
 
 
