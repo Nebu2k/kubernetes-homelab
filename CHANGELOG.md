@@ -1,3 +1,11 @@
+# [4.44.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.43.0...v4.44.0) (2026-08-01)
+
+
+### Features
+
+* **monitoring:** Alerts fuer unpoller ([e27f5f6](https://github.com/Nebu2k/kubernetes-homelab/commit/e27f5f6477953ae24ccf745ce0a3fbf1de7c05db))
+* **unifi-poller:** unpoller v2.39.0 auf v3.3.4 ([5952dd7](https://github.com/Nebu2k/kubernetes-homelab/commit/5952dd75369bc162af26b151ed08133bf23785e9))
+
 # [4.43.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.42.1...v4.43.0) (2026-08-01)
 
 
