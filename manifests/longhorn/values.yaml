@@ -9,10 +9,21 @@ persistence:
     enable: true
     jobList: '[{"name":"backup","isGroup":true},{"name":"snapshot","isGroup":true},{"name":"maintenance","isGroup":true}]'
 
-# Default backup store configuration (MinIO on Proxmox VM)
+# Backup-Target: SMB-Share direkt auf dem UniFi-NAS (192.168.2.6, 300 GB).
+#
+# Loest MinIO auf der Proxmox-VM ab. Vorher lief es doppelt: Longhorn sicherte
+# nach MinIO, und die MinIO-VM wurde ihrerseits per Proxmox-Job aufs selbe NAS
+# gesichert. Ein Umweg ueber eine VM, die nur Zwischenlager war.
+#
+# Bewusst NICHT migriert: der alte Bestand bleibt in MinIO liegen und laeuft
+# dort aus. Auf dem NAS wird bei null angefangen.
+#
+# Rollback: diese zwei Zeilen zurueck auf s3://homelab-longhorn@us-east-1/ und
+# longhorn-minio-secret. Beide Secrets liegen weiter im Cluster, die MinIO-VM
+# ist unangetastet.
 defaultBackupStore:
-    backupTarget: "s3://homelab-longhorn@us-east-1/"
-    backupTargetCredentialSecret: longhorn-minio-secret
+    backupTarget: "cifs://192.168.2.6/longhorn_backup"
+    backupTargetCredentialSecret: longhorn-nas-cifs-secret
 # Default settings
 defaultSettings:
   defaultReplicaCount: "2"
