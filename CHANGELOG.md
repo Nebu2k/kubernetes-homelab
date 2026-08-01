@@ -1,3 +1,10 @@
+# [4.42.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.41.0...v4.42.0) (2026-08-01)
+
+
+### Features
+
+* **longhorn:** Backup-Target von MinIO auf SMB-Share am UniFi-NAS ([021f27a](https://github.com/Nebu2k/kubernetes-homelab/commit/021f27abee5449d0544731caebce973c2057b81d))
+
 # [4.41.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.40.0...v4.41.0) (2026-08-01)
 
 
