@@ -1,3 +1,10 @@
+# [4.41.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.40.0...v4.41.0) (2026-08-01)
+
+
+### Features
+
+* **longhorn:** CIFS-Credentials fuers UniFi-NAS als SealedSecret ([5fa98fc](https://github.com/Nebu2k/kubernetes-homelab/commit/5fa98fc8d8c5211565697704ab4b335b4572579a))
+
 # [4.40.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.39.2...v4.40.0) (2026-08-01)
 
 
