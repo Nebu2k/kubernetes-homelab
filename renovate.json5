@@ -158,9 +158,9 @@
       versioning: 'regex:^latest-build-(?<major>\\d+)$',
     },
 
-    // Zwei Majors sind bewusst zurueckgestellt, Begruendung je in ROADMAP.md.
+    // Ein Major ist bewusst zurueckgestellt, Begruendung in ROADMAP.md.
     // Nur der Major-Sprung ist aus, Patches und Minors der aktuellen Linie
-    // laufen weiter, damit die Dienste gepflegt bleiben.
+    // laufen weiter, damit der Dienst gepflegt bleibt.
 
     // paperless-ngx v3: neun Breaking Changes, drei davon treffen Settings, die
     // wir tatsaechlich setzen (DB-Settings-Refactor, Consumer-Umbau,
@@ -173,15 +173,11 @@
       enabled: false,
     },
 
-    // unpoller v3 setzt neuere UniFi-Network-APIs voraus ("may not work for
-    // older Unifi installations on 9.x") und aendert Metriknamen, was unsere
-    // vier UniFi-Grafana-Dashboards trifft. Vorher muss geklaert sein, welche
-    // Network-Version auf der UDM laeuft.
-    {
-      matchPackageNames: ['ghcr.io/unpoller/unpoller'],
-      matchUpdateTypes: ['major'],
-      enabled: false,
-    },
+    // unpoller: die Major-Sperre ist am 2026-08-01 mit dem Sprung auf v3.3.4
+    // entfallen. Der befuerchtete Metrik-Bruch war keiner (gemessener Diff
+    // v2.39.0 gegen v3.3.4: eine Metrik weg, die niemand referenziert, alle
+    // Label-Aenderungen rein additiv). unpoller faellt damit unter die
+    // allgemeinen Regeln: Patches automergen, Majors werden ein PR.
 
     // k3s selbst (Zielversion der Plans) und das kubectl-Image, das die
     // Drain-Schritte faehrt: nur Patches automatisch.

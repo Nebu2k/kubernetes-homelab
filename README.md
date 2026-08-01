@@ -1072,7 +1072,7 @@ kubectl get secret -n monitoring grafana-admin-credentials \
 | System Upgrade Controller | v0.20.1 | System Upgrade Controller |
 | Teslamate | 4.0.1 | Teslamate |
 | Traefik | 41.1.0 | Traefik |
-| Unifi Poller | v2.39.0 | Unifi Poller |
+| Unifi Poller | v3.3.4 | Unifi Poller |
 | Uptime Kuma | 2.4.0 | Uptime Kuma |
 | K3s | v1.33.5 | Lightweight Kubernetes |
 | Kube-VIP | v1.0.1 | Control plane HA |
