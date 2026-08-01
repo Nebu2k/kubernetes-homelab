@@ -44,6 +44,20 @@ spec:
       - key: node-role.kubernetes.io/control-plane
         operator: DoesNotExist
   serviceAccountName: system-upgrade
+  # Die Wartezeit im prepare-Container zaehlt gegen die Laufzeit des Jobs. Der
+  # Default von 900s reicht dafuer strukturell nicht: der Server-Plan braucht
+  # allein an postCompleteDelay 3 x 5min, gemessen am 2026-08-01 waren es
+  # 14,5min von der Job-Erstellung bis "Complete" auf dem dritten Node. Der
+  # Agent-Job stirbt dann exakt nach 900s an DeadlineExceeded, ohne je etwas
+  # getan zu haben (der cordon passiert erst nach prepare, der Node bleibt also
+  # unangetastet). Beim 1.34.9-Durchlauf ist das nicht aufgefallen, weil der
+  # Agent-Plan dort nach dem Server-Plan nachgezogen wurde und prepare sofort
+  # zurueckkam.
+  #
+  # 2700s deckt den Server-Plan mit reichlich Luft ab, auch wenn spaeter ein
+  # vierter Control-Plane-Node dazukommt. Das Limit bleibt sinnvoll, es faengt
+  # weiterhin einen wirklich haengenden Upgrade-Container ab.
+  jobActiveDeadlineSecs: 2700
   prepare:
     image: rancher/k3s-upgrade
     args: ["prepare", "k3s-server"]
