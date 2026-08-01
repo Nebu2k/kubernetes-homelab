@@ -187,6 +187,8 @@ homelab/
     │   ├── kustomization.yaml
     │   ├── minio-secret-sealed.yaml
     │   ├── minio-secret-unsealed.yaml.example
+    │   ├── nas-cifs-secret-sealed.yaml
+    │   ├── nas-cifs-secret-unsealed.yaml.example
     │   ├── node-config.yaml
     │   ├── recurring-backup-jobs.yaml
     │   ├── servicemonitor.yaml
