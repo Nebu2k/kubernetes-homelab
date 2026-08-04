@@ -19,8 +19,8 @@ cd "$(git rev-parse --show-toplevel)"
 
 # Version des Clusters, gegen die validiert wird. Bei k3s-Upgrade mitziehen.
 # Die Zielversion steht in manifests/system-upgrade-controller/plan-*.yaml.
-# Aktuell: v1.35.6+k3s1
-KUBE_VERSION="1.35.6"
+# Aktuell: v1.36.2+k3s1
+KUBE_VERSION="1.36.2"
 
 # Helm-Charts, die Cluster-Capabilities abfragen, scheitern sonst beim Rendern.
 # traefik/templates/servicemonitor.yaml bricht z.B. hart ab ("You have to deploy
