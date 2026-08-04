@@ -1,3 +1,10 @@
+## [4.47.2](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.47.1...v4.47.2) (2026-08-04)
+
+
+### Bug Fixes
+
+* **home-assistant:** wirkungslose ipWhiteList entfernen ([bc8528f](https://github.com/Nebu2k/kubernetes-homelab/commit/bc8528f302abf125ab135d1ebd2aa2c6110ce7be))
+
 ## [4.47.1](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.47.0...v4.47.1) (2026-08-04)
 
 
