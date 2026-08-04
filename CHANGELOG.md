@@ -1,3 +1,10 @@
+## [4.48.1](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.48.0...v4.48.1) (2026-08-04)
+
+
+### Bug Fixes
+
+* **ci:** KUBE_VERSION auf 1.36.2 nachziehen ([bebbe8c](https://github.com/Nebu2k/kubernetes-homelab/commit/bebbe8ca1a25b2ac2f19c6117a97554d55eb85de))
+
 # [4.48.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.47.3...v4.48.0) (2026-08-04)
 
 
