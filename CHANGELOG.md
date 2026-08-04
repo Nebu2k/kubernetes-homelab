@@ -1,3 +1,10 @@
+## [4.47.1](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.47.0...v4.47.1) (2026-08-04)
+
+
+### Bug Fixes
+
+* **paperless-ngx:** echte Client-IP im Login-Log ([b88038f](https://github.com/Nebu2k/kubernetes-homelab/commit/b88038f30cf17a2b82a2aa39acfb674e6701448c))
+
 # [4.47.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.46.0...v4.47.0) (2026-08-04)
 
 
