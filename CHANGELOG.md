@@ -1,3 +1,10 @@
+# [4.48.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.47.3...v4.48.0) (2026-08-04)
+
+
+### Features
+
+* **traefik:** PodDisruptionBudget minAvailable 1 ([e0decd8](https://github.com/Nebu2k/kubernetes-homelab/commit/e0decd82cc1688bf09f6fff58a417241ccc2fa6a))
+
 ## [4.47.3](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.47.2...v4.47.3) (2026-08-04)
 
 
