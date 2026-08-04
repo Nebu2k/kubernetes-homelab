@@ -66,8 +66,22 @@ spec:
           value: "https://paperless.elmstreet79.de"
         - name: PAPERLESS_CSRF_TRUSTED_ORIGINS
           value: "https://paperless.elmstreet79.de"
-        - name: PAPERLESS_TRUSTED_PROXIES
-          value: "traefik"
+        # Kein PAPERLESS_TRUSTED_PROXIES. Die Variable will Praefixe echter
+        # IP-Adressen, und der frueher hier stehende Wert "traefik" hat die
+        # Client-IP nicht nur ungenau gemacht, sondern komplett verhindert:
+        # python-ipware verlangt bei gesetzter proxy_list mindestens einen
+        # Eintrag mehr im X-Forwarded-For als Eintraege in der Liste. Traefik
+        # setzt XFF aber auf genau einen Eintrag, also war die Liste nie
+        # erfuellbar und im Log stand "Unable to determine IP address".
+        # Leer gelassen nimmt ipware den ersten XFF-Eintrag, und das ist hier
+        # der echte Client: Traefik laeuft ohne forwardedHeaders.trustedIPs und
+        # ueberschreibt eingehende X-Forwarded-*-Header, statt sie zu ergaenzen.
+        #
+        # Der Proxy-Count fuer allauth haengt sonst an der Laenge dieser Liste
+        # und faellt ohne sie auf 0, womit alle Clients im Rate-Limit denselben
+        # Topf teilen wuerden. Deshalb hier explizit, statt als Nebenwirkung.
+        - name: PAPERLESS_ALLAUTH_TRUSTED_PROXY_COUNT
+          value: "1"
         - name: PAPERLESS_USE_X_FORWARD_HOST
           value: "true"
         - name: PAPERLESS_USE_X_FORWARD_PORT
