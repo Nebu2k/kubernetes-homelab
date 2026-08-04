@@ -158,20 +158,12 @@
       versioning: 'regex:^latest-build-(?<major>\\d+)$',
     },
 
-    // Ein Major ist bewusst zurueckgestellt, Begruendung in ROADMAP.md.
-    // Nur der Major-Sprung ist aus, Patches und Minors der aktuellen Linie
-    // laufen weiter, damit der Dienst gepflegt bleibt.
-
-    // paperless-ngx v3: neun Breaking Changes, drei davon treffen Settings, die
-    // wir tatsaechlich setzen (DB-Settings-Refactor, Consumer-Umbau,
-    // OCR/Archive-Trennung). Dazu Suchmaschinenwechsel Whoosh -> tantivy mit
-    // Index-Neubau. Persoenliche Dokumente, das wird ein eigenes Vorhaben mit
-    // frischem Backup und durchgearbeiteter Migrationsdoku.
-    {
-      matchPackageNames: ['ghcr.io/paperless-ngx/paperless-ngx'],
-      matchUpdateTypes: ['major'],
-      enabled: false,
-    },
+    // paperless-ngx: die Major-Sperre ist am 2026-08-04 mit dem Sprung auf
+    // v3.0.5 entfallen. Die drei Settings-Gruppen aus den Breaking Changes sind
+    // im Deployment nachgezogen, der tantivy-Index wurde beim ersten Start neu
+    // gebaut. Damit greift wieder die allgemeine Regel; der Automerge bleibt
+    // aber aus (Regel weiter unten), weil auch Patch-Releases Migrationen
+    // mitbringen koennen und hier persoenliche Dokumente haengen.
 
     // unpoller: die Major-Sperre ist am 2026-08-01 mit dem Sprung auf v3.3.4
     // entfallen. Der befuerchtete Metrik-Bruch war keiner (gemessener Diff

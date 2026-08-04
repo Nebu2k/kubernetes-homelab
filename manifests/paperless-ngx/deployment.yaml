@@ -45,7 +45,7 @@ spec:
           mountPath: /usr/src/paperless/export
       containers:
       - name: paperless-ngx
-        image: ghcr.io/paperless-ngx/paperless-ngx:2.20.15
+        image: ghcr.io/paperless-ngx/paperless-ngx:3.0.5
         imagePullPolicy: IfNotPresent
         ports:
         - name: http
@@ -78,6 +78,11 @@ spec:
           value: "redis://redis:6379"
         
         # PostgreSQL
+        # Seit v3 muss die Engine explizit stehen. v2 hat sie aus der blossen
+        # Anwesenheit von PAPERLESS_DBHOST abgeleitet; das tut v3 als Fallback
+        # zwar noch, die Migrationsdoku verlangt aber den expliziten Wert.
+        - name: PAPERLESS_DBENGINE
+          value: "postgresql"
         - name: PAPERLESS_DBHOST
           value: "postgresql"
         - name: PAPERLESS_DBPORT
@@ -116,18 +121,27 @@ spec:
               key: PAPERLESS_SECRET_KEY
         
         # Features
-        - name: PAPERLESS_CONSUMER_POLLING
+        # Consume liegt auf CIFS, wo inotify nicht funktioniert. Deshalb
+        # Polling statt nativer Events. Hiess bis v2 PAPERLESS_CONSUMER_POLLING.
+        - name: PAPERLESS_CONSUMER_POLLING_INTERVAL
           value: "30"
+        # v3 laesst Duplikate standardmaessig durch und markiert sie nur noch in
+        # der UI. Das hier haelt das alte Verhalten: Duplikat wird abgewiesen.
         - name: PAPERLESS_CONSUMER_DELETE_DUPLICATES
           value: "true"
         - name: PAPERLESS_CONSUMER_RECURSIVE
           value: "true"
         - name: PAPERLESS_CONSUMER_SUBDIRS_AS_TAGS
           value: "true"
-        - name: PAPERLESS_CONSUMER_IGNORE_PATTERN
-          value: ".DS_Store,._.*, desktop.ini, @eaDir"
-        - name: PAPERLESS_OCR_SKIP_ARCHIVE_FILE
-          value: "never"
+        # Kein PAPERLESS_CONSUMER_IGNORE_PATTERNS: die NAS-Artefakte, die wir
+        # frueher hier aufgezaehlt haben (.DS_Store, ._*, desktop.ini, @eaDir),
+        # stehen in v3 alle in den eingebauten Defaults des Consumer-Filters.
+
+        # Loest PAPERLESS_OCR_SKIP_ARCHIVE_FILE ab. v3 trennt "OCR laufen lassen"
+        # von "Archivdatei erzeugen"; unser altes "never" hiess "das Archiv nie
+        # ueberspringen" und entspricht damit jetzt "always".
+        - name: PAPERLESS_ARCHIVE_FILE_GENERATION
+          value: "always"
         - name: PAPERLESS_FILENAME_FORMAT
           value: "{{ created_year }}/{{ correspondent }}/{{ created }}-{{ title }}"
         - name: PAPERLESS_TIKA_ENABLED
