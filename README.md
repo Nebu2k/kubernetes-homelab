@@ -130,7 +130,6 @@ homelab/
     │   ├── ingress.yaml
     │   ├── kustomization.yaml
     │   ├── matter-pvc.yaml
-    │   ├── middleware-real-ip.yaml
     │   ├── namespace.yaml
     │   ├── pvc.yaml
     │   └── service.yaml
