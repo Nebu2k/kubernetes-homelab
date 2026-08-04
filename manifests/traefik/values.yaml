@@ -5,6 +5,32 @@ deployment:
 nodeSelector:
   node-role.kubernetes.io/worker: "worker"
 
+# Beide Replicas sind vorher auf k3s-worker-1 gelandet, weil nichts sie
+# auseinanderhielt. Mit externalTrafficPolicy: Local (siehe service unten)
+# kuendigt MetalLB die .250 nur noch von Nodes an, auf denen ein bereiter
+# Traefik-Pod laeuft. Ohne Spreizung waere worker-1 damit ein Single Point
+# of Failure geworden: bei Ausfall haette es erst einen Pod-Start auf
+# prodesk gebraucht, bevor die VIP ueberhaupt wieder angekuendigt wird.
+topologySpreadConstraints:
+  - labelSelector:
+      matchLabels:
+        app.kubernetes.io/name: traefik
+        app.kubernetes.io/instance: traefik-traefik
+    maxSkew: 1
+    topologyKey: kubernetes.io/hostname
+    whenUnsatisfiable: DoNotSchedule
+
+# Muss zur harten Spreizung oben passen. Der Chart-Default ist
+# maxUnavailable: 0 / maxSurge: 1, wuerde beim Rollout also einen dritten
+# Pod hochziehen. Bei zwei Replicas auf zwei zulaessigen Nodes verletzt der
+# die maxSkew und bliebe Pending: das Update haengt fest. Andersherum
+# ersetzt der Rollout je einen Pod an Ort und Stelle, ohne dritten Platz.
+updateStrategy:
+  type: RollingUpdate
+  rollingUpdate:
+    maxUnavailable: 1
+    maxSurge: 0
+
 # CRD providers for Middleware and ServersTransport
 providers:
   kubernetesCRD:
@@ -30,6 +56,16 @@ service:
   # gibt es nicht mehr.
   spec:
     type: LoadBalancer
+    # Ohne das SNAT-tet kube-proxy jedes eingehende Paket auf das
+    # CNI-Gateway des Nodes, auf dem Traefik laeuft. Traefik sah dadurch
+    # clusterweit nur 10.42.6.1 statt echter Clients, und jedes Backend
+    # hinter dem Ingress bekam dieselbe Adresse in X-Forwarded-For. Mit
+    # Local reicht MetalLB (L2) die Quell-IP unveraendert durch.
+    #
+    # Preis: die .250 wird nur noch von Nodes mit einem bereiten
+    # Traefik-Pod angekuendigt. Deshalb die topologySpreadConstraints oben,
+    # damit das nicht auf einen einzelnen Node zusammenfaellt.
+    externalTrafficPolicy: Local
 
 # Prometheus metrics
 metrics:
