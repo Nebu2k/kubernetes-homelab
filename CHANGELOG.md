@@ -1,3 +1,10 @@
+# [4.47.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.46.0...v4.47.0) (2026-08-04)
+
+
+### Features
+
+* **paperless-ngx:** 2.20.15 auf 3.0.5, behebt den stummen Consumer ([b90de71](https://github.com/Nebu2k/kubernetes-homelab/commit/b90de71a6bf84637a2db3127a8c7701e4355fc5c))
+
 # [4.46.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.45.1...v4.46.0) (2026-08-04)
 
 
