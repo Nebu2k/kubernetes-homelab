@@ -107,8 +107,11 @@ accessLog:
 # der drei Argumente aus diesem Block auf.
 # api.dashboard und ping setzt das Chart ohnehin selbst.
 # Der readTimeout war damit nie aktiv, Traefik laeuft auf seinem Default
-# von 60s. Bewusst NICHT mitmigriert, damit dieses Upgrade das Verhalten
-# nicht aendert. Siehe ROADMAP.md, ob wir die 24h ueberhaupt wollen.
+# von 60s. Am 2026-08-04 entschieden, das so zu lassen: das Cluster lief
+# jahrelang auf 60s ohne ein einziges Problem, ein Timeout ohne Leidensdruck
+# ist keine Verbesserung. Falls doch mal noetig (Kandidaten: HA-Websockets,
+# Plex), waere der native Key in v41
+# ports.websecure.transport.respondingTimeouts.readTimeout.
 
 # Dashboard
 ingressRoute:
