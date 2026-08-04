@@ -18,6 +18,18 @@ und EINEN Router-Portforward.
 
 - **Traefik** (MetalLB LoadBalancer `192.168.2.250`) ist der einzige Eingang,
   routet Cluster- UND externe Hosts per SNI/Host-Header.
+- **Der Service läuft auf `externalTrafficPolicy: Local`** (seit 2026-08-04).
+  Backends sehen dadurch die **echte Client-IP** im `X-Forwarded-For`. Vorher
+  SNAT-tete kube-proxy alles auf `10.42.6.1`, wodurch jede IP-basierte Regel
+  still wirkungslos war (eine `ipWhiteList` an home-assistant liess so jeden
+  Aufrufer der Welt durch). **Wenn du jetzt eine IP-Regel baust, greift sie
+  wirklich** — auch gegen externe Nutzer. Drei Dinge hängen zusammen und dürfen
+  nicht einzeln angefasst werden: `Local` + harte `topologySpreadConstraints`
+  (sonst SPOF, weil MetalLB nur von Nodes mit bereitem Pod ankündigt) +
+  `updateStrategy: maxSurge 0` (sonst verklemmt sich der Rollout an der
+  maxSkew). Dazu ein PDB `minAvailable: 1` für den Node-Drain. Traefik läuft
+  ohne `forwardedHeaders.trustedIPs` und überschreibt eingehende
+  `X-Forwarded-*`-Header, der Wert ist also nicht spoofbar.
 - **Öffentlich:** UniFi-Portforward nur **80+443 → 192.168.2.250** + Cloudflare-
   **CNAME → `nebu2k.ipv64.net`** (UniFi-DynDNS). Plex hat zusätzlich einen
   direkten **32400**-Portforward (native Apps, eigenes Protokoll).
@@ -54,8 +66,13 @@ Sonderfälle:
 ### Intern-only externe Hosts (NICHT im Cluster)
 
 Laufen über das external-services-Muster (siehe unten):
-`unifi`, `nas` (UniFi-NAS), `pve` (Proxmox), `minio`, `minio-api`, `vscode`,
-`glances-macmini`, `adguard-macmini`, `adguard` (AdGuard-LXC auf pve).
+`unifi`, `nas` (UniFi-NAS), `pve` (Proxmox), `vscode`, `glances-macmini`,
+`adguard-macmini`, `adguard` (AdGuard-LXC auf pve).
+
+`minio` und `minio-api` standen hier bis 2026-08-01. Die Routen und der
+Homepage-Eintrag sind entfernt, seit die Longhorn-Backups auf das UniFi-NAS
+zeigen (CIFS statt MinIO). Die MinIO-VM selbst existiert weiter, siehe
+`terraform/proxmox/vm-minio-backup.tf`.
 
 ## DNS-Architektur (Split-Horizon, zwei Stellen)
 
@@ -163,7 +180,9 @@ Getrennte Stacks, je eigener S3-State (AWS, Bucket
   `nebu2k.ipv64.net`). Ersetzt das alte cloudflare-sync-Script.
 - `terraform/proxmox/`: Proxmox-VMs (bpg/proxmox), wiederverwendbares `vm-module`,
   cloud-init, MinIO-Buckets.
-- `terraform/hetzner/`: **Pangolin-VPS** (wird abgebaut, siehe unten).
+
+Mehr Stacks gibt es nicht. Der frühere `terraform/hetzner/` (Pangolin-VPS) ist
+mit der Pangolin-Ablösung komplett entfernt, siehe unten.
 
 `terraform.tfvars` ist gitignored (enthält CF-Token + Zone-ID).
 

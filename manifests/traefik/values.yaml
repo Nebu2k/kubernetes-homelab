@@ -31,6 +31,23 @@ updateStrategy:
     maxUnavailable: 1
     maxSurge: 0
 
+# Schuetzt den Ingress bei freiwilligen Stoerungen, vor allem beim Node-Drain
+# durch den system-upgrade-controller. Ohne PDB darf ein Drain beide Pods
+# gleichzeitig raeumen, und mit externalTrafficPolicy: Local haette dann kein
+# Node mehr einen bereiten Endpoint: MetalLB kuendigt die .250 nicht mehr an,
+# der komplette Ingress ist weg.
+#
+# minAvailable statt maxUnavailable, weil die Zusage dann an der absoluten Zahl
+# haengt und nicht an replicas: bei einem versehentlichen Scale-Down auf 1
+# blockiert der PDB den Drain, statt stillschweigend alles freizugeben.
+#
+# Kein Deadlock mit der harten Spreizung oben: der geraeumte Pod bleibt Pending,
+# bis der Node zurueck ist (der andere Node hat wegen maxSkew keinen Platz).
+# Der PDB verlangt nur einen laufenden Pod, und den gibt es die ganze Zeit.
+podDisruptionBudget:
+  enabled: true
+  minAvailable: 1
+
 # CRD providers for Middleware and ServersTransport
 providers:
   kubernetesCRD:
