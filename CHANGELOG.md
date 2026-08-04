@@ -1,3 +1,15 @@
+# [4.46.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.45.1...v4.46.0) (2026-08-04)
+
+
+### Bug Fixes
+
+* **monitoring:** PodNotReady schliesst Job-Pods aus ([8170821](https://github.com/Nebu2k/kubernetes-homelab/commit/8170821366823770927050c17ec52cdf5f9d845e))
+
+
+### Features
+
+* **system-upgrade-controller:** k3s v1.35.6 auf v1.36.2 ([2773a37](https://github.com/Nebu2k/kubernetes-homelab/commit/2773a37917694630484cfa29de9ef358c294ed7d))
+
 ## [4.45.1](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.45.0...v4.45.1) (2026-08-01)
 
 
