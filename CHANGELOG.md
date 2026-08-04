@@ -1,3 +1,10 @@
+## [4.47.3](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.47.2...v4.47.3) (2026-08-04)
+
+
+### Bug Fixes
+
+* **traefik:** echte Client-IP durchreichen, externalTrafficPolicy Local ([aa2b813](https://github.com/Nebu2k/kubernetes-homelab/commit/aa2b81313aa285b22bf5679b9095f707b0194fab))
+
 ## [4.47.2](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.47.1...v4.47.2) (2026-08-04)
 
 
