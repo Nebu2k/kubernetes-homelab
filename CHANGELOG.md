@@ -1,3 +1,10 @@
+# [4.53.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.52.0...v4.53.0) (2026-08-05)
+
+
+### Features
+
+* **backup-monitor:** taegliche Frische-Sonde ueber die drei S3-Buckets ([2dbb0f8](https://github.com/Nebu2k/kubernetes-homelab/commit/2dbb0f83ed9e5199e3512194d333083e70720ee3))
+
 # [4.52.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.51.0...v4.52.0) (2026-08-05)
 
 
