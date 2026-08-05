@@ -1,3 +1,10 @@
+## [4.49.1](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.49.0...v4.49.1) (2026-08-05)
+
+
+### Bug Fixes
+
+* **home-assistant:** Archiv-Job kopiert per copy-object statt s3 cp ([eba7c46](https://github.com/Nebu2k/kubernetes-homelab/commit/eba7c46185f646c8508ba0510699d42d27a405b0))
+
 # [4.49.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.48.1...v4.49.0) (2026-08-05)
 
 
