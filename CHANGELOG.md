@@ -1,3 +1,10 @@
+## [4.56.1](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.56.0...v4.56.1) (2026-08-05)
+
+
+### Bug Fixes
+
+* **backup-monitor:** etcd-Frische je Server-Node statt ueber den ganzen Bucket ([4ff76f0](https://github.com/Nebu2k/kubernetes-homelab/commit/4ff76f04bfc985a5056613e2454f78841726658e))
+
 # [4.56.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.55.3...v4.56.0) (2026-08-05)
 
 
