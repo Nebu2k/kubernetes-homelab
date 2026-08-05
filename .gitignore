@@ -1,5 +1,6 @@
 # Ignore secrets and sensitive config
 .env
+ROADMAP.md
 *.secret.yaml
 *.secrets.yaml
 *-unsealed.yaml
@@ -15,6 +16,10 @@
 
 # Ignore backup scripts with credentials
 scripts*/*
+
+# Ignore agent skills: beschreiben Betriebsdetails und offene Lücken,
+# gehören nicht in ein öffentliches Repo. Lokal weiter voll nutzbar.
+.claude/
 
 # Ignore OS and editor files
 .DS_Store
