@@ -257,6 +257,7 @@ homelab/
     │   ├── plan-agent.yaml
     │   └── plan-server.yaml
     ├── teslamate/
+    │   ├── backup-cronjob.yaml
     │   ├── database-deployment.yaml
     │   ├── database-pdb.yaml
     │   ├── database-pvc.yaml
@@ -274,6 +275,8 @@ homelab/
     │   ├── postgres-exporter-deployment.yaml
     │   ├── postgres-exporter-service.yaml
     │   ├── postgres-exporter-servicemonitor.yaml
+    │   ├── s3-backup-credentials-sealed.yaml
+    │   ├── s3-backup-credentials-unsealed.yaml.example
     │   ├── teslamate-deployment.yaml
     │   ├── teslamate-ingress.yaml
     │   ├── teslamate-secret-sealed.yaml

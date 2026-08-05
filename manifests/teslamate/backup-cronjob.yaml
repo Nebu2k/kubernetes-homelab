@@ -1,0 +1,205 @@
+# Offsite-Backup der Teslamate-Datenbank nach S3.
+#
+# Teslamate ist der einzige Datensatz im Cluster, der bei einem Hausbrand
+# ersatzlos weg waere und weh taete: die Fahrhistorie laesst sich nicht neu
+# erzeugen. Grafana-Dashboards und uptime-kuma-Historie gelten als verschmerzbar.
+#
+# Gesichert wird gezielt die Datenbank per pg_dump, NICHT das Longhorn-Volume.
+# Ein Dump ist in sich geschlossen und ohne Longhorn wiederherstellbar, ein
+# Volume-Snapshot braucht wieder ein Longhorn.
+#
+# Ablage und Aufbewahrung stehen in
+# homelab-terraform/terraform/aws/s3-teslamate-backup.tf:
+#   daily/   30 Tage
+#   monthly/ 365 Tage (nur der Lauf am Monatsersten legt zusaetzlich hier ab)
+# Aendern sich die Praefixe hier, MUESSEN die Variablen dort mitgehen, sonst
+# raeumt niemand mehr auf.
+#
+# Der Bucket ist versioniert und der IAM-User "homelab-teslamate-backup" hat
+# WEDER DeleteObject NOCH DeleteObjectVersion. Dieser Job kann also nichts
+# loeschen, nur schreiben. Wer hier ein "aws s3 rm" ergaenzt, bekommt
+# AccessDenied, und das ist Absicht.
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: teslamate-db-backup
+  namespace: teslamate
+  labels:
+    app.kubernetes.io/name: teslamate-db-backup
+spec:
+  # 01:30 UTC, bewusst vor dem Paperless-Export (02:00) und dem HA-Archiv
+  # (04:00 am Monatsersten), damit sich die Backup-Laeufe nicht ueberlappen.
+  schedule: "30 1 * * *"
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  concurrencyPolicy: Forbid
+  jobTemplate:
+    spec:
+      template:
+        metadata:
+          labels:
+            app.kubernetes.io/name: teslamate-db-backup
+        spec:
+          restartPolicy: OnFailure
+          volumes:
+            - name: dump
+              emptyDir:
+                # Der Dump liegt bei rund 60 MB (DB 259 MB, custom format ist
+                # komprimiert). Das Limit ist grosszuegig, aber vorhanden: ohne
+                # sizeLimit schreibt ein entgleister Lauf die Node-Disk voll und
+                # reisst alles mit, was auf demselben Node laeuft.
+                sizeLimit: 1Gi
+
+          # Zwei Schritte, bewusst als initContainer + container und nicht als
+          # ein Skript: so ist im Fehlerfall am Pod-Status ablesbar, ob der Dump
+          # oder der Upload gescheitert ist.
+          initContainers:
+            - name: dump
+              # MUSS zur Version in database-deployment.yaml passen. pg_dump
+              # weigert sich, einen Server zu dumpen, der neuer ist als es
+              # selbst. Renovate hebt beide Stellen, weil beide denselben Tag
+              # tragen. Wer eine davon von Hand anfasst, bricht das Backup, und
+              # zwar erst beim naechsten naechtlichen Lauf.
+              image: postgres:18.4
+              command:
+                - /bin/sh
+                - -c
+                - |
+                  set -eu
+
+                  DUMP="/dump/teslamate_$(date -u +%F).dump"
+
+                  echo "Dumpe ${PGDATABASE} von ${PGHOST} nach ${DUMP}"
+
+                  # -Fc (custom format): komprimiert, und pg_restore kann daraus
+                  # gezielt einzelne Tabellen ziehen. Ein reiner SQL-Dump kann
+                  # das nicht.
+                  pg_dump -Fc -f "${DUMP}"
+
+                  # Gegenprobe, bevor irgendwas hochgeht: pg_restore -l liest
+                  # Header und Inhaltsverzeichnis des Archivs. Ein abgebrochener
+                  # oder halb geschriebener Dump faellt hier durch, statt als
+                  # scheinbar erfolgreiches Backup in S3 zu landen und erst beim
+                  # Restore aufzufliegen.
+                  ENTRIES=$(pg_restore -l "${DUMP}" | grep -c ';' || true)
+                  if [ "${ENTRIES}" -lt 1 ]; then
+                    echo "FEHLER: ${DUMP} ist kein lesbares pg_dump-Archiv."
+                    exit 1
+                  fi
+
+                  echo "Dump ok, ${ENTRIES} TOC-Eintraege, $(stat -c %s "${DUMP}") Bytes."
+              env:
+                - name: PGHOST
+                  value: teslamate-database
+                - name: PGUSER
+                  valueFrom:
+                    secretKeyRef:
+                      name: teslamate-secrets
+                      key: DATABASE_USER
+                - name: PGPASSWORD
+                  valueFrom:
+                    secretKeyRef:
+                      name: teslamate-secrets
+                      key: DATABASE_PASS
+                - name: PGDATABASE
+                  valueFrom:
+                    secretKeyRef:
+                      name: teslamate-secrets
+                      key: DATABASE_NAME
+              volumeMounts:
+                - name: dump
+                  mountPath: /dump
+              resources:
+                requests:
+                  cpu: 100m
+                  memory: 128Mi
+                limits:
+                  cpu: 500m
+                  memory: 512Mi
+
+          containers:
+            - name: upload
+              image: amazon/aws-cli:2.36.13
+              command:
+                - /bin/sh
+                - -c
+                - |
+                  set -eu
+
+                  DAY=$(date -u +%F)
+                  DUMP="/dump/teslamate_${DAY}.dump"
+
+                  if [ ! -s "${DUMP}" ]; then
+                    echo "FEHLER: ${DUMP} fehlt oder ist leer."
+                    exit 1
+                  fi
+
+                  LOCAL_SIZE=$(stat -c %s "${DUMP}")
+
+                  # "aws s3 cp" ist hier richtig, anders als im HA-Archiv-Job.
+                  # Dort ging es um eine Kopie S3 nach S3, und die liest die
+                  # Objekt-Tags der Quelle (s3:GetObjectTagging, fehlt dem Key).
+                  # Ein Upload vom lokalen Dateisystem macht nur PutObject.
+                  upload() {
+                    KEY="$1"
+                    echo "Lade hoch nach s3://${S3_BUCKET_NAME}/${KEY}"
+                    aws s3 cp "${DUMP}" "s3://${S3_BUCKET_NAME}/${KEY}" \
+                      --region "${S3_REGION}" --only-show-errors
+
+                    REMOTE_SIZE=$(aws s3api head-object \
+                      --bucket "${S3_BUCKET_NAME}" --region "${S3_REGION}" \
+                      --key "${KEY}" --query 'ContentLength' --output text)
+
+                    if [ "${REMOTE_SIZE}" != "${LOCAL_SIZE}" ]; then
+                      echo "FEHLER: Groesse weicht ab, lokal ${LOCAL_SIZE} vs S3 ${REMOTE_SIZE}."
+                      exit 1
+                    fi
+                    echo "  ok, ${REMOTE_SIZE} Bytes."
+                  }
+
+                  upload "daily/teslamate_${DAY}.dump"
+
+                  # Am Monatsersten derselbe Dump ein zweites Mal, unter dem
+                  # Praefix mit der langen Aufbewahrung.
+                  #
+                  # Bewusst ein zweiter Upload und kein copy-object innerhalb S3:
+                  # die Datei liegt ohnehin lokal, der zweite Upload kostet einmal
+                  # im Monat 60 MB Traffic und spart dem IAM-User jedes
+                  # Kopier-Recht. Damit bleibt seine Policy bei GetObject und
+                  # PutObject.
+                  if [ "$(date -u +%d)" = "01" ]; then
+                    upload "monthly/teslamate_$(date -u +%Y-%m).dump"
+                  fi
+
+                  echo "Backup fuer ${DAY} abgeschlossen."
+              env:
+                - name: AWS_ACCESS_KEY_ID
+                  valueFrom:
+                    secretKeyRef:
+                      name: s3-teslamate-backup-credentials
+                      key: AWS_ACCESS_KEY_ID
+                - name: AWS_SECRET_ACCESS_KEY
+                  valueFrom:
+                    secretKeyRef:
+                      name: s3-teslamate-backup-credentials
+                      key: AWS_SECRET_ACCESS_KEY
+                - name: S3_BUCKET_NAME
+                  valueFrom:
+                    secretKeyRef:
+                      name: s3-teslamate-backup-credentials
+                      key: S3_BUCKET_NAME
+                - name: S3_REGION
+                  valueFrom:
+                    secretKeyRef:
+                      name: s3-teslamate-backup-credentials
+                      key: S3_REGION
+              volumeMounts:
+                - name: dump
+                  mountPath: /dump
+              resources:
+                requests:
+                  cpu: 50m
+                  memory: 128Mi
+                limits:
+                  cpu: 200m
+                  memory: 256Mi

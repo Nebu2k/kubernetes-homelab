@@ -20,6 +20,8 @@ resources:
   - teslamate-ingress.yaml
   - grafana-ingress.yaml
   - teslamate-secret-sealed.yaml
+  - s3-backup-credentials-sealed.yaml
+  - backup-cronjob.yaml
   - postgres-exporter-deployment.yaml
   - postgres-exporter-service.yaml
   - postgres-exporter-servicemonitor.yaml
