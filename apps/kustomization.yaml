@@ -28,4 +28,5 @@ resources:
   - fr24.yaml
   - paperless-ngx.yaml
   - ripe-atlas.yaml
+  - backup-monitor.yaml
 

@@ -29,7 +29,14 @@ metadata:
 spec:
   # 01:30 UTC, bewusst vor dem Paperless-Export (02:00) und dem HA-Archiv
   # (04:00 am Monatsersten), damit sich die Backup-Laeufe nicht ueberlappen.
+  #
+  # timeZone ist Pflicht, nicht Kosmetik: ohne das Feld laeuft ein CronJob in
+  # der Zeitzone der Node, die gerade den kube-controller-manager haelt. Im
+  # Cluster sind das mal Europe/Berlin (die Raspis) und mal Etc/UTC (x86), der
+  # Zeitplan wandert also mit dem Lease. Gemessen am 2026-08-05: dieser Job
+  # feuerte um 23:30 UTC statt 01:30, weil der Lease bei raspi5 lag.
   schedule: "30 1 * * *"
+  timeZone: "Etc/UTC"
   successfulJobsHistoryLimit: 3
   failedJobsHistoryLimit: 3
   concurrencyPolicy: Forbid

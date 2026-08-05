@@ -29,7 +29,7 @@ Production-ready K3s cluster managed via GitOps using ArgoCD App-of-Apps pattern
 | 8 | Ripe Atlas, Uptime Kuma |
 | 9 | Homepage, N8n, Paperless Ngx |
 | 10 | Beszel |
-| 11 | Proxmox Exporter |
+| 11 | Backup Monitor, Proxmox Exporter |
 | 12 | Argocd Config |
 | 15 | Fr24 |
 | 16 | External Services |
@@ -65,6 +65,7 @@ homelab/
 │   ├── n8n.yaml                       # Wave 9
 │   ├── paperless-ngx.yaml             # Wave 9
 │   ├── beszel.yaml                    # Wave 10
+│   ├── backup-monitor.yaml            # Wave 11
 │   ├── proxmox-exporter.yaml          # Wave 11
 │   ├── argocd-config.yaml             # Wave 12
 │   ├── fr24.yaml                      # Wave 15
@@ -76,6 +77,11 @@ homelab/
     │   ├── argocd-server-patch.yaml
     │   ├── ingress.yaml
     │   └── kustomization.yaml
+    ├── backup-monitor/
+    │   ├── freshness-cronjob.yaml
+    │   ├── kustomization.yaml
+    │   ├── s3-backup-monitor-credentials-sealed.yaml
+    │   └── s3-backup-monitor-credentials-unsealed.yaml.example
     ├── beszel/
     │   ├── agent-daemonset.yaml
     │   ├── deployment.yaml

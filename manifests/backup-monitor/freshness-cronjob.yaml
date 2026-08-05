@@ -1,0 +1,190 @@
+# Frische-Sonde ueber die drei Offsite-Backup-Buckets.
+#
+# Die Alerts der Gruppe "offsite-backup-jobs" belegen, dass ein Job durchgelaufen
+# ist. Sie belegen NICHT, dass etwas im Bucket angekommen ist. Genau dazwischen
+# liegen die Fehler, die sonst niemand sieht:
+#
+#   - paperless: der Export laeuft als CronJob, der Upload aber im Sidecar auf
+#     eigenem Timer. Scheitert der Upload, schreibt der Sidecar "ERROR" ins Log
+#     und schlaeft weiter. Der Job bleibt gruen.
+#   - Home Assistant: es gibt gar keinen Job. HA laedt selbst hoch, und wenn das
+#     ausfaellt, faellt es still aus. Beleg vom 2026-08-05: nach dem Key-Tausch
+#     wechselte die Agenten-ID, das automatische Backup ging nur noch nach
+#     backup.local, und HA hat dazu genau eine WARNING-Zeile geschrieben. In der
+#     UI sah alles gesund aus. Auch der Sensor
+#     sensor.backup_last_successful_automatic_backup stand danach auf gruen, denn
+#     ein Backup war ja entstanden.
+#   - teslamate: hier ist die Luecke am kleinsten (Dump und Upload sind derselbe
+#     Job), aber der Bucket ist trotzdem die einzige Stelle, an der man das
+#     Ergebnis sieht statt der Absicht.
+#
+# Der Job faellt mit exit 1 aus, sobald ein Bucket zu alt ist. Das Melden macht
+# die Alert-Regel OffsiteBackupFreshnessCheckFailing in
+# manifests/kube-prometheus-stack/prometheus-rules.yaml.
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: offsite-backup-freshness
+  namespace: monitoring
+  labels:
+    app.kubernetes.io/name: offsite-backup-freshness
+spec:
+  # 06:00 UTC, also nach allem, was nachts sichert: teslamate 01:30, der
+  # paperless-Export 02:00 (der Sidecar synct innerhalb der folgenden Stunde),
+  # HAs eigener Lauf gegen 05:30 Ortszeit und das Monatsarchiv 04:00 am Ersten.
+  #
+  # timeZone ist hier PFLICHT und nicht Kosmetik. Ohne das Feld laeuft ein
+  # CronJob in der Zeitzone der Node, die gerade den kube-controller-manager
+  # haelt, und das sind im Cluster mal Europe/Berlin (die Raspis) und mal
+  # Etc/UTC (die x86-Nodes). Der Zeitplan wandert also mit dem Lease. Gemessen
+  # am 2026-08-05: "0 2 * * *" feuerte um 00:00 UTC, weil der Lease bei raspi5
+  # lag.
+  schedule: "0 6 * * *"
+  timeZone: "Etc/UTC"
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  concurrencyPolicy: Forbid
+  jobTemplate:
+    spec:
+      # Kein Retry. Ein zu alter Bucket wird beim zweiten Versuch nicht juenger,
+      # und der fehlgeschlagene Job IST das Signal fuer den Alert.
+      backoffLimit: 0
+      template:
+        metadata:
+          labels:
+            app.kubernetes.io/name: offsite-backup-freshness
+        spec:
+          restartPolicy: Never
+          containers:
+            - name: check
+              image: amazon/aws-cli:2.36.13
+              command:
+                - /bin/sh
+                - -c
+                - |
+                  set -eu
+
+                  NOW=$(date -u +%s)
+                  FAIL=0
+
+                  # Argumente: Bucket, Praefix (leer = ganzer Bucket), Grenze in
+                  # Stunden, Klartextname fuer die Ausgabe.
+                  pruefe() {
+                    BUCKET="$1"; PREFIX="$2"; MAX_H="$3"; LABEL="$4"
+
+                    # sort_by liefert das juengste Objekt. Bewusst ueber
+                    # LastModified und nicht ueber den Key: die Namen folgen in
+                    # den drei Buckets drei verschiedenen Schemata, der
+                    # Zeitstempel ist das einzig gemeinsame.
+                    #
+                    # Das "Contents || `[]`" ist noetig, nicht huebsch: trifft
+                    # das Praefix nichts, fehlt Contents ganz, und sort_by(null)
+                    # bricht mit einem JMESPath-Typfehler ab statt mit einem
+                    # leeren Ergebnis. Der Fall tritt real auf, naemlich bevor
+                    # der paperless-Export seine erste last-export.txt
+                    # geschrieben hat.
+                    NEWEST=$(aws s3api list-objects-v2 \
+                      --bucket "${BUCKET}" --region "${S3_REGION}" \
+                      ${PREFIX:+--prefix "${PREFIX}"} \
+                      --query 'sort_by(Contents || `[]`, &LastModified)[-1].[LastModified,Key]' \
+                      --output text 2>&1) || {
+                        echo "FEHLER: ${LABEL}: Listing fehlgeschlagen: ${NEWEST}"
+                        FAIL=1
+                        return
+                      }
+
+                    if [ -z "${NEWEST}" ] || [ "${NEWEST}" = "None" ]; then
+                      echo "FEHLER: ${LABEL}: kein einziges Objekt unter '${PREFIX}'."
+                      FAIL=1
+                      return
+                    fi
+
+                    STAMP=$(echo "${NEWEST}" | cut -f1)
+                    KEY=$(echo "${NEWEST}" | cut -f2)
+                    AGE_H=$(( (NOW - $(date -u -d "${STAMP}" +%s)) / 3600 ))
+
+                    # Der Key steht bewusst NICHT im Log: die Dateinamen des
+                    # paperless-Exports tragen Titel und Korrespondent. Nur die
+                    # Endung, die reicht zum Einordnen.
+                    printf '%-28s %4sh alt (Grenze %sh)  .%s\n' \
+                      "${LABEL}" "${AGE_H}" "${MAX_H}" "${KEY##*.}"
+
+                    if [ "${AGE_H}" -gt "${MAX_H}" ]; then
+                      echo "  ZU ALT: seit ${AGE_H}h ist in ${BUCKET} nichts Neues angekommen."
+                      FAIL=1
+                    fi
+                  }
+
+                  echo "Frische der Offsite-Backups, Stand $(date -u +%FT%TZ)"
+                  echo
+
+                  # 36h wie bei den Job-Alerts: ein einzelner ausgefallener Lauf
+                  # soll nicht sofort melden. Weil der Check nur einmal taeglich
+                  # laeuft, heisst das in der Praxis: ein Ausfall meldet sich
+                  # spaetestens am uebernaechsten Morgen.
+                  pruefe "${TESLAMATE_BUCKET}" "daily/" 36 "teslamate (daily)"
+
+                  # HA laedt jeden Tar selbst hoch, hier zaehlt der ganze Bucket.
+                  pruefe "${HOME_ASSISTANT_BUCKET}" "" 36 "home assistant"
+
+                  # WICHTIG: hier wird gezielt die Heartbeat-Datei geprueft, nicht
+                  # das juengste Objekt im Bucket. Der Sidecar synct ohne
+                  # --delete und laedt nur hoch, was sich geaendert hat, und
+                  # "document_exporter" behaelt die alten mtimes der Medien-
+                  # Dateien bei. Aendert sich an den Dokumenten tagelang nichts,
+                  # wird auch tagelang nichts hochgeladen: gemessen am
+                  # 2026-08-05 stammten von 218 Objekten die aeltesten aus dem
+                  # Maerz und am 2026-08-03 kam gar nichts an. "Juengstes Objekt"
+                  # waere also ein Fehlalarm-Generator.
+                  #
+                  # last-export.txt schreibt der Export-CronJob nach jedem
+                  # erfolgreichen Lauf frisch, damit hat sie immer eine neue
+                  # mtime und wird immer synchronisiert. Ist SIE aktuell, sind
+                  # beide Haelften belegt: der Export lief UND der Sidecar hat
+                  # hochgeladen.
+                  pruefe "${PAPERLESS_BUCKET}" "paperless-backup/last-export.txt" 36 "paperless (heartbeat)"
+
+                  echo
+                  if [ "${FAIL}" -ne 0 ]; then
+                    echo "MINDESTENS EIN BUCKET IST NICHT AKTUELL."
+                    exit 1
+                  fi
+                  echo "Alle drei Buckets sind aktuell."
+              env:
+                - name: AWS_ACCESS_KEY_ID
+                  valueFrom:
+                    secretKeyRef:
+                      name: s3-backup-monitor-credentials
+                      key: AWS_ACCESS_KEY_ID
+                - name: AWS_SECRET_ACCESS_KEY
+                  valueFrom:
+                    secretKeyRef:
+                      name: s3-backup-monitor-credentials
+                      key: AWS_SECRET_ACCESS_KEY
+                - name: S3_REGION
+                  valueFrom:
+                    secretKeyRef:
+                      name: s3-backup-monitor-credentials
+                      key: S3_REGION
+                - name: PAPERLESS_BUCKET
+                  valueFrom:
+                    secretKeyRef:
+                      name: s3-backup-monitor-credentials
+                      key: PAPERLESS_BUCKET
+                - name: HOME_ASSISTANT_BUCKET
+                  valueFrom:
+                    secretKeyRef:
+                      name: s3-backup-monitor-credentials
+                      key: HOME_ASSISTANT_BUCKET
+                - name: TESLAMATE_BUCKET
+                  valueFrom:
+                    secretKeyRef:
+                      name: s3-backup-monitor-credentials
+                      key: TESLAMATE_BUCKET
+              resources:
+                requests:
+                  cpu: 50m
+                  memory: 64Mi
+                limits:
+                  cpu: 200m
+                  memory: 256Mi

@@ -35,7 +35,13 @@ metadata:
 spec:
   # 1. des Monats, 04:00 UTC. Das taegliche HA-Backup landet gegen 03:00 UTC im
   # Bucket, der Job greift also einen frischen Stand ab.
+  #
+  # timeZone ist Pflicht: ohne das Feld laeuft der Job in der Zeitzone der Node,
+  # die gerade den kube-controller-manager haelt, und der Zeitplan wandert mit
+  # dem Lease. Ohne das Feld waere dieser Job am 2026-08-05 um 02:00 UTC
+  # gelaufen, also VOR dem HA-Backup, und haette den Vortagsstand archiviert.
   schedule: "0 4 1 * *"
+  timeZone: "Etc/UTC"
   successfulJobsHistoryLimit: 3
   failedJobsHistoryLimit: 3
   concurrencyPolicy: Forbid

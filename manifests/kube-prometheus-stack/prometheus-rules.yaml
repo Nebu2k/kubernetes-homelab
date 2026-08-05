@@ -274,7 +274,46 @@ spec:
             severity: warning
           annotations:
             summary: "Paperless document export has not succeeded recently"
-            description: "No successful paperless-backup-trigger job for over 36h. The S3 sidecar keeps syncing, so the bucket looks healthy while its content silently ages. NOTE: this alert only covers the export, not the upload to S3."
+            description: "No successful paperless-backup-trigger job for over 36h. The S3 sidecar keeps syncing, so the bucket looks healthy while its content silently ages. NOTE: this alert only covers the export, not the upload to S3. The upload half is covered by OffsiteBackupNotArriving below."
+
+        # Die drei Alerts oben belegen, dass ein Job gelaufen ist. Dieser hier
+        # belegt, dass etwas im Bucket ANGEKOMMEN ist, und das ist nicht
+        # dasselbe: bei paperless laeuft der Upload im Sidecar auf eigenem
+        # Timer, und bei HA gibt es ueberhaupt keinen Job. Der CronJob
+        # offsite-backup-freshness (manifests/backup-monitor/) prueft das einmal
+        # taeglich um 06:00 UTC und endet mit exit 1, sobald ein Bucket zu alt
+        # ist.
+        #
+        # Der erste Zweig braucht die Altersbedingung, sonst meldet der Alert
+        # ewig weiter: failedJobsHistoryLimit haelt fehlgeschlagene Jobs am
+        # Leben, ein blosses "max(...) > 0" bliebe also auch dann feuernd, wenn
+        # der naechste Lauf laengst wieder gruen war. Die 90000s (25h) decken
+        # genau einen Tagesabstand ab.
+        #
+        # Kein "for": ein fehlgeschlagener Job bleibt fehlgeschlagen, da wartet
+        # nichts darauf, sich von selbst zu erholen. Der absent-Zweig faengt den
+        # Fall, dass der CronJob verschwindet, wie bei den drei Alerts oben, der
+        # mittlere den Fall, dass er gar nicht mehr zum Laufen kommt.
+        - alert: OffsiteBackupNotArriving
+          expr: |
+            (
+              max(
+                kube_job_status_failed{namespace="monitoring", job_name=~"offsite-backup-freshness.*"} > 0
+                and on(job_name)
+                (time() - kube_job_created{namespace="monitoring", job_name=~"offsite-backup-freshness.*"} < 90000)
+              ) > 0
+            )
+            or
+            (
+              time() - max(kube_job_status_completion_time{namespace="monitoring", job_name=~"offsite-backup-freshness.*"}) > 172800
+            )
+            or
+            absent(kube_job_status_completion_time{namespace="monitoring", job_name=~"offsite-backup-freshness.*"})
+          labels:
+            severity: warning
+          annotations:
+            summary: "An offsite backup bucket has stopped receiving objects"
+            description: "The daily offsite-backup-freshness check failed, or has not succeeded for over 48h. At least one of the three S3 buckets has received nothing new for longer than its threshold, which the per-job alerts above cannot see. Run `kubectl -n monitoring logs job/<last offsite-backup-freshness job>` for the per-bucket ages."
 
     # Pod and container alerts
     - name: pod-health
