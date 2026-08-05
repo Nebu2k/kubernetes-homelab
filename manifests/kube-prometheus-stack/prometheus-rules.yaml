@@ -476,3 +476,46 @@ spec:
           annotations:
             summary: "unpoller liefert keine Metriken mehr"
             description: "unpoller_prometheus_cache_age_seconds fehlt seit >15m. Die beiden anderen unpoller-Alerts sind damit blind. Deployment monitoring/unifi-poller pruefen."
+
+    # SealedSecrets. Der Controller wurde bis 2026-08-05 gar nicht gescrapt,
+    # der ServiceMonitor haengt jetzt an apps/sealed-secrets.yaml.
+    #
+    # Das Ziel ist genau EIN Signal: ein SealedSecret, das sich nicht mehr
+    # entschluesseln laesst. Das ist der Fall, der sonst erst beim naechsten
+    # Cluster-Neuaufbau auffaellt, und SealedSecrets sind nicht
+    # rueckentschluesselbar. Key-Alter oder Cert-Ablauf lassen sich hier NICHT
+    # alarmieren, dafuer gibt es keine Metrik.
+    - name: sealed-secrets
+      interval: 60s
+      rules:
+        # condition_info ist -1 (false), 0 (unknown/absent) oder 1 (true).
+        # Alarmiert wird nur auf -1: 0 steht auch fuer "Bedingung noch nicht
+        # gesetzt" und waere direkt nach dem Anlegen eines SealedSecrets ein
+        # Fehlalarm.
+        #
+        # Haeufigste Ursache ist nicht ein kaputtes Secret, sondern ein
+        # fehlender privater Key: versiegelt wird immer gegen den laufenden
+        # Controller, und der rotiert alle 30 Tage. Wer die alten
+        # sealed-secrets-key*-Secrets in kube-system verliert, verliert damit
+        # alles, was gegen sie versiegelt wurde.
+        - alert: SealedSecretUnsealFailed
+          expr: sealed_secrets_controller_condition_info{condition="Synced"} == -1
+          for: 5m
+          labels:
+            severity: critical
+          annotations:
+            summary: "SealedSecret laesst sich nicht mehr entschluesseln"
+            description: "{{ $labels.namespace }}/{{ $labels.name }} steht auf Synced=False. Der zugehoerige Sealing-Key fehlt im Cluster (Secrets sealed-secrets-key* in kube-system) oder das Secret wurde gegen einen fremden Controller versiegelt. Das dahinterliegende Secret ist damit nicht neu erzeugbar: kubectl -n kube-system logs -l app.kubernetes.io/name=sealed-secrets pruefen, bevor irgendetwas geloescht wird."
+
+        # Sicherheitsnetz, gleiche Logik wie bei unpoller und TeslaMate. Ohne
+        # Scrape verschwindet condition_info und der Alert oben wird still,
+        # statt zu feuern. build_info ist dafuer der stabilere Anker: es gibt
+        # sie auch dann, wenn kein einziges SealedSecret existiert.
+        - alert: SealedSecretsControllerDown
+          expr: absent(sealed_secrets_controller_build_info)
+          for: 15m
+          labels:
+            severity: warning
+          annotations:
+            summary: "SealedSecrets-Controller liefert keine Metriken mehr"
+            description: "sealed_secrets_controller_build_info fehlt seit >15m. SealedSecretUnsealFailed ist damit blind. Deployment kube-system/sealed-secrets-controller und den ServiceMonitor sealed-secrets-controller pruefen."
