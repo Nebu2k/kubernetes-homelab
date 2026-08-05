@@ -92,13 +92,47 @@ spec:
                   echo "Archiviere ${SRC}"
                   echo "        -> ${DST}"
 
-                  aws s3 cp \
-                    "s3://${S3_BUCKET_NAME}/${SRC}" \
-                    "s3://${S3_BUCKET_NAME}/${DST}" \
+                  # Bewusst die Low-Level-API und NICHT "aws s3 cp".
+                  #
+                  # Das High-Level-Kommando liest beim Kopieren die Objekt-Tags,
+                  # um sie mitzunehmen, und braucht dafuer s3:GetObjectTagging.
+                  # Der IAM-Key hat das nicht, "aws s3 cp" scheitert hier mit
+                  # AccessDenied (belegt im Testlauf am 2026-08-05).
+                  #
+                  # copy-object kopiert server-seitig und kommt mit GetObject auf
+                  # der Quelle und PutObject auf dem Ziel aus. --tagging-directive
+                  # REPLACE ohne --tagging setzt das Ziel explizit auf "keine
+                  # Tags" und vermeidet jeden Tagging-Zugriff. HA setzt ohnehin
+                  # keine Tags, es geht also nichts verloren.
+                  #
+                  # Grenze: copy-object schafft einen Durchgang bis 5 GB. Die
+                  # Tars liegen bei ~0,5 GB. Sollte HA je darueber wachsen,
+                  # braucht es hier einen Multipart-Copy.
+                  aws s3api copy-object \
+                    --bucket "${S3_BUCKET_NAME}" \
                     --region "${S3_REGION}" \
-                    --no-progress
+                    --key "${DST}" \
+                    --copy-source "${S3_BUCKET_NAME}/${SRC}" \
+                    --tagging-directive REPLACE \
+                    --query 'CopyObjectResult.ETag' \
+                    --output text
 
-                  echo "Archivstand fuer ${YM} angelegt."
+                  # Gegenprobe: Zielobjekt muss existieren und exakt so gross
+                  # sein wie die Quelle. Ohne das meldet der Job Erfolg, sobald
+                  # der API-Call durchging, und niemand merkt einen Teilstand.
+                  SRC_SIZE=$(aws s3api head-object --bucket "${S3_BUCKET_NAME}" \
+                    --region "${S3_REGION}" --key "${SRC}" \
+                    --query 'ContentLength' --output text)
+                  DST_SIZE=$(aws s3api head-object --bucket "${S3_BUCKET_NAME}" \
+                    --region "${S3_REGION}" --key "${DST}" \
+                    --query 'ContentLength' --output text)
+
+                  if [ "${SRC_SIZE}" != "${DST_SIZE}" ]; then
+                    echo "FEHLER: Groesse weicht ab, Quelle ${SRC_SIZE} vs Ziel ${DST_SIZE}."
+                    exit 1
+                  fi
+
+                  echo "Archivstand fuer ${YM} angelegt, ${DST_SIZE} Bytes."
               env:
                 - name: AWS_ACCESS_KEY_ID
                   valueFrom:
