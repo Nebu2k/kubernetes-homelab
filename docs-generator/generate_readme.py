@@ -348,33 +348,40 @@ def generate_tree_fallback():
     return "\n".join(lines)
 
 
-def get_homepage_widget_secrets():
+def get_sealed_secrets():
     """
-    Find all *-unsealed.yaml.example files in homepage manifests
-    and generate seal commands for them.
-    Returns list of dictionaries with secret metadata.
+    Find every *-unsealed.yaml.example across all manifest directories and
+    derive the seal command for it.
+
+    The .example files are the single source of truth here: a new secret shows
+    up in the README as soon as its template is committed, and a removed one
+    disappears with it. Nothing about secrets is hardcoded in the template
+    anymore -- that is how the README kept advertising MinIO months after the
+    backup target had moved to the NAS.
+
+    Returns a list of dicts, sorted by component then secret name.
     """
-    homepage_dir = MANIFESTS_DIR / "homepage"
     secrets = []
-    
-    if not homepage_dir.exists():
+
+    if not MANIFESTS_DIR.exists():
         return secrets
-    
-    # Find all unsealed.yaml.example files
-    for example_file in sorted(homepage_dir.glob("*-unsealed.yaml.example")):
-        # Extract secret name from filename
-        # e.g., "adguard-credentials-unsealed.yaml.example" -> "adguard-credentials"
-        # Remove "-unsealed.yaml.example" suffix
+
+    for example_file in sorted(MANIFESTS_DIR.glob("*/*-unsealed.yaml.example")):
+        component = example_file.parent.name
+        # "adguard-credentials-unsealed.yaml.example" -> "adguard-credentials"
         base_name = example_file.name.replace("-unsealed.yaml.example", "")
-        
+
         secrets.append({
+            'component': component,
             'example_file': example_file.name,
             'unsealed_file': f"{base_name}-unsealed.yaml",
             'sealed_file': f"{base_name}-sealed.yaml",
-            'secret_name': f"homepage-{base_name}",
-            'base_name': base_name
+            'example_path': f"manifests/{component}/{example_file.name}",
+            'unsealed_path': f"manifests/{component}/{base_name}-unsealed.yaml",
+            'sealed_path': f"manifests/{component}/{base_name}-sealed.yaml",
+            'base_name': base_name,
         })
-    
+
     return secrets
 
 
@@ -392,9 +399,14 @@ def main():
     print("  📁 Generating repository structure...")
     repo_structure = generate_tree_fallback()
     
-    print("  🔐 Extracting Homepage widget secrets...")
-    homepage_secrets = get_homepage_widget_secrets()
-    print(f"      Found {len(homepage_secrets)} secrets to automate")
+    print("  🔐 Extracting sealed secrets...")
+    sealed_secrets = get_sealed_secrets()
+    # Homepage-Widgets werden separat dokumentiert: sie koennen erst versiegelt
+    # werden, wenn Grafana & Co. laufen und ihre Tokens existieren.
+    homepage_secrets = [s for s in sealed_secrets if s['component'] == 'homepage']
+    bootstrap_secrets = [s for s in sealed_secrets if s['component'] != 'homepage']
+    print(f"      Found {len(sealed_secrets)} secrets "
+          f"({len(bootstrap_secrets)} bootstrap, {len(homepage_secrets)} homepage)")
 
     print("  📚 Extracting documentation links...")
     documentation_links = get_documentation_links()
@@ -405,6 +417,8 @@ def main():
         'sync_waves': sync_waves,
         'versions': versions,
         'repo_structure': repo_structure,
+        'sealed_secrets': sealed_secrets,
+        'bootstrap_secrets': bootstrap_secrets,
         'homepage_secrets': homepage_secrets,
         'documentation_links': documentation_links
     }

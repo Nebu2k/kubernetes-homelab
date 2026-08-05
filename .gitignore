@@ -14,9 +14,6 @@ ROADMAP.md
 *.tmp
 *.log
 
-# Ignore backup scripts with credentials
-scripts*/*
-
 # Ignore agent skills: beschreiben Betriebsdetails und offene Lücken,
 # gehören nicht in ein öffentliches Repo. Lokal weiter voll nutzbar.
 .claude/

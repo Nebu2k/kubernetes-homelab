@@ -303,22 +303,25 @@ cd kubernetes-homelab
    # For now, keep it unsealed locally (gitignored)
    ```
 
-3. **Longhorn S3 Backup** (optional):
+3. **All other secrets** (each optional, depending on which apps you keep):
+
+   Every component that needs credentials ships a `.example` template. Copy the
+   ones you need, fill them in, and leave them unsealed for now. Each file's
+   header comment explains what belongs in it.
 
    ```bash
-   # Create from example
-   cp manifests/longhorn/s3-secret-unsealed.yaml.example \
-      manifests/longhorn/s3-secret-unsealed.yaml
-   
-   # Update MinIO/S3 credentials
-   vim manifests/longhorn/s3-secret-unsealed.yaml
-   # Change: AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_ENDPOINTS
-   
-   # Note: Sealing happens AFTER cluster bootstrap (Step 7+)
-   # For now, keep it unsealed locally (gitignored)
+{%- for secret in bootstrap_secrets %}
+{%- if secret.component != 'cert-manager' %}
+   cp {{ secret.example_path }} \
+      {{ secret.unsealed_path }}
+{%- endif %}
+{%- endfor %}
+
+   # Then edit each copy and replace the placeholder values.
+   # Sealing happens AFTER cluster bootstrap (Step 7.5).
    ```
 
-   ⚠️ **Note:** `*-unsealed.yaml` files are gitignored for security. Only `.example` templates are committed.
+   ⚠️ **Note:** `*-unsealed.yaml` files are gitignored for security. Only `.example` templates are committed. They are also the only reseal source you will ever have, since SealedSecrets cannot be decrypted back.
 
 4. **Traefik Dashboard Domain** (required if using different domain):
 
@@ -364,38 +367,19 @@ kubectl wait --for=condition=available --timeout=300s \
   deployment/sealed-secrets-controller -n kube-system
 ```
 
-**Option A: Download public certificate for offline sealing (Recommended)**
-
-This allows you to seal secrets even when not connected to the cluster:
+**Seal every secret you created in Step 6** (requires cluster access):
 
 ```bash
-# Download the public certificate (one-time setup)
-kubeseal --fetch-cert --controller-namespace=kube-system > sealed-secrets-pub-cert.pem
-
-# Seal Cloudflare API token (cert-manager)
-kubeseal --cert sealed-secrets-pub-cert.pem --format=yaml \
-  < manifests/cert-manager/cloudflare-api-token-unsealed.yaml \
-  > manifests/cert-manager/cloudflare-api-token-sealed.yaml
-
-# If using Longhorn S3 backup:
-kubeseal --cert sealed-secrets-pub-cert.pem --format=yaml \
-  < manifests/longhorn/minio-secret-unsealed.yaml \
-  > manifests/longhorn/minio-secret-sealed.yaml
+{%- for secret in bootstrap_secrets %}
+# {{ loop.index }}. {{ secret.component }}: {{ secret.base_name | replace('-', ' ') }}
+kubeseal --format=yaml --controller-namespace=kube-system \
+  < {{ secret.unsealed_path }} \
+  > {{ secret.sealed_path }}
+{% endfor %}
 ```
 
-**Option B: Seal directly from cluster** (requires cluster access):
-
-```bash
-# Seal Cloudflare API token (cert-manager)
-kubeseal --format=yaml --controller-namespace=kube-system \
-  < manifests/cert-manager/cloudflare-api-token-unsealed.yaml \
-  > manifests/cert-manager/cloudflare-api-token-sealed.yaml
-
-# If using Longhorn S3 backup:
-kubeseal --format=yaml --controller-namespace=kube-system \
-  < manifests/longhorn/minio-secret-unsealed.yaml \
-  > manifests/longhorn/minio-secret-sealed.yaml
-```
+Or reseal all of them at once with `./reseal-all-secrets.sh`, which walks every
+`*-unsealed.yaml` under `manifests/` and does exactly the above.
 
 **Commit and deploy:**
 
@@ -410,7 +394,7 @@ git push
 kubectl get applications -n argocd -w
 ```
 
-⚠️ **Note:** The public certificate (`sealed-secrets-pub-cert.pem`) is cluster-specific. If you rebuild the cluster or reinstall Sealed Secrets, you'll need to fetch a new certificate. The certificate file is gitignored for security.
+ℹ️ **Why no offline certificate?** `kubeseal` can also seal against a public certificate file fetched with `kubeseal --fetch-cert`, which works without cluster access. This repo deliberately does not keep one: the controller rotates its sealing key every 30 days, a checked-out certificate silently goes stale, and sealing against a months-old key still succeeds without any error. Always seal against the live controller.
 
 ### Step 7.6: Configure Homepage Widgets (**on your laptop** - AFTER Grafana is ready)
 
@@ -427,10 +411,10 @@ cp manifests/homepage/{{ secret.example_file }} \
 # Edit the file and replace placeholder values with your actual credentials
 vim manifests/homepage/{{ secret.unsealed_file }}
 
-# Seal the secret (using offline certificate)
-kubeseal --cert sealed-secrets-pub-cert.pem --format=yaml \
-  < manifests/homepage/{{ secret.unsealed_file }} \
-  > manifests/homepage/{{ secret.sealed_file }}
+# Seal the secret
+kubeseal --format=yaml --controller-namespace=kube-system \
+  < {{ secret.unsealed_path }} \
+  > {{ secret.sealed_path }}
 
 {% endfor %}
 # Commit and push
@@ -521,7 +505,7 @@ URL: https://uptime.elmstreet79.de
 Everything goes through Traefik (single reverse proxy) with the wildcard TLS default cert. A service is **public exactly when it has a Cloudflare record**. There is no wildcard A-record.
 
 - **Public** (Cloudflare CNAME → `nebu2k.ipv64.net`, managed in the `homelab-terraform` Cloudflare stack): `www`, `homeassistant`, `teslamate`, `plex`, `dreambox`. Apex `elmstreet79.de` 301-redirects to `www`. Plex additionally has a direct `32400` port-forward for native apps.
-- **Internal/VPN-only** (no Cloudflare record): everything else, e.g. `argocd`, `grafana`, `prometheus`, `alertmanager`, `longhorn`, `portainer`, `uptime`, `home`, `paperless`, `n8n`, plus the external hosts (`unifi`, `pve`, `minio`, `nas`, `vscode`, …).
+- **Internal/VPN-only** (no Cloudflare record): everything else, e.g. `argocd`, `grafana`, `prometheus`, `alertmanager`, `longhorn`, `portainer`, `uptime`, `home`, `paperless`, `n8n`, plus the external hosts (`unifi`, `pve`, `nas`, `vscode`, `adguard`, …).
 
 To make a service public: add its host to `public_hosts` in `homelab-terraform/terraform/cloudflare/` and `terraform apply`. Nothing else needed, the single port-forward covers all.
 
@@ -562,8 +546,8 @@ kubectl get application traefik -n argocd -w
 # 1. Edit unsealed secret (example: Cloudflare API token)
 vim manifests/cert-manager/cloudflare-api-token-unsealed.yaml
 
-# 2. Re-seal (using offline certificate)
-kubeseal --cert sealed-secrets-pub-cert.pem --format=yaml \
+# 2. Re-seal against the live controller
+kubeseal --format=yaml --controller-namespace=kube-system \
   < manifests/cert-manager/cloudflare-api-token-unsealed.yaml \
   > manifests/cert-manager/cloudflare-api-token-sealed.yaml
 
