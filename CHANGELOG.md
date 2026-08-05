@@ -1,3 +1,10 @@
+## [4.55.1](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.55.0...v4.55.1) (2026-08-05)
+
+
+### Bug Fixes
+
+* **backup-monitor:** Key ohne Punkt landete vollstaendig im Log ([04f856a](https://github.com/Nebu2k/kubernetes-homelab/commit/04f856affa742b80dffb8c9d7551d579141f70f9))
+
 # [4.55.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.54.0...v4.55.0) (2026-08-05)
 
 
