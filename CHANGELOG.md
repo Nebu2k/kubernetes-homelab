@@ -1,3 +1,10 @@
+# [4.55.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.54.0...v4.55.0) (2026-08-05)
+
+
+### Features
+
+* **backup-monitor:** Frische-Sonde deckt den etcd-Snapshot-Bucket mit ab ([ae05fe8](https://github.com/Nebu2k/kubernetes-homelab/commit/ae05fe8b8b676a588320c2287e3dc689394be675))
+
 # [4.54.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.53.0...v4.54.0) (2026-08-05)
 
 
