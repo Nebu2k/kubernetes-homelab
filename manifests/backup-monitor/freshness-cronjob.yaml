@@ -161,23 +161,37 @@ spec:
                   pruefe "${PAPERLESS_BUCKET}" "paperless-backup/last-export.txt" 36 "paperless (heartbeat)"
 
                   # etcd: k3s laedt auf JEDER der drei Server-Nodes alle 12h
-                  # hoch. Geprueft wird der ganze Bucket, also reicht eine
-                  # funktionierende Node, damit es hier gruen aussieht.
+                  # hoch, und geprueft wird JEDE Node einzeln.
                   #
-                  # Das ist Absicht: der Zweck dieses Buckets ist, dass
-                  # ueberhaupt eine verwertbare Kopie der Sealing-Keys ausserhalb
-                  # des Clusters liegt, und dafuer genuegt eine. Faellt der
-                  # Upload auf genau einer Node aus, faellt das hier NICHT auf.
-                  # Wer das merken will, braucht drei getrennte Praefix-Pruefungen,
-                  # und dafuer muessten die Snapshots erst in node-eigene Ordner
-                  # gehen (--etcd-s3-folder). Das geht nicht, ohne das
-                  # Config-Secret abzuschalten, siehe die Doku im Skill.
+                  # Bis 2026-08-05 stand hier eine einzige Pruefung ueber den
+                  # ganzen Bucket. Die war gruen, sobald EINE Node lieferte, und
+                  # hat genau deshalb verdeckt, dass ueberhaupt nur cp-1 je etwas
+                  # hochgeladen hatte. Ein Bucket-Alter sagt nichts darueber, ob
+                  # noch drei Erzeuger leben.
                   #
-                  # 18h statt 36h: der Abstand ist hier 12h und nicht 24h wie bei
-                  # den anderen, und es sind drei unabhaengige Erzeuger. Zwei
-                  # ausgefallene Laeufe in Folge auf allen dreien sind ein echtes
-                  # Signal, kein Rauschen.
-                  pruefe "${ETCD_BUCKET}" "" 18 "etcd (sealing keys)"
+                  # Node-eigene Ordner (--etcd-s3-folder) braucht es dafuer
+                  # NICHT, auch wenn das Config-Secret fuer alle Nodes dasselbe
+                  # ist: k3s baut den Node-Namen in den Objektnamen ein
+                  # ("<snapshot-name>-<node>-<unix-ts>"). Das Praefix
+                  # "etcd-snapshot-<node>-" trifft damit genau die geplanten
+                  # Snapshots einer Node und laesst on-demand-Laeufe bewusst
+                  # aussen vor: geprueft werden soll der automatische Weg.
+                  #
+                  # Die Node-Namen stehen hier fest. Nach einem Node-Neubau oder
+                  # Rename meldet sich diese Sonde mit "kein einziges Objekt" und
+                  # muss nachgezogen werden. Das ist der gewollte laute Ausgang,
+                  # ein stiller waere genau der Fehler von oben.
+                  #
+                  # 26h statt 18h: pro Node ist der Abstand 12h, und ein einzelner
+                  # ausgefallener Lauf (Reboot durch kured im Zeitfenster) soll
+                  # nicht melden. Zwei ausgefallene Laeufe in Folge sind 24h und
+                  # damit ein echtes Signal. Zur Erinnerung: der Check laeuft
+                  # 06:00 UTC, die Snapshots fallen 00:00 und 12:00 LOKALZEIT der
+                  # jeweiligen Node, und die Raspis stehen auf Europe/Berlin
+                  # waehrend die x86-Nodes auf UTC stehen.
+                  for NODE in k3s-cp-1 raspi4 raspi5; do
+                    pruefe "${ETCD_BUCKET}" "etcd-snapshot-${NODE}-" 26 "etcd ${NODE}"
+                  done
 
                   echo
                   if [ "${FAIL}" -ne 0 ]; then

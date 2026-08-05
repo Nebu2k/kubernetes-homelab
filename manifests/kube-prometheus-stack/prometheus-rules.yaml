@@ -313,7 +313,7 @@ spec:
             severity: warning
           annotations:
             summary: "An offsite backup bucket has stopped receiving objects"
-            description: "The daily offsite-backup-freshness check failed, or has not succeeded for over 48h. At least one of the three S3 buckets has received nothing new for longer than its threshold, which the per-job alerts above cannot see. Run `kubectl -n monitoring logs job/<last offsite-backup-freshness job>` for the per-bucket ages."
+            description: "The daily offsite-backup-freshness check failed, or has not succeeded for over 48h. At least one of the six checks (teslamate, home assistant, paperless heartbeat, and one per etcd server node) has received nothing new for longer than its threshold, which the per-job alerts above cannot see. Run `kubectl -n monitoring logs job/<last offsite-backup-freshness job>` for the individual ages."
 
     # Pod and container alerts
     - name: pod-health
