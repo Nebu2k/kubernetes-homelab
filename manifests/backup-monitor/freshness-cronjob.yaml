@@ -111,8 +111,19 @@ spec:
                     # Der Key steht bewusst NICHT im Log: die Dateinamen des
                     # paperless-Exports tragen Titel und Korrespondent. Nur die
                     # Endung, die reicht zum Einordnen.
-                    printf '%-28s %4sh alt (Grenze %sh)  .%s\n' \
-                      "${LABEL}" "${AGE_H}" "${MAX_H}" "${KEY##*.}"
+                    #
+                    # Die case-Konstruktion ist Pflicht und keine Vorsicht:
+                    # "${KEY##*.}" liefert bei einem Key OHNE Punkt den
+                    # vollstaendigen Key zurueck. Genau das sind die
+                    # etcd-Snapshots ("etcd-snapshot-<node>-<ts>"), und damit
+                    # stuende die Regel oben nur noch auf dem Papier.
+                    case "${KEY}" in
+                      *.*) EXT=".${KEY##*.}" ;;
+                      *)   EXT="(ohne Endung)" ;;
+                    esac
+
+                    printf '%-28s %4sh alt (Grenze %sh)  %s\n' \
+                      "${LABEL}" "${AGE_H}" "${MAX_H}" "${EXT}"
 
                     if [ "${AGE_H}" -gt "${MAX_H}" ]; then
                       echo "  ZU ALT: seit ${AGE_H}h ist in ${BUCKET} nichts Neues angekommen."
