@@ -1,0 +1,10 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+# Kein namespace.yaml: kube-system existiert immer. Der Namespace ist hier auch
+# nicht frei waehlbar, k3s sucht das Secret aus --etcd-s3-config-secret
+# ausschliesslich dort.
+namespace: kube-system
+
+resources:
+  - s3-etcd-backup-credentials-sealed.yaml

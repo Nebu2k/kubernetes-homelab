@@ -20,7 +20,7 @@ Production-ready K3s cluster managed via GitOps using ArgoCD App-of-Apps pattern
 | Wave | Component |
 |------|-----------|
 | 0 | Coredns Config, Sealed Secrets |
-| 1 | Kured, Metallb, Reloader, System Upgrade Controller |
+| 1 | Etcd S3 Config, Kured, Metallb, Reloader, System Upgrade Controller |
 | 3 | Traefik |
 | 4 | Cert Manager, Longhorn |
 | 5 | Csi Driver Smb, Landing Page, Nfs Storage, Portainer, Teslamate |
@@ -44,6 +44,7 @@ homelab/
 │   ├── kustomization.yaml         # List of all apps
 │   ├── coredns-config.yaml            # Wave 0
 │   ├── sealed-secrets.yaml            # Wave 0
+│   ├── etcd-s3-config.yaml            # Wave 1
 │   ├── kured.yaml                     # Wave 1
 │   ├── metallb.yaml                   # Wave 1
 │   ├── reloader.yaml                  # Wave 1
@@ -105,6 +106,10 @@ homelab/
     │   └── kustomization.yaml
     ├── csi-driver-smb/
     │   └── values.yaml
+    ├── etcd-s3-config/
+    │   ├── kustomization.yaml
+    │   ├── s3-etcd-backup-credentials-sealed.yaml
+    │   └── s3-etcd-backup-credentials-unsealed.yaml.example
     ├── external-services/
     │   ├── adguard-macmini-service.yaml
     │   ├── adguard-pve-service.yaml
