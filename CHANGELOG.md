@@ -1,3 +1,10 @@
+## [4.55.3](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.55.2...v4.55.3) (2026-08-05)
+
+
+### Bug Fixes
+
+* **renovate:** Automerge kam durch Dauer-Rebase nie zum Merge ([49c2f4f](https://github.com/Nebu2k/kubernetes-homelab/commit/49c2f4ffebf050a93e9b365d6ea6fb151f45ce36))
+
 ## [4.55.2](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.55.1...v4.55.2) (2026-08-05)
 
 
