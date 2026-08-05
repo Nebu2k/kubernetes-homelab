@@ -1,3 +1,10 @@
+# [4.54.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.53.0...v4.54.0) (2026-08-05)
+
+
+### Features
+
+* **etcd-s3-config:** Zugangsdaten fuer die etcd-Snapshots nach S3 ([770e29e](https://github.com/Nebu2k/kubernetes-homelab/commit/770e29e647e44230cbc8fb2daf83cafb8cf62e44))
+
 # [4.53.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.52.0...v4.53.0) (2026-08-05)
 
 
