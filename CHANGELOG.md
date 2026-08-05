@@ -1,3 +1,10 @@
+# [4.50.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.49.1...v4.50.0) (2026-08-05)
+
+
+### Features
+
+* **teslamate:** Offsite-Backup der Datenbank nach S3 ([8677b51](https://github.com/Nebu2k/kubernetes-homelab/commit/8677b517d7ba192c1cbf81cfa67e7b4f8a8e6557))
+
 ## [4.49.1](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.49.0...v4.49.1) (2026-08-05)
 
 
