@@ -125,6 +125,7 @@ homelab/
     │   ├── namespace.yaml
     │   └── service.yaml
     ├── home-assistant/
+    │   ├── backup-archive-cronjob.yaml
     │   ├── configmap-configuration.yaml
     │   ├── deployment.yaml
     │   ├── ingress.yaml
@@ -132,6 +133,8 @@ homelab/
     │   ├── matter-pvc.yaml
     │   ├── namespace.yaml
     │   ├── pvc.yaml
+    │   ├── s3-archive-credentials-sealed.yaml
+    │   ├── s3-archive-credentials-unsealed.yaml.example
     │   └── service.yaml
     ├── homepage/
     │   ├── adguard-credentials-sealed.yaml

@@ -1,0 +1,129 @@
+# Monatliches Archiv der Home-Assistant-Backups ("Backup des Backups").
+#
+# HA haelt in S3 nur seine letzten N automatischen Backups, alles aeltere loescht
+# es selbst. Dieser Job hebt einmal im Monat einen Stand heraus, damit es einen
+# weit zurueckliegenden Wiederherstellungspunkt gibt. Aufgeraeumt wird der nicht
+# hier, sondern per S3-Lifecycle-Regel "expire-monthly-archive" (Praefix
+# "Monthly", 180 Tage) in homelab-terraform/terraform/aws/s3-backup-buckets.tf.
+# Praefix und Aufbewahrung haengen also zusammen: aendert sich hier das Praefix,
+# MUSS die Variable dort mitgehen, sonst raeumt niemand mehr auf.
+#
+# Warum ein Kopierjob und keine HA-Automation: HAs Service "backup.create"
+# schreibt fest verdrahtet nur zum lokalen Agenten (agent_ids aus
+# local_backup_agents, name=None) und erreicht S3 nie. "backup.create_automatic"
+# laedt zwar hoch, erzeugt aber ein automatisches Backup, das damit wieder unter
+# HAs Retention faellt. Einen benannten, S3-gerichteten, retention-freien Stand
+# gibt es nur ueber die WebSocket-API, und die ist aus einer Automation nicht
+# aufrufbar. Geprueft am Quelltext der laufenden Instanz, 2026-08-05.
+#
+# ENTSCHEIDEND: kopiert wird NUR das .tar, NICHT die zugehoerige
+# .metadata.json. HAs S3-Agent listet Backups ausschliesslich ueber die
+# Metadata-Dateien ("List backups from an S3 bucket by reading metadata files").
+# Ohne sie ist der Archivstand fuer HA unsichtbar und kann von keiner Retention
+# je angefasst werden. Wiederherstellung heisst dann: Tar aus S3 ziehen und in
+# der HA-UI hochladen.
+#
+# Der Kopiervorgang laeuft server-seitig innerhalb S3, es geht kein Byte durch
+# den Cluster und es entsteht keine lokale Kopie auf dem Longhorn-Volume.
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: ha-backup-archive
+  namespace: home-assistant
+  labels:
+    app.kubernetes.io/name: ha-backup-archive
+spec:
+  # 1. des Monats, 04:00 UTC. Das taegliche HA-Backup landet gegen 03:00 UTC im
+  # Bucket, der Job greift also einen frischen Stand ab.
+  schedule: "0 4 1 * *"
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  concurrencyPolicy: Forbid
+  jobTemplate:
+    spec:
+      template:
+        metadata:
+          labels:
+            app.kubernetes.io/name: ha-backup-archive
+        spec:
+          restartPolicy: OnFailure
+          containers:
+            - name: archive
+              image: amazon/aws-cli:2.36.13
+              command:
+                - /bin/sh
+                - -c
+                - |
+                  set -eu
+
+                  YM=$(date -u +%Y-%m)
+
+                  # Idempotenz. restartPolicy OnFailure kann den Job wiederholen,
+                  # und ein Nachlauf soll keinen zweiten Stand fuer denselben
+                  # Monat anlegen.
+                  EXISTING=$(aws s3api list-objects-v2 \
+                    --bucket "${S3_BUCKET_NAME}" \
+                    --region "${S3_REGION}" \
+                    --prefix "Monthly_${YM}_" \
+                    --query 'length(Contents || `[]`)' \
+                    --output text)
+
+                  if [ "${EXISTING}" != "0" ]; then
+                    echo "Archivstand fuer ${YM} liegt bereits im Bucket, nichts zu tun."
+                    exit 0
+                  fi
+
+                  # Juengstes automatisches Backup suchen. Nur .tar, die
+                  # .metadata.json bleibt bewusst liegen (siehe Kopf).
+                  SRC=$(aws s3api list-objects-v2 \
+                    --bucket "${S3_BUCKET_NAME}" \
+                    --region "${S3_REGION}" \
+                    --prefix "Automatic_backup_" \
+                    --query 'sort_by(Contents[?ends_with(Key, `.tar`)], &LastModified)[-1].Key' \
+                    --output text)
+
+                  if [ -z "${SRC}" ] || [ "${SRC}" = "None" ]; then
+                    echo "FEHLER: kein Automatic_backup_*.tar im Bucket gefunden."
+                    echo "Entweder sichert HA nicht mehr nach S3, oder das Namensschema hat sich geaendert."
+                    exit 1
+                  fi
+
+                  DST="Monthly_${YM}_${SRC}"
+                  echo "Archiviere ${SRC}"
+                  echo "        -> ${DST}"
+
+                  aws s3 cp \
+                    "s3://${S3_BUCKET_NAME}/${SRC}" \
+                    "s3://${S3_BUCKET_NAME}/${DST}" \
+                    --region "${S3_REGION}" \
+                    --no-progress
+
+                  echo "Archivstand fuer ${YM} angelegt."
+              env:
+                - name: AWS_ACCESS_KEY_ID
+                  valueFrom:
+                    secretKeyRef:
+                      name: s3-archive-credentials
+                      key: AWS_ACCESS_KEY_ID
+                - name: AWS_SECRET_ACCESS_KEY
+                  valueFrom:
+                    secretKeyRef:
+                      name: s3-archive-credentials
+                      key: AWS_SECRET_ACCESS_KEY
+                - name: S3_BUCKET_NAME
+                  valueFrom:
+                    secretKeyRef:
+                      name: s3-archive-credentials
+                      key: S3_BUCKET_NAME
+                - name: S3_REGION
+                  valueFrom:
+                    secretKeyRef:
+                      name: s3-archive-credentials
+                      key: S3_REGION
+              resources:
+                requests:
+                  cpu: 50m
+                  memory: 128Mi
+                limits:
+                  cpu: 200m
+                  memory: 256Mi
