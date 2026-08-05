@@ -1,3 +1,10 @@
+# [4.56.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.55.3...v4.56.0) (2026-08-05)
+
+
+### Features
+
+* **sealed-secrets:** Alert auf ein nicht mehr entschluesselbares SealedSecret ([1ba48a4](https://github.com/Nebu2k/kubernetes-homelab/commit/1ba48a4ae118b8935922bf5c84e74fa37dd2637b))
+
 ## [4.55.3](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.55.2...v4.55.3) (2026-08-05)
 
 
