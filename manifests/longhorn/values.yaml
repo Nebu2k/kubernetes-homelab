@@ -15,12 +15,12 @@ persistence:
 # nach MinIO, und die MinIO-VM wurde ihrerseits per Proxmox-Job aufs selbe NAS
 # gesichert. Ein Umweg ueber eine VM, die nur Zwischenlager war.
 #
-# Bewusst NICHT migriert: der alte Bestand bleibt in MinIO liegen und laeuft
-# dort aus. Auf dem NAS wird bei null angefangen.
+# Bewusst NICHT migriert: der alte Bestand blieb in MinIO liegen und ist mit der
+# VM weg. Auf dem NAS wurde bei null angefangen.
 #
-# Rollback: diese zwei Zeilen zurueck auf s3://homelab-longhorn@us-east-1/ und
-# longhorn-minio-secret. Beide Secrets liegen weiter im Cluster, die MinIO-VM
-# ist unangetastet.
+# Es gibt KEINEN Rollback mehr: die MinIO-VM ist am 2026-08-04 abgebaut worden,
+# das longhorn-minio-secret am 2026-08-05 aus dem Repo entfernt. Ein Weg zurueck
+# waere ein Neubau, kein Zurueckstellen dieser zwei Zeilen.
 defaultBackupStore:
     backupTarget: "cifs://192.168.2.6/longhorn_backup"
     backupTargetCredentialSecret: longhorn-nas-cifs-secret

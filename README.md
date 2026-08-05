@@ -196,8 +196,6 @@ homelab/
     │   ├── disable-local-path-default.yaml
     │   ├── ingress.yaml
     │   ├── kustomization.yaml
-    │   ├── minio-secret-sealed.yaml
-    │   ├── minio-secret-unsealed.yaml.example
     │   ├── nas-cifs-secret-sealed.yaml
     │   ├── nas-cifs-secret-unsealed.yaml.example
     │   ├── node-config.yaml
@@ -588,22 +586,49 @@ cd kubernetes-homelab
    # For now, keep it unsealed locally (gitignored)
    ```
 
-3. **Longhorn S3 Backup** (optional):
+3. **All other secrets** (each optional, depending on which apps you keep):
+
+   Every component that needs credentials ships a `.example` template. Copy the
+   ones you need, fill them in, and leave them unsealed for now. Each file's
+   header comment explains what belongs in it.
 
    ```bash
-   # Create from example
-   cp manifests/longhorn/s3-secret-unsealed.yaml.example \
-      manifests/longhorn/s3-secret-unsealed.yaml
-   
-   # Update MinIO/S3 credentials
-   vim manifests/longhorn/s3-secret-unsealed.yaml
-   # Change: AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_ENDPOINTS
-   
-   # Note: Sealing happens AFTER cluster bootstrap (Step 7+)
-   # For now, keep it unsealed locally (gitignored)
+   cp manifests/backup-monitor/s3-backup-monitor-credentials-unsealed.yaml.example \
+      manifests/backup-monitor/s3-backup-monitor-credentials-unsealed.yaml
+   cp manifests/beszel/secret-unsealed.yaml.example \
+      manifests/beszel/secret-unsealed.yaml
+   cp manifests/etcd-s3-config/s3-etcd-backup-credentials-unsealed.yaml.example \
+      manifests/etcd-s3-config/s3-etcd-backup-credentials-unsealed.yaml
+   cp manifests/fr24/fr24-secret-unsealed.yaml.example \
+      manifests/fr24/fr24-secret-unsealed.yaml
+   cp manifests/home-assistant/s3-archive-credentials-unsealed.yaml.example \
+      manifests/home-assistant/s3-archive-credentials-unsealed.yaml
+   cp manifests/kube-prometheus-stack/aws-credentials-unsealed.yaml.example \
+      manifests/kube-prometheus-stack/aws-credentials-unsealed.yaml
+   cp manifests/longhorn/nas-cifs-secret-unsealed.yaml.example \
+      manifests/longhorn/nas-cifs-secret-unsealed.yaml
+   cp manifests/n8n/postgresql-secret-unsealed.yaml.example \
+      manifests/n8n/postgresql-secret-unsealed.yaml
+   cp manifests/paperless-ngx/paperless-secrets-unsealed.yaml.example \
+      manifests/paperless-ngx/paperless-secrets-unsealed.yaml
+   cp manifests/paperless-ngx/s3-backup-credentials-unsealed.yaml.example \
+      manifests/paperless-ngx/s3-backup-credentials-unsealed.yaml
+   cp manifests/paperless-ngx/smb-credentials-unsealed.yaml.example \
+      manifests/paperless-ngx/smb-credentials-unsealed.yaml
+   cp manifests/proxmox-exporter/pve-api-credentials-unsealed.yaml.example \
+      manifests/proxmox-exporter/pve-api-credentials-unsealed.yaml
+   cp manifests/teslamate/s3-backup-credentials-unsealed.yaml.example \
+      manifests/teslamate/s3-backup-credentials-unsealed.yaml
+   cp manifests/teslamate/teslamate-secret-unsealed.yaml.example \
+      manifests/teslamate/teslamate-secret-unsealed.yaml
+   cp manifests/unifi-poller/unifi-config-unsealed.yaml.example \
+      manifests/unifi-poller/unifi-config-unsealed.yaml
+
+   # Then edit each copy and replace the placeholder values.
+   # Sealing happens AFTER cluster bootstrap (Step 7.5).
    ```
 
-   ⚠️ **Note:** `*-unsealed.yaml` files are gitignored for security. Only `.example` templates are committed.
+   ⚠️ **Note:** `*-unsealed.yaml` files are gitignored for security. Only `.example` templates are committed. They are also the only reseal source you will ever have, since SealedSecrets cannot be decrypted back.
 
 4. **Traefik Dashboard Domain** (required if using different domain):
 
@@ -649,38 +674,93 @@ kubectl wait --for=condition=available --timeout=300s \
   deployment/sealed-secrets-controller -n kube-system
 ```
 
-**Option A: Download public certificate for offline sealing (Recommended)**
-
-This allows you to seal secrets even when not connected to the cluster:
+**Seal every secret you created in Step 6** (requires cluster access):
 
 ```bash
-# Download the public certificate (one-time setup)
-kubeseal --fetch-cert --controller-namespace=kube-system > sealed-secrets-pub-cert.pem
+# 1. backup-monitor: s3 backup monitor credentials
+kubeseal --format=yaml --controller-namespace=kube-system \
+  < manifests/backup-monitor/s3-backup-monitor-credentials-unsealed.yaml \
+  > manifests/backup-monitor/s3-backup-monitor-credentials-sealed.yaml
 
-# Seal Cloudflare API token (cert-manager)
-kubeseal --cert sealed-secrets-pub-cert.pem --format=yaml \
-  < manifests/cert-manager/cloudflare-api-token-unsealed.yaml \
-  > manifests/cert-manager/cloudflare-api-token-sealed.yaml
+# 2. beszel: secret
+kubeseal --format=yaml --controller-namespace=kube-system \
+  < manifests/beszel/secret-unsealed.yaml \
+  > manifests/beszel/secret-sealed.yaml
 
-# If using Longhorn S3 backup:
-kubeseal --cert sealed-secrets-pub-cert.pem --format=yaml \
-  < manifests/longhorn/minio-secret-unsealed.yaml \
-  > manifests/longhorn/minio-secret-sealed.yaml
-```
-
-**Option B: Seal directly from cluster** (requires cluster access):
-
-```bash
-# Seal Cloudflare API token (cert-manager)
+# 3. cert-manager: cloudflare api token
 kubeseal --format=yaml --controller-namespace=kube-system \
   < manifests/cert-manager/cloudflare-api-token-unsealed.yaml \
   > manifests/cert-manager/cloudflare-api-token-sealed.yaml
 
-# If using Longhorn S3 backup:
+# 4. etcd-s3-config: s3 etcd backup credentials
 kubeseal --format=yaml --controller-namespace=kube-system \
-  < manifests/longhorn/minio-secret-unsealed.yaml \
-  > manifests/longhorn/minio-secret-sealed.yaml
+  < manifests/etcd-s3-config/s3-etcd-backup-credentials-unsealed.yaml \
+  > manifests/etcd-s3-config/s3-etcd-backup-credentials-sealed.yaml
+
+# 5. fr24: fr24 secret
+kubeseal --format=yaml --controller-namespace=kube-system \
+  < manifests/fr24/fr24-secret-unsealed.yaml \
+  > manifests/fr24/fr24-secret-sealed.yaml
+
+# 6. home-assistant: s3 archive credentials
+kubeseal --format=yaml --controller-namespace=kube-system \
+  < manifests/home-assistant/s3-archive-credentials-unsealed.yaml \
+  > manifests/home-assistant/s3-archive-credentials-sealed.yaml
+
+# 7. kube-prometheus-stack: aws credentials
+kubeseal --format=yaml --controller-namespace=kube-system \
+  < manifests/kube-prometheus-stack/aws-credentials-unsealed.yaml \
+  > manifests/kube-prometheus-stack/aws-credentials-sealed.yaml
+
+# 8. longhorn: nas cifs secret
+kubeseal --format=yaml --controller-namespace=kube-system \
+  < manifests/longhorn/nas-cifs-secret-unsealed.yaml \
+  > manifests/longhorn/nas-cifs-secret-sealed.yaml
+
+# 9. n8n: postgresql secret
+kubeseal --format=yaml --controller-namespace=kube-system \
+  < manifests/n8n/postgresql-secret-unsealed.yaml \
+  > manifests/n8n/postgresql-secret-sealed.yaml
+
+# 10. paperless-ngx: paperless secrets
+kubeseal --format=yaml --controller-namespace=kube-system \
+  < manifests/paperless-ngx/paperless-secrets-unsealed.yaml \
+  > manifests/paperless-ngx/paperless-secrets-sealed.yaml
+
+# 11. paperless-ngx: s3 backup credentials
+kubeseal --format=yaml --controller-namespace=kube-system \
+  < manifests/paperless-ngx/s3-backup-credentials-unsealed.yaml \
+  > manifests/paperless-ngx/s3-backup-credentials-sealed.yaml
+
+# 12. paperless-ngx: smb credentials
+kubeseal --format=yaml --controller-namespace=kube-system \
+  < manifests/paperless-ngx/smb-credentials-unsealed.yaml \
+  > manifests/paperless-ngx/smb-credentials-sealed.yaml
+
+# 13. proxmox-exporter: pve api credentials
+kubeseal --format=yaml --controller-namespace=kube-system \
+  < manifests/proxmox-exporter/pve-api-credentials-unsealed.yaml \
+  > manifests/proxmox-exporter/pve-api-credentials-sealed.yaml
+
+# 14. teslamate: s3 backup credentials
+kubeseal --format=yaml --controller-namespace=kube-system \
+  < manifests/teslamate/s3-backup-credentials-unsealed.yaml \
+  > manifests/teslamate/s3-backup-credentials-sealed.yaml
+
+# 15. teslamate: teslamate secret
+kubeseal --format=yaml --controller-namespace=kube-system \
+  < manifests/teslamate/teslamate-secret-unsealed.yaml \
+  > manifests/teslamate/teslamate-secret-sealed.yaml
+
+# 16. unifi-poller: unifi config
+kubeseal --format=yaml --controller-namespace=kube-system \
+  < manifests/unifi-poller/unifi-config-unsealed.yaml \
+  > manifests/unifi-poller/unifi-config-sealed.yaml
+
 ```
+
+Or reseal all of them at once with `./reseal-all-secrets.sh`, which walks every
+`*-unsealed.yaml` under `manifests/` and does exactly the above.
 
 **Commit and deploy:**
 
@@ -695,7 +775,7 @@ git push
 kubectl get applications -n argocd -w
 ```
 
-⚠️ **Note:** The public certificate (`sealed-secrets-pub-cert.pem`) is cluster-specific. If you rebuild the cluster or reinstall Sealed Secrets, you'll need to fetch a new certificate. The certificate file is gitignored for security.
+ℹ️ **Why no offline certificate?** `kubeseal` can also seal against a public certificate file fetched with `kubeseal --fetch-cert`, which works without cluster access. This repo deliberately does not keep one: the controller rotates its sealing key every 30 days, a checked-out certificate silently goes stale, and sealing against a months-old key still succeeds without any error. Always seal against the live controller.
 
 ### Step 7.6: Configure Homepage Widgets (**on your laptop** - AFTER Grafana is ready)
 
@@ -712,8 +792,8 @@ cp manifests/homepage/adguard-credentials-unsealed.yaml.example \
 # Edit the file and replace placeholder values with your actual credentials
 vim manifests/homepage/adguard-credentials-unsealed.yaml
 
-# Seal the secret (using offline certificate)
-kubeseal --cert sealed-secrets-pub-cert.pem --format=yaml \
+# Seal the secret
+kubeseal --format=yaml --controller-namespace=kube-system \
   < manifests/homepage/adguard-credentials-unsealed.yaml \
   > manifests/homepage/adguard-credentials-sealed.yaml
 
@@ -725,8 +805,8 @@ cp manifests/homepage/argocd-token-secret-unsealed.yaml.example \
 # Edit the file and replace placeholder values with your actual credentials
 vim manifests/homepage/argocd-token-secret-unsealed.yaml
 
-# Seal the secret (using offline certificate)
-kubeseal --cert sealed-secrets-pub-cert.pem --format=yaml \
+# Seal the secret
+kubeseal --format=yaml --controller-namespace=kube-system \
   < manifests/homepage/argocd-token-secret-unsealed.yaml \
   > manifests/homepage/argocd-token-secret-sealed.yaml
 
@@ -738,8 +818,8 @@ cp manifests/homepage/beszel-secret-unsealed.yaml.example \
 # Edit the file and replace placeholder values with your actual credentials
 vim manifests/homepage/beszel-secret-unsealed.yaml
 
-# Seal the secret (using offline certificate)
-kubeseal --cert sealed-secrets-pub-cert.pem --format=yaml \
+# Seal the secret
+kubeseal --format=yaml --controller-namespace=kube-system \
   < manifests/homepage/beszel-secret-unsealed.yaml \
   > manifests/homepage/beszel-secret-sealed.yaml
 
@@ -751,8 +831,8 @@ cp manifests/homepage/grafana-credentials-unsealed.yaml.example \
 # Edit the file and replace placeholder values with your actual credentials
 vim manifests/homepage/grafana-credentials-unsealed.yaml
 
-# Seal the secret (using offline certificate)
-kubeseal --cert sealed-secrets-pub-cert.pem --format=yaml \
+# Seal the secret
+kubeseal --format=yaml --controller-namespace=kube-system \
   < manifests/homepage/grafana-credentials-unsealed.yaml \
   > manifests/homepage/grafana-credentials-sealed.yaml
 
@@ -764,8 +844,8 @@ cp manifests/homepage/plex-token-unsealed.yaml.example \
 # Edit the file and replace placeholder values with your actual credentials
 vim manifests/homepage/plex-token-unsealed.yaml
 
-# Seal the secret (using offline certificate)
-kubeseal --cert sealed-secrets-pub-cert.pem --format=yaml \
+# Seal the secret
+kubeseal --format=yaml --controller-namespace=kube-system \
   < manifests/homepage/plex-token-unsealed.yaml \
   > manifests/homepage/plex-token-sealed.yaml
 
@@ -777,8 +857,8 @@ cp manifests/homepage/portainer-token-unsealed.yaml.example \
 # Edit the file and replace placeholder values with your actual credentials
 vim manifests/homepage/portainer-token-unsealed.yaml
 
-# Seal the secret (using offline certificate)
-kubeseal --cert sealed-secrets-pub-cert.pem --format=yaml \
+# Seal the secret
+kubeseal --format=yaml --controller-namespace=kube-system \
   < manifests/homepage/portainer-token-unsealed.yaml \
   > manifests/homepage/portainer-token-sealed.yaml
 
@@ -790,8 +870,8 @@ cp manifests/homepage/proxmox-secret-unsealed.yaml.example \
 # Edit the file and replace placeholder values with your actual credentials
 vim manifests/homepage/proxmox-secret-unsealed.yaml
 
-# Seal the secret (using offline certificate)
-kubeseal --cert sealed-secrets-pub-cert.pem --format=yaml \
+# Seal the secret
+kubeseal --format=yaml --controller-namespace=kube-system \
   < manifests/homepage/proxmox-secret-unsealed.yaml \
   > manifests/homepage/proxmox-secret-sealed.yaml
 
@@ -803,8 +883,8 @@ cp manifests/homepage/unifi-token-unsealed.yaml.example \
 # Edit the file and replace placeholder values with your actual credentials
 vim manifests/homepage/unifi-token-unsealed.yaml
 
-# Seal the secret (using offline certificate)
-kubeseal --cert sealed-secrets-pub-cert.pem --format=yaml \
+# Seal the secret
+kubeseal --format=yaml --controller-namespace=kube-system \
   < manifests/homepage/unifi-token-unsealed.yaml \
   > manifests/homepage/unifi-token-sealed.yaml
 
@@ -897,7 +977,7 @@ URL: https://uptime.elmstreet79.de
 Everything goes through Traefik (single reverse proxy) with the wildcard TLS default cert. A service is **public exactly when it has a Cloudflare record**. There is no wildcard A-record.
 
 - **Public** (Cloudflare CNAME → `nebu2k.ipv64.net`, managed in the `homelab-terraform` Cloudflare stack): `www`, `homeassistant`, `teslamate`, `plex`, `dreambox`. Apex `elmstreet79.de` 301-redirects to `www`. Plex additionally has a direct `32400` port-forward for native apps.
-- **Internal/VPN-only** (no Cloudflare record): everything else, e.g. `argocd`, `grafana`, `prometheus`, `alertmanager`, `longhorn`, `portainer`, `uptime`, `home`, `paperless`, `n8n`, plus the external hosts (`unifi`, `pve`, `minio`, `nas`, `vscode`, …).
+- **Internal/VPN-only** (no Cloudflare record): everything else, e.g. `argocd`, `grafana`, `prometheus`, `alertmanager`, `longhorn`, `portainer`, `uptime`, `home`, `paperless`, `n8n`, plus the external hosts (`unifi`, `pve`, `nas`, `vscode`, `adguard`, …).
 
 To make a service public: add its host to `public_hosts` in `homelab-terraform/terraform/cloudflare/` and `terraform apply`. Nothing else needed, the single port-forward covers all.
 
@@ -938,8 +1018,8 @@ kubectl get application traefik -n argocd -w
 # 1. Edit unsealed secret (example: Cloudflare API token)
 vim manifests/cert-manager/cloudflare-api-token-unsealed.yaml
 
-# 2. Re-seal (using offline certificate)
-kubeseal --cert sealed-secrets-pub-cert.pem --format=yaml \
+# 2. Re-seal against the live controller
+kubeseal --format=yaml --controller-namespace=kube-system \
   < manifests/cert-manager/cloudflare-api-token-unsealed.yaml \
   > manifests/cert-manager/cloudflare-api-token-sealed.yaml
 
