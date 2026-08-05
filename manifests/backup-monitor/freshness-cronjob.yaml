@@ -1,4 +1,4 @@
-# Frische-Sonde ueber die drei Offsite-Backup-Buckets.
+# Frische-Sonde ueber die Offsite-Backup-Buckets.
 #
 # Die Alerts der Gruppe "offsite-backup-jobs" belegen, dass ein Job durchgelaufen
 # ist. Sie belegen NICHT, dass etwas im Bucket angekommen ist. Genau dazwischen
@@ -17,6 +17,11 @@
 #   - teslamate: hier ist die Luecke am kleinsten (Dump und Upload sind derselbe
 #     Job), aber der Bucket ist trotzdem die einzige Stelle, an der man das
 #     Ergebnis sieht statt der Absicht.
+#   - etcd: hier ist die Luecke am groessten. Den Upload macht der
+#     k3s-Server-Prozess auf cp-1, raspi4 und raspi5 selbst, es gibt weder Pod
+#     noch Job noch Kubernetes-Event, an dem ein Fehlschlag sichtbar waere,
+#     sondern nur eine Zeile im journal der jeweiligen Node. Ohne diese Sonde
+#     wuerde ein kaputter etcd-Upload gar nicht auffallen.
 #
 # Der Job faellt mit exit 1 aus, sobald ein Bucket zu alt ist. Das Melden macht
 # die Alert-Regel OffsiteBackupFreshnessCheckFailing in
@@ -144,12 +149,31 @@ spec:
                   # hochgeladen.
                   pruefe "${PAPERLESS_BUCKET}" "paperless-backup/last-export.txt" 36 "paperless (heartbeat)"
 
+                  # etcd: k3s laedt auf JEDER der drei Server-Nodes alle 12h
+                  # hoch. Geprueft wird der ganze Bucket, also reicht eine
+                  # funktionierende Node, damit es hier gruen aussieht.
+                  #
+                  # Das ist Absicht: der Zweck dieses Buckets ist, dass
+                  # ueberhaupt eine verwertbare Kopie der Sealing-Keys ausserhalb
+                  # des Clusters liegt, und dafuer genuegt eine. Faellt der
+                  # Upload auf genau einer Node aus, faellt das hier NICHT auf.
+                  # Wer das merken will, braucht drei getrennte Praefix-Pruefungen,
+                  # und dafuer muessten die Snapshots erst in node-eigene Ordner
+                  # gehen (--etcd-s3-folder). Das geht nicht, ohne das
+                  # Config-Secret abzuschalten, siehe die Doku im Skill.
+                  #
+                  # 18h statt 36h: der Abstand ist hier 12h und nicht 24h wie bei
+                  # den anderen, und es sind drei unabhaengige Erzeuger. Zwei
+                  # ausgefallene Laeufe in Folge auf allen dreien sind ein echtes
+                  # Signal, kein Rauschen.
+                  pruefe "${ETCD_BUCKET}" "" 18 "etcd (sealing keys)"
+
                   echo
                   if [ "${FAIL}" -ne 0 ]; then
                     echo "MINDESTENS EIN BUCKET IST NICHT AKTUELL."
                     exit 1
                   fi
-                  echo "Alle drei Buckets sind aktuell."
+                  echo "Alle Buckets sind aktuell."
               env:
                 - name: AWS_ACCESS_KEY_ID
                   valueFrom:
@@ -181,6 +205,11 @@ spec:
                     secretKeyRef:
                       name: s3-backup-monitor-credentials
                       key: TESLAMATE_BUCKET
+                - name: ETCD_BUCKET
+                  valueFrom:
+                    secretKeyRef:
+                      name: s3-backup-monitor-credentials
+                      key: ETCD_BUCKET
               resources:
                 requests:
                   cpu: 50m
