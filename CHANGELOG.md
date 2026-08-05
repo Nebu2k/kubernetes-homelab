@@ -1,3 +1,10 @@
+# [4.49.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.48.1...v4.49.0) (2026-08-05)
+
+
+### Features
+
+* **home-assistant:** monatliches S3-Archiv der Backups ([7833c90](https://github.com/Nebu2k/kubernetes-homelab/commit/7833c909e008af653ab73bc47a1526077805419f))
+
 ## [4.48.1](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.48.0...v4.48.1) (2026-08-04)
 
 
