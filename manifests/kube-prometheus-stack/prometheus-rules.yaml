@@ -188,6 +188,94 @@ spec:
             summary: "Longhorn backup store is filling up"
             description: "Backups on //192.168.2.6/longhorn_backup total {{ $value | humanize1024 }}B (threshold: 240GiB of 300GB). Longhorn does NOT free space by itself when the share is full, backups just start failing. Reduce retain values or drop volumes from the backup group."
 
+    # Offsite-Backup-Jobs (S3)
+    #
+    # Diese Gruppe deckt eine Luecke, die die Upstream-Alerts NICHT schliessen.
+    # KubeJobFailed und KubeJobNotCompleted melden einen Job, der laeuft und
+    # dabei scheitert oder haengt. Sie melden nicht den Fall, der bei einem
+    # Backup viel gefaehrlicher ist: einen Job, der ueberhaupt nicht mehr laeuft.
+    # CronJob versehentlich aus der kustomization geflogen, suspended, Schedule
+    # vertippt, Namespace leer geraeumt: in all diesen Faellen ist upstream
+    # still, und das faellt erst auf, wenn man das Backup braucht.
+    #
+    # Anker ist deshalb das ALTER des letzten erfolgreich abgeschlossenen Jobs,
+    # analog zu LonghornBackupStale weiter oben.
+    #
+    # Zwei Dinge, die an dieser Konstruktion haengen und leicht kaputtgehen:
+    #
+    # 1. Das "or absent(...)" ist der eigentliche Kern. Verschwindet der CronJob,
+    #    verschwinden mit ihm auch seine Jobs und damit die Metrik. Ohne den
+    #    absent-Zweig loest sich der Alert dann in Luft auf, statt zu feuern,
+    #    also genau im schlimmsten Fall. Deshalb steht er hier pro Job einzeln
+    #    und nicht ueber einen gemeinsamen Selektor: absent() ueber mehrere Jobs
+    #    feuert erst, wenn ALLE fehlen.
+    # 2. Die Metrik lebt nur, solange der Job im Cluster liegt
+    #    (successfulJobsHistoryLimit: 3). Bei einem taeglichen Job sind das drei
+    #    Tage, bei einem monatlichen drei Monate, beides deutlich mehr als die
+    #    Schwellen unten. Wer die History verkleinert, muss hier mitdenken.
+    #
+    # Nach dem ERSTEN Deployment eines solchen Jobs einmal von Hand anstossen
+    # (kubectl create job --from=cronjob/<name>), sonst feuert der absent-Zweig
+    # bis zum ersten regulaeren Lauf zu Recht ins Leere. Bei einem monatlichen
+    # Job waeren das bis zu vier Wochen Dauerfeuer.
+    #
+    # NICHT abgedeckt: ob das Objekt wirklich in S3 angekommen ist. Dafuer
+    # braucht es eine S3-Metrikquelle, siehe ROADMAP Punkt 7.
+    - name: offsite-backup-jobs
+      interval: 60s
+      rules:
+        # Taeglich 01:30 UTC. 36h wie bei Longhorn: ein einzelner ausgefallener
+        # Lauf soll nicht sofort melden, zwei aufeinanderfolgende schon.
+        - alert: TeslaMateBackupJobStale
+          expr: |
+            (
+              time() - max(kube_job_status_completion_time{namespace="teslamate", job_name=~"teslamate-db-backup.*"}) > 129600
+            )
+            or
+            absent(kube_job_status_completion_time{namespace="teslamate", job_name=~"teslamate-db-backup.*"})
+          for: 1h
+          labels:
+            severity: warning
+          annotations:
+            summary: "TeslaMate database backup has not succeeded recently"
+            description: "No successful teslamate-db-backup job for over 36h (or the CronJob is gone entirely). This is the ONLY offsite copy of the driving history. Check `kubectl -n teslamate get cronjob,job` and the logs of the last attempt."
+
+        # Laeuft nur am 1. des Monats. Der groesste regulaere Abstand sind 31
+        # Tage, 35 lassen also vier Tage Luft und melden trotzdem lange bevor
+        # der naechste Lauf faellig waere. Das ist der Job mit der laengsten
+        # Blindzeit ueberhaupt, deshalb hier ueberhaupt ein Alert.
+        - alert: HomeAssistantArchiveJobStale
+          expr: |
+            (
+              time() - max(kube_job_status_completion_time{namespace="home-assistant", job_name=~"ha-backup-archive.*"}) > 3024000
+            )
+            or
+            absent(kube_job_status_completion_time{namespace="home-assistant", job_name=~"ha-backup-archive.*"})
+          for: 1h
+          labels:
+            severity: warning
+          annotations:
+            summary: "Home Assistant monthly archive job has not succeeded recently"
+            description: "No successful ha-backup-archive job for over 35 days (or the CronJob is gone entirely). Without it the S3 bucket only holds HA's last 3 automatic backups, so the long-term restore point stops growing. Check `kubectl -n home-assistant get cronjob,job`."
+
+        # Deckt NUR die Export-Haelfte ab. Der Upload macht der S3-Sidecar auf
+        # eigenem Timer, ein erfolgreicher Job beweist also nicht, dass etwas in
+        # S3 gelandet ist. Trotzdem sinnvoll: faellt der Export aus, exportiert
+        # der Sidecar unbemerkt denselben alten Stand weiter.
+        - alert: PaperlessExportJobStale
+          expr: |
+            (
+              time() - max(kube_job_status_completion_time{namespace="paperless-ngx", job_name=~"paperless-backup-trigger.*"}) > 129600
+            )
+            or
+            absent(kube_job_status_completion_time{namespace="paperless-ngx", job_name=~"paperless-backup-trigger.*"})
+          for: 1h
+          labels:
+            severity: warning
+          annotations:
+            summary: "Paperless document export has not succeeded recently"
+            description: "No successful paperless-backup-trigger job for over 36h. The S3 sidecar keeps syncing, so the bucket looks healthy while its content silently ages. NOTE: this alert only covers the export, not the upload to S3."
+
     # Pod and container alerts
     - name: pod-health
       interval: 30s
