@@ -1,3 +1,10 @@
+# [4.52.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.51.0...v4.52.0) (2026-08-05)
+
+
+### Features
+
+* **backup:** paperless und HA-Archiv auf eigene IAM-Keys umstellen ([1ed720e](https://github.com/Nebu2k/kubernetes-homelab/commit/1ed720e1c77d38c56df7132073461dda028c4e7d))
+
 # [4.51.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.50.0...v4.51.0) (2026-08-05)
 
 
