@@ -48,6 +48,26 @@
   // woechentlich, sonst liegt ein fertiger PR bis zu sieben Tage herum.
   platformAutomerge: false,
 
+  // Gehoert unmittelbar zu platformAutomerge: false und darf nicht ohne dieses
+  // wieder auf "auto" zurueck.
+  //
+  // Der Default "auto" bedeutet bei aktivem Automerge "behind-base-branch":
+  // Renovate rebased jeden automerge-faehigen Branch, sobald main sich bewegt
+  // hat. Hier bewegt sich main durch semantic-release mehrmals taeglich, der
+  // Rebase passiert also bei jedem Lauf. Er setzt die Status-Checks zurueck,
+  // die brauchen ~40s, der Renovate-Lauf ist nach ~80s vorbei. Da Renovate
+  // selbst merged (nur waehrend eines Laufs), sieht es den gruenen Stand nie:
+  // Lauf N rebased, die CI wird nach Lauf-Ende gruen, Lauf N+1 rebased erneut.
+  // PR #52 (amazon/aws-cli, Patch, Automerge an, alles gruen) lag so zwei Tage.
+  //
+  // Mit "conflicted" wird nur noch bei echtem Merge-Konflikt rebased. Der
+  // Branch bleibt gruen stehen und der naechste Lauf merged ihn, so wie es der
+  // Kommentar zum Cron in renovate.yml beschreibt. Preis: gemerged wird ein
+  // Branch, der gegen einen etwas aelteren main-Stand validiert wurde. Bei
+  // Image-Tag-Patches ist das ein Pod-Neustart, und einen echten Konflikt
+  // faengt Renovate weiterhin ab.
+  rebaseWhen: 'conflicted',
+
   // Kein PR-Schwall beim ersten Lauf. Das Dependency Dashboard zeigt trotzdem
   // alles auf einmal, es werden nur weniger PRs gleichzeitig offen gehalten.
   prConcurrentLimit: 5,
