@@ -1,3 +1,11 @@
+## [4.55.2](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.55.1...v4.55.2) (2026-08-05)
+
+
+### Bug Fixes
+
+* **longhorn:** MinIO-Reste aus dem Backup-Pfad entfernen ([8c014c1](https://github.com/Nebu2k/kubernetes-homelab/commit/8c014c1c2ebba3a83df474e482d74692698b5ee3))
+* **secrets:** gegen den laufenden Controller sealen statt gegen ein Cert im Repo ([1759850](https://github.com/Nebu2k/kubernetes-homelab/commit/175985031a123ffc725950a1e4f31266a225a7c9))
+
 ## [4.55.1](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.55.0...v4.55.1) (2026-08-05)
 
 
