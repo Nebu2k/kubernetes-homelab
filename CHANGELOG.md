@@ -1,3 +1,10 @@
+# [4.51.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.50.0...v4.51.0) (2026-08-05)
+
+
+### Features
+
+* **monitoring:** Stale-Alerts fuer die drei Offsite-Backup-Jobs ([7f660fa](https://github.com/Nebu2k/kubernetes-homelab/commit/7f660fa279ad619a5c4af8ec0f3de8cfc52bd9a3))
+
 # [4.50.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.49.1...v4.50.0) (2026-08-05)
 
 
