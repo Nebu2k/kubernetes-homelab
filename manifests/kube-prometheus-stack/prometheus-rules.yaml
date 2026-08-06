@@ -585,3 +585,88 @@ spec:
           annotations:
             summary: "Gatus liefert keine Metriken mehr"
             description: "gatus_results_endpoint_success fehlt seit >15m, alle Gatus-Alerts sind damit blind. Deployment gatus/gatus und den ServiceMonitor gatus pruefen."
+
+    # === cert-manager ===
+    #
+    # Bis zum 2026-08-06 gab es hier gar nichts: der Chart-Default setzt nur
+    # prometheus.io-Annotationen, und die wertet dieser Stack nicht aus. Das
+    # Wildcard-Cert *.elmstreet79.de haengt an genau einem ClusterIssuer mit
+    # DNS-01 ueber Cloudflare, und an ihm haengt jeder Host im Haus.
+    #
+    # Reihenfolge der Alarme nach Frueherkennung: NotReady und
+    # RenewalOverdue schlagen an, waehrend das alte Cert noch laenger gilt,
+    # ExpiringSoon ist nur das Sicherheitsnetz darunter.
+    - name: cert-manager
+      interval: 60s
+      rules:
+        # certmanager_certificate_ready_status traegt je Certificate drei
+        # Serien (True/False/Unknown), aktiv ist immer genau eine. Der Selektor
+        # auf condition="True" ist deshalb Pflicht: ohne ihn ist die Bedingung
+        # fuer ein kerngesundes Cert dauerhaft erfuellt.
+        - alert: CertManagerCertNotReady
+          expr: certmanager_certificate_ready_status{condition="True"} == 0
+          for: 15m
+          labels:
+            severity: warning
+          annotations:
+            summary: "Certificate {{ $labels.namespace }}/{{ $labels.name }} ist nicht ready"
+            description: "Ausgestellt ueber {{ $labels.issuer_kind }} {{ $labels.issuer_name }}. Das bestehende Cert gilt meist noch, die Erneuerung scheitert aber. kubectl describe certificate -n {{ $labels.namespace }} {{ $labels.name }}, dann die CertificateRequest und die Order dazu."
+
+        # certmanager_certificate_renewal_timestamp_seconds ist der Zeitpunkt,
+        # zu dem cert-manager erneuern WILL (bei Let's Encrypt 30 Tage vor
+        # Ablauf). Liegt der laenger in der Vergangenheit, ist die Erneuerung
+        # faellig und nicht passiert. Nach einem erfolgreichen Lauf wandert der
+        # Wert von selbst wieder nach vorn.
+        - alert: CertManagerCertRenewalOverdue
+          expr: time() - certmanager_certificate_renewal_timestamp_seconds > 259200
+          for: 1h
+          labels:
+            severity: warning
+          annotations:
+            summary: "Erneuerung von {{ $labels.namespace }}/{{ $labels.name }} ist seit >3 Tagen ueberfaellig"
+            description: "cert-manager wollte laengst erneuern und hat es nicht geschafft. Bis zum Ablauf bleiben noch Wochen, aber der Fehler ist jetzt schon da: haeufigste Ursache ist das Cloudflare-Token fuer die DNS-01-Challenge (SealedSecret in cert-manager) oder ein Rate-Limit bei Let's Encrypt."
+
+        # Sicherheitsnetz unter den beiden oberen. Feuert erst, wenn die
+        # Erneuerung ueber eine Woche lang nicht geklappt hat.
+        - alert: CertManagerCertExpiringSoon
+          expr: certmanager_certificate_expiration_timestamp_seconds - time() < 1814400
+          for: 1h
+          labels:
+            severity: critical
+          annotations:
+            summary: "Certificate {{ $labels.namespace }}/{{ $labels.name }} laeuft in <21 Tagen ab"
+            description: "Noch {{ $value | humanizeDuration }}. Bei *.elmstreet79.de haengt daran JEDER Host, intern wie oeffentlich. Gatus meldet dasselbe unabhaengig davon von aussen (GatusCertificateExpiringSoon), zwei Melder fuer denselben Ausfall sind hier Absicht."
+
+        - alert: CertManagerClusterIssuerNotReady
+          expr: certmanager_clusterissuer_ready_status{condition="True"} == 0
+          for: 15m
+          labels:
+            severity: warning
+          annotations:
+            summary: "ClusterIssuer {{ $labels.name }} ist nicht ready"
+            description: "Solange der Issuer haengt, kann kein einziges Zertifikat ausgestellt oder erneuert werden. Zuerst das Cloudflare-API-Token pruefen."
+
+        # Let's Encrypt deckelt pro Domain und Woche. Ins Limit laeuft man
+        # typischerweise durch eine Schleife aus fehlschlagenden Orders, und
+        # danach ist fuer Tage nichts mehr auszustellen.
+        - alert: CertManagerAcmeRateLimited
+          expr: sum(rate(certmanager_http_acme_client_request_count{status="429"}[10m])) > 0
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            summary: "Let's Encrypt antwortet mit 429 (Rate-Limit)"
+            description: "cert-manager laeuft ins ACME-Rate-Limit. Nicht weiter retriggern, sondern die Ursache der fehlschlagenden Orders suchen: die Limits gelten pro Domain und Woche."
+
+        # Sicherheitsnetz, gleiche Logik wie bei unpoller und SealedSecrets.
+        # certmanager_clock_time_seconds ist der stabilere Anker als die
+        # Certificate-Metriken: es gibt sie auch dann, wenn gerade kein
+        # einziges Certificate existiert.
+        - alert: CertManagerDown
+          expr: absent(certmanager_clock_time_seconds)
+          for: 15m
+          labels:
+            severity: warning
+          annotations:
+            summary: "cert-manager liefert keine Metriken mehr"
+            description: "certmanager_clock_time_seconds fehlt seit >15m, alle cert-manager-Alerts sind damit blind. Deployment cert-manager/cert-manager und den ServiceMonitor cert-manager pruefen."
