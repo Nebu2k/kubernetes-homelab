@@ -348,21 +348,12 @@ data:
       # Domain-Laufzeiten (RDAP/WHOIS). Bewusst eigene Gruppe: eine zickige
       # WHOIS-Antwort soll die Site oben nicht rot faerben. Gatus laesst hier
       # ohnehin kein Intervall unter 5m zu, taeglich reicht voellig.
+      #
+      # KEINE .de-Domains hier. DENIC veroeffentlicht kein Ablaufdatum, Gatus
+      # antwortet fuer elmstreet79.de und haushelden-service.de mit
+      # "domain extension de does not have an expiration date". Das ist
+      # dauerhaft so und waere ein Endpoint, der nie gruen werden kann.
       # ==================================================================
-      - name: elmstreet79.de
-        group: Domains
-        url: "https://elmstreet79.de"
-        interval: 12h
-        conditions:
-          - "[DOMAIN_EXPIRATION] > 720h"
-
-      - name: haushelden-service.de
-        group: Domains
-        url: "https://haushelden-service.de"
-        interval: 12h
-        conditions:
-          - "[DOMAIN_EXPIRATION] > 720h"
-
       - name: peters.club
         group: Domains
         url: "https://peters.club"
