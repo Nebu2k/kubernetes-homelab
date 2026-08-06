@@ -1,3 +1,10 @@
+## [4.61.1](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.61.0...v4.61.1) (2026-08-06)
+
+
+### Bug Fixes
+
+* **worldmonitor:** Lizenztext in alle vier Images aufnehmen ([80e389a](https://github.com/Nebu2k/kubernetes-homelab/commit/80e389a12f5aa2f5dc5c8e59e4a5051352e3fc60))
+
 # [4.61.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.60.1...v4.61.0) (2026-08-06)
 
 
