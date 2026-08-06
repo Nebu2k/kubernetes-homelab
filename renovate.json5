@@ -216,7 +216,7 @@
     },
 
     // Ein Postgres-Update soll eine Entscheidung sein, nicht drei PRs.
-    // Betrifft teslamate, n8n und paperless (dort die -alpine-Variante).
+    // Betrifft teslamate und paperless (dort die -alpine-Variante).
     {
       matchDatasources: ['docker'],
       matchPackageNames: ['postgres'],

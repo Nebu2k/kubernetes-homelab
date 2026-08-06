@@ -505,7 +505,7 @@ URL: https://uptime.elmstreet79.de
 Everything goes through Traefik (single reverse proxy) with the wildcard TLS default cert. A service is **public exactly when it has a Cloudflare record**. There is no wildcard A-record.
 
 - **Public** (Cloudflare CNAME → `nebu2k.ipv64.net`, managed in the `homelab-terraform` Cloudflare stack): `www`, `homeassistant`, `teslamate`, `plex`, `dreambox`. Apex `elmstreet79.de` 301-redirects to `www`. Plex additionally has a direct `32400` port-forward for native apps.
-- **Internal/VPN-only** (no Cloudflare record): everything else, e.g. `argocd`, `grafana`, `prometheus`, `alertmanager`, `longhorn`, `portainer`, `uptime`, `home`, `paperless`, `n8n`, plus the external hosts (`unifi`, `pve`, `nas`, `vscode`, `adguard`, …).
+- **Internal/VPN-only** (no Cloudflare record): everything else, e.g. `argocd`, `grafana`, `prometheus`, `alertmanager`, `longhorn`, `portainer`, `uptime`, `home`, `paperless`, plus the external hosts (`unifi`, `pve`, `nas`, `vscode`, `adguard`, …).
 
 To make a service public: add its host to `public_hosts` in `homelab-terraform/terraform/cloudflare/` and `terraform apply`. Nothing else needed, the single port-forward covers all.
 

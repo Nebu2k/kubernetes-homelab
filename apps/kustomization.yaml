@@ -19,7 +19,6 @@ resources:
   - portainer.yaml
   - uptime-kuma.yaml
   - homepage.yaml
-  - n8n.yaml
   - argocd-config.yaml
   - external-services.yaml
   - home-assistant.yaml

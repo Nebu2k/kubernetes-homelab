@@ -27,7 +27,7 @@ Production-ready K3s cluster managed via GitOps using ArgoCD App-of-Apps pattern
 | 6 | Kube Prometheus Stack |
 | 7 | Home Assistant, Unifi Poller |
 | 8 | Ripe Atlas, Uptime Kuma |
-| 9 | Homepage, N8n, Paperless Ngx |
+| 9 | Homepage, Paperless Ngx |
 | 10 | Beszel |
 | 11 | Backup Monitor, Proxmox Exporter |
 | 12 | Argocd Config |
@@ -63,7 +63,6 @@ homelab/
 │   ├── ripe-atlas.yaml                # Wave 8
 │   ├── uptime-kuma.yaml               # Wave 8
 │   ├── homepage.yaml                  # Wave 9
-│   ├── n8n.yaml                       # Wave 9
 │   ├── paperless-ngx.yaml             # Wave 9
 │   ├── beszel.yaml                    # Wave 10
 │   ├── backup-monitor.yaml            # Wave 11
@@ -206,18 +205,6 @@ homelab/
     │   ├── kustomization.yaml
     │   ├── metallb-ip-pool.yaml
     │   └── values.yaml
-    ├── n8n/
-    │   ├── deployment.yaml
-    │   ├── ingress.yaml
-    │   ├── kustomization.yaml
-    │   ├── namespace.yaml
-    │   ├── postgresql-pvc.yaml
-    │   ├── postgresql-secret-sealed.yaml
-    │   ├── postgresql-secret-unsealed.yaml.example
-    │   ├── postgresql-service.yaml
-    │   ├── postgresql-statefulset.yaml
-    │   ├── pvc.yaml
-    │   └── service.yaml
     ├── nfs-subdir-external-provisioner/
     │   └── values.yaml
     ├── paperless-ngx/
@@ -607,8 +594,6 @@ cd kubernetes-homelab
       manifests/kube-prometheus-stack/aws-credentials-unsealed.yaml
    cp manifests/longhorn/nas-cifs-secret-unsealed.yaml.example \
       manifests/longhorn/nas-cifs-secret-unsealed.yaml
-   cp manifests/n8n/postgresql-secret-unsealed.yaml.example \
-      manifests/n8n/postgresql-secret-unsealed.yaml
    cp manifests/paperless-ngx/paperless-secrets-unsealed.yaml.example \
       manifests/paperless-ngx/paperless-secrets-unsealed.yaml
    cp manifests/paperless-ngx/s3-backup-credentials-unsealed.yaml.example \
@@ -717,42 +702,37 @@ kubeseal --format=yaml --controller-namespace=kube-system \
   < manifests/longhorn/nas-cifs-secret-unsealed.yaml \
   > manifests/longhorn/nas-cifs-secret-sealed.yaml
 
-# 9. n8n: postgresql secret
-kubeseal --format=yaml --controller-namespace=kube-system \
-  < manifests/n8n/postgresql-secret-unsealed.yaml \
-  > manifests/n8n/postgresql-secret-sealed.yaml
-
-# 10. paperless-ngx: paperless secrets
+# 9. paperless-ngx: paperless secrets
 kubeseal --format=yaml --controller-namespace=kube-system \
   < manifests/paperless-ngx/paperless-secrets-unsealed.yaml \
   > manifests/paperless-ngx/paperless-secrets-sealed.yaml
 
-# 11. paperless-ngx: s3 backup credentials
+# 10. paperless-ngx: s3 backup credentials
 kubeseal --format=yaml --controller-namespace=kube-system \
   < manifests/paperless-ngx/s3-backup-credentials-unsealed.yaml \
   > manifests/paperless-ngx/s3-backup-credentials-sealed.yaml
 
-# 12. paperless-ngx: smb credentials
+# 11. paperless-ngx: smb credentials
 kubeseal --format=yaml --controller-namespace=kube-system \
   < manifests/paperless-ngx/smb-credentials-unsealed.yaml \
   > manifests/paperless-ngx/smb-credentials-sealed.yaml
 
-# 13. proxmox-exporter: pve api credentials
+# 12. proxmox-exporter: pve api credentials
 kubeseal --format=yaml --controller-namespace=kube-system \
   < manifests/proxmox-exporter/pve-api-credentials-unsealed.yaml \
   > manifests/proxmox-exporter/pve-api-credentials-sealed.yaml
 
-# 14. teslamate: s3 backup credentials
+# 13. teslamate: s3 backup credentials
 kubeseal --format=yaml --controller-namespace=kube-system \
   < manifests/teslamate/s3-backup-credentials-unsealed.yaml \
   > manifests/teslamate/s3-backup-credentials-sealed.yaml
 
-# 15. teslamate: teslamate secret
+# 14. teslamate: teslamate secret
 kubeseal --format=yaml --controller-namespace=kube-system \
   < manifests/teslamate/teslamate-secret-unsealed.yaml \
   > manifests/teslamate/teslamate-secret-sealed.yaml
 
-# 16. unifi-poller: unifi config
+# 15. unifi-poller: unifi config
 kubeseal --format=yaml --controller-namespace=kube-system \
   < manifests/unifi-poller/unifi-config-unsealed.yaml \
   > manifests/unifi-poller/unifi-config-sealed.yaml
@@ -977,7 +957,7 @@ URL: https://uptime.elmstreet79.de
 Everything goes through Traefik (single reverse proxy) with the wildcard TLS default cert. A service is **public exactly when it has a Cloudflare record**. There is no wildcard A-record.
 
 - **Public** (Cloudflare CNAME → `nebu2k.ipv64.net`, managed in the `homelab-terraform` Cloudflare stack): `www`, `homeassistant`, `teslamate`, `plex`, `dreambox`. Apex `elmstreet79.de` 301-redirects to `www`. Plex additionally has a direct `32400` port-forward for native apps.
-- **Internal/VPN-only** (no Cloudflare record): everything else, e.g. `argocd`, `grafana`, `prometheus`, `alertmanager`, `longhorn`, `portainer`, `uptime`, `home`, `paperless`, `n8n`, plus the external hosts (`unifi`, `pve`, `nas`, `vscode`, `adguard`, …).
+- **Internal/VPN-only** (no Cloudflare record): everything else, e.g. `argocd`, `grafana`, `prometheus`, `alertmanager`, `longhorn`, `portainer`, `uptime`, `home`, `paperless`, plus the external hosts (`unifi`, `pve`, `nas`, `vscode`, `adguard`, …).
 
 To make a service public: add its host to `public_hosts` in `homelab-terraform/terraform/cloudflare/` and `terraform apply`. Nothing else needed, the single port-forward covers all.
 
@@ -1157,7 +1137,6 @@ kubectl get secret -n monitoring grafana-admin-credentials \
 | Landing Page | 1.31.3-alpine | Landing Page |
 | Longhorn | 1.12.0 | Longhorn |
 | Metallb | 0.16.1 | Metallb |
-| N8n | 2.33.3 | N8n |
 | Nfs Subdir External Provisioner | 4.0.18 | Nfs Storage |
 | Paperless Ngx | 3.0.5 | Paperless Ngx |
 | Portainer | 239.5.0 | Portainer |
@@ -1186,7 +1165,6 @@ kubectl get secret -n monitoring grafana-admin-credentials \
 - [Landing Page](https://github.com/nginx/nginx)
 - [Longhorn](https://charts.longhorn.io)
 - [Metallb](https://metallb.github.io/metallb)
-- [n8n](https://docs.n8n.io/)
 - [NFS Subdir External Provisioner](https://kubernetes-sigs.github.io/nfs-subdir-external-provisioner)
 - [Portainer](https://portainer.github.io/k8s)
 - [Proxmox Exporter](https://github.com/prometheus-pve/prometheus-pve-exporter)

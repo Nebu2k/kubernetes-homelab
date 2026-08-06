@@ -18,7 +18,7 @@ TEMPLATE_DIR = Path(__file__).parent / "templates"
 OUTPUT_FILE = REPO_ROOT / "README.md"
 
 # Special cases for title casing
-SPECIAL_CASES = {'n8n': 'n8n'}
+SPECIAL_CASES = {}
 
 # Common acronyms that should stay uppercase
 ACRONYMS = {'nfs', 's3', 'api', 'dns', 'tls', 'ssl', 'http', 'https',
@@ -196,7 +196,6 @@ def get_documentation_links():
         'home-assistant': 'https://www.home-assistant.io/docs/',
         'homepage': 'https://gethomepage.dev/latest/',
         'uptime-kuma': 'https://github.com/louislam/uptime-kuma/wiki',
-        'n8n': 'https://docs.n8n.io/',
         'minio': 'https://min.io/docs/minio/kubernetes/upstream/',
         'teslamate': 'https://docs.teslamate.org/',
         'landing-page': 'https://github.com/nginx/nginx',
