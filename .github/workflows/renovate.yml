@@ -12,7 +12,21 @@ on:
     # N+1 merged. Bei woechentlichem Cron waere das eine Woche Latenz pro
     # Image-Patch. minimumReleaseAge (3 Tage) bleibt der eigentliche Puffer
     # gegen frische kaputte Releases, nicht der Cron.
+    #
+    # Zwei Laeufe pro Tag, und das ist kein Komfort, sondern die Bedingung dafuer
+    # dass Automerge ueberhaupt greift. Ein Lauf, der den Branch anfasst (neue
+    # Version, Rebase bei Konflikt), setzt die Status-Checks zurueck. Die
+    # brauchen ~60s, der Lauf ist nach ~80s vorbei: er sieht den gruenen Stand
+    # nie und merged folglich nicht.
+    #
+    # Bei einer Dependency mit taeglichem Release trifft das jeden Lauf.
+    # amazon/aws-cli taggt werktags gegen 19:15 UTC, mit minimumReleaseAge von
+    # 3 Tagen wird also jeden Abend eine neue Version reif. Der 04:00-Lauf hebt
+    # den Branch darauf an, statt den vom Vortag zu mergen. PR #52 lag so seit
+    # dem 04.08. Der zweite Lauf findet den Branch gruen und unveraendert vor
+    # und merged ihn.
     - cron: '0 4 * * *'
+    - cron: '30 4 * * *'
   workflow_dispatch:
     inputs:
       dryRun:
