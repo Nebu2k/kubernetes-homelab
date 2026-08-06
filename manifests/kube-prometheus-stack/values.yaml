@@ -367,6 +367,13 @@ prometheusOperator:
     node-role.kubernetes.io/worker: worker
   
   # Enable monitoring of namespaces
+  #
+  # FALLE: das ist eine Allowlist, kein Komfort-Feature. Der Operator sucht
+  # ServiceMonitors NUR in diesen Namespaces. Ein ServiceMonitor woanders wird
+  # nicht etwa abgelehnt, er wird schlicht ignoriert: kein Scrape-Pool, kein
+  # Target, keine Fehlermeldung, weder im Operator-Log noch in der ArgoCD-UI.
+  # Der ServiceMonitor steht dann gruen und synced da und tut nichts.
+  # Jeder neue Dienst mit eigenem ServiceMonitor gehoert hier mit rein.
   namespaces:
     releaseNamespace: true
     additional:
@@ -376,6 +383,7 @@ prometheusOperator:
       - longhorn-system
       - home-assistant
       - teslamate
+      - gatus
 
 # Service Monitors for additional components
 additionalServiceMonitors:
