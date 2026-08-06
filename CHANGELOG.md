@@ -1,3 +1,10 @@
+# [4.59.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.58.0...v4.59.0) (2026-08-06)
+
+
+### Features
+
+* **gatus:** DNS-Check ueber IPv6 per Relay ([9a837cb](https://github.com/Nebu2k/kubernetes-homelab/commit/9a837cbcd0df9297f69c0f19c81c0604cbc523b4))
+
 # [4.58.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.57.3...v4.58.0) (2026-08-06)
 
 
