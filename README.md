@@ -23,7 +23,7 @@ Production-ready K3s cluster managed via GitOps using ArgoCD App-of-Apps pattern
 | 1 | Etcd S3 Config, Kured, Metallb, Reloader, System Upgrade Controller |
 | 3 | Traefik |
 | 4 | Cert Manager, Longhorn |
-| 5 | Csi Driver Smb, Landing Page, Nfs Storage, Portainer, Teslamate |
+| 5 | Csi Driver Smb, Landing Page, Nfs Storage, Teslamate |
 | 6 | Kube Prometheus Stack |
 | 7 | Home Assistant, Unifi Poller |
 | 8 | Gatus, Ripe Atlas |
@@ -56,7 +56,6 @@ homelab/
 │   ├── csi-driver-smb.yaml            # Wave 5
 │   ├── landing-page.yaml              # Wave 5
 │   ├── nfs-storage.yaml               # Wave 5
-│   ├── portainer.yaml                 # Wave 5
 │   ├── teslamate.yaml                 # Wave 5
 │   ├── kube-prometheus-stack.yaml     # Wave 6
 │   ├── home-assistant.yaml            # Wave 7
@@ -174,8 +173,6 @@ homelab/
     │   ├── namespace.yaml
     │   ├── plex-token-sealed.yaml
     │   ├── plex-token-unsealed.yaml.example
-    │   ├── portainer-token-sealed.yaml
-    │   ├── portainer-token-unsealed.yaml.example
     │   ├── proxmox-secret-sealed.yaml
     │   ├── proxmox-secret-unsealed.yaml.example
     │   ├── service.yaml
@@ -238,11 +235,6 @@ homelab/
     │   ├── smb-consume-pv.yaml
     │   ├── smb-credentials-sealed.yaml
     │   └── smb-credentials-unsealed.yaml.example
-    ├── portainer/
-    │   ├── ingress.yaml
-    │   ├── kustomization.yaml
-    │   ├── servers-transport.yaml
-    │   └── values.yaml
     ├── proxmox-exporter/
     │   ├── deployment.yaml
     │   ├── kustomization.yaml
@@ -840,20 +832,7 @@ kubeseal --format=yaml --controller-namespace=kube-system \
   > manifests/homepage/plex-token-sealed.yaml
 
 
-# 6. Portainer Token
-cp manifests/homepage/portainer-token-unsealed.yaml.example \
-   manifests/homepage/portainer-token-unsealed.yaml
-
-# Edit the file and replace placeholder values with your actual credentials
-vim manifests/homepage/portainer-token-unsealed.yaml
-
-# Seal the secret
-kubeseal --format=yaml --controller-namespace=kube-system \
-  < manifests/homepage/portainer-token-unsealed.yaml \
-  > manifests/homepage/portainer-token-sealed.yaml
-
-
-# 7. Proxmox Secret
+# 6. Proxmox Secret
 cp manifests/homepage/proxmox-secret-unsealed.yaml.example \
    manifests/homepage/proxmox-secret-unsealed.yaml
 
@@ -866,7 +845,7 @@ kubeseal --format=yaml --controller-namespace=kube-system \
   > manifests/homepage/proxmox-secret-sealed.yaml
 
 
-# 8. Unifi Token
+# 7. Unifi Token
 cp manifests/homepage/unifi-token-unsealed.yaml.example \
    manifests/homepage/unifi-token-unsealed.yaml
 
@@ -925,20 +904,6 @@ Pass: <from-step-5>
 kubectl -n argocd delete secret argocd-initial-admin-secret
 ```
 
-**Portainer:**
-
-```text
-URL: https://portainer.elmstreet79.de
-```
-
-⚠️ **Create admin account within 5 minutes!**
-
-If timeout, restart the pod:
-
-```bash
-kubectl delete pod -n portainer -l app.kubernetes.io/name=portainer
-```
-
 **Longhorn:**
 
 ```text
@@ -967,7 +932,7 @@ URL: https://status.elmstreet79.de
 Everything goes through Traefik (single reverse proxy) with the wildcard TLS default cert. A service is **public exactly when it has a Cloudflare record**. There is no wildcard A-record.
 
 - **Public** (Cloudflare CNAME → `nebu2k.ipv64.net`, managed in the `homelab-terraform` Cloudflare stack): `www`, `homeassistant`, `teslamate`, `plex`, `dreambox`. Apex `elmstreet79.de` 301-redirects to `www`. Plex additionally has a direct `32400` port-forward for native apps.
-- **Internal/VPN-only** (no Cloudflare record): everything else, e.g. `argocd`, `grafana`, `prometheus`, `alertmanager`, `longhorn`, `portainer`, `status`, `home`, `paperless`, plus the external hosts (`unifi`, `pve`, `nas`, `vscode`, `adguard`, …).
+- **Internal/VPN-only** (no Cloudflare record): everything else, e.g. `argocd`, `grafana`, `prometheus`, `alertmanager`, `longhorn`, `status`, `home`, `paperless`, plus the external hosts (`unifi`, `pve`, `nas`, `vscode`, `adguard`, …).
 
 To make a service public: add its host to `public_hosts` in `homelab-terraform/cloudflare/` and `terraform apply`. Nothing else needed, the single port-forward covers all.
 
@@ -1150,7 +1115,6 @@ kubectl get secret -n monitoring grafana-admin-credentials \
 | Metallb | 0.16.1 | Metallb |
 | Nfs Subdir External Provisioner | 4.0.18 | Nfs Storage |
 | Paperless Ngx | 3.0.5 | Paperless Ngx |
-| Portainer | 239.5.0 | Portainer |
 | Proxmox Exporter | 1.0.8 | Proxmox Exporter |
 | Reloader | 2.2.14 | Reloader |
 | Ripe Atlas | 5120 | Ripe Atlas |
@@ -1177,7 +1141,6 @@ kubectl get secret -n monitoring grafana-admin-credentials \
 - [Longhorn](https://charts.longhorn.io)
 - [Metallb](https://metallb.github.io/metallb)
 - [NFS Subdir External Provisioner](https://kubernetes-sigs.github.io/nfs-subdir-external-provisioner)
-- [Portainer](https://portainer.github.io/k8s)
 - [Proxmox Exporter](https://github.com/prometheus-pve/prometheus-pve-exporter)
 - [Reloader](https://stakater.github.io/stakater-charts)
 - [Sealed Secrets](https://bitnami.github.io/sealed-secrets/)

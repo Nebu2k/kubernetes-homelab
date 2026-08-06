@@ -82,11 +82,6 @@ spec:
             secretKeyRef:
               name: homepage-adguard
               key: password
-        - name: HOMEPAGE_VAR_PORTAINER_TOKEN
-          valueFrom:
-            secretKeyRef:
-              name: homepage-portainer
-              key: token
         - name: HOMEPAGE_VAR_UNIFI_USER
           valueFrom:
             secretKeyRef:

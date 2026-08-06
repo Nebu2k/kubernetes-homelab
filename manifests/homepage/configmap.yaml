@@ -42,17 +42,6 @@ data:
     # Services die manuell konfiguriert werden müssen, da nicht in Kubernetes gehostet
     
     - Management:
-      - Container (Pi5):
-          href: https://portainer.elmstreet79.de
-          description: Portainer Docker Pi5
-          icon: docker.png
-          weight: 30
-          widget:
-            type: portainer
-            url: https://portainer.elmstreet79.de
-            env: 2
-            key: {{HOMEPAGE_VAR_PORTAINER_TOKEN}}
-    
       - AWS Console:
           href: https://d-99675baf99.awsapps.com/start/#/console?account_id=077448369105&role_name=AdministratorAccess
           description: AWS Account

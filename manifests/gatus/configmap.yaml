@@ -102,13 +102,6 @@ data:
         conditions:
           - "[STATUS] == 200"
 
-      - name: Portainer
-        group: Cluster
-        url: "https://portainer.elmstreet79.de"
-        interval: 60s
-        conditions:
-          - "[STATUS] == 200"
-
       - name: Home Assistant
         group: Cluster
         url: "https://homeassistant.elmstreet79.de"

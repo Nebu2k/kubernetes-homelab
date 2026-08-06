@@ -16,7 +16,6 @@ resources:
   - kube-prometheus-stack.yaml
   - proxmox-exporter.yaml
   - unifi-poller.yaml
-  - portainer.yaml
   - gatus.yaml
   - homepage.yaml
   - argocd-config.yaml

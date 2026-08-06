@@ -15,7 +15,6 @@ resources:
   - proxmox-secret-sealed.yaml
   - argocd-token-secret-sealed.yaml
   - adguard-credentials-sealed.yaml
-  - portainer-token-sealed.yaml
   - unifi-token-sealed.yaml
   - grafana-credentials-sealed.yaml
   - plex-token-sealed.yaml
