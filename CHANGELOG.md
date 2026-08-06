@@ -1,3 +1,10 @@
+## [4.57.1](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.57.0...v4.57.1) (2026-08-06)
+
+
+### Bug Fixes
+
+* **gatus:** .de-Domains aus der Laufzeit-Pruefung nehmen ([bc5ffea](https://github.com/Nebu2k/kubernetes-homelab/commit/bc5ffea204630aa77dfe66fe8e4ed7697666bfac))
+
 # [4.57.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.56.2...v4.57.0) (2026-08-06)
 
 
