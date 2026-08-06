@@ -17,12 +17,12 @@ spec:
       helm:
         valueFiles:
           - $values/manifests/traefik/values.yaml
+    # Nur als Quelle fuer die valueFiles oben. Eine dritte Source mit
+    # path: manifests/traefik gab es bis 2026-08-06, sie trug ausschliesslich
+    # den toten Service traefik-dashboard.
     - repoURL: https://github.com/Nebu2k/kubernetes-homelab
       targetRevision: main
       ref: values
-    - repoURL: https://github.com/Nebu2k/kubernetes-homelab
-      targetRevision: main
-      path: manifests/traefik
   destination:
     server: https://kubernetes.default.svc
     namespace: traefik

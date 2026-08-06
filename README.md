@@ -288,8 +288,6 @@ homelab/
     │   ├── teslamate-secret-unsealed.yaml.example
     │   └── teslamate-service.yaml
     ├── traefik/
-    │   ├── dashboard-service.yaml
-    │   ├── kustomization.yaml
     │   └── values.yaml
     └── unifi-poller/
         ├── deployment.yaml
