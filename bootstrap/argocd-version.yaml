@@ -1,0 +1,25 @@
+# ArgoCD verwaltet alles ausser sich selbst und wird von Hand per Helm
+# installiert (README, Schritt 5). Damit steht seine Version in keinem Manifest
+# und Renovate saehe ein anstehendes Upgrade nie.
+#
+# Diese Datei wird von NICHTS ausgerollt. bootstrap/ liegt ausserhalb der
+# app-of-apps (die root-App zeigt auf apps/), und validate.sh fasst sie nicht an.
+# Sie ist ausschliesslich der Anker, an dem Renovate haengt: gibt es ein neueres
+# argo-cd-Chart, kommt ein PR, und der ist die Erinnerung. Der Merge aendert
+# nichts am Cluster, deshalb laeuft er als "chore" ohne Release.
+#
+# Das Upgrade selbst bleibt Handarbeit auf dem Laptop:
+#
+#   helm repo update argo
+#   helm upgrade argocd argo/argo-cd -n argocd --version <chartVersion> \
+#     --set global.domain=argocd.elmstreet79.de \
+#     --set configs.cm.url=https://argocd.elmstreet79.de \
+#     --set 'configs.params.server\.insecure'=true
+#
+# Die drei --set-Werte sind der vollstaendige Satz aus `helm get values argocd`.
+# Bei einem Chart-Major explizit setzen statt --reuse-values, sonst schlagen neue
+# Chart-Defaults nicht sauber durch.
+#
+# Nach dem Upgrade die Version hier nachziehen, sonst erinnert Renovate weiter.
+# renovate: datasource=helm depName=argo-cd registryUrl=https://argoproj.github.io/argo-helm
+chartVersion: 9.2.4

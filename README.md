@@ -39,7 +39,8 @@ Production-ready K3s cluster managed via GitOps using ArgoCD App-of-Apps pattern
 ```text
 homelab/
 ├── bootstrap/
-│   └── root-app.yaml              # App-of-Apps (deploys everything)
+│   ├── root-app.yaml              # App-of-Apps (deploys everything)
+│   └── argocd-version.yaml        # Renovate-Anker fuer ArgoCD selbst (wird nicht ausgerollt)
 ├── apps/
 │   ├── kustomization.yaml         # List of all apps
 │   ├── coredns-config.yaml            # Wave 0

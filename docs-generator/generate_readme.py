@@ -285,7 +285,8 @@ def generate_tree_fallback():
     
     # Bootstrap directory
     lines.append("├── bootstrap/")
-    lines.append("│   └── root-app.yaml              # App-of-Apps (deploys everything)")
+    lines.append("│   ├── root-app.yaml              # App-of-Apps (deploys everything)")
+    lines.append("│   └── argocd-version.yaml        # Renovate-Anker fuer ArgoCD selbst (wird nicht ausgerollt)")
     
     # Apps directory with sync-waves
     lines.append("├── apps/")

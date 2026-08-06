@@ -119,6 +119,18 @@
         '# renovate: datasource=(?<datasource>\\S+)\\s+\\S+:\\s*(?<depName>[^:\\s]+):(?<currentValue>\\S+)',
       ],
     },
+    // ArgoCD selbst wird von Hand per Helm installiert und verwaltet sich
+    // bewusst nicht selbst, seine Version steht deshalb in keinem Manifest.
+    // bootstrap/argocd-version.yaml haelt sie als reinen Anker, damit ein
+    // anstehendes Upgrade wenigstens als PR auffaellt. Automerge greift hier
+    // nicht, die Regel in Phase 3 filtert auf matchManagers: kubernetes.
+    {
+      customType: 'regex',
+      managerFilePatterns: ['bootstrap/argocd-version.yaml'],
+      matchStrings: [
+        '# renovate: datasource=(?<datasource>\\S+) depName=(?<depName>\\S+) registryUrl=(?<registryUrl>\\S+)\\s+chartVersion:\\s*(?<currentValue>\\S+)',
+      ],
+    },
     // worldmonitor haengt an einem Upstream-COMMIT, nicht an einer Version.
     // Grund: koala73/worldmonitor taggt seine Releases seit Maerz 2026 nicht
     // mehr (letzter Tag v2.5.23, package.json auf main steht bei 2.10.0), und
@@ -204,6 +216,16 @@
       matchPackageNames: ['https://github.com/koala73/worldmonitor'],
       semanticCommitType: 'fix',
       semanticCommitScope: 'deps',
+    },
+
+    // Der ArgoCD-Anker ist eine Erinnerung, kein Cluster-Zustand: der Merge
+    // rollt nichts aus, das helm upgrade bleibt Handarbeit. Also "chore", damit
+    // kein Release und kein CHANGELOG-Eintrag entsteht, der ein Upgrade
+    // behauptet, das noch gar nicht gelaufen ist.
+    {
+      matchPackageNames: ['argo-cd'],
+      semanticCommitType: 'chore',
+      semanticCommitScope: 'argocd',
     },
 
     // fr24 taggt mit einem monoton hochzaehlenden Build-Counter
