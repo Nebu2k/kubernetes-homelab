@@ -1,3 +1,10 @@
+# [4.58.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.57.3...v4.58.0) (2026-08-06)
+
+
+### Features
+
+* **cert-manager:** Metriken scrapen und alarmieren ([0603fc2](https://github.com/Nebu2k/kubernetes-homelab/commit/0603fc251285e8fa6d3a808a1f278653f64db94c))
+
 ## [4.57.3](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.57.2...v4.57.3) (2026-08-06)
 
 
