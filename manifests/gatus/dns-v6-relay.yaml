@@ -1,0 +1,161 @@
+# DNS-Relay, damit Gatus den AdGuard auch ueber IPv6 pruefen kann.
+#
+# Warum es das ueberhaupt braucht: das Pod-Netz ist bewusst IPv4-only (PodCIDRs
+# 10.42.x.0/24, Pods bekommen nur eine link-local v6). Eine DNS-Abfrage aus dem
+# gatus-Pod auf fd2e:9a71:c3b5::16 scheitert deshalb sofort mit "network
+# unreachable", unabhaengig davon, ob der Resolver lebt. Echtes v6 gibt es im
+# Cluster nur im Host-Netz: die Nodes haengen per SLAAC in der manuellen ULA
+# fd2e:9a71:c3b5::/64.
+#
+# Also: dieser Pod laeuft mit hostNetwork und leitet eine v4-Anfrage auf
+# Port 5354 unveraendert an [fd2e:9a71:c3b5::16]:53 weiter. Gatus fragt den
+# Relay ganz normal per ClusterIP-Service an, der v6-Hop passiert echt auf dem
+# LAN. Der Endpoint "AdGuard LXC (IPv6)" in configmap.yaml prueft damit genau
+# das, was sonst still ausfaellt: verliert der LXC seine statische ULA (z.B.
+# MLD-Snooping ohne Querier auf vmbr0), bleiben alle v4-Checks gruen und nur
+# Clients mit v6-DNS-Server sind tot.
+#
+# Nur der LXC auf pve hat eine v6-Adresse. fd2e:9a71:c3b5::4 (AdGuard macmini)
+# laeuft in den Timeout, deshalb gibt es hier bewusst nur EINEN Upstream.
+#
+# Faellt der Relay selbst aus, wird der Gatus-Endpoint rot, ohne dass DNS kaputt
+# ist. Das unterscheidet die Deployment-Alarmierung des kube-prometheus-stack:
+# ist gleichzeitig KubeDeploymentReplicasMismatch offen, liegt es am Relay.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: dns-v6-relay
+  namespace: gatus
+  labels:
+    app.kubernetes.io/name: dns-v6-relay
+data:
+  Corefile: |
+    .:5354 {
+        errors
+        health :8154
+        ready :8155
+
+        # KEIN cache-Plugin: jede Gatus-Abfrage soll den Upstream wirklich
+        # erreichen, sonst misst der Check nur den Relay-Speicher.
+        #
+        # max_fails 0 schaltet das Ausmustern des Upstreams ab. Sonst merkt
+        # sich forward nach ein paar Timeouts "Host down" und antwortet
+        # SERVFAIL, ohne es nochmal zu versuchen: der Check bliebe dann auch
+        # rot, nachdem der Resolver laengst wieder da ist.
+        forward . [fd2e:9a71:c3b5::16]:53 {
+            max_fails 0
+        }
+    }
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dns-v6-relay
+  namespace: gatus
+  labels:
+    app.kubernetes.io/name: dns-v6-relay
+spec:
+  replicas: 1
+  # Recreate statt RollingUpdate: mit hostNetwork wuerden sonst kurzzeitig zwei
+  # Pods denselben Host-Port 5354 wollen.
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: dns-v6-relay
+  template:
+    metadata:
+      annotations:
+        reloader.stakater.com/auto: "true"
+      labels:
+        app.kubernetes.io/name: dns-v6-relay
+    spec:
+      # Der ganze Zweck des Pods. Beide Worker-Nodes haengen in der ULA, der
+      # Pod darf also zwischen ihnen wandern.
+      hostNetwork: true
+      # Der Relay loest keine Namen auf (der Upstream ist ein IP-Literal), und
+      # ClusterFirst waere mit hostNetwork sowieso irrefuehrend.
+      dnsPolicy: Default
+
+      nodeSelector:
+        node-role.kubernetes.io/worker: "worker"
+
+      containers:
+        - name: coredns
+          image: rancher/mirrored-coredns-coredns:1.14.4
+          imagePullPolicy: IfNotPresent
+          args: ["-conf", "/etc/coredns/Corefile"]
+          ports:
+            - name: dns-udp
+              containerPort: 5354
+              protocol: UDP
+            - name: dns-tcp
+              containerPort: 5354
+              protocol: TCP
+
+          volumeMounts:
+            - name: config
+              mountPath: /etc/coredns
+              readOnly: true
+
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8154
+            initialDelaySeconds: 10
+            periodSeconds: 30
+            timeoutSeconds: 5
+            failureThreshold: 3
+
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: 8155
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+              # Gebraucht wird die Capability hier nicht (Port 5354), aber das
+              # coredns-Binary traegt sie als File-Capability. Liegt sie nicht
+              # im Bounding-Set, verweigert der Kernel schon den exec:
+              # "exec /coredns: operation not permitted", CrashLoopBackOff.
+              add: ["NET_BIND_SERVICE"]
+
+          resources:
+            requests:
+              cpu: 10m
+              memory: 32Mi
+            limits:
+              memory: 64Mi
+
+      volumes:
+        - name: config
+          configMap:
+            name: dns-v6-relay
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: dns-v6-relay
+  namespace: gatus
+  labels:
+    app.kubernetes.io/name: dns-v6-relay
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: dns-v6-relay
+  ports:
+    - name: dns-udp
+      port: 5354
+      targetPort: 5354
+      protocol: UDP
+    - name: dns-tcp
+      port: 5354
+      targetPort: 5354
+      protocol: TCP

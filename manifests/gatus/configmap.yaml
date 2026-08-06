@@ -290,6 +290,24 @@ data:
           - "[DNS_RCODE] == NOERROR"
           - "[BODY] == 192.168.2.250"
 
+      # Dieselbe Frage an den LXC, aber ueber seine ULA statt ueber v4. Der Weg
+      # dahin laeuft ueber den DNS-Relay (dns-v6-relay.yaml), weil das Pod-Netz
+      # v4-only ist und Gatus fd2e:9a71:c3b5::16 sonst gar nicht erreicht.
+      # Faellt die statische ULA am LXC weg, ist das der einzige Check, der das
+      # sieht: v4 antwortet dann unveraendert weiter.
+      #
+      # Der macmini hat bewusst kein Gegenstueck, er hat keine v6-Adresse.
+      - name: AdGuard LXC (IPv6)
+        group: DNS
+        url: "dns-v6-relay.gatus.svc.cluster.local:5354"
+        interval: 60s
+        dns:
+          query-name: "argocd.elmstreet79.de"
+          query-type: "A"
+        conditions:
+          - "[DNS_RCODE] == NOERROR"
+          - "[BODY] == 192.168.2.250"
+
       # Gegenprobe von aussen: loest der oeffentliche Name noch auf (CNAME auf
       # nebu2k.ipv64.net)? Die IP selbst ist dynamisch, also nur der RCODE.
       - name: Cloudflare (oeffentlicher Record)
