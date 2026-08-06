@@ -671,44 +671,4 @@ spec:
             summary: "cert-manager liefert keine Metriken mehr"
             description: "certmanager_clock_time_seconds fehlt seit >15m, alle cert-manager-Alerts sind damit blind. Deployment cert-manager/cert-manager und den ServiceMonitor cert-manager pruefen."
 
-    # worldmonitor. Das Dashboard holt seine Daten nicht selbst, es liest nur
-    # aus Redis. Gefuellt wird Redis vom CronJob worldmonitor-seeder. Faellt der
-    # aus, passiert genau NICHTS Sichtbares: die App bleibt gruen, der Ingress
-    # antwortet, die Kacheln zeigen weiter Zahlen. Nur eben die von gestern.
-    # Genau diese Blindstelle schliesst der Alert.
-    #
-    # Aufgebaut wie die Backup-Jobs weiter oben, inklusive des absent-Zweigs:
-    # verschwindet der CronJob, verschwinden seine Jobs und damit die Metrik,
-    # und ohne diesen Zweig loeste sich der Alert lautlos auf statt zu feuern.
-    #
-    # Zwei Dinge, die daran haengen:
-    #
-    # 1. Der Job-NAME muss passen. Ein Lauf, der von Hand mit einem anderen
-    #    Namen angestossen wird (kubectl create job ... seed-initial), zaehlt
-    #    fuer diesen Alert nicht. Manuelle Laeufe deshalb als
-    #    worldmonitor-seeder-<etwas> anlegen.
-    # 2. ttlSecondsAfterFinished im CronJob steht auf 24h. Die Schwelle unten
-    #    muss darunter bleiben, sonst ist das Job-Objekt weg, bevor der
-    #    Altersvergleich ueberhaupt anschlagen kann. Wer die TTL verkleinert,
-    #    muss hier mitdenken.
-    - name: worldmonitor
-      interval: 60s
-      rules:
-        # Der Job laeuft alle zwei Stunden und braucht selbst rund eine
-        # (gemessen am ersten, kalten Lauf: 65 Minuten fuer 165 Skripte).
-        # 6h decken damit zwei ausgefallene Laeufe ab: ein einzelner meldet
-        # nicht sofort, zwei aufeinanderfolgende schon.
-        - alert: WorldMonitorSeederStale
-          expr: |
-            (
-              time() - max(kube_job_status_completion_time{namespace="worldmonitor", job_name=~"worldmonitor-seeder.*"}) > 21600
-            )
-            or
-            absent(kube_job_status_completion_time{namespace="worldmonitor", job_name=~"worldmonitor-seeder.*"})
-          for: 1h
-          labels:
-            severity: warning
-          annotations:
-            summary: "worldmonitor-Seeder ist seit über 8h nicht mehr durchgelaufen"
-            description: "Kein erfolgreicher worldmonitor-seeder-Job seit über 8h (oder der CronJob ist ganz verschwunden). Das Dashboard sieht deshalb weiter gesund aus und zeigt trotzdem alte Daten. Pruefen mit `kubectl -n worldmonitor get cronjob,job` und den Logs des letzten Laufs."
 

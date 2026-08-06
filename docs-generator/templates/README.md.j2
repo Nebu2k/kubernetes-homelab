@@ -500,21 +500,12 @@ URL: https://status.elmstreet79.de
 
 📈 **Features:** Blackbox checks (HTTP/TCP/DNS) grouped by failure domain, certificate and domain expiration, uptime history in SQLite. Every check is declared in `manifests/gatus/configmap.yaml`, there is no UI-side state. Alerting does **not** run through Gatus itself: it exports Prometheus metrics and the rules live in the `gatus` group of `manifests/kube-prometheus-stack/prometheus-rules.yaml`.
 
-**World Monitor (Global Situational Awareness Dashboard):**
-
-```text
-URL: https://worldmonitor.elmstreet79.de
-(internal-only)
-```
-
-🌍 **Features:** Self-hosted [worldmonitor](https://github.com/koala73/worldmonitor) — news aggregation, conflict and market data, earthquakes, wildfires, shipping. Four **self-built** images (app, AIS relay, Redis REST proxy, seeder), because upstream only publishes a frontend-only image that points at its own hosted API. All four are built from one pinned upstream commit by `.github/workflows/build-worldmonitor-images.yml`; the commit lives in the `images:` block of `manifests/worldmonitor/kustomization.yaml` and nowhere else. Data does not come from the app itself: a CronJob runs upstream's ~170 seed scripts into Redis every two hours, and the app only ever reads from there.
-
 **Service Access Architecture:**
 
 Everything goes through Traefik (single reverse proxy) with the wildcard TLS default cert. A service is **public exactly when it has a Cloudflare record**. There is no wildcard A-record.
 
 - **Public** (Cloudflare CNAME → `nebu2k.ipv64.net`, managed in the `homelab-terraform` Cloudflare stack): `www`, `homeassistant`, `teslamate`, `plex`, `dreambox`. Apex `elmstreet79.de` 301-redirects to `www`. Plex additionally has a direct `32400` port-forward for native apps.
-- **Internal/VPN-only** (no Cloudflare record): everything else, e.g. `argocd`, `grafana`, `prometheus`, `alertmanager`, `longhorn`, `portainer`, `status`, `home`, `paperless`, `worldmonitor`, plus the external hosts (`unifi`, `pve`, `nas`, `vscode`, `adguard`, …).
+- **Internal/VPN-only** (no Cloudflare record): everything else, e.g. `argocd`, `grafana`, `prometheus`, `alertmanager`, `longhorn`, `portainer`, `status`, `home`, `paperless`, plus the external hosts (`unifi`, `pve`, `nas`, `vscode`, `adguard`, …).
 
 To make a service public: add its host to `public_hosts` in `homelab-terraform/cloudflare/` and `terraform apply`. Nothing else needed, the single port-forward covers all.
 

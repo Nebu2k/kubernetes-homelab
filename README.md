@@ -32,7 +32,7 @@ Production-ready K3s cluster managed via GitOps using ArgoCD App-of-Apps pattern
 | 11 | Backup Monitor, Proxmox Exporter |
 | 12 | Argocd Config |
 | 15 | Fr24 |
-| 16 | External Services, Worldmonitor |
+| 16 | External Services |
 
 ## 📁 Repository Structure
 
@@ -70,8 +70,7 @@ homelab/
 │   ├── proxmox-exporter.yaml          # Wave 11
 │   ├── argocd-config.yaml             # Wave 12
 │   ├── fr24.yaml                      # Wave 15
-│   ├── external-services.yaml         # Wave 16
-│   └── worldmonitor.yaml              # Wave 16
+│   └── external-services.yaml         # Wave 16
 └── manifests/
     ├── argocd/
     │   ├── argocd-cm-patch.yaml
@@ -291,25 +290,13 @@ homelab/
     │   └── teslamate-service.yaml
     ├── traefik/
     │   └── values.yaml
-    ├── unifi-poller/
-    │   ├── deployment.yaml
-    │   ├── kustomization.yaml
-    │   ├── service.yaml
-    │   ├── servicemonitor.yaml
-    │   ├── unifi-config-sealed.yaml
-    │   └── unifi-config-unsealed.yaml.example
-    └── worldmonitor/
-        ├── ais-relay.yaml
-        ├── app.yaml
-        ├── ingress.yaml
+    └── unifi-poller/
+        ├── deployment.yaml
         ├── kustomization.yaml
-        ├── namespace.yaml
-        ├── redis-pvc.yaml
-        ├── redis-rest.yaml
-        ├── redis.yaml
-        ├── secret-sealed.yaml
-        ├── secret-unsealed.yaml.example
-        └── seeder-cronjob.yaml
+        ├── service.yaml
+        ├── servicemonitor.yaml
+        ├── unifi-config-sealed.yaml
+        └── unifi-config-unsealed.yaml.example
 ```
 
 ## 🚀 Fresh Installation
@@ -622,8 +609,6 @@ cd kubernetes-homelab
       manifests/teslamate/teslamate-secret-unsealed.yaml
    cp manifests/unifi-poller/unifi-config-unsealed.yaml.example \
       manifests/unifi-poller/unifi-config-unsealed.yaml
-   cp manifests/worldmonitor/secret-unsealed.yaml.example \
-      manifests/worldmonitor/secret-unsealed.yaml
 
    # Then edit each copy and replace the placeholder values.
    # Sealing happens AFTER cluster bootstrap (Step 7.5).
@@ -752,11 +737,6 @@ kubeseal --format=yaml --controller-namespace=kube-system \
 kubeseal --format=yaml --controller-namespace=kube-system \
   < manifests/unifi-poller/unifi-config-unsealed.yaml \
   > manifests/unifi-poller/unifi-config-sealed.yaml
-
-# 16. worldmonitor: secret
-kubeseal --format=yaml --controller-namespace=kube-system \
-  < manifests/worldmonitor/secret-unsealed.yaml \
-  > manifests/worldmonitor/secret-sealed.yaml
 
 ```
 
@@ -973,21 +953,12 @@ URL: https://status.elmstreet79.de
 
 📈 **Features:** Blackbox checks (HTTP/TCP/DNS) grouped by failure domain, certificate and domain expiration, uptime history in SQLite. Every check is declared in `manifests/gatus/configmap.yaml`, there is no UI-side state. Alerting does **not** run through Gatus itself: it exports Prometheus metrics and the rules live in the `gatus` group of `manifests/kube-prometheus-stack/prometheus-rules.yaml`.
 
-**World Monitor (Global Situational Awareness Dashboard):**
-
-```text
-URL: https://worldmonitor.elmstreet79.de
-(internal-only)
-```
-
-🌍 **Features:** Self-hosted [worldmonitor](https://github.com/koala73/worldmonitor) — news aggregation, conflict and market data, earthquakes, wildfires, shipping. Four **self-built** images (app, AIS relay, Redis REST proxy, seeder), because upstream only publishes a frontend-only image that points at its own hosted API. All four are built from one pinned upstream commit by `.github/workflows/build-worldmonitor-images.yml`; the commit lives in the `images:` block of `manifests/worldmonitor/kustomization.yaml` and nowhere else. Data does not come from the app itself: a CronJob runs upstream's ~170 seed scripts into Redis every two hours, and the app only ever reads from there.
-
 **Service Access Architecture:**
 
 Everything goes through Traefik (single reverse proxy) with the wildcard TLS default cert. A service is **public exactly when it has a Cloudflare record**. There is no wildcard A-record.
 
 - **Public** (Cloudflare CNAME → `nebu2k.ipv64.net`, managed in the `homelab-terraform` Cloudflare stack): `www`, `homeassistant`, `teslamate`, `plex`, `dreambox`. Apex `elmstreet79.de` 301-redirects to `www`. Plex additionally has a direct `32400` port-forward for native apps.
-- **Internal/VPN-only** (no Cloudflare record): everything else, e.g. `argocd`, `grafana`, `prometheus`, `alertmanager`, `longhorn`, `portainer`, `status`, `home`, `paperless`, `worldmonitor`, plus the external hosts (`unifi`, `pve`, `nas`, `vscode`, `adguard`, …).
+- **Internal/VPN-only** (no Cloudflare record): everything else, e.g. `argocd`, `grafana`, `prometheus`, `alertmanager`, `longhorn`, `portainer`, `status`, `home`, `paperless`, plus the external hosts (`unifi`, `pve`, `nas`, `vscode`, `adguard`, …).
 
 To make a service public: add its host to `public_hosts` in `homelab-terraform/cloudflare/` and `terraform apply`. Nothing else needed, the single port-forward covers all.
 
