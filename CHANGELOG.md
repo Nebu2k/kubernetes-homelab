@@ -1,3 +1,10 @@
+# [4.61.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.60.1...v4.61.0) (2026-08-06)
+
+
+### Features
+
+* **worldmonitor:** Alarm auf einen stehengebliebenen Seeder ([34058e6](https://github.com/Nebu2k/kubernetes-homelab/commit/34058e67f2da616a80686abd814f2f2e1d6cff05))
+
 ## [4.60.1](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.60.0...v4.60.1) (2026-08-06)
 
 
