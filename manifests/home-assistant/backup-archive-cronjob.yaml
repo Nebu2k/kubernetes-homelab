@@ -4,7 +4,7 @@
 # es selbst. Dieser Job hebt einmal im Monat einen Stand heraus, damit es einen
 # weit zurueckliegenden Wiederherstellungspunkt gibt. Aufgeraeumt wird der nicht
 # hier, sondern per S3-Lifecycle-Regel "expire-monthly-archive" (Praefix
-# "Monthly", 180 Tage) in homelab-terraform/terraform/aws/s3-backup-buckets.tf.
+# "Monthly", 180 Tage) in homelab-terraform/aws/s3-backup-buckets.tf.
 # Praefix und Aufbewahrung haengen also zusammen: aendert sich hier das Praefix,
 # MUSS die Variable dort mitgehen, sonst raeumt niemand mehr auf.
 #

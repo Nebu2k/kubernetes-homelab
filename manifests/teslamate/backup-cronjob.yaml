@@ -9,7 +9,7 @@
 # Volume-Snapshot braucht wieder ein Longhorn.
 #
 # Ablage und Aufbewahrung stehen in
-# homelab-terraform/terraform/aws/s3-teslamate-backup.tf:
+# homelab-terraform/aws/s3-teslamate-backup.tf:
 #   daily/   30 Tage
 #   monthly/ 365 Tage (nur der Lauf am Monatsersten legt zusaetzlich hier ab)
 # Aendern sich die Praefixe hier, MUESSEN die Variablen dort mitgehen, sonst
