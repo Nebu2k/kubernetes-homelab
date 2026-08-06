@@ -65,10 +65,19 @@ prometheus:
         cpu: 1000m
         memory: 2Gi
     
-    # Run on worker nodes only
+    # Run on worker nodes only.
+    #
+    # arch ist hier bewusst zusaetzlich gesetzt und keine Doppelung: das
+    # worker-Label tragen heute nur worker-1 und prodesk (beide amd64), aber es
+    # ist eine Konvention, die jeder Node bekommen kann. Prometheus ist der
+    # speicherhungrigste Pod im Cluster, auf einem der ARM-Raspis waere er ein
+    # Problem fuer die Node und fuer sich selbst. amd64 macht daraus eine
+    # Eigenschaft der Hardware statt eines Versprechens ueber Labels.
+    # Gegenstueck zur verworfenen VictoriaMetrics-Migration (siehe ROADMAP).
     nodeSelector:
       node-role.kubernetes.io/worker: worker
-    
+      kubernetes.io/arch: amd64
+
     # Lifecycle hooks to prevent Longhorn volume attachment issues
     containers:
       - name: prometheus
