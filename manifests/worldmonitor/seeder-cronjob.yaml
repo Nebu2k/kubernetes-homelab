@@ -1,0 +1,97 @@
+# Der Teil, ohne den das Dashboard leer bleibt.
+#
+# worldmonitor holt seine Daten nicht selbst: die App liest nur aus Redis, und
+# gefuellt wird Redis von rund 170 Seeder-Skripten, die Upstream ausserhalb der
+# Container laufen laesst (Doku dort: ein Cron alle 30 Minuten auf dem Host).
+# Im Cluster ist das dieser Job. Laeuft er nicht, meldet die App "0/55 OK".
+#
+# Die Skripte laufen sequenziell und schlucken ihre eigenen Fehler: fehlt ein
+# API-Key, meldet der betroffene Seeder SKIP und der Lauf geht weiter. Der Job
+# endet deshalb praktisch immer mit Exit 0. Das ist gewollt, ein einzelner
+# toter Upstream soll nicht den ganzen Lauf als Fehlschlag markieren.
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: worldmonitor-seeder
+  namespace: worldmonitor
+  labels:
+    app.kubernetes.io/name: worldmonitor-seeder
+spec:
+  # Alle zwei Stunden statt der halbstuendlichen Empfehlung von Upstream: die
+  # Skripte laufen nacheinander, ein voller Durchlauf dauert entsprechend, und
+  # die Feeds hier sind Nachrichten- und Wirtschaftsdaten, keine Sensorik.
+  #
+  # timeZone ist Pflicht: ohne das Feld laeuft ein CronJob in der Zeitzone der
+  # Node, die gerade den kube-controller-manager haelt, und wandert damit mit
+  # dem Lease zwischen Europe/Berlin (Raspis) und Etc/UTC (x86).
+  schedule: "15 */2 * * *"
+  timeZone: "Etc/UTC"
+  successfulJobsHistoryLimit: 1
+  failedJobsHistoryLimit: 3
+  # Forbid, weil zwei parallele Laeufe dieselben Redis-Keys schreiben wuerden.
+  concurrencyPolicy: Forbid
+  jobTemplate:
+    spec:
+      # Kein Retry: der naechste planmaessige Lauf ist in zwei Stunden, und ein
+      # Wiederholungslauf wuerde nur dieselben toten Upstreams noch einmal
+      # abklappern.
+      backoffLimit: 0
+      # Deckel unter dem naechsten Start. Faengt einen Lauf ab, der an einem
+      # haengenden Upstream festklebt, den scripts/run-seeders.sh nicht selbst
+      # abgeraeumt bekommt.
+      activeDeadlineSeconds: 6600
+      ttlSecondsAfterFinished: 86400
+      template:
+        metadata:
+          labels:
+            app.kubernetes.io/name: worldmonitor-seeder
+        spec:
+          restartPolicy: Never
+          nodeSelector:
+            node-role.kubernetes.io/worker: "worker"
+          containers:
+            - name: seeder
+              image: ghcr.io/nebu2k/worldmonitor-seeder
+              imagePullPolicy: IfNotPresent
+              env:
+                - name: TZ
+                  value: "Europe/Berlin"
+                # run-seeders.sh nimmt REDIS_TOKEN und setzt daraus selbst
+                # UPSTASH_REDIS_REST_TOKEN. Der Vorrang ist dort absichtlich so
+                # herum, deshalb hier auch genau dieser Name.
+                - name: UPSTASH_REDIS_REST_URL
+                  value: "http://worldmonitor-redis-rest"
+                - name: REDIS_TOKEN
+                  valueFrom:
+                    secretKeyRef:
+                      name: worldmonitor
+                      key: REDIS_TOKEN
+                - name: GROQ_API_KEY
+                  valueFrom:
+                    secretKeyRef:
+                      name: worldmonitor
+                      key: GROQ_API_KEY
+                - name: NASA_FIRMS_API_KEY
+                  valueFrom:
+                    secretKeyRef:
+                      name: worldmonitor
+                      key: NASA_FIRMS_API_KEY
+                - name: FRED_API_KEY
+                  valueFrom:
+                    secretKeyRef:
+                      name: worldmonitor
+                      key: FRED_API_KEY
+                - name: EIA_API_KEY
+                  valueFrom:
+                    secretKeyRef:
+                      name: worldmonitor
+                      key: EIA_API_KEY
+              resources:
+                requests:
+                  cpu: 100m
+                  memory: 512Mi
+                # NODE_OPTIONS im Image deckelt den Heap auf 1024 MB, das Limit
+                # liegt darueber, damit ein Seeder am Heap-Limit scheitert und
+                # nicht am OOM-Killer.
+                limits:
+                  memory: 1536Mi

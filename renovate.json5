@@ -119,6 +119,24 @@
         '# renovate: datasource=(?<datasource>\\S+)\\s+\\S+:\\s*(?<depName>[^:\\s]+):(?<currentValue>\\S+)',
       ],
     },
+    // worldmonitor haengt an einem Upstream-COMMIT, nicht an einer Version.
+    // Grund: koala73/worldmonitor taggt seine Releases seit Maerz 2026 nicht
+    // mehr (letzter Tag v2.5.23, package.json auf main steht bei 2.10.0), und
+    // der letzte Tag kennt das docker/-Verzeichnis noch gar nicht. Es gibt also
+    // keine Release-Datasource, gegen die man vergleichen koennte, nur den
+    // Branch main.
+    //
+    // Die vier Eigenbau-Images teilen sich diesen einen Commit, der Ausdruck
+    // trifft deshalb absichtlich alle vier newTag-Zeilen der Datei und hebt sie
+    // gemeinsam an.
+    {
+      customType: 'regex',
+      managerFilePatterns: ['manifests/worldmonitor/kustomization.yaml'],
+      matchStrings: ['newTag:\\s*(?<currentDigest>[0-9a-f]{40})'],
+      depNameTemplate: 'https://github.com/koala73/worldmonitor',
+      currentValueTemplate: 'main',
+      datasourceTemplate: 'git-refs',
+    },
   ],
 
   packageRules: [
@@ -158,11 +176,34 @@
       enabled: false,
     },
 
-    // Eigenes Image, gebaut von .github/workflows/build-smb-sync-image.yml.
-    // Der Tag ist ein git-SHA, es gibt nichts Upstream zu vergleichen.
+    // Die vier worldmonitor-Images sind Eigenbau (siehe
+    // .github/workflows/build-worldmonitor-images.yml). Ihr Tag ist der
+    // Upstream-Commit, es gibt in der Registry nichts zu vergleichen. Die Regel
+    // deckt zwei Manager gleichzeitig ab: den kubernetes-Manager, der die
+    // tag-losen image:-Zeilen in den Deployments sieht, und den
+    // kustomize-Manager, der den images:-Block aufmacht.
+    //
+    // Angehoben wird stattdessen der Commit selbst, ueber den customManager
+    // weiter oben. Ein "fix(deps)" daraus geht bewusst NICHT durch den
+    // Automerge: der Merge stoesst erst den Image-Build an, ArgoCD ist
+    // schneller und laeuft solange in ImagePullBackOff.
     {
-      matchPackageNames: ['nebu2k/paperless-smb-sync'],
+      matchPackageNames: [
+        'ghcr.io/nebu2k/worldmonitor',
+        'ghcr.io/nebu2k/worldmonitor-ais-relay',
+        'ghcr.io/nebu2k/worldmonitor-redis-rest',
+        'ghcr.io/nebu2k/worldmonitor-seeder',
+      ],
       enabled: false,
+    },
+
+    // Der Commit-Bump selbst ist Cluster-Zustand, also "fix(deps)" wie die
+    // Manifest-Updates. Ohne diese Regel liefe er als "chore" und loeste keinen
+    // Release samt CHANGELOG-Eintrag aus.
+    {
+      matchPackageNames: ['https://github.com/koala73/worldmonitor'],
+      semanticCommitType: 'fix',
+      semanticCommitScope: 'deps',
     },
 
     // fr24 taggt mit einem monoton hochzaehlenden Build-Counter

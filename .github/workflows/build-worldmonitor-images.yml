@@ -1,0 +1,183 @@
+name: Build worldmonitor Images
+
+# worldmonitor (github.com/koala73/worldmonitor) veroeffentlicht kein
+# brauchbares Image fuer den self-hosted Stack:
+#
+#  - ghcr.io/koala73/worldmonitor wird aus docker/Dockerfile gebaut und ist NUR
+#    das Frontend. Es zeigt per Default auf https://api.worldmonitor.app, ist
+#    also ein Client fuer den gehosteten Dienst, kein Self-Hosting.
+#  - Der self-hostbare Stack (root-Dockerfile, Dockerfile.relay,
+#    docker/Dockerfile.redis-rest) ist nirgends publiziert.
+#  - Die git-Tags hinken hinterher: v2.5.23 ist von Maerz 2026, package.json auf
+#    main steht auf 2.10.0, und der Tag kennt das ganze docker/-Verzeichnis noch
+#    nicht. Es gibt also keine Release-Version, gegen die man bauen koennte.
+#
+# Deshalb bauen wir vier Images selbst, alle aus EINEM gepinnten Upstream-Commit.
+# Der Commit steht an genau einer Stelle: im images:-Block von
+# manifests/worldmonitor/kustomization.yaml. Renovate hebt ihn dort an (Regel in
+# renovate.json5), dieser Workflow liest ihn von dort.
+#
+# ABLAUF NACH EINEM BUMP: der Merge nach main loest zwei Dinge parallel aus,
+# diesen Build und den ArgoCD-Sync. ArgoCD ist schneller und laeuft ein paar
+# Minuten in ImagePullBackOff, bis die Images oben sind. Das loest sich von
+# selbst (kubelet wiederholt den Pull), ist aber der Grund, warum die
+# worldmonitor-Images NICHT automergen duerfen.
+#
+# EINMALIG NACH DEM ERSTEN LAUF: GHCR legt neue Packages privat an, unabhaengig
+# davon, dass dieses Repo public ist. Der Cluster hat keinen GHCR-Login und
+# bleibt sonst dauerhaft in ImagePullBackOff. Alle vier Packages einmal auf
+# public stellen (github.com/users/Nebu2k/packages → Package settings →
+# Change visibility). Die Alternative waere ein imagePullSecret im Namespace,
+# das aber ein weiteres rotierendes Token einfuehrt.
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'manifests/worldmonitor/kustomization.yaml'
+      - 'manifests/worldmonitor/Dockerfile.seeder'
+      - '.github/workflows/build-worldmonitor-images.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+concurrency:
+  group: build-worldmonitor
+  cancel-in-progress: false
+
+env:
+  UPSTREAM_REPO: koala73/worldmonitor
+  REGISTRY: ghcr.io
+  # Fest klein geschrieben statt github.repository_owner: der steht als "Nebu2k"
+  # da, und GHCR lehnt Grossbuchstaben im Repository-Namen ab.
+  IMAGE_NAMESPACE: nebu2k
+
+jobs:
+  ref:
+    name: Upstream-Commit ermitteln
+    runs-on: ubuntu-latest
+    outputs:
+      sha: ${{ steps.pin.outputs.sha }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Install PyYAML
+        run: python3 -m pip install --quiet pyyaml
+
+      - name: Gepinnten Commit aus kustomization.yaml lesen
+        id: pin
+        run: |
+          python3 - <<'PY' >> "$GITHUB_OUTPUT"
+          import re, sys, yaml
+
+          with open('manifests/worldmonitor/kustomization.yaml') as f:
+              images = yaml.safe_load(f)['images']
+
+          # Alle vier Images muessen denselben Commit tragen. Sie teilen sich
+          # den Upstream-Baum; ein Mix aus zwei Staenden waere ein Fehler, der
+          # sich erst zur Laufzeit als kaputte Datenstruktur zeigen wuerde.
+          tags = {i['name']: i['newTag'] for i in images}
+          unique = set(tags.values())
+          if len(unique) != 1:
+              sys.exit(f"images: tragen verschiedene Tags: {tags}")
+
+          sha = unique.pop()
+          if not re.fullmatch(r'[0-9a-f]{40}', sha):
+              sys.exit(f"newTag ist kein voller Commit-SHA: {sha}")
+
+          print(f"sha={sha}")
+          PY
+
+  build:
+    name: ${{ matrix.image }}
+    needs: ref
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # Frontend + Node-API unter supervisord. Das ist das Dockerfile, das
+          # auch Upstreams docker-compose.yml baut, nicht docker/Dockerfile.
+          - image: worldmonitor
+            context: upstream
+            file: upstream/Dockerfile
+          # WebSocket-Relay: AIS-Schiffsverkehr, Marktdaten, UCDP.
+          - image: worldmonitor-ais-relay
+            context: upstream
+            file: upstream/Dockerfile.relay
+          # Upstash-kompatibler REST-Proxy vor Redis. Die App spricht
+          # ausschliesslich dieses Protokoll, nie Redis direkt. Der Context ist
+          # docker/, weil das Dockerfile "COPY redis-rest-proxy.mjs ." macht.
+          - image: worldmonitor-redis-rest
+            context: upstream/docker
+            file: upstream/docker/Dockerfile.redis-rest
+          # Eigenes Dockerfile aus diesem Repo, Context ist trotzdem Upstream.
+          - image: worldmonitor-seeder
+            context: upstream
+            file: homelab/manifests/worldmonitor/Dockerfile.seeder
+    steps:
+      - name: Checkout (homelab)
+        uses: actions/checkout@v7
+        with:
+          path: homelab
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v4
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # Der Tag ist der Upstream-Commit, also unveraenderlich. Liegt er schon in
+      # der Registry, ist der Build reine Laufzeit: ein workflow_dispatch nach
+      # einem unbeteiligten Push soll nicht 15 Minuten npm ci fahren.
+      - name: Schon gebaut?
+        id: exists
+        run: |
+          set -uo pipefail
+          IMAGE="${REGISTRY}/${IMAGE_NAMESPACE}/${{ matrix.image }}:${{ needs.ref.outputs.sha }}"
+          if docker manifest inspect "$IMAGE" >/dev/null 2>&1; then
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            echo "::notice::$IMAGE existiert bereits, Build uebersprungen"
+          else
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Checkout (upstream)
+        if: steps.exists.outputs.skip == 'false'
+        uses: actions/checkout@v7
+        with:
+          repository: ${{ env.UPSTREAM_REPO }}
+          ref: ${{ needs.ref.outputs.sha }}
+          path: upstream
+
+      - name: Set up Docker Buildx
+        if: steps.exists.outputs.skip == 'false'
+        uses: docker/setup-buildx-action@v4
+
+      # Bewusst nur linux/amd64, kein QEMU-arm64. Beide Worker-Nodes
+      # (k3s-worker-1, prodesk) sind amd64, die Raspis tragen kein worker-Label
+      # und scheiden ueber den nodeSelector im Deployment ohnehin aus. Ein
+      # emulierter arm64-Build des Frontends (npm ci + tsc + vite) wuerde die
+      # Laufzeit vervielfachen, ohne dass das Ergebnis je gescheduled wird.
+      - name: Build and push
+        if: steps.exists.outputs.skip == 'false'
+        uses: docker/build-push-action@v7
+        with:
+          context: ${{ matrix.context }}
+          file: ${{ matrix.file }}
+          platforms: linux/amd64
+          push: true
+          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAMESPACE }}/${{ matrix.image }}:${{ needs.ref.outputs.sha }}
+          cache-from: type=gha,scope=${{ matrix.image }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.image }}
+          labels: |
+            org.opencontainers.image.title=${{ matrix.image }}
+            org.opencontainers.image.description=Eigenbau aus ${{ env.UPSTREAM_REPO }}@${{ needs.ref.outputs.sha }} fuer das elmstreet79-Homelab
+            org.opencontainers.image.source=https://github.com/${{ env.UPSTREAM_REPO }}
+            org.opencontainers.image.revision=${{ needs.ref.outputs.sha }}
+            org.opencontainers.image.licenses=AGPL-3.0-or-later

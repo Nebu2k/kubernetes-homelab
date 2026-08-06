@@ -1,0 +1,43 @@
+# =============================================================================
+# worldmonitor Seeder
+# =============================================================================
+# Baut NICHT aus diesem Repo, sondern aus einem Checkout von
+# github.com/koala73/worldmonitor (siehe .github/workflows/build-worldmonitor-
+# images.yml). Der Build-Context ist das Upstream-Repo, diese Datei wird per
+# "-f" hineingereicht.
+#
+# Warum ein eigenes Dockerfile: Upstream liefert Seeder-Images nur fuer zwei
+# einzelne Bundles (Dockerfile.seed-bundle-*), nicht fuer den kompletten Lauf.
+# Das Dashboard bezieht seine Daten aber ausschliesslich aus Redis, gefuellt
+# von scripts/run-seeders.sh ueber alle ~170 seed-*.mjs. Ohne diesen Lauf
+# zeigt die Oberflaeche "0/55 OK" und bleibt leer.
+#
+# Node-Version bewusst an den Upstream-Dockerfiles gehalten (node:24-alpine).
+# Kein Digest-Pin wie bei Upstream: der wuerde hier ohne Renovate-Anbindung
+# still veralten.
+FROM node:24-alpine
+
+# curl brauchen einzelne Seeder, deren Node-TLS-Fingerprint von Akamai
+# geblockt wird (gleiche Begruendung wie in Upstreams Dockerfile.relay).
+RUN apk add --no-cache curl
+
+WORKDIR /app
+
+# Erst die Lockfiles, damit der Layer haelt, solange sich die Deps nicht
+# aendern. --ignore-scripts wie bei Upstream: node-gyp-Postinstalls
+# (bufferutil, utf-8-validate) haetten hier keinen Compiler.
+COPY scripts/package.json scripts/package-lock.json ./scripts/
+RUN npm ci --prefix scripts --omit=dev --omit=optional --ignore-scripts
+
+# Den ganzen scripts/-Baum kopieren statt einzelner Dateien. Upstream begruendet
+# das in Dockerfile.seed-bundle-*: das Cherry-Picking hat dort mehrfach Dienste
+# zerlegt, weil ein neuer lokaler Import nicht im Dockerfile nachgezogen wurde.
+COPY scripts/ ./scripts/
+COPY shared/ ./shared/
+COPY data/ ./data/
+
+# --dns-result-order=ipv4first wie in Upstreams Seeder-Images: etliche
+# Upstreams haben AAAA-Records, die ins Leere laufen.
+ENV NODE_OPTIONS="--max-old-space-size=1024 --dns-result-order=ipv4first"
+
+CMD ["sh", "scripts/run-seeders.sh"]

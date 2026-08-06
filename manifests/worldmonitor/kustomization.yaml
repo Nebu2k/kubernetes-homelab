@@ -1,0 +1,38 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: worldmonitor
+
+resources:
+  - namespace.yaml
+  - secret-sealed.yaml
+  - redis-pvc.yaml
+  - redis.yaml
+  - redis-rest.yaml
+  - ais-relay.yaml
+  - app.yaml
+  - ingress.yaml
+  - seeder-cronjob.yaml
+
+# HIER steht die Version des gesamten Stacks, und nur hier.
+#
+# Alle vier Images sind Eigenbau aus EINEM Commit von
+# github.com/koala73/worldmonitor (siehe
+# .github/workflows/build-worldmonitor-images.yml, das den Commit von hier
+# liest). Der Tag ist deshalb der Commit-SHA und kein Semver: Upstream taggt
+# seine Releases seit Maerz 2026 nicht mehr, der letzte Tag v2.5.23 kennt den
+# ganzen self-hosting-Teil des Repos noch nicht.
+#
+# Die vier Tags MUESSEN identisch bleiben. Die Images teilen sich denselben
+# Quellbaum (gemeinsame Redis-Schluessel, gemeinsame Datenvertraege), ein Mix
+# aus zwei Staenden faellt nicht beim Deployen auf, sondern erst als kaputte
+# Kachel. Der Build-Workflow bricht ab, wenn sie auseinanderlaufen.
+images:
+  - name: ghcr.io/nebu2k/worldmonitor
+    newTag: d8db1c357e29e0d00fc19661fa477f2109c353a1
+  - name: ghcr.io/nebu2k/worldmonitor-ais-relay
+    newTag: d8db1c357e29e0d00fc19661fa477f2109c353a1
+  - name: ghcr.io/nebu2k/worldmonitor-redis-rest
+    newTag: d8db1c357e29e0d00fc19661fa477f2109c353a1
+  - name: ghcr.io/nebu2k/worldmonitor-seeder
+    newTag: d8db1c357e29e0d00fc19661fa477f2109c353a1

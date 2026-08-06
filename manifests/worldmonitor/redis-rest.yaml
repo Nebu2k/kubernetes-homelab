@@ -1,0 +1,95 @@
+# Upstash-kompatibler REST-Proxy vor Redis.
+#
+# Warum ueberhaupt: worldmonitor ist fuer Vercel + Upstash geschrieben und
+# spricht Redis ausschliesslich per HTTP-REST, nie ueber das Redis-Protokoll.
+# Ohne diesen Proxy hat der self-hosted Stack keinen Datenzugang. Upstream
+# liefert ihn als docker/redis-rest-proxy.mjs mit.
+#
+# Der Proxy laesst nur eine feste Liste von Redis-Kommandos durch und lehnt
+# EVAL/EVALSHA/SCRIPT ab. Das ist kein Fehler, sondern Absicht: der
+# Lua-Sliding-Window-Limiter der App merkt die Ablehnung einmal und faellt fuer
+# den Rest des Prozesses auf einen INCR/EXPIRE-Fixed-Window zurueck.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: worldmonitor-redis-rest
+  namespace: worldmonitor
+  labels:
+    app.kubernetes.io/name: worldmonitor-redis-rest
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: worldmonitor-redis-rest
+  template:
+    metadata:
+      annotations:
+        reloader.stakater.com/auto: "true"
+      labels:
+        app.kubernetes.io/name: worldmonitor-redis-rest
+    spec:
+      nodeSelector:
+        node-role.kubernetes.io/worker: "worker"
+      containers:
+        - name: redis-rest
+          image: ghcr.io/nebu2k/worldmonitor-redis-rest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 8079
+              protocol: TCP
+          env:
+            # Upstream laesst den Proxy auf 80 lauschen. 8079 vermeidet den
+            # privilegierten Port, der Service davor bleibt trotzdem auf 80,
+            # damit die UPSTASH_REDIS_REST_URL ohne Portangabe auskommt.
+            - name: PORT
+              value: "8079"
+            - name: SRH_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: worldmonitor
+                  key: REDIS_TOKEN
+            - name: REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: worldmonitor
+                  key: REDIS_PASSWORD
+            - name: SRH_CONNECTION_STRING
+              value: "redis://:$(REDIS_PASSWORD)@worldmonitor-redis:6379"
+          # Kein httpGet: der Proxy verlangt den Bearer auf JEDER Route, auch
+          # auf GET /. Eine HTTP-Probe bekaeme dauerhaft 401.
+          livenessProbe:
+            tcpSocket:
+              port: http
+            initialDelaySeconds: 15
+            periodSeconds: 20
+          readinessProbe:
+            tcpSocket:
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          resources:
+            requests:
+              cpu: 25m
+              memory: 64Mi
+            limits:
+              memory: 192Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: worldmonitor-redis-rest
+  namespace: worldmonitor
+  labels:
+    app.kubernetes.io/name: worldmonitor-redis-rest
+spec:
+  type: ClusterIP
+  ports:
+    - name: http
+      port: 80
+      targetPort: http
+      protocol: TCP
+  selector:
+    app.kubernetes.io/name: worldmonitor-redis-rest

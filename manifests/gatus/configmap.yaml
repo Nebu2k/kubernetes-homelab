@@ -160,6 +160,16 @@ data:
         conditions:
           - "[STATUS] == 200"
 
+      # /api/sidecar-health statt "/": nginx liefert die Startseite auch dann
+      # noch aus, wenn der Node-Prozess daneben tot ist. Diese Route geht durch
+      # nginx' /api/-Proxy und belegt damit beide Haelften des Containers.
+      - name: World Monitor
+        group: Cluster
+        url: "https://worldmonitor.elmstreet79.de/api/sidecar-health"
+        interval: 60s
+        conditions:
+          - "[STATUS] == 200"
+
       # ==================================================================
       # Infrastruktur ausserhalb des Clusters.
       #

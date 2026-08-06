@@ -1,0 +1,113 @@
+# Das Relay ist trotz seines Namens nicht nur AIS. Es haelt die
+# WebSocket-Verbindung zu aisstream.io fuer den Schiffsverkehr, faehrt aber
+# daneben eigene Schleifen fuer Marktdaten (Yahoo/Finnhub) und UCDP-Konflikte
+# und schreibt die direkt nach Redis.
+#
+# Ohne AISSTREAM_API_KEY bleibt die Schiffskarte leer, der Rest laeuft. Der Key
+# ist kostenlos (aisstream.io) und kann jederzeit ins Secret nachgezogen werden.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: worldmonitor-ais-relay
+  namespace: worldmonitor
+  labels:
+    app.kubernetes.io/name: worldmonitor-ais-relay
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: worldmonitor-ais-relay
+  template:
+    metadata:
+      annotations:
+        reloader.stakater.com/auto: "true"
+      labels:
+        app.kubernetes.io/name: worldmonitor-ais-relay
+    spec:
+      nodeSelector:
+        node-role.kubernetes.io/worker: "worker"
+      containers:
+        - name: ais-relay
+          image: ghcr.io/nebu2k/worldmonitor-ais-relay
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 3004
+              protocol: TCP
+          env:
+            - name: TZ
+              value: "Europe/Berlin"
+            - name: PORT
+              value: "3004"
+
+            # Ohne RELAY_SHARED_SECRET beendet sich das Relay im Start mit
+            # "FATAL". Der dokumentierte Ausweg
+            # I_UNDERSTAND_THIS_DISABLES_AUTH=true wird hier bewusst NICHT
+            # benutzt: er macht jede nicht-oeffentliche Route fuer alles offen,
+            # was den Port erreicht.
+            - name: RELAY_SHARED_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: worldmonitor
+                  key: RELAY_SHARED_SECRET
+
+            - name: UPSTASH_REDIS_REST_URL
+              value: "http://worldmonitor-redis-rest"
+            - name: UPSTASH_REDIS_REST_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: worldmonitor
+                  key: REDIS_TOKEN
+            # Die eigenen Seed-Schleifen des Relays verlangen sonst https://
+            # in der Upstash-URL und starten gegen den Klartext-Proxy nicht.
+            - name: UPSTASH_ALLOW_INSECURE_HTTP
+              value: "true"
+
+            - name: AISSTREAM_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: worldmonitor
+                  key: AISSTREAM_API_KEY
+
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 30
+            periodSeconds: 30
+            timeoutSeconds: 5
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+
+          resources:
+            requests:
+              cpu: 50m
+              memory: 256Mi
+            limits:
+              memory: 768Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: worldmonitor-ais-relay
+  namespace: worldmonitor
+  labels:
+    app.kubernetes.io/name: worldmonitor-ais-relay
+spec:
+  type: ClusterIP
+  ports:
+    - name: http
+      port: 3004
+      targetPort: http
+      protocol: TCP
+  selector:
+    app.kubernetes.io/name: worldmonitor-ais-relay
