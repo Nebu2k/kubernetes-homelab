@@ -1,3 +1,10 @@
+## [4.57.2](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.57.1...v4.57.2) (2026-08-06)
+
+
+### Bug Fixes
+
+* **kube-prometheus-stack:** Namespace gatus in die Operator-Allowlist ([53c23b8](https://github.com/Nebu2k/kubernetes-homelab/commit/53c23b893cfe18ff300960365f519a9ffe411771))
+
 ## [4.57.1](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.57.0...v4.57.1) (2026-08-06)
 
 
