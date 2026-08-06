@@ -36,7 +36,8 @@ spec:
               cpu: 100m
               memory: 128Mi
             limits:
-              cpu: 500m
+              # Bewusst kein CPU-Limit: ~31m Schnitt, aber kurze Bursts in der
+              # CFS-Periode ergaben 36% Throttling trotz Reserve bis 500m.
               memory: 256Mi
           volumeMounts:
             - name: config
