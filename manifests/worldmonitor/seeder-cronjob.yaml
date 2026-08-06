@@ -21,6 +21,12 @@ spec:
   # Skripte laufen nacheinander, ein voller Durchlauf dauert entsprechend, und
   # die Feeds hier sind Nachrichten- und Wirtschaftsdaten, keine Sensorik.
   #
+  # Gemessen am ersten, kalten Lauf (2026-08-06): 65 Minuten fuer 165 Skripte,
+  # davon 111 OK, 33 uebersprungen (fehlende Keys), 21 gescheitert (zickige
+  # Upstreams, kein Timeout). Der Takt hat damit knapp eine Stunde Luft. Wird
+  # er enger gestellt, ueberholt sich der Job selbst: concurrencyPolicy Forbid
+  # laesst den naechsten Start dann kommentarlos ausfallen.
+  #
   # timeZone ist Pflicht: ohne das Feld laeuft ein CronJob in der Zeitzone der
   # Node, die gerade den kube-controller-manager haelt, und wandert damit mit
   # dem Lease zwischen Europe/Berlin (Raspis) und Etc/UTC (x86).
