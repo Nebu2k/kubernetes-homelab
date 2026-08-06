@@ -206,6 +206,11 @@ grafana:
         gnetId: 11315
         revision: 9
         datasource: Prometheus
+      # UniFi Poller - Client DPI (braucht save_dpi im Poller-Config)
+      unifi-client-dpi:
+        gnetId: 11310
+        revision: 5
+        datasource: Prometheus
       # UniFi Poller - Network Sites
       unifi-sites:
         gnetId: 11311
@@ -219,6 +224,11 @@ grafana:
       # UniFi Poller - USW Insights
       unifi-usw:
         gnetId: 11312
+        revision: 9
+        datasource: Prometheus
+      # UniFi Poller - USG Insights (WAN/Uplink, greift auch fuer die UDR)
+      unifi-usg:
+        gnetId: 11313
         revision: 9
         datasource: Prometheus
       # Proxmox via Prometheus
