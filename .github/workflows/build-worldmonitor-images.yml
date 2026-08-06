@@ -23,12 +23,15 @@ name: Build worldmonitor Images
 # selbst (kubelet wiederholt den Pull), ist aber der Grund, warum die
 # worldmonitor-Images NICHT automergen duerfen.
 #
-# EINMALIG NACH DEM ERSTEN LAUF: GHCR legt neue Packages privat an, unabhaengig
-# davon, dass dieses Repo public ist. Der Cluster hat keinen GHCR-Login und
-# bleibt sonst dauerhaft in ImagePullBackOff. Alle vier Packages einmal auf
-# public stellen (github.com/users/Nebu2k/packages → Package settings →
-# Change visibility). Die Alternative waere ein imagePullSecret im Namespace,
-# das aber ein weiteres rotierendes Token einfuehrt.
+# SICHTBARKEIT: die vier Packages sind public, ohne dass jemand etwas umstellen
+# musste. GHCR uebernimmt beim ersten Push die Sichtbarkeit des Repos, dessen
+# GITHUB_TOKEN gepusht hat, und dieses Repo ist public. Nachgeprueft am
+# 2026-08-06 mit einem anonymen Pull. Das ist die Voraussetzung dafuer, dass der
+# Cluster ohne imagePullSecret ziehen kann.
+#
+# Damit werden die Images weitergegeben, und daran haengen die AGPL-Pflichten
+# aus §4/§6. Was dafuer getan ist und was offen bleibt, steht in
+# manifests/worldmonitor/README.md.
 
 on:
   push:
@@ -39,6 +42,11 @@ on:
       - 'manifests/worldmonitor/Dockerfile.seeder'
       - '.github/workflows/build-worldmonitor-images.yml'
   workflow_dispatch:
+    inputs:
+      force_rebuild:
+        description: 'Bereits vorhandene Tags neu bauen und ueberschreiben'
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -132,15 +140,30 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      # Der Tag ist der Upstream-Commit, also unveraenderlich. Liegt er schon in
-      # der Registry, ist der Build reine Laufzeit: ein workflow_dispatch nach
-      # einem unbeteiligten Push soll nicht 15 Minuten npm ci fahren.
+      # Der Tag ist der Upstream-Commit. Liegt er schon in der Registry, ist der
+      # Build reine Laufzeit: ein workflow_dispatch soll nicht 15 Minuten npm ci
+      # fahren, nur weil jemand den Knopf gedrueckt hat.
+      #
+      # ACHTUNG, das ist die Kehrseite: der Tag beschreibt NUR den
+      # Upstream-Stand, nicht unser Rezept. Aendert sich Dockerfile.seeder oder
+      # ein Label in diesem Workflow, ohne dass der Upstream-Commit mitgeht,
+      # wuerde der Build hier stillschweigend uebersprungen und die Aenderung
+      # nie im Image landen. Dafuer gibt es force_rebuild: dann wird derselbe
+      # Tag neu gebaut und ueberschrieben.
+      #
+      # Nach einem force_rebuild ziehen die Nodes das neue Image NICHT von
+      # selbst: der Tag ist unveraendert und imagePullPolicy steht auf
+      # IfNotPresent. Betroffene Pods einmal neu ausrollen
+      # (kubectl rollout restart -n worldmonitor deploy/<name>).
       - name: Schon gebaut?
         id: exists
         run: |
           set -uo pipefail
           IMAGE="${REGISTRY}/${IMAGE_NAMESPACE}/${{ matrix.image }}:${{ needs.ref.outputs.sha }}"
-          if docker manifest inspect "$IMAGE" >/dev/null 2>&1; then
+          if [ "${{ inputs.force_rebuild }}" = "true" ]; then
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::force_rebuild gesetzt, $IMAGE wird neu gebaut"
+          elif docker manifest inspect "$IMAGE" >/dev/null 2>&1; then
             echo "skip=true" >> "$GITHUB_OUTPUT"
             echo "::notice::$IMAGE existiert bereits, Build uebersprungen"
           else
@@ -180,4 +203,5 @@ jobs:
             org.opencontainers.image.description=Eigenbau aus ${{ env.UPSTREAM_REPO }}@${{ needs.ref.outputs.sha }} fuer das elmstreet79-Homelab
             org.opencontainers.image.source=https://github.com/${{ env.UPSTREAM_REPO }}
             org.opencontainers.image.revision=${{ needs.ref.outputs.sha }}
-            org.opencontainers.image.licenses=AGPL-3.0-or-later
+            org.opencontainers.image.licenses=AGPL-3.0-only
+            org.opencontainers.image.documentation=https://github.com/Nebu2k/kubernetes-homelab/blob/main/manifests/worldmonitor/README.md

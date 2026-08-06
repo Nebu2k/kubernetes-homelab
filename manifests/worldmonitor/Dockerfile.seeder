@@ -36,6 +36,12 @@ COPY scripts/ ./scripts/
 COPY shared/ ./shared/
 COPY data/ ./data/
 
+# Der Lizenztext gehoert ins Image. worldmonitor steht unter AGPL-3.0, und wer
+# ein Image weitergibt, gibt Objektcode weiter: dazu muss eine Kopie der Lizenz
+# mitkommen. Upstreams eigene Dockerfiles kopieren sie nicht mit, hier ist es
+# unser Dockerfile und damit unsere Sache. Siehe README.md daneben.
+COPY LICENSE /usr/share/doc/worldmonitor/LICENSE
+
 # --dns-result-order=ipv4first wie in Upstreams Seeder-Images: etliche
 # Upstreams haben AAAA-Records, die ins Leere laufen.
 ENV NODE_OPTIONS="--max-old-space-size=1024 --dns-result-order=ipv4first"
