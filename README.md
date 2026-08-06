@@ -75,7 +75,6 @@ homelab/
     ├── argocd/
     │   ├── argocd-cm-patch.yaml
     │   ├── argocd-rbac-cm-patch.yaml
-    │   ├── argocd-server-patch.yaml
     │   ├── ingress.yaml
     │   └── kustomization.yaml
     ├── backup-monitor/

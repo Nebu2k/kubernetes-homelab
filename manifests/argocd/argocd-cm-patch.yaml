@@ -6,10 +6,3 @@ metadata:
 data:
   accounts.readonly: apiKey
   timeout.reconciliation: 30s
-  resource.exclusions: |
-    - apiGroups:
-      - cilium.io
-      kinds:
-      - CiliumIdentity
-      clusters:
-      - "*"
