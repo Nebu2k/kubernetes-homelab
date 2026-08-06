@@ -1,3 +1,10 @@
+## [4.60.1](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.60.0...v4.60.1) (2026-08-06)
+
+
+### Bug Fixes
+
+* **worldmonitor:** AGPL-Pflichten und force_rebuild nachziehen ([b55b2a9](https://github.com/Nebu2k/kubernetes-homelab/commit/b55b2a9fd72868a23aeac1aca25cd17c03369f90))
+
 # [4.60.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.59.1...v4.60.0) (2026-08-06)
 
 
