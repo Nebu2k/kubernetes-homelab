@@ -133,9 +133,15 @@ prometheus:
 grafana:
   enabled: true
   
-  # Admin credentials (change in production!)
-  adminPassword: prom-operator
-  
+  # Admin credentials aus dem SealedSecret, nicht im Klartext hier: Grafana
+  # haengt an einem Ingress. Die beiden Sidecars melden sich mit genau diesen
+  # Werten an /api/admin/provisioning/*/reload an, deshalb muss das Secret zum
+  # Passwort in der Grafana-DB passen (siehe grafana-admin-unsealed.yaml.example).
+  admin:
+    existingSecret: grafana-admin-credentials
+    userKey: admin-user
+    passwordKey: admin-password
+
   # Run on worker nodes only
   nodeSelector:
     node-role.kubernetes.io/worker: worker

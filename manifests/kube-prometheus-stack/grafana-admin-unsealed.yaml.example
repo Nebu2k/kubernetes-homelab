@@ -1,0 +1,18 @@
+# kubeseal --format=yaml --controller-namespace=kube-system < manifests/kube-prometheus-stack/grafana-admin-unsealed.yaml > manifests/kube-prometheus-stack/grafana-admin-sealed.yaml
+#
+# Das Passwort steht NICHT mehr in der values.yaml. Wer es hier aendert, muss es
+# auch in der laufenden Grafana-DB setzen, sonst passt das Secret nicht zum
+# Login: Grafana uebernimmt GF_SECURITY_ADMIN_PASSWORD nur beim Erstinit.
+#   kubectl -n monitoring exec deploy/kube-prometheus-stack-grafana -c grafana -- \
+#     grafana cli admin reset-admin-password <passwort>
+# Ausserdem haengt das Homepage-Widget daran: manifests/homepage/grafana-credentials-unsealed.yaml
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: grafana-admin-credentials
+  namespace: monitoring
+type: Opaque
+stringData:
+  admin-user: "admin"
+  admin-password: "CHANGE-ME"
