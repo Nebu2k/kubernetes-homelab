@@ -51,12 +51,17 @@ sind und damit von jedem gezogen werden koennen. Verlangt sind klare Hinweise
 auf den zugehoerigen Quelltext (Labels oben, plus diese Datei) und eine Kopie
 des Lizenztextes beim Objektcode.
 
-**Offener Punkt dabei:** in `worldmonitor-seeder` liegt die Lizenz unter
-`/usr/share/doc/worldmonitor/LICENSE`, weil das unser Dockerfile ist. Die
-anderen drei werden aus Upstreams Dockerfiles gebaut, und die kopieren die
-`LICENSE`-Datei nicht mit. Der Lizenztext liegt bei diesen dreien also nur
-mittelbar bei, ueber das `image.source`-Label und diese Datei. Wer das
-lueckenlos will, hat zwei Wege: die Packages auf privat stellen und dem Cluster
-ein `imagePullSecret` geben (dann wird gar nicht weitergegeben und §4/§6 greifen
-nicht), oder im Build-Workflow eine duenne zweite Stufe je Image ergaenzen, die
-nichts tut ausser die `LICENSE` hineinzukopieren.
+**In allen vier Images liegt der Lizenztext unter
+`/usr/share/doc/worldmonitor/LICENSE`.** Bei `worldmonitor-seeder` kopiert ihn
+`Dockerfile.seeder` selbst, weil das unser Rezept ist. Die anderen drei kommen
+aus Upstreams Dockerfiles, und die kopieren ihn nicht mit; deshalb haengt der
+Build-Workflow dort eine einzelne `COPY`-Zeile an das Dockerfile an
+(Schritt "Lizenz-Stufe anhaengen"). Sie erzeugt im letzten Stage eine
+zusaetzliche Schicht von ein paar Kilobyte und laesst alles davor unberuehrt.
+
+Die Zeile zieht die Datei aus dem benannten Build-Context `wmsrc` statt aus
+dem Build-Context des jeweiligen Images. Das ist kein Selbstzweck: der Context
+von `worldmonitor-redis-rest` ist `docker/`, und dort liegt keine `LICENSE`.
+
+Das ist die einzige Stelle, an der das gebaute Image vom Upstream-Rezept
+abweicht. Es kommt eine Datei hinzu, es aendert sich keine.

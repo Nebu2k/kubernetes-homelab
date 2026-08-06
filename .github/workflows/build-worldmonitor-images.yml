@@ -113,20 +113,25 @@ jobs:
           - image: worldmonitor
             context: upstream
             file: upstream/Dockerfile
+            wrap_license: true
           # WebSocket-Relay: AIS-Schiffsverkehr, Marktdaten, UCDP.
           - image: worldmonitor-ais-relay
             context: upstream
             file: upstream/Dockerfile.relay
+            wrap_license: true
           # Upstash-kompatibler REST-Proxy vor Redis. Die App spricht
           # ausschliesslich dieses Protokoll, nie Redis direkt. Der Context ist
           # docker/, weil das Dockerfile "COPY redis-rest-proxy.mjs ." macht.
           - image: worldmonitor-redis-rest
             context: upstream/docker
             file: upstream/docker/Dockerfile.redis-rest
+            wrap_license: true
           # Eigenes Dockerfile aus diesem Repo, Context ist trotzdem Upstream.
+          # Kopiert die LICENSE selbst, braucht die Stufe unten also nicht.
           - image: worldmonitor-seeder
             context: upstream
             file: homelab/manifests/worldmonitor/Dockerfile.seeder
+            wrap_license: false
     steps:
       - name: Checkout (homelab)
         uses: actions/checkout@v7
@@ -178,6 +183,35 @@ jobs:
           ref: ${{ needs.ref.outputs.sha }}
           path: upstream
 
+      # AGPL §4/§6: die Images liegen public in der Registry, werden also
+      # weitergegeben, und dann muss eine Kopie der Lizenz beim Objektcode
+      # liegen. Upstreams Dockerfiles kopieren sie nicht mit.
+      #
+      # Statt eines zweiten Artefakts haengen wir eine COPY-Zeile an das
+      # jeweilige Dockerfile an. Sie landet im letzten Stage und ergibt dort
+      # eine zusaetzliche Schicht von ein paar Kilobyte; alles davor bleibt
+      # unberuehrt, insbesondere aendert sich am Programm selbst nichts.
+      #
+      # Die Zeile zieht aus dem benannten Build-Context "wmsrc" statt aus dem
+      # Build-Context des Images. Noetig wegen redis-rest: dessen Context ist
+      # upstream/docker, dort liegt keine LICENSE.
+      - name: Lizenz-Stufe anhaengen
+        if: steps.exists.outputs.skip == 'false' && matrix.wrap_license
+        id: dockerfile
+        run: |
+          set -euo pipefail
+          out="$RUNNER_TEMP/Dockerfile.${{ matrix.image }}"
+          cp "${{ matrix.file }}" "$out"
+          cat >> "$out" <<'DOCKERFILE'
+
+          # --- vom Homelab-Build angehaengt --------------------------------
+          # AGPL-3.0: eine Kopie der Lizenz gehoert zum weitergegebenen
+          # Objektcode. Upstreams Dockerfiles kopieren sie nicht mit.
+          COPY --from=wmsrc LICENSE /usr/share/doc/worldmonitor/LICENSE
+          DOCKERFILE
+          echo "file=$out" >> "$GITHUB_OUTPUT"
+          tail -4 "$out"
+
       - name: Set up Docker Buildx
         if: steps.exists.outputs.skip == 'false'
         uses: docker/setup-buildx-action@v4
@@ -192,7 +226,8 @@ jobs:
         uses: docker/build-push-action@v7
         with:
           context: ${{ matrix.context }}
-          file: ${{ matrix.file }}
+          file: ${{ steps.dockerfile.outputs.file || matrix.file }}
+          build-contexts: wmsrc=upstream
           platforms: linux/amd64
           push: true
           tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAMESPACE }}/${{ matrix.image }}:${{ needs.ref.outputs.sha }}
