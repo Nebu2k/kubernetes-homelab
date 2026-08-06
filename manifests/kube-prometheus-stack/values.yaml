@@ -366,35 +366,23 @@ prometheusOperator:
   nodeSelector:
     node-role.kubernetes.io/worker: worker
   
-  # Enable monitoring of namespaces
+  # KEIN prometheusOperator.namespaces mehr, der Operator sieht alle Namespaces.
   #
-  # FALLE: das ist eine Allowlist, kein Komfort-Feature. Der Operator sucht
-  # ServiceMonitors NUR in diesen Namespaces. Ein ServiceMonitor woanders wird
-  # nicht etwa abgelehnt, er wird schlicht ignoriert: kein Scrape-Pool, kein
-  # Target, keine Fehlermeldung, weder im Operator-Log noch in der ArgoCD-UI.
-  # Der ServiceMonitor steht dann gruen und synced da und tut nichts.
-  # Jeder neue Dienst mit eigenem ServiceMonitor gehoert hier mit rein.
-  namespaces:
-    releaseNamespace: true
-    additional:
-      - kube-system
-      - ingress-nginx
-      - cert-manager
-      - longhorn-system
-      - home-assistant
-      - teslamate
-      - gatus
-
-# Service Monitors for additional components
-additionalServiceMonitors:
-  # Monitor NGINX Ingress Controller
-  - name: nginx-ingress-controller
-    selector:
-      matchLabels:
-        app.kubernetes.io/name: ingress-nginx
-    namespaceSelector:
-      matchNames:
-        - ingress-nginx
-    endpoints:
-      - port: metrics
-        interval: 30s
+  # Das Feld war eine Allowlist und ihr Versagen war still: ein ServiceMonitor
+  # ausserhalb der Liste wurde nicht abgelehnt, sondern ignoriert. Kein
+  # Scrape-Pool, kein Target, keine Zeile im Operator-Log, in ArgoCD stand er
+  # gruen und synced da. Gekostet hat das den Traefik-ServiceMonitor: in
+  # manifests/traefik/values.yaml steht seit jeher metrics.prometheus.
+  # serviceMonitor.enabled = true, und trotzdem gab es bis 2026-08-06 keine
+  # einzige traefik_*-Metrik. Der einzige Eingang ins Cluster war unbeobachtet.
+  # Aufgefallen ist es erst, als Gatus denselben Fehler ausloeste.
+  #
+  # Die Liste war ausserdem in beide Richtungen falsch: ingress-nginx stand
+  # drin, obwohl es den Namespace hier gar nicht gibt (Traefik hat nginx
+  # abgeloest). Eine Liste, die man bei jedem neuen Dienst nachziehen muss und
+  # deren Vergessen nicht auffaellt, ist im Homelab die schlechtere Wahl als
+  # der Default. Zugriffsrechte kostet das nichts: der Operator haengt an einer
+  # ClusterRole, Namespace-Roles gibt es keine.
+  #
+  # Was bleibt, ist die serviceMonitorSelector-Ebene weiter oben
+  # (serviceMonitorSelectorNilUsesHelmValues: false = alle Labels erlaubt).
