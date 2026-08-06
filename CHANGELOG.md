@@ -1,3 +1,10 @@
+# [4.57.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.56.2...v4.57.0) (2026-08-06)
+
+
+### Features
+
+* **gatus:** Uptime Kuma durch Gatus ersetzen ([f69ceaf](https://github.com/Nebu2k/kubernetes-homelab/commit/f69ceaf2e02d0ed6e1e4cb84008cda2a5d78ed1c))
+
 ## [4.56.2](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.56.1...v4.56.2) (2026-08-06)
 
 
