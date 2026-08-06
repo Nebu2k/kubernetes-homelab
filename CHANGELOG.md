@@ -1,3 +1,10 @@
+## [4.59.1](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.59.0...v4.59.1) (2026-08-06)
+
+
+### Bug Fixes
+
+* **renovate:** zweiter Lauf, sonst merged Automerge nie ([10774dd](https://github.com/Nebu2k/kubernetes-homelab/commit/10774dde8573e99bf5edd252e4f1c6f51eea9cd6))
+
 # [4.59.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.58.0...v4.59.0) (2026-08-06)
 
 
