@@ -1,3 +1,10 @@
+## [4.56.2](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.56.1...v4.56.2) (2026-08-06)
+
+
+### Bug Fixes
+
+* **kube-prometheus-stack:** Prometheus per arch-Selector von den Raspis fernhalten ([9828d00](https://github.com/Nebu2k/kubernetes-homelab/commit/9828d0046f6db28e3694f7b469ec67a2df0abfc9))
+
 ## [4.56.1](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.56.0...v4.56.1) (2026-08-05)
 
 
