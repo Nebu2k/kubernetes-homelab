@@ -1,0 +1,385 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: gatus-config
+  namespace: gatus
+data:
+  config.yaml: |
+    # Gatus: Status-Seite fuer das Homelab.
+    #
+    # Abgrenzung zum Prometheus-Stack: Prometheus misst von INNEN (Metriken der
+    # Dienste selbst), Gatus misst von AUSSEN (kommt eine Antwort, und ist sie
+    # richtig). Alerting laeuft trotzdem ueber genau einen Weg: Gatus schreibt
+    # nur Metriken, die Regeln dazu stehen in
+    # manifests/kube-prometheus-stack/prometheus-rules.yaml (Gruppe "gatus")
+    # und gehen wie alles andere per Alertmanager an SNS. Gatus-eigene
+    # Alert-Provider sind bewusst NICHT konfiguriert.
+    #
+    # Aufloesung: der Pod haengt an CoreDNS, also greift der Split-Horizon-
+    # Rewrite *.elmstreet79.de -> 192.168.2.250. Die Checks auf Cluster-Dienste
+    # gehen damit ueber Traefik und pruefen die ganze Kette (DNS, LB, TLS, App).
+    # ndots: 1, damit externe Namen nicht erst durch die Search-Domains laufen.
+
+    metrics: true
+
+    # Default ist 3. Bei ~40 Endpoints haelt ein einzelner Timeout (10s) sonst
+    # ein Drittel der Warteschlange auf.
+    concurrency: 8
+
+    storage:
+      type: sqlite
+      path: /data/data.db
+      caching: true
+
+    ui:
+      title: "Status | elmstreet79.de"
+      header: "elmstreet79.de"
+      dashboard-heading: "Homelab Status"
+      dashboard-subheading: "Erreichbarkeit der Dienste, von aussen gemessen"
+      default-sort-by: group
+      buttons:
+        - name: "Dashboard"
+          link: "https://home.elmstreet79.de"
+        - name: "Grafana"
+          link: "https://grafana.elmstreet79.de"
+
+    endpoints:
+      # ==================================================================
+      # Cluster-Dienste (ueber Traefik, also inkl. DNS + LB + TLS + App)
+      # ==================================================================
+      - name: Homepage
+        group: Cluster
+        url: "https://home.elmstreet79.de"
+        interval: 60s
+        conditions:
+          - "[STATUS] == 200"
+          - "[RESPONSE_TIME] < 2000"
+          # Kanarienvogel fuer das Wildcard-Cert, das ALLE Hosts hier nutzen.
+          - "[CERTIFICATE_EXPIRATION] > 240h"
+
+      - name: Landing Page
+        group: Cluster
+        url: "https://www.elmstreet79.de"
+        interval: 60s
+        conditions:
+          - "[STATUS] == 200"
+          - "[RESPONSE_TIME] < 2000"
+
+      - name: ArgoCD
+        group: Cluster
+        url: "https://argocd.elmstreet79.de/healthz"
+        interval: 60s
+        conditions:
+          - "[STATUS] == 200"
+
+      - name: Grafana
+        group: Cluster
+        url: "https://grafana.elmstreet79.de/api/health"
+        interval: 60s
+        conditions:
+          - "[STATUS] == 200"
+          # Grafana antwortet auch dann noch 200, wenn nur die DB weg ist.
+          - "[BODY].database == ok"
+
+      - name: Prometheus
+        group: Cluster
+        url: "https://prometheus.elmstreet79.de/-/healthy"
+        interval: 60s
+        conditions:
+          - "[STATUS] == 200"
+
+      - name: Alertmanager
+        group: Cluster
+        url: "https://alertmanager.elmstreet79.de/-/healthy"
+        interval: 60s
+        conditions:
+          - "[STATUS] == 200"
+
+      - name: Longhorn
+        group: Cluster
+        url: "https://longhorn.elmstreet79.de"
+        interval: 60s
+        conditions:
+          - "[STATUS] == 200"
+
+      - name: Portainer
+        group: Cluster
+        url: "https://portainer.elmstreet79.de"
+        interval: 60s
+        conditions:
+          - "[STATUS] == 200"
+
+      - name: Home Assistant
+        group: Cluster
+        url: "https://homeassistant.elmstreet79.de"
+        interval: 60s
+        conditions:
+          - "[STATUS] == 200"
+          - "[RESPONSE_TIME] < 2000"
+
+      - name: Paperless
+        group: Cluster
+        url: "https://paperless.elmstreet79.de"
+        interval: 60s
+        conditions:
+          - "[STATUS] == 200"
+
+      - name: TeslaMate
+        group: Cluster
+        url: "https://teslamate.elmstreet79.de/api/health"
+        interval: 60s
+        conditions:
+          - "[STATUS] == 200"
+          - "[BODY].database == ok"
+
+      - name: TeslaMate Settings
+        group: Cluster
+        url: "https://teslamate-settings.elmstreet79.de"
+        interval: 60s
+        conditions:
+          - "[STATUS] == 200"
+
+      - name: Beszel
+        group: Cluster
+        url: "https://beszel.elmstreet79.de"
+        interval: 60s
+        conditions:
+          - "[STATUS] == 200"
+
+      - name: FR24 Feeder
+        group: Cluster
+        url: "https://fr24.elmstreet79.de"
+        interval: 60s
+        conditions:
+          - "[STATUS] == 200"
+
+      - name: AdGuard Sync
+        group: Cluster
+        url: "https://adguardhome-sync-web.elmstreet79.de"
+        interval: 60s
+        conditions:
+          - "[STATUS] == 200"
+
+      # ==================================================================
+      # Infrastruktur ausserhalb des Clusters.
+      #
+      # Bewusst direkt auf die IP, NICHT ueber <host>.elmstreet79.de: faellt
+      # Traefik aus, sind oben alle Cluster-Checks rot und hier alles gruen.
+      # Genau diese Aufteilung sagt beim Blick aufs Dashboard sofort, ob der
+      # Reverse-Proxy oder das Blech dahinter kaputt ist.
+      # ==================================================================
+      - name: Proxmox
+        group: Infrastruktur
+        url: "https://192.168.2.8:8006/"
+        interval: 2m
+        client:
+          insecure: true  # self-signed
+        conditions:
+          - "[STATUS] == 200"
+
+      - name: UniFi Gateway
+        group: Infrastruktur
+        url: "https://192.168.2.1/"
+        interval: 2m
+        client:
+          insecure: true
+        conditions:
+          - "[STATUS] == 200"
+
+      - name: UniFi NAS
+        group: Infrastruktur
+        url: "https://192.168.2.6/"
+        interval: 2m
+        client:
+          insecure: true
+        conditions:
+          - "[STATUS] == 200"
+
+      # Das NAS traegt die Longhorn-Backups per CIFS. Ist der Share weg, laufen
+      # die RecurringJobs ins Leere, und das faellt sonst erst nach Stunden auf.
+      - name: UniFi NAS (SMB)
+        group: Infrastruktur
+        url: "tcp://192.168.2.6:445"
+        interval: 5m
+        conditions:
+          - "[CONNECTED] == true"
+
+      - name: Plex
+        group: Infrastruktur
+        url: "http://192.168.2.4:32400/identity"
+        interval: 2m
+        conditions:
+          - "[STATUS] == 200"
+
+      - name: code-server
+        group: Infrastruktur
+        url: "http://192.168.2.4:8080/"
+        interval: 5m
+        conditions:
+          - "[STATUS] == 200"
+
+      - name: Glances (macmini)
+        group: Infrastruktur
+        url: "http://192.168.2.4:61208/"
+        interval: 5m
+        conditions:
+          - "[STATUS] == 200"
+
+      - name: Dreambox
+        group: Infrastruktur
+        url: "https://192.168.2.11/"
+        interval: 5m
+        client:
+          insecure: true
+        conditions:
+          # 401 ist die gesunde Antwort (Basic Auth). Ein 502/000 waere der
+          # Fehlerfall, deshalb hier exakt statt "< 500".
+          - "[STATUS] == 401"
+
+      - name: AdGuard (LXC pve)
+        group: Infrastruktur
+        url: "http://192.168.2.16/"
+        interval: 2m
+        conditions:
+          - "[STATUS] == 200"
+
+      - name: AdGuard (macmini)
+        group: Infrastruktur
+        url: "http://192.168.2.4/"
+        interval: 2m
+        conditions:
+          - "[STATUS] == 200"
+
+      # ==================================================================
+      # DNS. Prueft nicht nur "Resolver lebt", sondern dass der
+      # Split-Horizon-Rewrite *.elmstreet79.de -> 192.168.2.250 wirklich
+      # antwortet. Der muss an drei Stellen gleich sein (beide AdGuards +
+      # CoreDNS), und ein stiller Ausfall einer davon trifft nur einen Teil
+      # der Clients.
+      # ==================================================================
+      - name: AdGuard (LXC pve)
+        group: DNS
+        url: "192.168.2.16"
+        interval: 60s
+        dns:
+          query-name: "argocd.elmstreet79.de"
+          query-type: "A"
+        conditions:
+          - "[DNS_RCODE] == NOERROR"
+          - "[BODY] == 192.168.2.250"
+
+      - name: AdGuard (macmini)
+        group: DNS
+        url: "192.168.2.4"
+        interval: 60s
+        dns:
+          query-name: "argocd.elmstreet79.de"
+          query-type: "A"
+        conditions:
+          - "[DNS_RCODE] == NOERROR"
+          - "[BODY] == 192.168.2.250"
+
+      - name: CoreDNS (Cluster)
+        group: DNS
+        url: "10.43.0.10"
+        interval: 60s
+        dns:
+          query-name: "argocd.elmstreet79.de"
+          query-type: "A"
+        conditions:
+          - "[DNS_RCODE] == NOERROR"
+          - "[BODY] == 192.168.2.250"
+
+      # Gegenprobe von aussen: loest der oeffentliche Name noch auf (CNAME auf
+      # nebu2k.ipv64.net)? Die IP selbst ist dynamisch, also nur der RCODE.
+      - name: Cloudflare (oeffentlicher Record)
+        group: DNS
+        url: "1.1.1.1"
+        interval: 5m
+        dns:
+          query-name: "www.elmstreet79.de"
+          query-type: "A"
+        conditions:
+          - "[DNS_RCODE] == NOERROR"
+
+      # ==================================================================
+      # Internet: Uplink und die oeffentlichen Sites
+      # ==================================================================
+      - name: Uplink (1.1.1.1)
+        group: Internet
+        url: "tcp://1.1.1.1:443"
+        interval: 60s
+        conditions:
+          - "[CONNECTED] == true"
+
+      - name: haushelden-service.de
+        group: Internet
+        url: "https://haushelden-service.de"
+        interval: 5m
+        conditions:
+          - "[STATUS] == 200"
+          - "[CERTIFICATE_EXPIRATION] > 240h"
+
+      - name: peters.club
+        group: Internet
+        url: "https://peters.club"
+        interval: 5m
+        conditions:
+          - "[STATUS] == 200"
+          - "[CERTIFICATE_EXPIRATION] > 240h"
+
+      - name: homeworx.solutions
+        group: Internet
+        url: "https://homeworx.solutions"
+        interval: 5m
+        conditions:
+          - "[STATUS] == 200"
+          - "[CERTIFICATE_EXPIRATION] > 240h"
+
+      - name: seb-it.com
+        group: Internet
+        url: "https://seb-it.com"
+        interval: 5m
+        conditions:
+          - "[STATUS] == 200"
+          - "[CERTIFICATE_EXPIRATION] > 240h"
+
+      # ==================================================================
+      # Domain-Laufzeiten (RDAP/WHOIS). Bewusst eigene Gruppe: eine zickige
+      # WHOIS-Antwort soll die Site oben nicht rot faerben. Gatus laesst hier
+      # ohnehin kein Intervall unter 5m zu, taeglich reicht voellig.
+      # ==================================================================
+      - name: elmstreet79.de
+        group: Domains
+        url: "https://elmstreet79.de"
+        interval: 12h
+        conditions:
+          - "[DOMAIN_EXPIRATION] > 720h"
+
+      - name: haushelden-service.de
+        group: Domains
+        url: "https://haushelden-service.de"
+        interval: 12h
+        conditions:
+          - "[DOMAIN_EXPIRATION] > 720h"
+
+      - name: peters.club
+        group: Domains
+        url: "https://peters.club"
+        interval: 12h
+        conditions:
+          - "[DOMAIN_EXPIRATION] > 720h"
+
+      - name: homeworx.solutions
+        group: Domains
+        url: "https://homeworx.solutions"
+        interval: 12h
+        conditions:
+          - "[DOMAIN_EXPIRATION] > 720h"
+
+      - name: seb-it.com
+        group: Domains
+        url: "https://seb-it.com"
+        interval: 12h
+        conditions:
+          - "[DOMAIN_EXPIRATION] > 720h"

@@ -1,0 +1,20 @@
+# Gatus schreibt seine Ergebnisse als Prometheus-Metriken (metrics: true in der
+# config). Alarmiert wird daraus in
+# manifests/kube-prometheus-stack/prometheus-rules.yaml (Gruppe "gatus"), damit
+# es bei EINEM Alarmweg bleibt (Alertmanager -> SNS).
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: gatus
+  namespace: gatus
+  labels:
+    app.kubernetes.io/name: gatus
+    release: kube-prometheus-stack
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: gatus
+  endpoints:
+    - port: http
+      path: /metrics
+      interval: 30s

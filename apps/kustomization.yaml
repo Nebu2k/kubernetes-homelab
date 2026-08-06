@@ -17,7 +17,7 @@ resources:
   - proxmox-exporter.yaml
   - unifi-poller.yaml
   - portainer.yaml
-  - uptime-kuma.yaml
+  - gatus.yaml
   - homepage.yaml
   - argocd-config.yaml
   - external-services.yaml

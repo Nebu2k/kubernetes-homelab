@@ -519,3 +519,69 @@ spec:
           annotations:
             summary: "SealedSecrets-Controller liefert keine Metriken mehr"
             description: "sealed_secrets_controller_build_info fehlt seit >15m. SealedSecretUnsealFailed ist damit blind. Deployment kube-system/sealed-secrets-controller und den ServiceMonitor sealed-secrets-controller pruefen."
+
+    # === Gatus (Blackbox-Sicht auf die Dienste) ===
+    #
+    # Gatus misst von aussen, was Prometheus von innen misst: kommt eine
+    # Antwort, kommt sie schnell genug, und stimmt sie inhaltlich. Gatus hat
+    # eigene Alert-Provider, die sind bewusst NICHT konfiguriert. Alarmiert
+    # wird nur hier, damit es bei EINEM Weg bleibt (Alertmanager -> SNS) und
+    # Stummschaltungen und Zeitfenster an einer Stelle liegen.
+    #
+    # Die Schwellen hier liegen absichtlich VOR denen in der Gatus-Config
+    # (manifests/gatus/configmap.yaml): der Alert warnt, bevor der Endpoint auf
+    # dem Dashboard rot wird.
+    - name: gatus
+      interval: 60s
+      rules:
+        # gatus_results_endpoint_success ist eine Gauge (0 = Check rot).
+        # 10m deckt auch die Endpoints mit 5m-Intervall ab, ein einzelner
+        # verpasster Lauf meldet also noch nicht.
+        - alert: GatusEndpointDown
+          expr: gatus_results_endpoint_success == 0
+          for: 10m
+          labels:
+            severity: warning
+          annotations:
+            summary: "Gatus: {{ $labels.group }}/{{ $labels.name }} ist rot"
+            description: "Der Check {{ $labels.group }}/{{ $labels.name }} (Typ {{ $labels.type }}) scheitert seit >10m. Welche Bedingung genau, steht auf https://status.elmstreet79.de. Faustregel: ist die Gruppe Cluster komplett rot und Infrastruktur gruen, liegt es an Traefik oder am Wildcard-Cert, nicht an den Diensten."
+
+        # Das Wildcard-Cert *.elmstreet79.de haengt an cert-manager (DNS-01 ueber
+        # Cloudflare). Bleibt die Erneuerung aus, faellt das sonst erst auf,
+        # wenn der Browser meckert.
+        #
+        # Der > 0-Zweig ist Pflicht: fuer Endpoints ohne TLS (TCP, DNS, http)
+        # steht die Metrik auf 0, ohne ihn wuerde der Alert fuer jeden davon
+        # sofort feuern.
+        - alert: GatusCertificateExpiringSoon
+          expr: gatus_results_certificate_expiration_seconds > 0 < 1209600
+          for: 1h
+          labels:
+            severity: warning
+          annotations:
+            summary: "Zertifikat fuer {{ $labels.name }} laeuft in <14 Tagen ab"
+            description: "{{ $labels.group }}/{{ $labels.name }}: noch {{ $value | humanizeDuration }}. Bei *.elmstreet79.de zuerst cert-manager pruefen (Certificate wildcard-elmstreet79-de in cert-manager, ClusterIssuer letsencrypt-prod, Cloudflare-Token)."
+
+        # Domain-Laufzeiten kommen per RDAP/WHOIS und nur alle 12h. Eine
+        # abgelaufene Domain ist der eine Ausfall, den kein Redeploy repariert.
+        - alert: GatusDomainExpiringSoon
+          expr: gatus_results_domain_expiration_seconds > 0 < 3888000
+          for: 6h
+          labels:
+            severity: warning
+          annotations:
+            summary: "Domain {{ $labels.name }} laeuft in <45 Tagen ab"
+            description: "{{ $labels.name }}: noch {{ $value | humanizeDuration }}. Verlaengerung beim Registrar pruefen (INWX bzw. Cloudflare)."
+
+        # Sicherheitsnetz, gleiche Logik wie bei unpoller und SealedSecrets:
+        # ohne Scrape verschwinden die Gauges oben und die Alerts werden still,
+        # statt zu feuern. Gatus ist die einzige Quelle dieser Metriken, ein
+        # Ausfall macht die ganze Gruppe blind.
+        - alert: GatusDown
+          expr: absent(gatus_results_endpoint_success)
+          for: 15m
+          labels:
+            severity: warning
+          annotations:
+            summary: "Gatus liefert keine Metriken mehr"
+            description: "gatus_results_endpoint_success fehlt seit >15m, alle Gatus-Alerts sind damit blind. Deployment gatus/gatus und den ServiceMonitor gatus pruefen."

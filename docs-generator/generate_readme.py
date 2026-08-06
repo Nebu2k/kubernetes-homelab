@@ -195,7 +195,7 @@ def get_documentation_links():
     OFFICIAL_DOCS = {
         'home-assistant': 'https://www.home-assistant.io/docs/',
         'homepage': 'https://gethomepage.dev/latest/',
-        'uptime-kuma': 'https://github.com/louislam/uptime-kuma/wiki',
+        'gatus': 'https://github.com/TwiN/gatus',
         'minio': 'https://min.io/docs/minio/kubernetes/upstream/',
         'teslamate': 'https://docs.teslamate.org/',
         'landing-page': 'https://github.com/nginx/nginx',

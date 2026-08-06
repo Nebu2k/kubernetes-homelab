@@ -26,7 +26,7 @@ Production-ready K3s cluster managed via GitOps using ArgoCD App-of-Apps pattern
 | 5 | Csi Driver Smb, Landing Page, Nfs Storage, Portainer, Teslamate |
 | 6 | Kube Prometheus Stack |
 | 7 | Home Assistant, Unifi Poller |
-| 8 | Ripe Atlas, Uptime Kuma |
+| 8 | Gatus, Ripe Atlas |
 | 9 | Homepage, Paperless Ngx |
 | 10 | Beszel |
 | 11 | Backup Monitor, Proxmox Exporter |
@@ -60,8 +60,8 @@ homelab/
 │   ├── kube-prometheus-stack.yaml     # Wave 6
 │   ├── home-assistant.yaml            # Wave 7
 │   ├── unifi-poller.yaml              # Wave 7
+│   ├── gatus.yaml                     # Wave 8
 │   ├── ripe-atlas.yaml                # Wave 8
-│   ├── uptime-kuma.yaml               # Wave 8
 │   ├── homepage.yaml                  # Wave 9
 │   ├── paperless-ngx.yaml             # Wave 9
 │   ├── beszel.yaml                    # Wave 10
@@ -134,6 +134,15 @@ homelab/
     │   ├── kustomization.yaml
     │   ├── namespace.yaml
     │   └── service.yaml
+    ├── gatus/
+    │   ├── configmap.yaml
+    │   ├── deployment.yaml
+    │   ├── ingress.yaml
+    │   ├── kustomization.yaml
+    │   ├── namespace.yaml
+    │   ├── pvc.yaml
+    │   ├── service.yaml
+    │   └── servicemonitor.yaml
     ├── home-assistant/
     │   ├── backup-archive-cronjob.yaml
     │   ├── configmap-configuration.yaml
@@ -282,20 +291,13 @@ homelab/
     │   ├── dashboard-service.yaml
     │   ├── kustomization.yaml
     │   └── values.yaml
-    ├── unifi-poller/
-    │   ├── deployment.yaml
-    │   ├── kustomization.yaml
-    │   ├── service.yaml
-    │   ├── servicemonitor.yaml
-    │   ├── unifi-config-sealed.yaml
-    │   └── unifi-config-unsealed.yaml.example
-    └── uptime-kuma/
+    └── unifi-poller/
         ├── deployment.yaml
-        ├── ingress.yaml
         ├── kustomization.yaml
-        ├── namespace.yaml
-        ├── pvc.yaml
-        └── service.yaml
+        ├── service.yaml
+        ├── servicemonitor.yaml
+        ├── unifi-config-sealed.yaml
+        └── unifi-config-unsealed.yaml.example
 ```
 
 ## 🚀 Fresh Installation
@@ -944,20 +946,20 @@ URL: https://home.elmstreet79.de
 
 🏠 **Features:** Unified dashboard with links to all services, real-time Kubernetes cluster metrics, auto-discovery of ingresses, dark theme, widgets for Proxmox/ArgoCD/Grafana
 
-**Uptime Kuma (Uptime Monitoring):**
+**Gatus (Status Page / Uptime Monitoring):**
 
 ```text
-URL: https://uptime.elmstreet79.de
+URL: https://status.elmstreet79.de
 ```
 
-⚠️ **First visit:** Create admin account on initial access. Then add monitors for your services.
+📈 **Features:** Blackbox checks (HTTP/TCP/DNS) grouped by failure domain, certificate and domain expiration, uptime history in SQLite. Every check is declared in `manifests/gatus/configmap.yaml`, there is no UI-side state. Alerting does **not** run through Gatus itself: it exports Prometheus metrics and the rules live in the `gatus` group of `manifests/kube-prometheus-stack/prometheus-rules.yaml`.
 
 **Service Access Architecture:**
 
 Everything goes through Traefik (single reverse proxy) with the wildcard TLS default cert. A service is **public exactly when it has a Cloudflare record**. There is no wildcard A-record.
 
 - **Public** (Cloudflare CNAME → `nebu2k.ipv64.net`, managed in the `homelab-terraform` Cloudflare stack): `www`, `homeassistant`, `teslamate`, `plex`, `dreambox`. Apex `elmstreet79.de` 301-redirects to `www`. Plex additionally has a direct `32400` port-forward for native apps.
-- **Internal/VPN-only** (no Cloudflare record): everything else, e.g. `argocd`, `grafana`, `prometheus`, `alertmanager`, `longhorn`, `portainer`, `uptime`, `home`, `paperless`, plus the external hosts (`unifi`, `pve`, `nas`, `vscode`, `adguard`, …).
+- **Internal/VPN-only** (no Cloudflare record): everything else, e.g. `argocd`, `grafana`, `prometheus`, `alertmanager`, `longhorn`, `portainer`, `status`, `home`, `paperless`, plus the external hosts (`unifi`, `pve`, `nas`, `vscode`, `adguard`, …).
 
 To make a service public: add its host to `public_hosts` in `homelab-terraform/terraform/cloudflare/` and `terraform apply`. Nothing else needed, the single port-forward covers all.
 
@@ -1130,6 +1132,7 @@ kubectl get secret -n monitoring grafana-admin-credentials \
 | Cert Manager | v1.21.1 | Cert Manager |
 | Csi Driver Smb | 1.20.3 | Csi Driver Smb |
 | Fr24 | latest-build-858 | Fr24 |
+| Gatus | v5.36.0 | Gatus |
 | Home Assistant | 2026.7.4 | Home Assistant |
 | Homepage | v1.13.2 | Homepage |
 | Kube Prometheus Stack | 88.0.1 | Kube Prometheus Stack |
@@ -1148,7 +1151,6 @@ kubectl get secret -n monitoring grafana-admin-credentials \
 | Teslamate | 4.0.1 | Teslamate |
 | Traefik | 41.1.0 | Traefik |
 | Unifi Poller | v3.3.4 | Unifi Poller |
-| Uptime Kuma | 2.4.0 | Uptime Kuma |
 | K3s | v1.33.5 | Lightweight Kubernetes |
 | Kube-VIP | v1.0.1 | Control plane HA |
 | ArgoCD | v3.2.3 | Continuous Delivery |
@@ -1157,6 +1159,7 @@ kubectl get secret -n monitoring grafana-admin-credentials \
 
 - [Cert Manager](https://charts.jetstack.io)
 - [Csi Driver Smb](https://raw.githubusercontent.com/kubernetes-csi/csi-driver-smb/master/charts)
+- [Gatus](https://github.com/TwiN/gatus)
 - [Home Assistant](https://www.home-assistant.io/docs/)
 - [Homepage](https://gethomepage.dev/latest/)
 - [K3s](https://docs.k3s.io/)
@@ -1174,7 +1177,6 @@ kubectl get secret -n monitoring grafana-admin-credentials \
 - [Teslamate](https://docs.teslamate.org/)
 - [Traefik](https://traefik.github.io/charts)
 - [Unifi Poller](https://unpoller.com/)
-- [Uptime Kuma](https://github.com/louislam/uptime-kuma/wiki)
 
 ## 📝 License
 
