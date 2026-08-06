@@ -1,3 +1,10 @@
+# [4.60.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.59.1...v4.60.0) (2026-08-06)
+
+
+### Features
+
+* **worldmonitor:** Lage-Dashboard selbst hosten ([490ba55](https://github.com/Nebu2k/kubernetes-homelab/commit/490ba55f1c7749defdcc38cc8b7b5a108c8f2715))
+
 ## [4.59.1](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.59.0...v4.59.1) (2026-08-06)
 
 
