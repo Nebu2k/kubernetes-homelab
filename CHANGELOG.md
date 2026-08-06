@@ -1,3 +1,10 @@
+## [4.57.3](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.57.2...v4.57.3) (2026-08-06)
+
+
+### Bug Fixes
+
+* **kube-prometheus-stack:** Namespace-Allowlist des Operators abbauen ([a1c9db3](https://github.com/Nebu2k/kubernetes-homelab/commit/a1c9db33e8e23301301c63fbf8b6890dd3f036f8))
+
 ## [4.57.2](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.57.1...v4.57.2) (2026-08-06)
 
 
