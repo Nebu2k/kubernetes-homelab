@@ -1,3 +1,11 @@
+# [4.68.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.67.0...v4.68.0) (2026-08-07)
+
+
+### Features
+
+* **monitoring:** Home Assistant scrapen ([e7dacd3](https://github.com/Nebu2k/kubernetes-homelab/commit/e7dacd39f22e2cc36bc1d23b2a4a9d217975b60b))
+* **monitoring:** Stromverbrauch ins Node-Overview ([972557b](https://github.com/Nebu2k/kubernetes-homelab/commit/972557bfd420c3c206e6fe50dfb0bcc2bb20c4c4))
+
 # [4.67.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.66.0...v4.67.0) (2026-08-07)
 
 
