@@ -1,3 +1,10 @@
+# [4.66.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.65.0...v4.66.0) (2026-08-07)
+
+
+### Features
+
+* **monitoring:** Beszel abbauen ([e3fcb69](https://github.com/Nebu2k/kubernetes-homelab/commit/e3fcb696e9a7e1b9b1c069e902ac2560e6b25759))
+
 # [4.65.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.64.0...v4.65.0) (2026-08-07)
 
 
