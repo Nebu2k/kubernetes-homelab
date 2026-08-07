@@ -10,7 +10,6 @@ resources:
   - metallb.yaml
   - traefik.yaml
   - cert-manager.yaml
-  - nfs-storage.yaml
   - csi-driver-smb.yaml
   - longhorn.yaml
   - kube-prometheus-stack.yaml

@@ -5,7 +5,7 @@ metadata:
   name: csi-driver-smb
   namespace: argocd
   annotations:
-    # Storage-Schicht, zusammen mit nfs-storage (5) und nach longhorn (4).
+    # Storage-Schicht, nach longhorn (4).
     # Muss vor paperless-ngx (9) stehen, das ein SMB-PV benutzt.
     argocd.argoproj.io/sync-wave: "5"
   finalizers:

@@ -23,7 +23,7 @@ Production-ready K3s cluster managed via GitOps using ArgoCD App-of-Apps pattern
 | 1 | Etcd S3 Config, Kured, Metallb, Reloader, System Upgrade Controller |
 | 3 | Traefik |
 | 4 | Cert Manager, Longhorn |
-| 5 | Csi Driver Smb, Landing Page, Nfs Storage, Teslamate |
+| 5 | Csi Driver Smb, Landing Page, Teslamate |
 | 6 | Kube Prometheus Stack |
 | 7 | Home Assistant, Unifi Poller |
 | 8 | Gatus, Ripe Atlas |
@@ -54,7 +54,6 @@ homelab/
 │   ├── longhorn.yaml                  # Wave 4
 │   ├── csi-driver-smb.yaml            # Wave 5
 │   ├── landing-page.yaml              # Wave 5
-│   ├── nfs-storage.yaml               # Wave 5
 │   ├── teslamate.yaml                 # Wave 5
 │   ├── kube-prometheus-stack.yaml     # Wave 6
 │   ├── home-assistant.yaml            # Wave 7
@@ -216,8 +215,6 @@ homelab/
     ├── metallb/
     │   ├── kustomization.yaml
     │   ├── metallb-ip-pool.yaml
-    │   └── values.yaml
-    ├── nfs-subdir-external-provisioner/
     │   └── values.yaml
     ├── paperless-ngx/
     │   ├── backup-cronjob.yaml
@@ -1114,7 +1111,6 @@ kubectl get secret -n monitoring grafana-admin-credentials \
 | Longhorn | 1.12.0 | Longhorn |
 | Mealie | v3.22.0 | Mealie |
 | Metallb | 0.16.1 | Metallb |
-| Nfs Subdir External Provisioner | 4.0.18 | Nfs Storage |
 | Paperless Ngx | 3.0.5 | Paperless Ngx |
 | Proxmox Exporter | 1.0.8 | Proxmox Exporter |
 | Reloader | 2.2.14 | Reloader |
@@ -1141,7 +1137,6 @@ kubectl get secret -n monitoring grafana-admin-credentials \
 - [Landing Page](https://github.com/nginx/nginx)
 - [Longhorn](https://charts.longhorn.io)
 - [Metallb](https://metallb.github.io/metallb)
-- [NFS Subdir External Provisioner](https://kubernetes-sigs.github.io/nfs-subdir-external-provisioner)
 - [Proxmox Exporter](https://github.com/prometheus-pve/prometheus-pve-exporter)
 - [Reloader](https://stakater.github.io/stakater-charts)
 - [Sealed Secrets](https://bitnami.github.io/sealed-secrets/)
