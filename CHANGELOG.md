@@ -1,3 +1,10 @@
+# [4.65.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.64.0...v4.65.0) (2026-08-07)
+
+
+### Features
+
+* **monitoring:** pve und macmini per node-exporter nach Prometheus holen ([4c2bd6f](https://github.com/Nebu2k/kubernetes-homelab/commit/4c2bd6f2948e97d34746b643b3046a6711b02998))
+
 # [4.64.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.63.1...v4.64.0) (2026-08-07)
 
 
