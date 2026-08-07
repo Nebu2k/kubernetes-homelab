@@ -9,5 +9,24 @@ resources:
   - alertmanager-ingress.yaml
   - prometheus-rules.yaml
   - etcd-scrapeconfig.yaml
+  - node-exporter-external-scrapeconfig.yaml
   - aws-credentials-sealed.yaml
   - grafana-admin-sealed.yaml
+
+# Eigene Grafana-Dashboards. Der grafana-sc-dashboard-Sidecar sammelt alle
+# ConfigMaps mit dem Label grafana_dashboard=1 ueber alle Namespaces ein
+# (METHOD=WATCH), das Chart braucht dafuer nichts. Fremd-Dashboards aus
+# grafana.com laufen dagegen weiter ueber grafana.dashboards.default.*.gnetId
+# in values.yaml.
+#
+# disableNameSuffixHash, weil der Name sonst bei jeder Aenderung wechselt: der
+# Sidecar wuerde das Dashboard unter neuem Namen zusaetzlich importieren, statt
+# es zu ersetzen.
+configMapGenerator:
+  - name: grafana-dashboard-node-overview
+    files:
+      - node-overview.json=dashboards/node-overview.json
+    options:
+      disableNameSuffixHash: true
+      labels:
+        grafana_dashboard: "1"

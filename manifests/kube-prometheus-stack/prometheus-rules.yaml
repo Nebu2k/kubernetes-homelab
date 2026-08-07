@@ -10,15 +10,31 @@ metadata:
 spec:
   groups:
     # Node filesystem alerts
+    #
+    # Zwei Filter, die seit 2026-08-07 dazugehoeren, seit pve und macmini per
+    # ScrapeConfig unter job=node-exporter mit drinhaengen:
+    #
+    # - `unless ... node_filesystem_readonly == 1`: macOS mountet die
+    #   CoreSimulator-Runtimes als readonly-Volumes, die konstruktionsbedingt zu
+    #   ~97% voll sind. Ohne den Zweig feuert NodeFilesystemSpaceCritical dort
+    #   sofort und dauerhaft. Ein readonly-Dateisystem kann ohnehin nicht
+    #   vollaufen, deshalb ist der Filter auch fuer linux richtig. Das Upstream-
+    #   Mixin macht es genauso. macminis `/` ist als versiegeltes System-Volume
+    #   ebenfalls readonly und faellt mit raus, ohne Verlust: es teilt sich den
+    #   APFS-Container mit /System/Volumes/Data, das beobachtet wird.
+    # - `mountpoint!~"/System/Volumes/(Preboot|Update|VM)"`: dieselben Zahlen aus
+    #   demselben Container. Ohne den Filter waere jeder volle macmini vier
+    #   Alerts statt einem.
     - name: node-disk-space
       interval: 30s
       rules:
         - alert: NodeFilesystemSpaceWarning
           expr: |
             (
-              node_filesystem_avail_bytes{mountpoint!~"^/run.*|^/sys.*|^/proc.*|^/dev.*"} / 
-              node_filesystem_size_bytes{mountpoint!~"^/run.*|^/sys.*|^/proc.*|^/dev.*"}
+              node_filesystem_avail_bytes{mountpoint!~"^/run.*|^/sys.*|^/proc.*|^/dev.*|^/System/Volumes/(Preboot|Update|VM)$"} /
+              node_filesystem_size_bytes{mountpoint!~"^/run.*|^/sys.*|^/proc.*|^/dev.*|^/System/Volumes/(Preboot|Update|VM)$"}
             ) < 0.20
+            unless on (instance, device, mountpoint) node_filesystem_readonly == 1
           for: 5m
           labels:
             severity: warning
@@ -29,9 +45,10 @@ spec:
         - alert: NodeFilesystemSpaceCritical
           expr: |
             (
-              node_filesystem_avail_bytes{mountpoint!~"^/run.*|^/sys.*|^/proc.*|^/dev.*"} / 
-              node_filesystem_size_bytes{mountpoint!~"^/run.*|^/sys.*|^/proc.*|^/dev.*"}
+              node_filesystem_avail_bytes{mountpoint!~"^/run.*|^/sys.*|^/proc.*|^/dev.*|^/System/Volumes/(Preboot|Update|VM)$"} /
+              node_filesystem_size_bytes{mountpoint!~"^/run.*|^/sys.*|^/proc.*|^/dev.*|^/System/Volumes/(Preboot|Update|VM)$"}
             ) < 0.10
+            unless on (instance, device, mountpoint) node_filesystem_readonly == 1
           for: 2m
           labels:
             severity: critical
@@ -42,9 +59,10 @@ spec:
         - alert: NodeFilesystemInodeWarning
           expr: |
             (
-              node_filesystem_files_free{mountpoint!~"^/run.*|^/sys.*|^/proc.*|^/dev.*"} / 
-              node_filesystem_files{mountpoint!~"^/run.*|^/sys.*|^/proc.*|^/dev.*"}
+              node_filesystem_files_free{mountpoint!~"^/run.*|^/sys.*|^/proc.*|^/dev.*|^/System/Volumes/(Preboot|Update|VM)$"} /
+              node_filesystem_files{mountpoint!~"^/run.*|^/sys.*|^/proc.*|^/dev.*|^/System/Volumes/(Preboot|Update|VM)$"}
             ) < 0.20
+            unless on (instance, device, mountpoint) node_filesystem_readonly == 1
           for: 5m
           labels:
             severity: warning
@@ -402,6 +420,32 @@ spec:
             severity: warning
           annotations:
             summary: "Node memory usage is high"
+            description: "Node {{ $labels.instance }} memory usage is {{ $value | humanizePercentage }} (threshold: 85%)."
+
+        # macmini braucht eine eigene Regel, weil darwins node_exporter andere
+        # Metriknamen liefert: kein node_memory_MemTotal_bytes, kein
+        # node_memory_MemAvailable_bytes, stattdessen node_memory_total_bytes und
+        # die Mach-Seitenklassen. Die Regel oben und NodeMemoryHighUtilization aus
+        # dem Mixin greifen dort also nicht, und zwar still: eine fehlende Metrik
+        # ergibt keine Serie, kein Alert, keine Fehlermeldung. Genau die Sorte
+        # Luecke, die man nur beim Hinschauen findet.
+        #
+        # "Verfuegbar" ist auf macOS free + inactive + purgeable; wired, active
+        # und compressed sind belegt. Gegenprobe 2026-08-07: 11.4 GiB belegt zu
+        # 10.2 GiB verfuegbar von 20 GiB, die Summe geht auf.
+        - alert: NodeHighMemoryDarwin
+          expr: |
+            (
+              1 - (
+                (node_memory_free_bytes + node_memory_inactive_bytes + node_memory_purgeable_bytes) /
+                node_memory_total_bytes
+              )
+            ) > 0.85
+          for: 10m
+          labels:
+            severity: warning
+          annotations:
+            summary: "Node memory usage is high (macOS)"
             description: "Node {{ $labels.instance }} memory usage is {{ $value | humanizePercentage }} (threshold: 85%)."
 
     # TeslaMate data freshness alerts

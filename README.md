@@ -188,6 +188,7 @@ homelab/
     │   ├── grafana-admin-unsealed.yaml.example
     │   ├── grafana-ingress.yaml
     │   ├── kustomization.yaml
+    │   ├── node-exporter-external-scrapeconfig.yaml
     │   ├── prometheus-ingress.yaml
     │   ├── prometheus-rules.yaml
     │   └── values.yaml
