@@ -1,3 +1,20 @@
+# [4.62.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.61.1...v4.62.0) (2026-08-07)
+
+
+### Bug Fixes
+
+* **deps:** update amazon/aws-cli docker tag to v2.36.15 ([#52](https://github.com/Nebu2k/kubernetes-homelab/issues/52)) ([2faa22c](https://github.com/Nebu2k/kubernetes-homelab/commit/2faa22c46d318e748dfbbc768a121100816b5796))
+* **deps:** update rancher/mirrored-coredns-coredns docker tag to v1.14.6 ([#57](https://github.com/Nebu2k/kubernetes-homelab/issues/57)) ([30abf16](https://github.com/Nebu2k/kubernetes-homelab/commit/30abf16c3a4164c98fac45600564af8ccc33dd0e))
+* **grafana:** Admin-Passwort ins SealedSecret statt in die values.yaml ([98577a8](https://github.com/Nebu2k/kubernetes-homelab/commit/98577a8abc67e7680152c3b4d2d84ed1fccf4fe3))
+* **unifi-poller:** CPU-Limit entfernen gegen CFS-Throttling ([634d34b](https://github.com/Nebu2k/kubernetes-homelab/commit/634d34bf33e75cbc1f9f41dfe355775b5d8ef416))
+
+
+### Features
+
+* **grafana:** UniFi Client-DPI- und USG-Dashboard ergaenzen ([fbb452b](https://github.com/Nebu2k/kubernetes-homelab/commit/fbb452b9ce3498a0ecd82bb2768c4fdf1a84d268))
+* **portainer:** Dienst ersatzlos abbauen ([4749341](https://github.com/Nebu2k/kubernetes-homelab/commit/4749341e425879d4ce7740e02a0ff478000439d7))
+* **worldmonitor:** Dienst wieder abbauen ([9b06927](https://github.com/Nebu2k/kubernetes-homelab/commit/9b069276703225a4240eb6bb37553d192deb62ba))
+
 ## [4.61.1](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.61.0...v4.61.1) (2026-08-06)
 
 
