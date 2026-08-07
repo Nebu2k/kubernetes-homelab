@@ -49,17 +49,14 @@ data:
           weight: 20
 
     - Monitoring:
-      - Beszel (Kubernetes):
-          href: https://beszel.elmstreet79.de
-          description: System Monitor (K8s)
-          icon: beszel.png
+      # Direktlink aufs Node-Overview: alle sieben Hosts auf einen Blick. Die
+      # Grafana-Kachel selbst kommt per gethomepage.dev-Annotation am Ingress
+      # und zeigt nur auf die Startseite.
+      - Node Overview:
+          href: https://grafana.elmstreet79.de/d/homelab-node-overview
+          description: Alle sieben Hosts (CPU, RAM, Disk, Temperatur)
+          icon: mdi-server-network
           weight: 40
-          widget:
-            type: beszel
-            url: https://beszel.elmstreet79.de
-            username: {{HOMEPAGE_VAR_BESZEL_USERNAME}}
-            password: {{HOMEPAGE_VAR_BESZEL_PASSWORD}}
-            version: 2
 
     - Infrastructure:
       - Proxmox:

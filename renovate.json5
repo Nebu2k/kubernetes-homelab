@@ -238,12 +238,6 @@
       groupName: 'postgres',
     },
 
-    // Beszel-Server und -Agent muessen versionsgleich bleiben.
-    {
-      matchPackageNames: ['henrygd/beszel', 'henrygd/beszel-agent'],
-      groupName: 'beszel',
-    },
-
     // teslamate und sein vorkonfiguriertes Grafana werden zusammen released.
     {
       matchPackageNames: ['teslamate/teslamate', 'teslamate/grafana'],

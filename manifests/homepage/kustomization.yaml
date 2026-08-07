@@ -18,4 +18,3 @@ resources:
   - unifi-token-sealed.yaml
   - grafana-credentials-sealed.yaml
   - plex-token-sealed.yaml
-  - beszel-secret-sealed.yaml
