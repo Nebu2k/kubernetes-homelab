@@ -10,8 +10,10 @@ resources:
   - prometheus-rules.yaml
   - etcd-scrapeconfig.yaml
   - node-exporter-external-scrapeconfig.yaml
+  - home-assistant-scrapeconfig.yaml
   - aws-credentials-sealed.yaml
   - grafana-admin-sealed.yaml
+  - home-assistant-token-sealed.yaml
 
 # Eigene Grafana-Dashboards. Der grafana-sc-dashboard-Sidecar sammelt alle
 # ConfigMaps mit dem Label grafana_dashboard=1 ueber alle Namespaces ein

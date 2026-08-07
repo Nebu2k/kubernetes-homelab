@@ -1,0 +1,41 @@
+# Home Assistant als Metrikquelle.
+#
+# HA misst laengst Strom, es stand nur nichts davon in Prometheus: Ecoflow am
+# Rack (der einzige ehrliche Wert fuers Homelab, RAPL sieht nur das
+# CPU-Package), Tibber Pulse fuer den Hausverbrauch, Hoymiles-PV und die
+# Wallbox. Welche Entities exportiert werden, entscheidet der Filter im
+# prometheus-Block von manifests/home-assistant/configmap-configuration.yaml,
+# nicht diese Datei.
+#
+# Statische Targets aus demselben Grund wie ueberall hier: ArgoCD wendet
+# Endpoints-Objekte nicht an. Gescrapt wird direkt am ClusterIP, nicht ueber
+# Traefik, damit der Weg keinen Ingress und kein Cert braucht.
+#
+# ACHTUNG Token: HA hat ip_ban_enabled mit login_attempts_threshold 5. Ein
+# falscher oder abgelaufener Token sperrt nach fuenf Scrapes die Pod-IP von
+# Prometheus aus, und der Bann ueberlebt in /config/ip_bans.yaml den Neustart.
+# Nach einem Token-Tausch also den ersten Scrape kontrollieren, nicht blind
+# committen.
+apiVersion: monitoring.coreos.com/v1alpha1
+kind: ScrapeConfig
+metadata:
+  name: home-assistant
+  namespace: monitoring
+  labels:
+    release: kube-prometheus-stack
+spec:
+  scheme: HTTP
+  metricsPath: /api/prometheus
+  # Das Secret muss im Namespace von Prometheus liegen, nicht bei HA.
+  authorization:
+    type: Bearer
+    credentials:
+      name: home-assistant-prometheus-token
+      key: token
+  staticConfigs:
+    - targets:
+        - home-assistant.home-assistant.svc.cluster.local:8123
+  relabelings:
+    - targetLabel: job
+      replacement: home-assistant
+      action: replace

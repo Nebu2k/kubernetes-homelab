@@ -1,0 +1,17 @@
+# Long-Lived Access Token aus Home Assistant.
+# Anlegen in HA: Profil -> Sicherheit -> Langlebige Zugriffstokens -> Token erstellen.
+# Der Token wird genau einmal angezeigt und ist unbegrenzt gueltig, bis man ihn
+# in derselben Ansicht widerruft.
+#
+# kubeseal --format=yaml --controller-namespace=kube-system \
+#   < manifests/kube-prometheus-stack/home-assistant-token-unsealed.yaml \
+#   > manifests/kube-prometheus-stack/home-assistant-token-sealed.yaml
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: home-assistant-prometheus-token
+  namespace: monitoring
+type: Opaque
+stringData:
+  token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...."

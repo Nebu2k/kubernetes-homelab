@@ -79,6 +79,7 @@ homelab/
     │   ├── kustomization.yaml
     │   ├── s3-backup-monitor-credentials-sealed.yaml
     │   └── s3-backup-monitor-credentials-unsealed.yaml.example
+    ├── beszel/
     ├── cert-manager/
     │   ├── cloudflare-api-token-sealed.yaml
     │   ├── cloudflare-api-token-unsealed.yaml.example
@@ -173,6 +174,9 @@ homelab/
     │   ├── grafana-admin-sealed.yaml
     │   ├── grafana-admin-unsealed.yaml.example
     │   ├── grafana-ingress.yaml
+    │   ├── home-assistant-scrapeconfig.yaml
+    │   ├── home-assistant-token-sealed.yaml
+    │   ├── home-assistant-token-unsealed.yaml.example
     │   ├── kustomization.yaml
     │   ├── node-exporter-external-scrapeconfig.yaml
     │   ├── prometheus-ingress.yaml
@@ -579,6 +583,8 @@ cd kubernetes-homelab
       manifests/kube-prometheus-stack/aws-credentials-unsealed.yaml
    cp manifests/kube-prometheus-stack/grafana-admin-unsealed.yaml.example \
       manifests/kube-prometheus-stack/grafana-admin-unsealed.yaml
+   cp manifests/kube-prometheus-stack/home-assistant-token-unsealed.yaml.example \
+      manifests/kube-prometheus-stack/home-assistant-token-unsealed.yaml
    cp manifests/longhorn/nas-cifs-secret-unsealed.yaml.example \
       manifests/longhorn/nas-cifs-secret-unsealed.yaml
    cp manifests/paperless-ngx/paperless-secrets-unsealed.yaml.example \
@@ -684,42 +690,47 @@ kubeseal --format=yaml --controller-namespace=kube-system \
   < manifests/kube-prometheus-stack/grafana-admin-unsealed.yaml \
   > manifests/kube-prometheus-stack/grafana-admin-sealed.yaml
 
-# 8. longhorn: nas cifs secret
+# 8. kube-prometheus-stack: home assistant token
+kubeseal --format=yaml --controller-namespace=kube-system \
+  < manifests/kube-prometheus-stack/home-assistant-token-unsealed.yaml \
+  > manifests/kube-prometheus-stack/home-assistant-token-sealed.yaml
+
+# 9. longhorn: nas cifs secret
 kubeseal --format=yaml --controller-namespace=kube-system \
   < manifests/longhorn/nas-cifs-secret-unsealed.yaml \
   > manifests/longhorn/nas-cifs-secret-sealed.yaml
 
-# 9. paperless-ngx: paperless secrets
+# 10. paperless-ngx: paperless secrets
 kubeseal --format=yaml --controller-namespace=kube-system \
   < manifests/paperless-ngx/paperless-secrets-unsealed.yaml \
   > manifests/paperless-ngx/paperless-secrets-sealed.yaml
 
-# 10. paperless-ngx: s3 backup credentials
+# 11. paperless-ngx: s3 backup credentials
 kubeseal --format=yaml --controller-namespace=kube-system \
   < manifests/paperless-ngx/s3-backup-credentials-unsealed.yaml \
   > manifests/paperless-ngx/s3-backup-credentials-sealed.yaml
 
-# 11. paperless-ngx: smb credentials
+# 12. paperless-ngx: smb credentials
 kubeseal --format=yaml --controller-namespace=kube-system \
   < manifests/paperless-ngx/smb-credentials-unsealed.yaml \
   > manifests/paperless-ngx/smb-credentials-sealed.yaml
 
-# 12. proxmox-exporter: pve api credentials
+# 13. proxmox-exporter: pve api credentials
 kubeseal --format=yaml --controller-namespace=kube-system \
   < manifests/proxmox-exporter/pve-api-credentials-unsealed.yaml \
   > manifests/proxmox-exporter/pve-api-credentials-sealed.yaml
 
-# 13. teslamate: s3 backup credentials
+# 14. teslamate: s3 backup credentials
 kubeseal --format=yaml --controller-namespace=kube-system \
   < manifests/teslamate/s3-backup-credentials-unsealed.yaml \
   > manifests/teslamate/s3-backup-credentials-sealed.yaml
 
-# 14. teslamate: teslamate secret
+# 15. teslamate: teslamate secret
 kubeseal --format=yaml --controller-namespace=kube-system \
   < manifests/teslamate/teslamate-secret-unsealed.yaml \
   > manifests/teslamate/teslamate-secret-sealed.yaml
 
-# 15. unifi-poller: unifi config
+# 16. unifi-poller: unifi config
 kubeseal --format=yaml --controller-namespace=kube-system \
   < manifests/unifi-poller/unifi-config-unsealed.yaml \
   > manifests/unifi-poller/unifi-config-sealed.yaml

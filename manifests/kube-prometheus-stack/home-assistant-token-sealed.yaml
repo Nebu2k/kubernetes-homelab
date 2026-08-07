@@ -1,0 +1,14 @@
+---
+apiVersion: bitnami.com/v1alpha1
+kind: SealedSecret
+metadata:
+  name: home-assistant-prometheus-token
+  namespace: monitoring
+spec:
+  encryptedData:
+    token: AgCWqJMfmUyhVPWvGiexxPL5Eq5JJYI1JEch2rod4o2ynkP0AQ8r0krzllDYduJaKtGC7hHN8qErh9dEuhxTYJ3gKzg40FlWTarNOd8Bl7YzhCmfkcc8LDuINWBMb869jXKiljGjRnoCxDmE0d/A8PYokBB+ONm3+phNwWGJdvym5iSq83Bjmp4x5G2b2x0M0Y1YXQeQL8WSi/tbBEW2Dpli3nNl5pijF5Yd2DeItgc5GKA9PNSopXkT35dZWD6Q1iH9FgRFT+BhMTOhvbpzTvM08dDhEyVGkUj+ip2lxA/riXTh2L7n6p8JFoRo1ujPuN3PJbiT0dm5NIBYY15i5jwyCDTDkmP9YfCxlsnIirJajJMXBzUi0fQBp71Rgb7p+miyUlRatO97iN2x4GQwm7U4iBM0g6XPJXQJ8ouBoM7ih0jhBq5G9srinyTaHBMiWDfUcnWOvhT17ylIdCqTKuKPujQzLCepeYZQEWxDSaBRMeyl3AYGAGmgCLueTHx15bCaMX1V9wVQ8vAYIdV2XcEYWuxKiWZz+yUQZ3OzlFq6pQmonLvHJTtoAR9ow8v3MyaBv9GSqV810TUZU0B7+px8UI0F1XWZRMPFAbMnOh4FP/7fmCQAd7ejsGkyhYs+2Rg0QKJx0GrwhwIVdBFb106P9SOHiLyqLZktdM9WtSpHMXt+lroPGySCyApwU2KhCQxiRxSYjTw+ZKpJezom+hYclFfDv8B0uT4iDcJKjbD1e5vLjxJ9Nn6mVM2Hh3YL7LFH6+1W/B293ATKadleP3w3eG+UyiwyyZ88r4GhoeTotBGi8o3F+92N/y4V9K4sW+ijnAR41NkgIJ+MRI8IiVqvTGQlj+NH83SBp/eDativ0ddBVPYk8IevxLqJ4iCagl73Fta0tHHkF1JbRm0Jgf/E3PP35PF+8TyNBnRF9JdewcLym0SKDNM=
+  template:
+    metadata:
+      name: home-assistant-prometheus-token
+      namespace: monitoring
+    type: Opaque
