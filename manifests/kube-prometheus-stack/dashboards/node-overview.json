@@ -370,6 +370,137 @@
         "legend": { "displayMode": "table", "placement": "right", "calcs": ["mean", "max"], "showLegend": true },
         "tooltip": { "mode": "multi", "sort": "desc" }
       }
+    },
+    {
+      "id": 8,
+      "type": "row",
+      "title": "Stromverbrauch",
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 33 },
+      "panels": []
+    },
+    {
+      "id": 9,
+      "type": "stat",
+      "title": "Rack jetzt",
+      "description": "Ecoflow Delta 3 am Rack, ueber Home Assistant. Das ist der einzige Wert, der den ganzen Verbrauch erfasst: RAPL und PPT sehen nur das CPU-Package, die Raspis und die VMs melden gar nichts.",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 6, "w": 5, "x": 0, "y": 34 },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "hass_sensor_power_w{job=\"home-assistant\",entity=\"sensor.delta_3_total_out_power\"}",
+          "legendFormat": "Rack",
+          "instant": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "watt",
+          "decimals": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 200 },
+              { "color": "red", "value": 350 }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "colorMode": "value",
+        "graphMode": "area",
+        "textMode": "auto"
+      }
+    },
+    {
+      "id": 10,
+      "type": "timeseries",
+      "title": "Rack: Ein, Aus und Solar",
+      "description": "Differenz zwischen AC-In und Total-Out ist Lade- bzw. Entladeleistung der Ecoflow. Im TOU-Modus laeuft das absichtlich auseinander.",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 6, "w": 10, "x": 5, "y": 34 },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "hass_sensor_power_w{job=\"home-assistant\",entity=\"sensor.delta_3_total_out_power\"}",
+          "legendFormat": "Verbrauch"
+        },
+        {
+          "refId": "B",
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "hass_sensor_power_w{job=\"home-assistant\",entity=\"sensor.delta_3_ac_in_power\"}",
+          "legendFormat": "Netzbezug"
+        },
+        {
+          "refId": "C",
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "hass_sensor_power_w{job=\"home-assistant\",entity=\"sensor.delta_3_solar_in_power\"}",
+          "legendFormat": "Solar"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "watt",
+          "min": 0,
+          "custom": { "drawStyle": "line", "lineWidth": 1, "fillOpacity": 10, "showPoints": "never" }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": { "displayMode": "table", "placement": "right", "calcs": ["mean", "max"], "showLegend": true },
+        "tooltip": { "mode": "multi", "sort": "desc" }
+      }
+    },
+    {
+      "id": 11,
+      "type": "timeseries",
+      "title": "Haus gesamt (Tibber Pulse)",
+      "description": "Ost- und Westfluegel getrennt gemessen, dazu die Summe. Zum Einordnen: das Rack steckt hier mit drin.",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 6, "w": 9, "x": 15, "y": 34 },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "hass_sensor_power_w{job=\"home-assistant\",entity=\"sensor.tibber_pulse_ostflugel_power\"}",
+          "legendFormat": "Ostflügel"
+        },
+        {
+          "refId": "B",
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "hass_sensor_power_w{job=\"home-assistant\",entity=\"sensor.tibber_pulse_westflugel_power\"}",
+          "legendFormat": "Westflügel"
+        },
+        {
+          "refId": "C",
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "sum(hass_sensor_power_w{job=\"home-assistant\",entity=~\"sensor.tibber_pulse_(ost|west)flugel_power\"})",
+          "legendFormat": "Summe"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "watt",
+          "min": 0,
+          "custom": { "drawStyle": "line", "lineWidth": 1, "fillOpacity": 0, "showPoints": "never" }
+        },
+        "overrides": [
+          {
+            "matcher": { "id": "byName", "options": "Summe" },
+            "properties": [{ "id": "custom.lineWidth", "value": 2 }]
+          }
+        ]
+      },
+      "options": {
+        "legend": { "displayMode": "table", "placement": "right", "calcs": ["mean", "max"], "showLegend": true },
+        "tooltip": { "mode": "multi", "sort": "desc" }
+      }
     }
   ]
 }
