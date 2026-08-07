@@ -1,3 +1,10 @@
+# [4.63.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.62.0...v4.63.0) (2026-08-07)
+
+
+### Features
+
+* **monitoring:** etcd-Metriken und -Alerts scharfschalten ([01cc387](https://github.com/Nebu2k/kubernetes-homelab/commit/01cc387ba02552dc5eb948a95902d9c113847719))
+
 # [4.62.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.61.1...v4.62.0) (2026-08-07)
 
 
