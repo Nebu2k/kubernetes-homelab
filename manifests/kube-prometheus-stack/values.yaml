@@ -33,7 +33,7 @@ defaultRules:
   create: true
   rules:
     alertmanager: true
-    etcd: false  # K3s uses embedded SQLite by default
+    etcd: true
     kubeScheduler: false  # K3s scheduler metrics not exposed
     kubeControllerManager: false  # K3s controller metrics not exposed
     kubeProxy: false  # K3s uses kube-router instead of kube-proxy
@@ -45,8 +45,30 @@ kubeControllerManager:
   enabled: false
 kubeProxy:
   enabled: false
+# etcd laeuft hier sehr wohl: drei Member auf cp-1, raspi4 und raspi5.
+# (Die frueheren "K3s uses embedded SQLite"-Kommentare an dieser Stelle und bei
+# defaultRules waren schlicht falsch, das Cluster wurde mit --cluster-init
+# aufgesetzt.)
+#
+# k3s serviert die etcd-Metriken auf Port 2381 im Klartext, ohne Client-Zerts.
+# Die Chart-Defaults passen deshalb schon (port/targetPort 2381, scheme http),
+# noetig sind nur enabled und die Endpoints.
+#
+# Ohne endpoints wuerde der Chart einen Selector-Service auf `component: etcd`
+# bauen. Den gibt es bei k3s nicht, etcd laeuft im k3s-Prozess und nicht als Pod.
+# Mit endpoints legt der Chart stattdessen ein Endpoints-Objekt mit genau diesen
+# IPs an, das der endpointslice-mirroring-Controller in eine EndpointSlice
+# spiegelt (noetig, weil Prometheus hier mit discoveryRole: endpointslice laeuft).
+#
+# Voraussetzung auf den Nodes: --etcd-expose-metrics=true in der k3s.service,
+# sonst bindet 2381 nur auf 127.0.0.1. Gesetzt am 2026-08-07 auf allen drei
+# Servern, siehe README.
 kubeEtcd:
-  enabled: false
+  enabled: true
+  endpoints:
+    - 192.168.2.19  # k3s-cp-1
+    - 192.168.2.2   # raspi4
+    - 192.168.2.9   # raspi5
 
 # Prometheus configuration
 prometheus:

@@ -49,6 +49,7 @@ curl -sfL https://get.k3s.io | INSTALL_K3S_CHANNEL=stable sh -s - server \
   --tls-san 192.168.2.2 \
   --disable traefik \
   --disable servicelb \
+  --etcd-expose-metrics=true \
   --write-kubeconfig-mode 644 \
   --node-ip 192.168.2.2
 
@@ -63,6 +64,8 @@ The LAN carries three global SLAAC prefixes (ISP GUA `2a00:1e:7c40:f100::/64`, t
 Do not disable the auto-ULA in UniFi to work around this: LAN clients need it to reach IPv6 targets.
 
 `--disable servicelb` is required as well, otherwise K3s' built-in ServiceLB fights MetalLB over LoadBalancer services.
+
+`--etcd-expose-metrics=true` is what makes etcd observable at all. K3s serves the etcd metrics on port 2381 in plaintext without client certs, but binds them to `127.0.0.1` unless this flag is set, so Prometheus cannot reach them from a pod. Server nodes only, and it is the precondition for `kubeEtcd` in the kube-prometheus-stack values.
 
 ℹ️ **After installation these flags live only in `/etc/systemd/system/k3s.service`** (`k3s-agent.service` on workers), as quoted arguments in `ExecStart`. There is no `/etc/rancher/k3s/config.yaml`. Changing them later means editing the unit per node, `systemctl daemon-reload && systemctl restart k3s`, and verifying with `kubectl get nodes` plus `kubectl get --raw='/readyz?verbose'` before touching the next one, so etcd quorum never drops below 2 of 3. Keep this section in sync when you do, it is the only place the flags are tracked in git.
 
@@ -146,6 +149,7 @@ curl -sfL https://get.k3s.io | INSTALL_K3S_CHANNEL=stable sh -s - server \
   --tls-san 192.168.2.9 \
   --disable traefik \
   --disable servicelb \
+  --etcd-expose-metrics=true \
   --write-kubeconfig-mode 644 \
   --node-ip 192.168.2.9
 ```
