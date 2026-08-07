@@ -1,3 +1,10 @@
+# [4.70.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.69.0...v4.70.0) (2026-08-07)
+
+
+### Features
+
+* **monitoring:** eigene Dashboards fuer Traefik, Backups, Proxmox und Gatus ([10376ca](https://github.com/Nebu2k/kubernetes-homelab/commit/10376cacdb2debb8bf1c90ebdaa714b85757fe28))
+
 # [4.69.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.68.0...v4.69.0) (2026-08-07)
 
 
