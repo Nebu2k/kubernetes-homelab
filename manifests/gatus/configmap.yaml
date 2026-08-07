@@ -117,6 +117,13 @@ data:
         conditions:
           - "[STATUS] == 200"
 
+      - name: Mealie
+        group: Cluster
+        url: "https://mealie.elmstreet79.de/api/app/about"
+        interval: 60s
+        conditions:
+          - "[STATUS] == 200"
+
       - name: TeslaMate
         group: Cluster
         url: "https://teslamate.elmstreet79.de/api/health"

@@ -25,6 +25,7 @@ resources:
   - landing-page.yaml
   - fr24.yaml
   - paperless-ngx.yaml
+  - mealie.yaml
   - ripe-atlas.yaml
   - backup-monitor.yaml
 
