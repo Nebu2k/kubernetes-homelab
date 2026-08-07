@@ -1,3 +1,10 @@
+# [4.64.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.63.1...v4.64.0) (2026-08-07)
+
+
+### Features
+
+* **monitoring:** eigene etcd-Alerts fuer fsync und fehlende Metriken ([b1177fd](https://github.com/Nebu2k/kubernetes-homelab/commit/b1177fd2c7d5c7a7b156f877c44e87a5822bb06f))
+
 ## [4.63.1](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.63.0...v4.63.1) (2026-08-07)
 
 
