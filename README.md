@@ -183,6 +183,7 @@ homelab/
     │   ├── alertmanager-ingress.yaml
     │   ├── aws-credentials-sealed.yaml
     │   ├── aws-credentials-unsealed.yaml.example
+    │   ├── etcd-scrapeconfig.yaml
     │   ├── grafana-admin-sealed.yaml
     │   ├── grafana-admin-unsealed.yaml.example
     │   ├── grafana-ingress.yaml

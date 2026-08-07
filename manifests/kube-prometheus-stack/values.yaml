@@ -46,29 +46,29 @@ kubeControllerManager:
 kubeProxy:
   enabled: false
 # etcd laeuft hier sehr wohl: drei Member auf cp-1, raspi4 und raspi5.
-# (Die frueheren "K3s uses embedded SQLite"-Kommentare an dieser Stelle und bei
-# defaultRules waren schlicht falsch, das Cluster wurde mit --cluster-init
+# (Der fruehere Kommentar "K3s uses embedded SQLite by default" an dieser Stelle
+# und bei defaultRules war schlicht falsch, das Cluster wurde mit --cluster-init
 # aufgesetzt.)
 #
-# k3s serviert die etcd-Metriken auf Port 2381 im Klartext, ohne Client-Zerts.
-# Die Chart-Defaults passen deshalb schon (port/targetPort 2381, scheme http),
-# noetig sind nur enabled und die Endpoints.
+# enabled: true schaltet hier nur die Alert-Regeln und das etcd-Dashboard frei.
+# Gescrapt wird NICHT ueber den Chart, sondern ueber etcd-scrapeconfig.yaml.
 #
-# Ohne endpoints wuerde der Chart einen Selector-Service auf `component: etcd`
-# bauen. Den gibt es bei k3s nicht, etcd laeuft im k3s-Prozess und nicht als Pod.
-# Mit endpoints legt der Chart stattdessen ein Endpoints-Objekt mit genau diesen
-# IPs an, das der endpointslice-mirroring-Controller in eine EndpointSlice
-# spiegelt (noetig, weil Prometheus hier mit discoveryRole: endpointslice laeuft).
+# Grund: der Chart-Weg fuer externe etcd-Member ist `endpoints:`, und daraus
+# entsteht ein Endpoints-Objekt. ArgoCD hat `Endpoints` und `EndpointSlice`
+# global in `resource.exclusions` (argocd-cm) und wendet sie deshalb nie an. Der
+# Service kam am 2026-08-07 sauber im Cluster an, das Endpoints-Objekt lautlos
+# nicht: ein Ziel, das nie erscheint, und keine Fehlermeldung dazu. Service und
+# ServiceMonitor bleiben darum aus, sonst stehen sie leer herum.
 #
 # Voraussetzung auf den Nodes: --etcd-expose-metrics=true in der k3s.service,
-# sonst bindet 2381 nur auf 127.0.0.1. Gesetzt am 2026-08-07 auf allen drei
+# sonst bindet Port 2381 nur auf 127.0.0.1. Gesetzt am 2026-08-07 auf allen drei
 # Servern, siehe README.
 kubeEtcd:
   enabled: true
-  endpoints:
-    - 192.168.2.19  # k3s-cp-1
-    - 192.168.2.2   # raspi4
-    - 192.168.2.9   # raspi5
+  service:
+    enabled: false
+  serviceMonitor:
+    enabled: false
 
 # Prometheus configuration
 prometheus:

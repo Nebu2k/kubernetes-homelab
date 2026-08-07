@@ -8,5 +8,6 @@ resources:
   - prometheus-ingress.yaml
   - alertmanager-ingress.yaml
   - prometheus-rules.yaml
+  - etcd-scrapeconfig.yaml
   - aws-credentials-sealed.yaml
   - grafana-admin-sealed.yaml

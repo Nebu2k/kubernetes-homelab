@@ -1,0 +1,40 @@
+# etcd-Metriken der drei k3s-Server.
+#
+# Statische Targets statt ServiceMonitor, weil etcd hier kein Pod ist: es laeuft
+# im k3s-Prozess auf dem Node und hat weder Service noch Endpoints. Der Weg des
+# Charts (kubeEtcd.endpoints) scheidet aus, ArgoCD wendet Endpoints-Objekte
+# grundsaetzlich nicht an (Begruendung in values.yaml).
+#
+# Port 2381 ist unverschluesselt und ohne Client-Zert, aber nur im LAN erreichbar
+# und erst, seit --etcd-expose-metrics=true in der k3s.service steht.
+#
+# Das Job-Label muss `.*etcd.*` erfuellen, sonst greifen weder die etcd-Regeln
+# aus defaultRules noch das etcd-Dashboard. Ohne relabeling hiesse der Job
+# "scrapeConfig/monitoring/etcd", das passt zwar, liest sich aber schlecht.
+apiVersion: monitoring.coreos.com/v1alpha1
+kind: ScrapeConfig
+metadata:
+  name: etcd
+  namespace: monitoring
+  labels:
+    release: kube-prometheus-stack
+spec:
+  scheme: HTTP
+  metricsPath: /metrics
+  staticConfigs:
+    - targets:
+        - 192.168.2.19:2381
+      labels:
+        node: k3s-cp-1
+    - targets:
+        - 192.168.2.2:2381
+      labels:
+        node: raspi4
+    - targets:
+        - 192.168.2.9:2381
+      labels:
+        node: raspi5
+  relabelings:
+    - targetLabel: job
+      replacement: etcd
+      action: replace
