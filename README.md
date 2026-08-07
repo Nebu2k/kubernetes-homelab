@@ -80,6 +80,7 @@ homelab/
     │   ├── kustomization.yaml
     │   ├── s3-backup-monitor-credentials-sealed.yaml
     │   └── s3-backup-monitor-credentials-unsealed.yaml.example
+    ├── beszel/
     ├── cert-manager/
     │   ├── cloudflare-api-token-sealed.yaml
     │   ├── cloudflare-api-token-unsealed.yaml.example

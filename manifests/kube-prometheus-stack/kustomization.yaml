@@ -32,3 +32,31 @@ configMapGenerator:
       disableNameSuffixHash: true
       labels:
         grafana_dashboard: "1"
+  - name: grafana-dashboard-traefik-overview
+    files:
+      - traefik-overview.json=dashboards/traefik-overview.json
+    options:
+      disableNameSuffixHash: true
+      labels:
+        grafana_dashboard: "1"
+  - name: grafana-dashboard-backup-overview
+    files:
+      - backup-overview.json=dashboards/backup-overview.json
+    options:
+      disableNameSuffixHash: true
+      labels:
+        grafana_dashboard: "1"
+  - name: grafana-dashboard-proxmox-overview
+    files:
+      - proxmox-overview.json=dashboards/proxmox-overview.json
+    options:
+      disableNameSuffixHash: true
+      labels:
+        grafana_dashboard: "1"
+  - name: grafana-dashboard-verfuegbarkeit
+    files:
+      - verfuegbarkeit.json=dashboards/verfuegbarkeit.json
+    options:
+      disableNameSuffixHash: true
+      labels:
+        grafana_dashboard: "1"

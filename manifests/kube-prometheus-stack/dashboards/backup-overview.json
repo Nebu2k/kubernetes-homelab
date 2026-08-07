@@ -1,0 +1,593 @@
+{
+  "title": "Backups (Longhorn und Offsite)",
+  "uid": "homelab-backups",
+  "description": "Die Sicht auf beide Backup-Wege: Longhorn per CIFS aufs UniFi-NAS (//192.168.2.6/longhorn_backup) und die Offsite-Kopien in S3. Bisher war die Frage, ob die Backups frisch sind, nur ueber den Alertmanager beantwortbar. Die Schwellen der Panels sind absichtlich dieselben wie in den Alertregeln (Gruppen longhorn-backup und offsite-backup-jobs), damit gelb hier und ein Alert dort dasselbe bedeuten.",
+  "tags": ["homelab", "backup", "longhorn"],
+  "timezone": "browser",
+  "schemaVersion": 39,
+  "editable": true,
+  "refresh": "1m",
+  "time": { "from": "now-7d", "to": "now" },
+  "templating": { "list": [] },
+  "annotations": { "list": [] },
+  "panels": [
+    {
+      "id": 1,
+      "type": "stat",
+      "title": "Volumes mit Backup",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 4, "w": 5, "x": 0, "y": 0 },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "count(max by (volume) (longhorn_volume_last_backup_at > 0))",
+          "instant": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": { "unit": "short", "decimals": 0, "color": { "mode": "fixed", "fixedColor": "text" } },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "colorMode": "none",
+        "graphMode": "none",
+        "textMode": "auto"
+      }
+    },
+    {
+      "id": 2,
+      "type": "stat",
+      "title": "Volumes ohne Backup",
+      "description": "Volumes, die noch nie gesichert wurden. Das Prometheus-Volume steht bewusst dabei. Ein frisch deployter Dienst landet hier ebenfalls, solange er nicht in den Longhorn-Backup-Gruppen steht, und genau diesen Fall kann LonghornBackupStale konstruktionsbedingt nicht sehen: der Alert filtert auf last_backup_at > 0. Dieses Panel ist die Gegenprobe dazu.",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 4, "w": 5, "x": 5, "y": 0 },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "count(max by (volume) (longhorn_volume_last_backup_at) == 0) or vector(0)",
+          "instant": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "decimals": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 1 }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "colorMode": "value",
+        "graphMode": "none",
+        "textMode": "auto"
+      }
+    },
+    {
+      "id": 3,
+      "type": "stat",
+      "title": "Ältestes Backup",
+      "description": "Alter des aeltesten letzten Backups ueber alle gesicherten Volumes. Rot ab 36h, das ist die Schwelle von LonghornBackupStale.",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 4, "w": 4, "x": 10, "y": 0 },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "max(time() - (longhorn_volume_last_backup_at > 0))",
+          "instant": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "decimals": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 86400 },
+              { "color": "red", "value": 129600 }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "colorMode": "value",
+        "graphMode": "none",
+        "textMode": "auto"
+      }
+    },
+    {
+      "id": 4,
+      "type": "stat",
+      "title": "Belegung Backup-Ziel",
+      "description": "Summe der Backup-Groessen als Naeherung nach unten: der Share auf dem UniFi-NAS hat keinen eigenen Exporter, und Longhorn dedupliziert Bloecke. Gelb ab 240 GiB (80% der 300 GB), rot ab 270 GiB. Longhorn raeumt bei vollem Share NICHT selbst auf, die Backups scheitern dann einfach.",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 4, "w": 5, "x": 14, "y": 0 },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "sum(longhorn_backup_actual_size_bytes)",
+          "instant": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bytes",
+          "decimals": 1,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 257698037760 },
+              { "color": "red", "value": 289910292480 }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "colorMode": "value",
+        "graphMode": "area",
+        "textMode": "auto"
+      }
+    },
+    {
+      "id": 5,
+      "type": "stat",
+      "title": "Backups im Fehlerzustand",
+      "description": "longhorn_backup_state == 4 (Error). Die Zustaende sind 0=New, 1=Pending, 2=InProgress, 3=Completed, 4=Error, 5=Unknown.",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 4, "w": 5, "x": 19, "y": 0 },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "count(longhorn_backup_state == 4) or vector(0)",
+          "instant": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "decimals": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "red", "value": 1 }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "colorMode": "value",
+        "graphMode": "none",
+        "textMode": "auto"
+      }
+    },
+    {
+      "id": 6,
+      "type": "row",
+      "title": "Longhorn (CIFS aufs NAS)",
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 4 },
+      "panels": []
+    },
+    {
+      "id": 7,
+      "type": "table",
+      "title": "Volumes",
+      "description": "Ein Eintrag pro Longhorn-Volume. Die Zahl der Backups je Volume ist die Retention in der Praxis: Longhorn haelt sie ueber retain im RecurringJob, nicht ueber die Groesse. Volumes mit Alter -, Anzahl - und Groesse - sind nie gesichert worden.",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 11, "w": 24, "x": 0, "y": 5 },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "max by (volume, pvc, pvc_namespace) (longhorn_volume_last_backup_at)",
+          "format": "table",
+          "instant": true
+        },
+        {
+          "refId": "B",
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "time() - max by (volume) (longhorn_volume_last_backup_at > 0)",
+          "format": "table",
+          "instant": true
+        },
+        {
+          "refId": "C",
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "count by (volume) (longhorn_backup_state)",
+          "format": "table",
+          "instant": true
+        },
+        {
+          "refId": "D",
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "sum by (volume) (longhorn_backup_actual_size_bytes)",
+          "format": "table",
+          "instant": true
+        },
+        {
+          "refId": "E",
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "max by (volume) (longhorn_volume_capacity_bytes)",
+          "format": "table",
+          "instant": true
+        }
+      ],
+      "transformations": [
+        { "id": "joinByField", "options": { "byField": "volume", "mode": "outer" } },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true,
+              "Time 1": true,
+              "Time 2": true,
+              "Time 3": true,
+              "Time 4": true,
+              "Time 5": true,
+              "Value #A": true,
+              "volume": true
+            },
+            "renameByName": {
+              "pvc_namespace": "Namespace",
+              "pvc": "PVC",
+              "Value #B": "Letztes Backup",
+              "Value #C": "Anzahl",
+              "Value #D": "Backups gesamt",
+              "Value #E": "Kapazität"
+            },
+            "indexByName": {
+              "pvc_namespace": 0,
+              "pvc": 1,
+              "Value #B": 2,
+              "Value #C": 3,
+              "Value #D": 4,
+              "Value #E": 5
+            }
+          }
+        },
+        { "id": "sortBy", "options": { "fields": {}, "sort": [{ "field": "Letztes Backup", "desc": true }] } }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": { "align": "auto", "cellOptions": { "type": "auto" } },
+          "unit": "none",
+          "decimals": 0
+        },
+        "overrides": [
+          {
+            "matcher": { "id": "byName", "options": "Letztes Backup" },
+            "properties": [
+              { "id": "unit", "value": "s" },
+              { "id": "custom.cellOptions", "value": { "type": "color-text" } },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    { "color": "green", "value": null },
+                    { "color": "yellow", "value": 86400 },
+                    { "color": "red", "value": 129600 }
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "matcher": { "id": "byRegexp", "options": "Backups gesamt|Kapazität" },
+            "properties": [
+              { "id": "unit", "value": "bytes" },
+              { "id": "decimals", "value": 1 }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "showHeader": true,
+        "footer": { "show": true, "reducer": ["sum"], "countRows": false, "fields": ["Backups gesamt"] }
+      }
+    },
+    {
+      "id": 8,
+      "type": "timeseries",
+      "title": "Belegung des Backup-Ziels",
+      "description": "Die rote Linie ist die Alert-Schwelle von LonghornBackupStoreSpaceWarning (240 GiB).",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 16 },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "sum(longhorn_backup_actual_size_bytes)",
+          "legendFormat": "belegt"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bytes",
+          "min": 0,
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "showPoints": "never",
+            "thresholdsStyle": { "mode": "line" }
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "red", "value": 257698037760 }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": { "displayMode": "list", "placement": "bottom", "showLegend": true },
+        "tooltip": { "mode": "single", "sort": "none" }
+      }
+    },
+    {
+      "id": 9,
+      "type": "timeseries",
+      "title": "Backup-Alter pro Volume",
+      "description": "Saegezahn nach unten bei jedem erfolgreichen Backup (backup-daily laeuft 02:00). Eine Linie, die einfach weiterlaeuft, ist das Bild, das LonghornBackupStale nach 36h meldet. Die rote Linie ist diese Schwelle.",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 16 },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "time() - max by (pvc, pvc_namespace) (longhorn_volume_last_backup_at > 0)",
+          "legendFormat": "{{pvc_namespace}}/{{pvc}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "min": 0,
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 1,
+            "fillOpacity": 0,
+            "showPoints": "never",
+            "thresholdsStyle": { "mode": "line" }
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "red", "value": 129600 }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": { "displayMode": "table", "placement": "right", "calcs": ["max"], "showLegend": true },
+        "tooltip": { "mode": "multi", "sort": "desc" }
+      }
+    },
+    {
+      "id": 10,
+      "type": "row",
+      "title": "Offsite (S3)",
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 24 },
+      "panels": []
+    },
+    {
+      "id": 11,
+      "type": "stat",
+      "title": "TeslaMate-DB (täglich)",
+      "description": "Alter des letzten erfolgreichen teslamate-db-backup-Jobs. Schwellen wie TeslaMateBackupJobStale (36h). Das ist die EINZIGE Offsite-Kopie der Fahrhistorie.",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 6, "w": 6, "x": 0, "y": 25 },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "time() - max(kube_job_status_completion_time{namespace=\"teslamate\", job_name=~\"teslamate-db-backup.*\"})",
+          "instant": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "decimals": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 86400 },
+              { "color": "red", "value": 129600 }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "colorMode": "value",
+        "graphMode": "none",
+        "textMode": "auto"
+      }
+    },
+    {
+      "id": 12,
+      "type": "stat",
+      "title": "HA-Archiv (monatlich)",
+      "description": "Alter des letzten erfolgreichen ha-backup-archive-Jobs. Laeuft nur am 1. des Monats, Schwellen wie HomeAssistantArchiveJobStale (35 Tage). Der Job mit der laengsten Blindzeit ueberhaupt, ein Wert von vier Wochen ist hier normal.",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 6, "w": 6, "x": 6, "y": 25 },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "time() - max(kube_job_status_completion_time{namespace=\"home-assistant\", job_name=~\"ha-backup-archive.*\"})",
+          "instant": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "decimals": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 2592000 },
+              { "color": "red", "value": 3024000 }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "colorMode": "value",
+        "graphMode": "none",
+        "textMode": "auto"
+      }
+    },
+    {
+      "id": 13,
+      "type": "stat",
+      "title": "Paperless-Export (täglich)",
+      "description": "Alter des letzten erfolgreichen paperless-backup-trigger-Jobs. Schwellen wie PaperlessExportJobStale (36h). Deckt nur den Export ab, nicht den Upload: den macht ein Sidecar auf eigenem Timer.",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 6, "w": 6, "x": 12, "y": 25 },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "time() - max(kube_job_status_completion_time{namespace=\"paperless-ngx\", job_name=~\"paperless-backup-trigger.*\"})",
+          "instant": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "decimals": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 86400 },
+              { "color": "red", "value": 129600 }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "colorMode": "value",
+        "graphMode": "none",
+        "textMode": "auto"
+      }
+    },
+    {
+      "id": 14,
+      "type": "stat",
+      "title": "Freshness-Check (täglich)",
+      "description": "Alter des letzten erfolgreichen offsite-backup-freshness-Jobs. Schwellen wie OffsiteBackupNotArriving (48h). Nur dieser Job schaut in die Buckets statt auf Job-Ergebnisse.",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 6, "w": 6, "x": 18, "y": 25 },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "time() - max(kube_job_status_completion_time{namespace=\"monitoring\", job_name=~\"offsite-backup-freshness.*\"})",
+          "instant": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "decimals": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 90000 },
+              { "color": "red", "value": 172800 }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "colorMode": "value",
+        "graphMode": "none",
+        "textMode": "auto"
+      }
+    },
+    {
+      "id": 15,
+      "type": "text",
+      "title": "Was diese vier Werte nicht belegen",
+      "gridPos": { "h": 6, "w": 16, "x": 0, "y": 31 },
+      "options": {
+        "mode": "markdown",
+        "content": "Die vier Stats oben belegen, dass ein **Job gelaufen** ist, nicht dass etwas **in S3 angekommen** ist. Das ist nicht dasselbe:\n\n- **etcd-Snapshots:** k3s laedt sie auf eigenem Timer direkt hoch, ohne Job und ohne Metrik im Cluster. Hier gibt es dafuer kein Panel.\n- **Paperless:** der Upload laeuft im Sidecar auf eigenem Timer, der Job deckt nur den Export ab.\n- **Home Assistant:** fuer das Backup selbst gibt es gar keinen Job, nur fuer das Monatsarchiv.\n\nDen Upload belegt allein der CronJob `offsite-backup-freshness` (taeglich 06:00 UTC, `manifests/backup-monitor/`): er prueft die Bucket-Inhalte und endet mit exit 1, sobald einer der sechs Checks (TeslaMate, Home Assistant, Paperless-Heartbeat, je ein etcd-Server-Node) zu alt ist. Die Einzelalter stehen nur in seinem Log:\n\n```\nkubectl -n monitoring logs job/<letzter offsite-backup-freshness-Job>\n```"
+      }
+    },
+    {
+      "id": 16,
+      "type": "stat",
+      "title": "Freshness-Check: letzter Lauf",
+      "description": "Fehlgeschlagene Jobs bleiben ueber failedJobsHistoryLimit erhalten, deshalb zaehlt nur ein Fehlschlag der letzten 25h. Genau diese Bedingung steckt auch im ersten Zweig von OffsiteBackupNotArriving.",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 6, "w": 8, "x": 16, "y": 31 },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "max(kube_job_status_failed{namespace=\"monitoring\", job_name=~\"offsite-backup-freshness.*\"} > 0 and on(job_name) (time() - kube_job_created{namespace=\"monitoring\", job_name=~\"offsite-backup-freshness.*\"} < 90000)) or vector(0)",
+          "instant": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "decimals": 0,
+          "mappings": [
+            { "type": "value", "options": { "0": { "text": "alle Buckets frisch", "color": "green", "index": 0 } } },
+            { "type": "range", "options": { "from": 1, "to": 100, "result": { "text": "Check fehlgeschlagen", "color": "red", "index": 1 } } }
+          ]
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "colorMode": "background",
+        "graphMode": "none",
+        "textMode": "auto"
+      }
+    }
+  ]
+}

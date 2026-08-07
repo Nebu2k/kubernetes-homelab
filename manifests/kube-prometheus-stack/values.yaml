@@ -207,13 +207,34 @@ grafana:
           path: /var/lib/grafana/dashboards/default
   
   # Additional dashboards
+  #
+  # Fremd-Dashboards von grafana.com. Eigene Dashboards laufen NICHT hier,
+  # sondern als ConfigMap mit dem Label grafana_dashboard=1, siehe
+  # kustomization.yaml und dashboards/.
+  #
+  # Am 2026-08-07 sind drei Eintraege rausgeflogen, weil ihre Queries auf
+  # Metriken zeigen, die dieses Cluster nicht hat. Alle drei liefen still
+  # weiter und zeigten leere Panels statt einer Fehlermeldung:
+  #
+  # - nginx-ingress (9614): 12 von 12 Metriken fehlten. Das Dashboard ist fuer
+  #   den ingress-nginx-Controller, hier laeuft Traefik. Ersetzt durch das
+  #   eigene Board "Traefik (Ingress)".
+  # - kubernetes-cluster (7249, revision 1): kubelet_running_pod_count gibt es
+  #   nicht mehr, und die Panels selektieren auf die cAdvisor-Labels
+  #   container_name und pod_name, die mit k8s 1.16 verschwunden sind. Die
+  #   Chart-eigenen Boards (k8s-resources-*, nodes, namespace-by-pod) deckten
+  #   dasselbe ohnehin besser ab.
+  # - proxmox-prometheus (24550): 28 von 50 Metriken fehlten. Das Dashboard
+  #   erwartet den prometheus-pve-exporter mit SMART- und Disk-Collectors, hier
+  #   laeuft bigtcze/pve-exporter. Ersetzt durch das eigene Board
+  #   "Proxmox (pve)", das nur die vorhandenen Metriken nutzt.
+  #
+  # Vor jedem neuen gnetId-Eintrag lohnt derselbe Test: Dashboard-JSON ziehen,
+  # die Metriknamen aus den Queries gegen /api/v1/label/__name__/values
+  # abgleichen. Ein Dashboard, das nicht passt, sieht sonst genauso aus wie
+  # eines, bei dem gerade nichts passiert.
   dashboards:
     default:
-      # Kubernetes cluster overview
-      kubernetes-cluster:
-        gnetId: 7249
-        revision: 1
-        datasource: Prometheus
       # Node exporter full
       node-exporter:
         gnetId: 1860
@@ -223,11 +244,6 @@ grafana:
       longhorn:
         gnetId: 13032
         revision: 6
-        datasource: Prometheus
-      # NGINX Ingress Controller
-      nginx-ingress:
-        gnetId: 9614
-        revision: 1
         datasource: Prometheus
       # UniFi Poller - Client Insights
       unifi-client-insights:
@@ -258,11 +274,6 @@ grafana:
       unifi-usg:
         gnetId: 11313
         revision: 9
-        datasource: Prometheus
-      # Proxmox via Prometheus
-      proxmox-prometheus:
-        gnetId: 24550
-        revision: 1
         datasource: Prometheus
 
 # Alert Manager
