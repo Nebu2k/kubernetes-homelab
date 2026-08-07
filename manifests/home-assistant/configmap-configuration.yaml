@@ -18,6 +18,29 @@ data:
     
     # Enable discovery for automatic device detection
     default_config:
+
+    # Metriken nach Prometheus (/api/prometheus, Bearer-Token).
+    #
+    # Gefiltert, und zwar bewusst eng: HA haelt 1652 Entities, exportiert wuerde
+    # sonst alles. Das Prometheus-Volume ist ohnehin der groesste Posten im
+    # Cluster und liegt genau deswegen ausserhalb der Backup-Gruppe.
+    #
+    # Drin sind die vier Quellen, die Strom messen und die Prometheus nicht schon
+    # anderweitig kennt:
+    #   delta_3              Ecoflow am Rack, der echte Homelab-Verbrauch
+    #   tibber_pulse         Hausverbrauch Ost- und Westfluegel
+    #   inverter             Hoymiles-PV
+    #   tesla_wall_connector Wallbox
+    # Die PoE-Werte des USW-16 fehlen absichtlich: die liefert unpoller bereits
+    # als unpoller_device_port_poe_watts, ein zweiter Weg waere nur Dopplung.
+    prometheus:
+      namespace: hass
+      filter:
+        include_entity_globs:
+          - sensor.delta_3_*
+          - sensor.tibber_pulse_*
+          - sensor.inverter_*
+          - sensor.tesla_wall_connector_*
     
     # Enable automations UI
     automation: !include automations.yaml

@@ -173,6 +173,8 @@ homelab/
     │   ├── grafana-admin-sealed.yaml
     │   ├── grafana-admin-unsealed.yaml.example
     │   ├── grafana-ingress.yaml
+    │   ├── home-assistant-scrapeconfig.yaml
+    │   ├── home-assistant-token-unsealed.yaml copy.example
     │   ├── kustomization.yaml
     │   ├── node-exporter-external-scrapeconfig.yaml
     │   ├── prometheus-ingress.yaml
