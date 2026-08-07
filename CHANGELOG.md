@@ -1,3 +1,10 @@
+# [4.67.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.66.0...v4.67.0) (2026-08-07)
+
+
+### Features
+
+* **home-assistant:** Prometheus-Endpoint aktivieren ([5de6066](https://github.com/Nebu2k/kubernetes-homelab/commit/5de6066f1d20210913e018e98d6f11981e9a1f00))
+
 # [4.66.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.65.0...v4.66.0) (2026-08-07)
 
 
