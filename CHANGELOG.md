@@ -1,3 +1,10 @@
+# [4.69.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.68.0...v4.69.0) (2026-08-07)
+
+
+### Features
+
+* **mealie:** Rezeptverwaltung deployen ([33aa575](https://github.com/Nebu2k/kubernetes-homelab/commit/33aa5754c3dade11fd0c1294b413b2bf2adcde08))
+
 # [4.68.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.67.0...v4.68.0) (2026-08-07)
 
 
