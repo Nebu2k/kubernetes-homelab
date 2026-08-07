@@ -1,3 +1,10 @@
+## [4.63.1](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.63.0...v4.63.1) (2026-08-07)
+
+
+### Bug Fixes
+
+* **monitoring:** etcd per ScrapeConfig scrapen statt ueber den Chart ([69c5f3d](https://github.com/Nebu2k/kubernetes-homelab/commit/69c5f3d8d16b95f1c61571fa9c464760f47fe1cc))
+
 # [4.63.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.62.0...v4.63.0) (2026-08-07)
 
 
