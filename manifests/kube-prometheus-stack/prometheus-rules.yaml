@@ -671,4 +671,47 @@ spec:
             summary: "cert-manager liefert keine Metriken mehr"
             description: "certmanager_clock_time_seconds fehlt seit >15m, alle cert-manager-Alerts sind damit blind. Deployment cert-manager/cert-manager und den ServiceMonitor cert-manager pruefen."
 
+    # etcd. Die 15 Upstream-Regeln (defaultRules.rules.etcd) decken den Ausfall
+    # ab, hier steht nur, was fuer dieses Cluster zu grob oder gar nicht dabei
+    # ist. Gescrapt wird ueber etcd-scrapeconfig.yaml, Job-Label "etcd".
+    - name: etcd-homelab
+      interval: 60s
+      rules:
+        # Upstream feuert erst ab p99 > 0.5s, kritisch > 1s. Gemessen am
+        # 2026-08-07 im Normalbetrieb: cp-1 ~3.7ms, raspi5 ~5.3ms, raspi4
+        # ~14.5ms. raspi4 schreibt sein etcd auf eine SD-Karte (mmcblk0), liegt
+        # damit eine Groessenordnung ueber den anderen und trotzdem 30-fach
+        # unter der Upstream-Schwelle. Deren Aufgabe ist "etcd steht gleich",
+        # nicht "das Medium wird langsam", und genau das ist hier die
+        # wahrscheinlichere Entwicklung.
+        #
+        # 50ms ist bewusst das Dreifache des heutigen raspi4-Werts: es meldet
+        # eine echte Verschlechterung, nicht die bekannte SD-Karte. Die Regel
+        # gilt fuer alle Member, nicht nur raspi4, sonst ist sie nach dem
+        # naechsten Hardware-Tausch still falsch.
+        - alert: EtcdFsyncSlow
+          expr: |
+            histogram_quantile(0.99, sum by (node, le) (
+              rate(etcd_disk_wal_fsync_duration_seconds_bucket{job="etcd"}[5m])
+            )) > 0.05
+          for: 15m
+          labels:
+            severity: warning
+          annotations:
+            summary: "etcd-fsync auf {{ $labels.node }} ist langsam (p99 {{ $value | humanizeDuration }})"
+            description: "Die WAL-fsync-Dauer liegt ueber 50ms. etcd bestaetigt jeden Write erst nach dem fsync, ein langsames Medium bremst damit den gesamten API-Server. Auf raspi4 ist das Medium eine SD-Karte: steigt der Wert dort dauerhaft, ist sie der naechste Kandidat zum Tausch, entweder gegen SSD-Boot oder per Rollentausch zum Worker."
+
+        # Sicherheitsnetz unter allen etcd-Alerts, gleiche Logik wie bei
+        # cert-manager und unpoller. Faellt die ScrapeConfig weg oder wird
+        # --etcd-expose-metrics auf einer Node beim Neubau vergessen, wird es
+        # sonst einfach still.
+        - alert: EtcdMetricsMissing
+          expr: count(up{job="etcd"} == 1) < 3 or absent(up{job="etcd"})
+          for: 15m
+          labels:
+            severity: warning
+          annotations:
+            summary: "Es liefern nur {{ $value }} von 3 etcd-Membern Metriken"
+            description: "Entweder ist ein Member weg (dann feuert auch etcdMembersDown), oder auf der Node fehlt --etcd-expose-metrics=true in der k3s.service und Port 2381 bindet wieder nur auf 127.0.0.1."
+
 
