@@ -1,3 +1,10 @@
+## [4.70.2](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.70.1...v4.70.2) (2026-08-08)
+
+
+### Bug Fixes
+
+* **landing-page:** Service-Links auf nofollow setzen ([97949b7](https://github.com/Nebu2k/kubernetes-homelab/commit/97949b7a49007ebde2a09fbe6566863f95236c16))
+
 ## [4.70.1](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.70.0...v4.70.1) (2026-08-08)
 
 
