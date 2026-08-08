@@ -48,3 +48,42 @@ patches:
           service:
             annotations:
               metallb.io/loadBalancerIPs: "192.168.2.240"
+          metrics:
+            prometheus:
+              serviceMonitor:
+                enabled: false
+
+  # --- Bis kube-prometheus-stack migriert ist -------------------------------
+  #
+  # Drei Plattform-Apps legen einen ServiceMonitor an. Die CRD dafuer
+  # (monitoring.coreos.com/v1) bringt kube-prometheus-stack mit, und das laeuft
+  # hier noch nicht. ArgoCD scheitert dabei nicht am ServiceMonitor allein: es
+  # bricht die ganze Sync-Operation ab ("failed to discover server resources"),
+  # die App bleibt komplett Missing.
+  #
+  # Bewusst abschalten statt prometheus-operator-crds vorzuziehen: dann gaebe es
+  # zwei Besitzer derselben CRDs, und beim spaeteren Entfernen der CRD-App
+  # wuerde ArgoCDs prune jeden ServiceMonitor im Cluster mitnehmen.
+  #
+  # DIESE DREI PATCHES ENTFERNEN, sobald kube-prometheus-stack in der
+  # resources-Liste oben steht. validate.sh baut das Overlay mit, ein
+  # vergessener Patch faellt beim naechsten Lauf nicht auf: er ist syntaktisch
+  # in Ordnung. Der Hinweis hier ist die einzige Bremse.
+  - target:
+      kind: Application
+      name: sealed-secrets
+    patch: |-
+      - op: replace
+        path: /spec/source/helm/valuesObject/metrics/serviceMonitor/enabled
+        value: false
+
+  - target:
+      kind: Application
+      name: cert-manager
+    patch: |-
+      - op: add
+        path: /spec/sources/0/helm/valuesObject
+        value:
+          prometheus:
+            servicemonitor:
+              enabled: false

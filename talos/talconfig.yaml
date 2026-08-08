@@ -113,6 +113,23 @@ nodes:
           ip: 192.168.2.248
 
 patches:
+  # Rund 20 Manifeste selektieren auf node-role.kubernetes.io/worker, unter
+  # anderem die nodeSelector von MetalLB und cert-manager. Ohne das Label bleibt
+  # die halbe Plattform Pending, und zwar ohne Fehler: der Scheduler sagt nur
+  # "0/3 nodes are available".
+  #
+  # Dass Talos das setzen darf, ist nicht selbstverstaendlich: der Prefix
+  # node-role.kubernetes.io/ ist fuer das kubelet gesperrt (NodeRestriction).
+  # Talos legt Node-Labels aber nicht ueber das kubelet an, sondern ueber einen
+  # eigenen Controller. Am 2026-08-08 auf talos-cp-3 verifiziert.
+  #
+  # Alle drei Nodes bekommen es. "Worker" ist hier ein Label fuer "traegt
+  # Workloads", keine Rolle: alle Nodes des Clusters tun das.
+  - |-
+    machine:
+      nodeLabels:
+        node-role.kubernetes.io/worker: worker
+
   # DNS wie auf den k3s-Nodes: AdGuard-LXC auf pve und die macmini-Instanz.
   # Keine RA-v6-Resolver, die waren auf den k3s-Nodes die wiederkehrende Falle.
   - |-
