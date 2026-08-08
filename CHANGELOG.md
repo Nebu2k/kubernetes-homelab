@@ -1,3 +1,10 @@
+## [4.75.2](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.75.1...v4.75.2) (2026-08-08)
+
+
+### Bug Fixes
+
+* **clusters:** MetalLB muss das Exclude-Label der Control-Plane ignorieren ([afaa98b](https://github.com/Nebu2k/kubernetes-homelab/commit/afaa98b937e671b8d7dfd7777e44063af930edd7))
+
 ## [4.75.1](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.75.0...v4.75.1) (2026-08-08)
 
 
