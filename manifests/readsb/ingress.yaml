@@ -1,0 +1,27 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: readsb
+  namespace: adsb
+  annotations:
+    gethomepage.dev/enabled: "true"
+    gethomepage.dev/name: "ADS-B"
+    gethomepage.dev/description: "tar1090 Flugkarte"
+    gethomepage.dev/group: "Applications"
+    gethomepage.dev/icon: "mdi-radar"
+    gethomepage.dev/href: "https://adsb.elmstreet79.de"
+    gethomepage.dev/weight: "21"
+    gethomepage.dev/pod-selector: "app=readsb"
+spec:
+  ingressClassName: traefik
+  rules:
+    - host: adsb.elmstreet79.de
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: readsb
+                port:
+                  number: 80

@@ -1,0 +1,29 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: readsb
+  namespace: adsb
+  labels:
+    app: readsb
+spec:
+  type: ClusterIP
+  ports:
+    - port: 80
+      targetPort: 80
+      protocol: TCP
+      name: http
+    # Beast-Ausgang. Hier haengt fr24feed dran, und beliebig viele weitere
+    # Feeder koennen parallel dazukommen (adsb.fi, airplanes.live), ohne dass
+    # readsb etwas davon merkt.
+    - port: 30005
+      targetPort: 30005
+      protocol: TCP
+      name: beast
+    # Prometheus-Statistiken. Noch ohne ServiceMonitor: die CRD kommt erst mit
+    # kube-prometheus-stack.
+    - port: 9273
+      targetPort: 9273
+      protocol: TCP
+      name: metrics
+  selector:
+    app: readsb

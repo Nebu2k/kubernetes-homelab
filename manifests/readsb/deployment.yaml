@@ -1,0 +1,138 @@
+# ADSB-Ultrafeeder: readsb plus tar1090, direkt am RTL-Stick.
+#
+# Loest dump1090-mutability ab, das als apt-Paket auf raspi5 lief und dessen
+# Config nur in /etc/default/dump1090-mutability stand. Der Stick steckt jetzt
+# an pve und wird per qemu-USB in talos-cp-1 durchgereicht.
+#
+# Warum Ultrafeeder und nicht docker-readsb-protobuf, das in der ROADMAP als
+# gleichwertige Alternative stand: das Repo ist seit April 2025 archiviert
+# (geprueft am 2026-08-08). Ultrafeeder wird aktiv gepflegt und ist bei
+# sdr-enthusiasts der Nachfolger.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: readsb
+  namespace: adsb
+  labels:
+    app: readsb
+spec:
+  replicas: 1
+  # Recreate, nicht RollingUpdate. Es gibt genau einen Stick. Bei einem Rolling
+  # Update wuerde der neue Pod starten, waehrend der alte das Geraet noch haelt,
+  # und beide scheitern abwechselnd am "usb_claim_interface error -6".
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: readsb
+  template:
+    metadata:
+      labels:
+        app: readsb
+      annotations:
+        reloader.stakater.com/auto: "true"
+    spec:
+      # Der Stick haengt physisch an talos-cp-1, der Pod kann nirgendwo sonst
+      # laufen. Damit ist diese Node ein Pet, bewusst und dokumentiert in
+      # ROADMAP.md: der Preis dafuer, keine eigene SDR-VM zu bauen.
+      #
+      # Wandert der Stick an eine andere VM, aendert sich hier der Hostname und
+      # in homelab-terraform/proxmox/vm-talos.tf der usb-Block. Sonst nichts.
+      nodeSelector:
+        kubernetes.io/hostname: talos-cp-1
+      containers:
+        - name: ultrafeeder
+          image: ghcr.io/sdr-enthusiasts/docker-adsb-ultrafeeder:latest-build-845
+          imagePullPolicy: IfNotPresent
+          securityContext:
+            # privileged statt device_cgroup_rules aus dem Upstream-Compose:
+            # Kubernetes kennt keine cgroup-Regeln pro Pod. Zusammen mit dem
+            # hostPath unten ist das der Weg an den Stick, und er ueberlebt ein
+            # Neu-Enumerieren nach einem Reset des Dongles.
+            privileged: true
+          ports:
+            - containerPort: 80
+              name: http
+              protocol: TCP
+            - containerPort: 30005
+              name: beast
+              protocol: TCP
+            - containerPort: 9273
+              name: metrics
+              protocol: TCP
+          env:
+            - name: TZ
+              value: "Europe/Berlin"
+            - name: READSB_DEVICE_TYPE
+              value: "rtlsdr"
+            # READSB_RTLSDR_DEVICE bleibt ungesetzt: es ist genau ein Stick im
+            # Spiel, readsb nimmt dann den einzigen gefundenen.
+            #
+            # READSB_GAIN ebenfalls ungesetzt. Der Default ist seit November
+            # 2024 "auto", also readsbs eingebaute Autogain-Regelung, und die
+            # ist dem festen GAIN=max von dump1090-mutability vorzuziehen. Sie
+            # braucht keinen persistenten Zustand, anders als das alte
+            # autogain-Skript.
+            #
+            # Antennenposition: Pflichtparameter bei Ultrafeeder, ohne sie
+            # startet der Container nicht. Sie stehen im SealedSecret, weil das
+            # Repo public ist und das die Hauskoordinaten sind.
+            - name: READSB_LAT
+              valueFrom:
+                secretKeyRef:
+                  name: readsb-secret
+                  key: lat
+            - name: READSB_LON
+              valueFrom:
+                secretKeyRef:
+                  name: readsb-secret
+                  key: lon
+            - name: READSB_ALT
+              valueFrom:
+                secretKeyRef:
+                  name: readsb-secret
+                  key: alt
+            # tar1090 haelt Traces und Heatmap unter /var/globe_history. Ohne
+            # Deckel waechst das unbegrenzt, und es liegt auf einem emptyDir,
+            # also auf der EPHEMERAL-Partition der Node.
+            - name: MAX_GLOBE_HISTORY
+              value: "3"
+          volumeMounts:
+            - name: usb
+              mountPath: /dev/bus/usb
+            - name: globe-history
+              mountPath: /var/globe_history
+          resources:
+            requests:
+              cpu: 200m
+              memory: 256Mi
+            limits:
+              cpu: "1"
+              memory: 768Mi
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 80
+            initialDelaySeconds: 30
+            periodSeconds: 15
+            timeoutSeconds: 5
+            failureThreshold: 6
+          livenessProbe:
+            tcpSocket:
+              port: 30005
+            initialDelaySeconds: 90
+            periodSeconds: 30
+            timeoutSeconds: 5
+            failureThreshold: 6
+      volumes:
+        - name: usb
+          hostPath:
+            path: /dev/bus/usb
+            type: Directory
+        # Bewusst emptyDir und kein Longhorn-Volume. tar1090-Traces werden
+        # dauernd geschrieben, das ist genau das Schreibmuster, das im alten
+        # Cluster das Prometheus-Volume auf das Zehnfache aufgeblaeht hat. Der
+        # Verlust bei einem Neustart ist die Flugspur-Historie von drei Tagen,
+        # nicht der Feed.
+        - name: globe-history
+          emptyDir: {}

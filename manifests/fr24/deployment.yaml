@@ -28,8 +28,11 @@ spec:
           name: http
           protocol: TCP
         env:
+        # Bis zum 2026-08-08 die feste 192.168.2.9, also dump1090-mutability
+        # auf raspi5. Seit dem SDR-Umzug nach pve laeuft readsb als Pod im
+        # selben Cluster, damit reicht der Service-Name.
         - name: BEASTHOST
-          value: "192.168.2.9"
+          value: "readsb.adsb.svc.cluster.local"
         - name: FR24KEY
           valueFrom:
             secretKeyRef:

@@ -30,6 +30,7 @@ Production-ready K3s cluster managed via GitOps using ArgoCD App-of-Apps pattern
 | 9 | Homepage, Mealie, Paperless Ngx |
 | 11 | Backup Monitor, Proxmox Exporter |
 | 12 | Argocd Config |
+| 14 | Readsb |
 | 15 | Fr24 |
 | 16 | External Services |
 
@@ -66,6 +67,7 @@ homelab/
 │   ├── backup-monitor.yaml            # Wave 11
 │   ├── proxmox-exporter.yaml          # Wave 11
 │   ├── argocd-config.yaml             # Wave 12
+│   ├── readsb.yaml                    # Wave 14
 │   ├── fr24.yaml                      # Wave 15
 │   └── external-services.yaml         # Wave 16
 ├── manifests/
@@ -242,6 +244,14 @@ homelab/
 │   │   ├── pve-api-credentials-unsealed.yaml.example
 │   │   ├── service.yaml
 │   │   └── servicemonitor.yaml
+│   ├── readsb/
+│   │   ├── deployment.yaml
+│   │   ├── ingress.yaml
+│   │   ├── kustomization.yaml
+│   │   ├── namespace.yaml
+│   │   ├── readsb-secret-sealed.yaml
+│   │   ├── readsb-secret-unsealed.yaml.example
+│   │   └── service.yaml
 │   ├── reloader/
 │   │   └── values.yaml
 │   ├── ripe-atlas/
@@ -613,6 +623,8 @@ cd kubernetes-homelab
       manifests/paperless-ngx/smb-credentials-unsealed.yaml
    cp manifests/proxmox-exporter/pve-api-credentials-unsealed.yaml.example \
       manifests/proxmox-exporter/pve-api-credentials-unsealed.yaml
+   cp manifests/readsb/readsb-secret-unsealed.yaml.example \
+      manifests/readsb/readsb-secret-unsealed.yaml
    cp manifests/teslamate/s3-backup-credentials-unsealed.yaml.example \
       manifests/teslamate/s3-backup-credentials-unsealed.yaml
    cp manifests/teslamate/teslamate-secret-unsealed.yaml.example \
@@ -743,17 +755,22 @@ kubeseal --format=yaml --controller-namespace=kube-system \
   < manifests/proxmox-exporter/pve-api-credentials-unsealed.yaml \
   > manifests/proxmox-exporter/pve-api-credentials-sealed.yaml
 
-# 15. teslamate: s3 backup credentials
+# 15. readsb: readsb secret
+kubeseal --format=yaml --controller-namespace=kube-system \
+  < manifests/readsb/readsb-secret-unsealed.yaml \
+  > manifests/readsb/readsb-secret-sealed.yaml
+
+# 16. teslamate: s3 backup credentials
 kubeseal --format=yaml --controller-namespace=kube-system \
   < manifests/teslamate/s3-backup-credentials-unsealed.yaml \
   > manifests/teslamate/s3-backup-credentials-sealed.yaml
 
-# 16. teslamate: teslamate secret
+# 17. teslamate: teslamate secret
 kubeseal --format=yaml --controller-namespace=kube-system \
   < manifests/teslamate/teslamate-secret-unsealed.yaml \
   > manifests/teslamate/teslamate-secret-sealed.yaml
 
-# 17. unifi-poller: unifi config
+# 18. unifi-poller: unifi config
 kubeseal --format=yaml --controller-namespace=kube-system \
   < manifests/unifi-poller/unifi-config-unsealed.yaml \
   > manifests/unifi-poller/unifi-config-sealed.yaml
@@ -1121,6 +1138,7 @@ kubectl get secret -n monitoring grafana-admin-credentials \
 | Metallb | 0.16.1 | Metallb |
 | Paperless Ngx | 3.0.5 | Paperless Ngx |
 | Proxmox Exporter | 1.0.8 | Proxmox Exporter |
+| Readsb | latest-build-845 | Readsb |
 | Reloader | 2.2.14 | Reloader |
 | Ripe Atlas | 5120 | Ripe Atlas |
 | Sealed Secrets | 2.19.1 | Sealed Secrets |

@@ -189,7 +189,12 @@
     // Achtung: die Zahl landet als "major", jedes Update ist damit formal ein
     // Major-Bump und wuerde in Phase 3 nie automergen. Ist so gewollt.
     {
-      matchPackageNames: ['ghcr.io/sdr-enthusiasts/docker-flightradar24'],
+      matchPackageNames: [
+        'ghcr.io/sdr-enthusiasts/docker-flightradar24',
+        // Ultrafeeder taggt nach demselben Schema. Seit dem 2026-08-08 im
+        // Talos-Cluster, es ersetzt dump1090-mutability auf raspi5.
+        'ghcr.io/sdr-enthusiasts/docker-adsb-ultrafeeder',
+      ],
       versioning: 'regex:^latest-build-(?<major>\\d+)$',
     },
 

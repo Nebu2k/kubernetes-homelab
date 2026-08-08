@@ -18,6 +18,13 @@ resources:
   - ../../apps/traefik.yaml
   - ../../apps/cert-manager.yaml
   - ../../apps/longhorn.yaml
+  # Erste Welle von Schritt 4. readsb haengt am RTL-Stick, der per USB an
+  # talos-cp-1 durchgereicht wird, fr24feed zieht seinen Beast-Stream daraus.
+  # Beide zusammen, weil fr24feed aus dem alten Cluster keinen ClusterIP hier
+  # erreichen kann. Im alten Cluster ist fr24 dafuer aus apps/kustomization.yaml
+  # herausgenommen.
+  - ../../apps/readsb.yaml
+  - ../../apps/fr24.yaml
 
 patches:
   # MetalLB: eigener Pool, PodSecurity und die Exclude-Label-Ausnahme.

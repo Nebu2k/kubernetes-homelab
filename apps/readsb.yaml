@@ -1,0 +1,33 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: readsb
+  namespace: argocd
+  annotations:
+    # Vor fr24 (15): fr24feed verbindet sich auf den Beast-Ausgang von readsb.
+    argocd.argoproj.io/sync-wave: "14"
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/Nebu2k/kubernetes-homelab.git
+    targetRevision: main
+    path: manifests/readsb
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: adsb
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      # Kein CreateNamespace: der Namespace steht als Manifest im Pfad, weil er
+      # das PodSecurity-Label tragen muss.
+      - CreateNamespace=false
+    retry:
+      limit: 5
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 3m

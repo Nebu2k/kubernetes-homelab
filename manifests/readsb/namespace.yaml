@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: adsb
+  labels:
+    # Der readsb-Pod braucht privileged plus hostPath /dev/bus/usb, um an den
+    # RTL-Stick zu kommen. Talos erzwingt clusterweit PodSecurity "baseline",
+    # ohne dieses Label wird der Pod abgelehnt.
+    #
+    # Bewusst am Namespace und nicht als weitere Ausnahme in
+    # talos/talconfig.yaml: das hier ist GitOps und faellt beim Deployen auf,
+    # eine Aenderung dort rebootet die Control-Plane.
+    pod-security.kubernetes.io/enforce: privileged
