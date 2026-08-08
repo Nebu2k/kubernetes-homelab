@@ -1,0 +1,58 @@
+# Longhorn im Talos-Cluster.
+#
+# Gleiches Muster wie clusters/talos/metallb: die Application aus apps/ bleibt
+# die gemeinsame Basis, nur der git-Pfad ihrer dritten Source zeigt hierher.
+# Damit ist an genau einer Stelle sichtbar, was sich vom k3s-Cluster
+# unterscheidet.
+#
+# Die drei Dateien aus manifests/longhorn/ werden referenziert, nicht kopiert.
+# Das funktioniert, weil ArgoCD mit --load-restrictor LoadRestrictionsNone baut.
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: longhorn-system
+
+resources:
+  # Entschluesselt ohne Reseal: die Sealing-Keys sind aus dem k3s-Cluster
+  # uebernommen. Zeigt auf dasselbe CIFS-Share wie das alte Cluster, das ist
+  # Absicht und die Voraussetzung fuer den Restore der Volumes.
+  - ../../../manifests/longhorn/nas-cifs-secret-sealed.yaml
+  - ../../../manifests/longhorn/recurring-backup-jobs.yaml
+  - ../../../manifests/longhorn/ingress.yaml
+  - node-config.yaml
+
+# Bewusst NICHT uebernommen:
+#
+#   servicemonitor.yaml
+#     Braucht monitoring.coreos.com/v1, das bringt kube-prometheus-stack mit und
+#     das laeuft hier noch nicht. Eine fehlende CRD laesst ArgoCD nicht nur den
+#     einen Task, sondern die ganze Sync-Operation abbrechen. Zurueckholen,
+#     sobald kube-prometheus-stack migriert ist, zusammen mit den drei
+#     ServiceMonitor-Patches in ../kustomization.yaml.
+#
+#   disable-local-path-default.yaml
+#     Setzt die local-path-StorageClass auf "nicht default". Die gibt es nur
+#     unter k3s, Talos bringt keinen local-path-Provisioner mit. Hier waere es
+#     eine StorageClass mit einem Provisioner, den niemand bereitstellt.
+
+patches:
+  # system-backup-daily bleibt aus, solange beide Cluster dasselbe
+  # Backup-Target benutzen.
+  #
+  # System-Backups landen im Share unter einem gemeinsamen Praefix und heissen
+  # <job-name>-<timestamp>. Beide Cluster wuerden denselben Namen erzeugen und
+  # beide wenden retain: 7 auf alles an, was sie dort sehen, also auch auf die
+  # Backups des jeweils anderen. Volume-Backups sind davon nicht betroffen, die
+  # haengen an der Volume-UUID.
+  #
+  # WIEDER EINSCHALTEN, sobald das k3s-Cluster abgebaut ist. Dann ist dieser
+  # Patch die einzige Stelle, an der es haengt.
+  - target:
+      kind: RecurringJob
+      name: system-backup-daily
+    patch: |-
+      $patch: delete
+      apiVersion: longhorn.io/v1beta2
+      kind: RecurringJob
+      metadata:
+        name: system-backup-daily

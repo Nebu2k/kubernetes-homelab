@@ -17,6 +17,7 @@ resources:
   - ../../apps/metallb.yaml
   - ../../apps/traefik.yaml
   - ../../apps/cert-manager.yaml
+  - ../../apps/longhorn.yaml
 
 patches:
   # MetalLB: eigener Pool, PodSecurity und die Exclude-Label-Ausnahme.
@@ -70,6 +71,27 @@ patches:
             prometheus:
               serviceMonitor:
                 enabled: false
+
+  # Longhorn: eigener Manifest-Pfad, weil die Node-CRs im k3s-Cluster auf
+  # k3s-worker-1, raspi5 und prodesk lauten und der ServiceMonitor hier noch
+  # nicht gehen kann. Was genau abweicht, steht in clusters/talos/longhorn/.
+  #
+  # Die Helm-Values bleiben geteilt: die Ruecksicht auf langsame Nodes
+  # (concurrentReplicaRebuildPerNodeLimit, backupConcurrentLimit) schadet auf
+  # den VMs nicht, und geteilte Values heisst, dass eine Einstellung nicht an
+  # zwei Stellen auseinanderlaufen kann.
+  #
+  # Die Voraussetzungen stehen in talos/talconfig.yaml: extraMounts fuer
+  # /var/lib/longhorn, die PodSecurity-Ausnahme fuer longhorn-system und die
+  # System Extensions iscsi-tools und util-linux-tools in der Schematic-ID.
+  # Am 2026-08-08 auf allen drei Nodes geprueft (ext-iscsid Running).
+  - target:
+      kind: Application
+      name: longhorn
+    patch: |-
+      - op: replace
+        path: /spec/sources/2/path
+        value: clusters/talos/longhorn
 
   # --- Bis kube-prometheus-stack migriert ist -------------------------------
   #

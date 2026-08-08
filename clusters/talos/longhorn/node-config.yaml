@@ -1,0 +1,62 @@
+# Longhorn-Node-Konfiguration des Talos-Clusters.
+#
+# Eigene Datei statt manifests/longhorn/node-config.yaml: dort stehen die
+# k3s-Nodes (k3s-worker-1, raspi5, prodesk, k3s-cp-1, raspi4). Die gibt es hier
+# nicht, und Longhorn-Node-CRs fuer nicht existierende Nodes bleiben als Leichen
+# liegen.
+#
+# BEWUSST OHNE disks-Block, alle drei. Ein eigener Disk-Key auf
+# /var/lib/longhorn/ ist immer ein Duplikat der Disk, die Longhorn beim ersten
+# Start selbst anlegt (default-disk-<fsid-hash>), und Longhorn laesst pro
+# Dateisystem-ID nur einen Eintrag gelten. Der zweite landet dauerhaft auf
+# Ready=False/DiskFilesystemChanged und ist danach nicht mehr wegzubekommen: der
+# validator.longhorn.io-Webhook laesst keinen Uebergang durch, der beide
+# Eintraege gleichzeitig anfasst. Genau das ist im k3s-Cluster auf zwei Nodes
+# passiert, die ausfuehrliche Fehlersuche steht in
+# manifests/longhorn/node-config.yaml. Hier wird der Fehler nicht wiederholt.
+#
+# Wirksam ist ohnehin nur das Node-Tag: die StorageClass selektiert ueber
+# persistence.defaultNodeSelector (nodeSelector "storage"), nicht ueber
+# diskSelector.
+#
+# Alle drei Nodes tragen Storage. Im Startaufbau sind alle drei Control-Plane
+# und alle drei tragen Workloads, eine Unterscheidung gaebe es nicht abzubilden.
+# Wenn prodesk und raspi5 in den Schritten 5 und 6 dazukommen, gehoeren sie hier
+# ergaenzt.
+apiVersion: longhorn.io/v1beta2
+kind: Node
+metadata:
+  name: talos-cp-1
+  namespace: longhorn-system
+spec:
+  name: talos-cp-1
+  tags:
+    - storage
+  allowScheduling: true
+  evictionRequested: false
+
+---
+apiVersion: longhorn.io/v1beta2
+kind: Node
+metadata:
+  name: talos-cp-2
+  namespace: longhorn-system
+spec:
+  name: talos-cp-2
+  tags:
+    - storage
+  allowScheduling: true
+  evictionRequested: false
+
+---
+apiVersion: longhorn.io/v1beta2
+kind: Node
+metadata:
+  name: talos-cp-3
+  namespace: longhorn-system
+spec:
+  name: talos-cp-3
+  tags:
+    - storage
+  allowScheduling: true
+  evictionRequested: false
