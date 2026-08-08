@@ -5,19 +5,35 @@
 # nicht, und Longhorn-Node-CRs fuer nicht existierende Nodes bleiben als Leichen
 # liegen.
 #
-# BEWUSST OHNE disks-Block, alle drei. Ein eigener Disk-Key auf
-# /var/lib/longhorn/ ist immer ein Duplikat der Disk, die Longhorn beim ersten
-# Start selbst anlegt (default-disk-<fsid-hash>), und Longhorn laesst pro
-# Dateisystem-ID nur einen Eintrag gelten. Der zweite landet dauerhaft auf
-# Ready=False/DiskFilesystemChanged und ist danach nicht mehr wegzubekommen: der
-# validator.longhorn.io-Webhook laesst keinen Uebergang durch, der beide
-# Eintraege gleichzeitig anfasst. Genau das ist im k3s-Cluster auf zwei Nodes
-# passiert, die ausfuehrliche Fehlersuche steht in
-# manifests/longhorn/node-config.yaml. Hier wird der Fehler nicht wiederholt.
+# MIT disks-Block, und das ist der Unterschied zu prodesk im k3s-Cluster.
 #
-# Wirksam ist ohnehin nur das Node-Tag: die StorageClass selektiert ueber
-# persistence.defaultNodeSelector (nodeSelector "storage"), nicht ueber
-# diskSelector.
+# Der erste Versuch am 2026-08-08 liess den Block weg, in der Annahme, Longhorn
+# lege die Disk wie dort selbst an. Tut es nicht: Longhorn erzeugt die
+# default-disk nur, wenn es das Node-CR SELBST anlegt. Unter GitOps ist ArgoCD
+# schneller, longhorn-manager findet das CR bereits vor, adoptiert es und
+# ergaenzt nichts. Ergebnis waren drei Nodes mit Ready=True, Schedulable=True
+# und null Kapazitaet. Das faellt nicht auf, bis das erste Volume Pending
+# bleibt: an der Node selbst ist nichts rot.
+#
+# prodesk ist deshalb kein Gegenbeispiel: er lief als k3s-Node schon mit
+# Longhorn, bevor er in dessen node-config.yaml auftauchte. Dort war Longhorn
+# zuerst da, hier ArgoCD.
+#
+# Aus demselben Grund kann die Duplikat-Falle aus dem k3s-Cluster hier nicht
+# zuschlagen. Dort tragen zwei Nodes zwei Eintraege auf /var/lib/longhorn/, den
+# manuellen und den automatischen, und der validator.longhorn.io-Webhook laesst
+# keinen Uebergang mehr durch, der das aufloest (die drei Sackgassen stehen in
+# manifests/longhorn/node-config.yaml). Voraussetzung dafuer sind ZWEI
+# Eintraege. Solange ArgoCD das CR anlegt, entsteht der automatische nie.
+#
+# Der Restrisiko-Fall ist, dass jemand ein Node-CR ganz loescht: dann legt
+# Longhorn es mit default-disk-<fsid-hash> neu an und ArgoCD schreibt seinen
+# Eintrag dazu. Dann ist es dasselbe Problem wie im alten Cluster. Node-CRs also
+# nicht loeschen, auch nicht "zum Aufraeumen".
+#
+# storageReserved: 30 GiB. /var/lib/longhorn liegt auf der EPHEMERAL-Partition
+# (133 GB, xfs), und die traegt auch die Container-Images und die Logs. Ohne
+# Reserve fuellt Longhorn sie bis an den Rand und nimmt das kubelet mit.
 #
 # Alle drei Nodes tragen Storage. Im Startaufbau sind alle drei Control-Plane
 # und alle drei tragen Workloads, eine Unterscheidung gaebe es nicht abzubilden.
@@ -34,6 +50,15 @@ spec:
     - storage
   allowScheduling: true
   evictionRequested: false
+  disks:
+    default-disk-talos-cp-1:
+      allowScheduling: true
+      diskType: filesystem
+      evictionRequested: false
+      path: /var/lib/longhorn/
+      storageReserved: 32212254720
+      tags:
+        - storage
 
 ---
 apiVersion: longhorn.io/v1beta2
@@ -47,6 +72,15 @@ spec:
     - storage
   allowScheduling: true
   evictionRequested: false
+  disks:
+    default-disk-talos-cp-2:
+      allowScheduling: true
+      diskType: filesystem
+      evictionRequested: false
+      path: /var/lib/longhorn/
+      storageReserved: 32212254720
+      tags:
+        - storage
 
 ---
 apiVersion: longhorn.io/v1beta2
@@ -60,3 +94,12 @@ spec:
     - storage
   allowScheduling: true
   evictionRequested: false
+  disks:
+    default-disk-talos-cp-3:
+      allowScheduling: true
+      diskType: filesystem
+      evictionRequested: false
+      path: /var/lib/longhorn/
+      storageReserved: 32212254720
+      tags:
+        - storage
