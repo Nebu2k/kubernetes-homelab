@@ -80,8 +80,8 @@ app-of-apps des neuen Clusters. Sie zieht die Application-Manifeste aus `apps/`
 und sagt nur, welche davon hier schon laufen und was sich unterscheidet. Ein
 Dienst wandert damit durch eine Zeile mehr in der Liste, nicht durch eine Kopie.
 
-Aktuell fuenf: `sealed-secrets`, `metallb`, `traefik`, `cert-manager`,
-`longhorn`. Belegt funktionierend: Traefik auf `192.168.2.240` liefert das
+Aktuell sieben: `sealed-secrets`, `metallb`, `traefik`, `cert-manager`,
+`longhorn`, `readsb`, `fr24`. Belegt funktionierend: Traefik auf `192.168.2.240` liefert das
 Let's-Encrypt-Wildcard, also greifen SealedSecrets (Cloudflare-Token),
 cert-manager (DNS-01) und der TLSStore-Default.
 
@@ -161,6 +161,16 @@ talosctl apply-config --nodes 192.168.2.20 --file clusterconfig/homelab-talos-cp
   (Home Assistant, csi-driver-smb) braucht beim Migrieren ein
   `pod-security.kubernetes.io/enforce: privileged` am Namespace. Das gehoert in
   die Manifeste, nicht hierher: eine Aenderung hier rebootet die Control-Plane.
+- **talos-cp-1 traegt den RTL-SDR und ist deshalb ein Pet.** Der Stick haengt an
+  pve und wird per qemu-USB durchgereicht (`usb_devices` in
+  `homelab-terraform/proxmox/vm-talos.tf`), der readsb-Pod ist per nodeSelector
+  daran gebunden. Diese Node ist die, die Schritt 7 der Migration ueberlebt.
+  Zwei Dinge, die dabei ueberrascht haben: **Proxmox steckt USB heiss dazu**, das
+  Hinzufuegen des Blocks hat die VM nicht neu gestartet, und **der Dongle laeuft
+  nicht an jedem Port**. Hinter dem ASMedia-ASM1074-Hub (`3-2.1`) hat er sich
+  einmal angemeldet und dann mit `error -71` und "unable to enumerate"
+  verabschiedet, an `3-2.3` laeuft er fehlerfrei. Bei USB-Problemen also zuerst
+  `dmesg -T | grep -i usb` auf pve, nicht im Cluster suchen.
 - **Longhorn-Disks muessen unter GitOps deklariert werden.** Longhorn legt die
   `default-disk` nur an, wenn es das Node-CR selbst erzeugt. ArgoCD ist
   schneller, longhorn-manager adoptiert das vorhandene CR und ergaenzt nichts.
