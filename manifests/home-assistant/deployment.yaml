@@ -19,17 +19,19 @@ spec:
       labels:
         app.kubernetes.io/name: home-assistant
     spec:
+      # hostNetwork bleibt Pflicht: mDNS-Discovery, CoIoT-Multicast (224.0.1.187,
+      # Shelly Gen1) und die HomeKit-Bridges brauchen das Node-Netz. Die
+      # Bindung an prodesk ist dagegen weg, siehe unten.
       hostNetwork: true
       dnsPolicy: ClusterFirstWithHostNet
-      affinity:
-        nodeAffinity:
-          requiredDuringSchedulingIgnoredDuringExecution:
-            nodeSelectorTerms:
-            - matchExpressions:
-              - key: kubernetes.io/hostname
-                operator: In
-                values:
-                - prodesk
+      # Keine nodeAffinity auf prodesk mehr. Sie hing an zwei Dingen, beide sind
+      # aufgeloest:
+      #   - Bluetooth: kein lokaler Adapter mehr, BLE laeuft ueber die
+      #     Shelly-Proxies (bluetooth-Config-Entries mit source_config_entry_id,
+      #     ble_scanner_mode passive). Deshalb ist auch der /run/dbus-Mount weg.
+      #   - Shelly Gen1: die acht Geraete pushten CoIoT per Unicast auf
+      #     192.168.2.7:5683. Umgestellt auf Multicast (coiot_peer=mcast), damit
+      #     folgt der Push dem Pod auf jede Node.
       nodeSelector:
         node-role.kubernetes.io/worker: "worker"
       initContainers:
@@ -86,9 +88,6 @@ spec:
         volumeMounts:
         - name: config
           mountPath: /config
-        - name: dbus
-          mountPath: /run/dbus
-          readOnly: true
         livenessProbe:
           httpGet:
             path: /
@@ -153,7 +152,3 @@ spec:
       - name: matter-data
         persistentVolumeClaim:
           claimName: home-assistant-matter-data
-      - name: dbus
-        hostPath:
-          path: /run/dbus
-          type: Directory
