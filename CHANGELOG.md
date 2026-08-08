@@ -1,3 +1,10 @@
+# [4.76.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.75.2...v4.76.0) (2026-08-08)
+
+
+### Features
+
+* **clusters:** Longhorn ins Talos-Cluster ([5ba0dcb](https://github.com/Nebu2k/kubernetes-homelab/commit/5ba0dcba4d9871720ab8f279e0a96276d8a15ca8))
+
 ## [4.75.2](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.75.1...v4.75.2) (2026-08-08)
 
 
