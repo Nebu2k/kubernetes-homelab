@@ -1,3 +1,10 @@
+## [4.76.1](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.76.0...v4.76.1) (2026-08-08)
+
+
+### Bug Fixes
+
+* **clusters:** Longhorn-Disks im Talos-Cluster explizit deklarieren ([79b0595](https://github.com/Nebu2k/kubernetes-homelab/commit/79b0595daf3aa98cef392c0807b02761e93dd787))
+
 # [4.76.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.75.2...v4.76.0) (2026-08-08)
 
 
