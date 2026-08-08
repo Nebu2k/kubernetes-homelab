@@ -1,3 +1,15 @@
+# [4.79.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.78.0...v4.79.0) (2026-08-08)
+
+
+### Bug Fixes
+
+* **talos:** eigene Schematic fuer prodesk ohne qemu-guest-agent ([975c1d0](https://github.com/Nebu2k/kubernetes-homelab/commit/975c1d0c17caf0f5a1ac9b58c6b4bf59fd11af54))
+
+
+### Features
+
+* **longhorn:** prodesk als vierten Storage-Node aufnehmen ([be29b1e](https://github.com/Nebu2k/kubernetes-homelab/commit/be29b1e9c7cc0961dd47e07141b7469b7dc0d41f))
+
 # [4.78.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.77.0...v4.78.0) (2026-08-08)
 
 
