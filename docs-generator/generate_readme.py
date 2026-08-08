@@ -320,31 +320,43 @@ def generate_tree_fallback():
         lines.append(f"{prefix}{app_file.name:<30} {wave_comment}")
     
     # Manifests directory
-    lines.append("└── manifests/")
+    lines.append("├── manifests/")
     manifest_dirs = sorted([d for d in (REPO_ROOT / "manifests").iterdir() 
                           if d.is_dir() and not d.name.startswith('.') and not is_ignored(d, gitignore_spec)])
     
+    # manifests/ ist nicht mehr der letzte Top-Level-Block, nodes/ kommt danach.
+    # Deshalb haengt alles darunter an einem durchlaufenden "│".
     for i, manifest_dir in enumerate(manifest_dirs):
         is_last_dir = i == len(manifest_dirs) - 1
-        dir_prefix = "    └── " if is_last_dir else "    ├── "
+        dir_prefix = "│   └── " if is_last_dir else "│   ├── "
         lines.append(f"{dir_prefix}{manifest_dir.name}/")
-        
+
         # Add files in manifest - filter using gitignore spec
-        all_files = sorted([f for f in manifest_dir.glob("*.yaml*") 
+        all_files = sorted([f for f in manifest_dir.glob("*.yaml*")
                           if not f.name.startswith('.') and not is_ignored(f, gitignore_spec)])
         # Additional filter: exclude unsealed.yaml files that don't have .example extension
-        manifest_files = [f for f in all_files 
+        manifest_files = [f for f in all_files
                          if not (f.name.endswith('-unsealed.yaml') and not f.name.endswith('.example'))]
-        
+
         for j, manifest_file in enumerate(manifest_files):
             is_last_file = j == len(manifest_files) - 1
-            if is_last_dir:
-                file_prefix = "        └── " if is_last_file else "        ├── "
-            else:
-                file_prefix = "    │   └── " if is_last_file else "    │   ├── "
-            
+            indent = "│       " if is_last_dir else "│   │   "
+            file_prefix = f"{indent}└── " if is_last_file else f"{indent}├── "
+
             lines.append(f"{file_prefix}{manifest_file.name}")
-    
+
+    # Node-lokaler Zustand. Kein GitOps, sondern die abgezogene Vorlage fuer
+    # einen Node-Neubau, siehe nodes/README.md.
+    lines.append("└── nodes/")
+    node_dirs = sorted([d for d in (REPO_ROOT / "nodes").iterdir()
+                        if d.is_dir() and not d.name.startswith('.')])
+    lines.append("    ├── README.md                  # Node-Typen, Abweichungen, Wiederaufbau")
+    lines.append("    ├── collect.sh                 # zieht den Ist-Zustand neu ab (Drift-Check)")
+    for i, node_dir in enumerate(node_dirs):
+        is_last = i == len(node_dirs) - 1
+        prefix = "    └── " if is_last else "    ├── "
+        lines.append(f"{prefix}{node_dir.name}/")
+
     return "\n".join(lines)
 
 

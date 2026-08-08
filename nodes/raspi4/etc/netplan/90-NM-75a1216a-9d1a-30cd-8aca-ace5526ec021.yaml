@@ -1,0 +1,20 @@
+network:
+  version: 2
+  ethernets:
+    eth0:
+      renderer: NetworkManager
+      match: {}
+      nameservers:
+        addresses:
+        - 1.1.1.1
+        - 192.168.2.16
+        - 192.168.2.4
+      dhcp4: true
+      dhcp6: true
+      networkmanager:
+        uuid: "75a1216a-9d1a-30cd-8aca-ace5526ec021"
+        name: "netplan-eth0"
+        passthrough:
+          ipv4.ignore-auto-dns: "true"
+          ipv6.ignore-auto-dns: "true"
+          proxy._: ""

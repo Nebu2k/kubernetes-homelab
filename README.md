@@ -68,229 +68,237 @@ homelab/
 │   ├── argocd-config.yaml             # Wave 12
 │   ├── fr24.yaml                      # Wave 15
 │   └── external-services.yaml         # Wave 16
-└── manifests/
-    ├── argocd/
-    │   ├── argocd-cm-patch.yaml
-    │   ├── argocd-rbac-cm-patch.yaml
-    │   ├── ingress.yaml
-    │   └── kustomization.yaml
-    ├── backup-monitor/
-    │   ├── freshness-cronjob.yaml
-    │   ├── kustomization.yaml
-    │   ├── s3-backup-monitor-credentials-sealed.yaml
-    │   └── s3-backup-monitor-credentials-unsealed.yaml.example
-    ├── cert-manager/
-    │   ├── cloudflare-api-token-sealed.yaml
-    │   ├── cloudflare-api-token-unsealed.yaml.example
-    │   ├── cluster-issuer.yaml
-    │   ├── kustomization.yaml
-    │   ├── tls-store.yaml
-    │   ├── values.yaml
-    │   └── wildcard-certificate.yaml
-    ├── coredns/
-    │   ├── coredns-custom.yaml
-    │   └── kustomization.yaml
-    ├── csi-driver-smb/
-    │   └── values.yaml
-    ├── etcd-s3-config/
-    │   ├── kustomization.yaml
-    │   ├── s3-etcd-backup-credentials-sealed.yaml
-    │   └── s3-etcd-backup-credentials-unsealed.yaml.example
-    ├── external-services/
-    │   ├── adguard-macmini-service.yaml
-    │   ├── adguard-pve-service.yaml
-    │   ├── adguardhome-sync-config.yaml
-    │   ├── adguardhome-sync-credentials-sealed.yaml
-    │   ├── adguardhome-sync-deployment.yaml
-    │   ├── adguardhome-sync-service.yaml
-    │   ├── adguardhome-sync-web-ingress.yaml
-    │   ├── dreambox-service.yaml
-    │   ├── external-ingressroutes.yaml
-    │   ├── glances-macmini-service.yaml
-    │   ├── kustomization.yaml
-    │   ├── plex-service.yaml
-    │   ├── proxmox-service.yaml
-    │   ├── unifi-nas-service.yaml
-    │   ├── unifi-service.yaml
-    │   └── vscode-service.yaml
-    ├── fr24/
-    │   ├── deployment.yaml
-    │   ├── fr24-secret-sealed.yaml
-    │   ├── fr24-secret-unsealed.yaml.example
-    │   ├── ingress.yaml
-    │   ├── kustomization.yaml
-    │   ├── namespace.yaml
-    │   └── service.yaml
-    ├── gatus/
-    │   ├── configmap.yaml
-    │   ├── deployment.yaml
-    │   ├── dns-v6-relay.yaml
-    │   ├── ingress.yaml
-    │   ├── kustomization.yaml
-    │   ├── namespace.yaml
-    │   ├── pvc.yaml
-    │   ├── service.yaml
-    │   └── servicemonitor.yaml
-    ├── home-assistant/
-    │   ├── backup-archive-cronjob.yaml
-    │   ├── configmap-configuration.yaml
-    │   ├── deployment.yaml
-    │   ├── ingress.yaml
-    │   ├── kustomization.yaml
-    │   ├── matter-pvc.yaml
-    │   ├── namespace.yaml
-    │   ├── pvc.yaml
-    │   ├── s3-archive-credentials-sealed.yaml
-    │   ├── s3-archive-credentials-unsealed.yaml.example
-    │   └── service.yaml
-    ├── homepage/
-    │   ├── adguard-credentials-sealed.yaml
-    │   ├── adguard-credentials-unsealed.yaml.example
-    │   ├── argocd-token-secret-sealed.yaml
-    │   ├── argocd-token-secret-unsealed.yaml.example
-    │   ├── clusterrole.yaml
-    │   ├── clusterrolebinding.yaml
-    │   ├── configmap.yaml
-    │   ├── deployment.yaml
-    │   ├── grafana-credentials-sealed.yaml
-    │   ├── grafana-credentials-unsealed.yaml.example
-    │   ├── ingress.yaml
-    │   ├── kustomization.yaml
-    │   ├── namespace.yaml
-    │   ├── plex-token-sealed.yaml
-    │   ├── plex-token-unsealed.yaml.example
-    │   ├── proxmox-secret-sealed.yaml
-    │   ├── proxmox-secret-unsealed.yaml.example
-    │   ├── service.yaml
-    │   ├── serviceaccount.yaml
-    │   ├── unifi-token-sealed.yaml
-    │   └── unifi-token-unsealed.yaml.example
-    ├── kube-prometheus-stack/
-    │   ├── alertmanager-ingress.yaml
-    │   ├── aws-credentials-sealed.yaml
-    │   ├── aws-credentials-unsealed.yaml.example
-    │   ├── etcd-scrapeconfig.yaml
-    │   ├── grafana-admin-sealed.yaml
-    │   ├── grafana-admin-unsealed.yaml.example
-    │   ├── grafana-ingress.yaml
-    │   ├── home-assistant-scrapeconfig.yaml
-    │   ├── home-assistant-token-sealed.yaml
-    │   ├── home-assistant-token-unsealed.yaml.example
-    │   ├── kustomization.yaml
-    │   ├── node-exporter-external-scrapeconfig.yaml
-    │   ├── prometheus-ingress.yaml
-    │   ├── prometheus-rules.yaml
-    │   └── values.yaml
-    ├── kured/
-    │   └── values.yaml
-    ├── landing-page/
-    │   ├── apex-redirect.yaml
-    │   ├── configmap.yaml
-    │   ├── deployment.yaml
-    │   ├── ingress.yaml
-    │   ├── kustomization.yaml
-    │   ├── namespace.yaml
-    │   └── service.yaml
-    ├── longhorn/
-    │   ├── disable-local-path-default.yaml
-    │   ├── ingress.yaml
-    │   ├── kustomization.yaml
-    │   ├── nas-cifs-secret-sealed.yaml
-    │   ├── nas-cifs-secret-unsealed.yaml.example
-    │   ├── node-config.yaml
-    │   ├── recurring-backup-jobs.yaml
-    │   ├── servicemonitor.yaml
-    │   └── values.yaml
-    ├── mealie/
-    │   ├── deployment.yaml
-    │   ├── ingress.yaml
-    │   ├── kustomization.yaml
-    │   ├── mealie-secrets-sealed.yaml
-    │   ├── mealie-secrets-unsealed.yaml.example
-    │   ├── namespace.yaml
-    │   ├── networkpolicy.yaml
-    │   ├── postgresql.yaml
-    │   ├── pvc.yaml
-    │   └── service.yaml
-    ├── metallb/
-    │   ├── kustomization.yaml
-    │   ├── metallb-ip-pool.yaml
-    │   └── values.yaml
-    ├── paperless-ngx/
-    │   ├── backup-cronjob.yaml
-    │   ├── db-pvc.yaml
-    │   ├── deployment.yaml
-    │   ├── ingress.yaml
-    │   ├── kustomization.yaml
-    │   ├── namespace.yaml
-    │   ├── networkpolicy.yaml
-    │   ├── paperless-secrets-sealed.yaml
-    │   ├── paperless-secrets-unsealed.yaml.example
-    │   ├── postgresql.yaml
-    │   ├── pvc.yaml
-    │   ├── redis.yaml
-    │   ├── s3-backup-credentials-sealed.yaml
-    │   ├── s3-backup-credentials-unsealed.yaml.example
-    │   ├── service.yaml
-    │   ├── smb-consume-pv.yaml
-    │   ├── smb-credentials-sealed.yaml
-    │   └── smb-credentials-unsealed.yaml.example
-    ├── proxmox-exporter/
-    │   ├── deployment.yaml
-    │   ├── kustomization.yaml
-    │   ├── pve-api-credentials-sealed.yaml
-    │   ├── pve-api-credentials-unsealed.yaml.example
-    │   ├── service.yaml
-    │   └── servicemonitor.yaml
-    ├── reloader/
-    │   └── values.yaml
-    ├── ripe-atlas/
-    │   ├── deployment.yaml
-    │   ├── kustomization.yaml
-    │   ├── namespace.yaml
-    │   └── pvc.yaml
-    ├── system-upgrade-controller/
-    │   ├── crd.yaml
-    │   ├── deployment.yaml
-    │   ├── kustomization.yaml
-    │   ├── patch-controller-env.yaml
-    │   ├── plan-agent.yaml
-    │   └── plan-server.yaml
-    ├── teslamate/
-    │   ├── backup-cronjob.yaml
-    │   ├── database-deployment.yaml
-    │   ├── database-pdb.yaml
-    │   ├── database-pvc.yaml
-    │   ├── database-service.yaml
-    │   ├── grafana-deployment.yaml
-    │   ├── grafana-ingress.yaml
-    │   ├── grafana-pvc.yaml
-    │   ├── grafana-service.yaml
-    │   ├── kustomization.yaml
-    │   ├── mosquitto-deployment.yaml
-    │   ├── mosquitto-pvc.yaml
-    │   ├── mosquitto-service.yaml
-    │   ├── namespace.yaml
-    │   ├── networkpolicy.yaml
-    │   ├── postgres-exporter-deployment.yaml
-    │   ├── postgres-exporter-service.yaml
-    │   ├── postgres-exporter-servicemonitor.yaml
-    │   ├── s3-backup-credentials-sealed.yaml
-    │   ├── s3-backup-credentials-unsealed.yaml.example
-    │   ├── teslamate-deployment.yaml
-    │   ├── teslamate-ingress.yaml
-    │   ├── teslamate-secret-sealed.yaml
-    │   ├── teslamate-secret-unsealed.yaml.example
-    │   └── teslamate-service.yaml
-    ├── traefik/
-    │   └── values.yaml
-    └── unifi-poller/
-        ├── deployment.yaml
-        ├── kustomization.yaml
-        ├── service.yaml
-        ├── servicemonitor.yaml
-        ├── unifi-config-sealed.yaml
-        └── unifi-config-unsealed.yaml.example
+├── manifests/
+│   ├── argocd/
+│   │   ├── argocd-cm-patch.yaml
+│   │   ├── argocd-rbac-cm-patch.yaml
+│   │   ├── ingress.yaml
+│   │   └── kustomization.yaml
+│   ├── backup-monitor/
+│   │   ├── freshness-cronjob.yaml
+│   │   ├── kustomization.yaml
+│   │   ├── s3-backup-monitor-credentials-sealed.yaml
+│   │   └── s3-backup-monitor-credentials-unsealed.yaml.example
+│   ├── cert-manager/
+│   │   ├── cloudflare-api-token-sealed.yaml
+│   │   ├── cloudflare-api-token-unsealed.yaml.example
+│   │   ├── cluster-issuer.yaml
+│   │   ├── kustomization.yaml
+│   │   ├── tls-store.yaml
+│   │   ├── values.yaml
+│   │   └── wildcard-certificate.yaml
+│   ├── coredns/
+│   │   ├── coredns-custom.yaml
+│   │   └── kustomization.yaml
+│   ├── csi-driver-smb/
+│   │   └── values.yaml
+│   ├── etcd-s3-config/
+│   │   ├── kustomization.yaml
+│   │   ├── s3-etcd-backup-credentials-sealed.yaml
+│   │   └── s3-etcd-backup-credentials-unsealed.yaml.example
+│   ├── external-services/
+│   │   ├── adguard-macmini-service.yaml
+│   │   ├── adguard-pve-service.yaml
+│   │   ├── adguardhome-sync-config.yaml
+│   │   ├── adguardhome-sync-credentials-sealed.yaml
+│   │   ├── adguardhome-sync-deployment.yaml
+│   │   ├── adguardhome-sync-service.yaml
+│   │   ├── adguardhome-sync-web-ingress.yaml
+│   │   ├── dreambox-service.yaml
+│   │   ├── external-ingressroutes.yaml
+│   │   ├── glances-macmini-service.yaml
+│   │   ├── kustomization.yaml
+│   │   ├── plex-service.yaml
+│   │   ├── proxmox-service.yaml
+│   │   ├── unifi-nas-service.yaml
+│   │   ├── unifi-service.yaml
+│   │   └── vscode-service.yaml
+│   ├── fr24/
+│   │   ├── deployment.yaml
+│   │   ├── fr24-secret-sealed.yaml
+│   │   ├── fr24-secret-unsealed.yaml.example
+│   │   ├── ingress.yaml
+│   │   ├── kustomization.yaml
+│   │   ├── namespace.yaml
+│   │   └── service.yaml
+│   ├── gatus/
+│   │   ├── configmap.yaml
+│   │   ├── deployment.yaml
+│   │   ├── dns-v6-relay.yaml
+│   │   ├── ingress.yaml
+│   │   ├── kustomization.yaml
+│   │   ├── namespace.yaml
+│   │   ├── pvc.yaml
+│   │   ├── service.yaml
+│   │   └── servicemonitor.yaml
+│   ├── home-assistant/
+│   │   ├── backup-archive-cronjob.yaml
+│   │   ├── configmap-configuration.yaml
+│   │   ├── deployment.yaml
+│   │   ├── ingress.yaml
+│   │   ├── kustomization.yaml
+│   │   ├── matter-pvc.yaml
+│   │   ├── namespace.yaml
+│   │   ├── pvc.yaml
+│   │   ├── s3-archive-credentials-sealed.yaml
+│   │   ├── s3-archive-credentials-unsealed.yaml.example
+│   │   └── service.yaml
+│   ├── homepage/
+│   │   ├── adguard-credentials-sealed.yaml
+│   │   ├── adguard-credentials-unsealed.yaml.example
+│   │   ├── argocd-token-secret-sealed.yaml
+│   │   ├── argocd-token-secret-unsealed.yaml.example
+│   │   ├── clusterrole.yaml
+│   │   ├── clusterrolebinding.yaml
+│   │   ├── configmap.yaml
+│   │   ├── deployment.yaml
+│   │   ├── grafana-credentials-sealed.yaml
+│   │   ├── grafana-credentials-unsealed.yaml.example
+│   │   ├── ingress.yaml
+│   │   ├── kustomization.yaml
+│   │   ├── namespace.yaml
+│   │   ├── plex-token-sealed.yaml
+│   │   ├── plex-token-unsealed.yaml.example
+│   │   ├── proxmox-secret-sealed.yaml
+│   │   ├── proxmox-secret-unsealed.yaml.example
+│   │   ├── service.yaml
+│   │   ├── serviceaccount.yaml
+│   │   ├── unifi-token-sealed.yaml
+│   │   └── unifi-token-unsealed.yaml.example
+│   ├── kube-prometheus-stack/
+│   │   ├── alertmanager-ingress.yaml
+│   │   ├── aws-credentials-sealed.yaml
+│   │   ├── aws-credentials-unsealed.yaml.example
+│   │   ├── etcd-scrapeconfig.yaml
+│   │   ├── grafana-admin-sealed.yaml
+│   │   ├── grafana-admin-unsealed.yaml.example
+│   │   ├── grafana-ingress.yaml
+│   │   ├── home-assistant-scrapeconfig.yaml
+│   │   ├── home-assistant-token-sealed.yaml
+│   │   ├── home-assistant-token-unsealed.yaml.example
+│   │   ├── kustomization.yaml
+│   │   ├── node-exporter-external-scrapeconfig.yaml
+│   │   ├── prometheus-ingress.yaml
+│   │   ├── prometheus-rules.yaml
+│   │   └── values.yaml
+│   ├── kured/
+│   │   └── values.yaml
+│   ├── landing-page/
+│   │   ├── apex-redirect.yaml
+│   │   ├── configmap.yaml
+│   │   ├── deployment.yaml
+│   │   ├── ingress.yaml
+│   │   ├── kustomization.yaml
+│   │   ├── namespace.yaml
+│   │   └── service.yaml
+│   ├── longhorn/
+│   │   ├── disable-local-path-default.yaml
+│   │   ├── ingress.yaml
+│   │   ├── kustomization.yaml
+│   │   ├── nas-cifs-secret-sealed.yaml
+│   │   ├── nas-cifs-secret-unsealed.yaml.example
+│   │   ├── node-config.yaml
+│   │   ├── recurring-backup-jobs.yaml
+│   │   ├── servicemonitor.yaml
+│   │   └── values.yaml
+│   ├── mealie/
+│   │   ├── deployment.yaml
+│   │   ├── ingress.yaml
+│   │   ├── kustomization.yaml
+│   │   ├── mealie-secrets-sealed.yaml
+│   │   ├── mealie-secrets-unsealed.yaml.example
+│   │   ├── namespace.yaml
+│   │   ├── networkpolicy.yaml
+│   │   ├── postgresql.yaml
+│   │   ├── pvc.yaml
+│   │   └── service.yaml
+│   ├── metallb/
+│   │   ├── kustomization.yaml
+│   │   ├── metallb-ip-pool.yaml
+│   │   └── values.yaml
+│   ├── paperless-ngx/
+│   │   ├── backup-cronjob.yaml
+│   │   ├── db-pvc.yaml
+│   │   ├── deployment.yaml
+│   │   ├── ingress.yaml
+│   │   ├── kustomization.yaml
+│   │   ├── namespace.yaml
+│   │   ├── networkpolicy.yaml
+│   │   ├── paperless-secrets-sealed.yaml
+│   │   ├── paperless-secrets-unsealed.yaml.example
+│   │   ├── postgresql.yaml
+│   │   ├── pvc.yaml
+│   │   ├── redis.yaml
+│   │   ├── s3-backup-credentials-sealed.yaml
+│   │   ├── s3-backup-credentials-unsealed.yaml.example
+│   │   ├── service.yaml
+│   │   ├── smb-consume-pv.yaml
+│   │   ├── smb-credentials-sealed.yaml
+│   │   └── smb-credentials-unsealed.yaml.example
+│   ├── proxmox-exporter/
+│   │   ├── deployment.yaml
+│   │   ├── kustomization.yaml
+│   │   ├── pve-api-credentials-sealed.yaml
+│   │   ├── pve-api-credentials-unsealed.yaml.example
+│   │   ├── service.yaml
+│   │   └── servicemonitor.yaml
+│   ├── reloader/
+│   │   └── values.yaml
+│   ├── ripe-atlas/
+│   │   ├── deployment.yaml
+│   │   ├── kustomization.yaml
+│   │   ├── namespace.yaml
+│   │   └── pvc.yaml
+│   ├── system-upgrade-controller/
+│   │   ├── crd.yaml
+│   │   ├── deployment.yaml
+│   │   ├── kustomization.yaml
+│   │   ├── patch-controller-env.yaml
+│   │   ├── plan-agent.yaml
+│   │   └── plan-server.yaml
+│   ├── teslamate/
+│   │   ├── backup-cronjob.yaml
+│   │   ├── database-deployment.yaml
+│   │   ├── database-pdb.yaml
+│   │   ├── database-pvc.yaml
+│   │   ├── database-service.yaml
+│   │   ├── grafana-deployment.yaml
+│   │   ├── grafana-ingress.yaml
+│   │   ├── grafana-pvc.yaml
+│   │   ├── grafana-service.yaml
+│   │   ├── kustomization.yaml
+│   │   ├── mosquitto-deployment.yaml
+│   │   ├── mosquitto-pvc.yaml
+│   │   ├── mosquitto-service.yaml
+│   │   ├── namespace.yaml
+│   │   ├── networkpolicy.yaml
+│   │   ├── postgres-exporter-deployment.yaml
+│   │   ├── postgres-exporter-service.yaml
+│   │   ├── postgres-exporter-servicemonitor.yaml
+│   │   ├── s3-backup-credentials-sealed.yaml
+│   │   ├── s3-backup-credentials-unsealed.yaml.example
+│   │   ├── teslamate-deployment.yaml
+│   │   ├── teslamate-ingress.yaml
+│   │   ├── teslamate-secret-sealed.yaml
+│   │   ├── teslamate-secret-unsealed.yaml.example
+│   │   └── teslamate-service.yaml
+│   ├── traefik/
+│   │   └── values.yaml
+│   └── unifi-poller/
+│       ├── deployment.yaml
+│       ├── kustomization.yaml
+│       ├── service.yaml
+│       ├── servicemonitor.yaml
+│       ├── unifi-config-sealed.yaml
+│       └── unifi-config-unsealed.yaml.example
+└── nodes/
+    ├── README.md                  # Node-Typen, Abweichungen, Wiederaufbau
+    ├── collect.sh                 # zieht den Ist-Zustand neu ab (Drift-Check)
+    ├── k3s-cp-1/
+    ├── k3s-worker-1/
+    ├── prodesk/
+    ├── raspi4/
+    └── raspi5/
 ```
 
 ## 🚀 Fresh Installation

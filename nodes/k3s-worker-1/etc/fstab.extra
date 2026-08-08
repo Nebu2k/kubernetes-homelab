@@ -1,0 +1,2 @@
+UUID=7d565821-68dc-4cf6-a56e-f653fa50e3dd /var/lib/longhorn ext4 defaults,noatime 0 2
+UUID=03770427-2409-4977-9eab-e289da2e89f1 /var/lib/k3s-data ext4 defaults 0 2
