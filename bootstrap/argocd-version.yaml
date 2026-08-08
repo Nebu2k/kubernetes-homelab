@@ -22,4 +22,4 @@
 #
 # Nach dem Upgrade die Version hier nachziehen, sonst erinnert Renovate weiter.
 # renovate: datasource=helm depName=argo-cd registryUrl=https://argoproj.github.io/argo-helm
-chartVersion: 9.2.4
+chartVersion: 9.7.1
