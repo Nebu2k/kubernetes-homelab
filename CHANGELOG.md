@@ -1,3 +1,10 @@
+## [4.70.1](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.70.0...v4.70.1) (2026-08-08)
+
+
+### Bug Fixes
+
+* **deps:** update amazon/aws-cli docker tag to v2.36.16 ([#59](https://github.com/Nebu2k/kubernetes-homelab/issues/59)) ([7d97a6d](https://github.com/Nebu2k/kubernetes-homelab/commit/7d97a6def13a7999757cf8bfb644a513c06ac995))
+
 # [4.70.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.69.0...v4.70.0) (2026-08-07)
 
 
