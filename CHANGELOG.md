@@ -1,3 +1,10 @@
+# [4.77.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.76.1...v4.77.0) (2026-08-08)
+
+
+### Features
+
+* **readsb:** SDR-Feed als Ultrafeeder im Talos-Cluster ([9c41499](https://github.com/Nebu2k/kubernetes-homelab/commit/9c41499fda33cdb800d4c4145e8d9a2cb0dfeeaf))
+
 ## [4.76.1](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.76.0...v4.76.1) (2026-08-08)
 
 
