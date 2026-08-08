@@ -1,3 +1,15 @@
+# [4.74.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.73.3...v4.74.0) (2026-08-08)
+
+
+### Features
+
+* **talos:** machine configs fuer das neue Cluster ([7308e43](https://github.com/Nebu2k/kubernetes-homelab/commit/7308e435265f298ca32b346abdc26518df540dcb))
+
+
+### Reverts
+
+* **longhorn:** Disk-Aufraeumen auf k3s-worker-1 zurueckdrehen ([a734ec4](https://github.com/Nebu2k/kubernetes-homelab/commit/a734ec4b17255e9e0325076e3a5440af1cb20ce9))
+
 ## [4.73.3](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.73.2...v4.73.3) (2026-08-08)
 
 
