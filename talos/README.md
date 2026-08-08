@@ -7,12 +7,12 @@ sondern zweites Cluster aufbauen, Workloads migrieren, altes abbauen.
 
 ## Was hier liegt
 
-| Datei                 | Inhalt                                                        |
-| --------------------- | ------------------------------------------------------------- |
-| `talconfig.yaml`      | Quelle der Wahrheit fuer alle machine configs                  |
-| `talsecret.sops.yaml` | etcd- und Kubernetes-CAs, SOPS/age-verschluesselt               |
-| `.sops.yaml`          | age-Recipient fuer die Verschluesselung                        |
-| `clusterconfig/`      | generiert, gitignored, enthaelt die CAs im Klartext            |
+| Datei                 | Inhalt                                              |
+| --------------------- | --------------------------------------------------- |
+| `talconfig.yaml`      | Quelle der Wahrheit fuer alle machine configs       |
+| `talsecret.sops.yaml` | etcd- und Kubernetes-CAs, SOPS/age-verschluesselt   |
+| `.sops.yaml`          | age-Recipient fuer die Verschluesselung             |
+| `clusterconfig/`      | generiert, gitignored, enthaelt die CAs im Klartext |
 
 **Der private age-Key steht in `~/.config/sops/age/keys.txt` und nirgends
 sonst.** Ohne ihn ist `talsecret.sops.yaml` unlesbar und das Cluster muss neu
@@ -25,12 +25,12 @@ Drei Control-Plane-VMs auf pve, gebaut aus
 `talosctl upgrade` die Node rebootet: mit einem einzelnen etcd-Member haengt
 jedes Upgrade am verlorenen Quorum.
 
-| Node         | IP             | VM-ID | Rolle                                       |
-| ------------ | -------------- | ----- | ------------------------------------------- |
-| `talos-cp-1` | 192.168.2.20   | 110   | Control-Plane, schedulet Workloads           |
-| `talos-cp-2` | 192.168.2.21   | 111   | Control-Plane, schedulet Workloads           |
-| `talos-cp-3` | 192.168.2.22   | 112   | Control-Plane, schedulet Workloads           |
-| VIP          | 192.168.2.248  |       | Kubernetes-Endpoint, von Talos selbst        |
+| Node         | IP            | VM-ID | Rolle                                 |
+| ------------ | ------------- | ----- | ------------------------------------- |
+| `talos-cp-1` | 192.168.2.20  | 110   | Control-Plane, schedulet Workloads    |
+| `talos-cp-2` | 192.168.2.21  | 111   | Control-Plane, schedulet Workloads    |
+| `talos-cp-3` | 192.168.2.22  | 112   | Control-Plane, schedulet Workloads    |
+| VIP          | 192.168.2.248 |       | Kubernetes-Endpoint, von Talos selbst |
 
 Die VMs sind temporaer. Spaeter ersetzen prodesk und raspi5 zwei davon, eine
 bleibt Control-Plane, eine wird Worker, eine wird geloescht.
@@ -62,6 +62,40 @@ Extensions zurueck und Longhorn verliert seine Volumes.
 
 Die VMs booten vom `nocloud`-Disk-Image, Upgrades laufen ueber
 `nocloud-installer`. Ein `metal`-Installer wuerde die Plattform umstellen.
+
+## Plattform (Stand 2026-08-08)
+
+ArgoCD kommt aus `homelab-terraform/argocd-talos/`, einem eigenen Stack mit
+eigenem State. Bewusst nicht ein Stack mit umgebogenem kubeconfig: solange zwei
+Cluster parallel laufen, waere ein Apply gegen den falschen Kontext ein
+Totalschaden am jeweils anderen.
+
+```bash
+cd homelab-terraform/argocd-talos && terraform apply
+KUBECONFIG=talos/clusterconfig/kubeconfig kubectl apply -f bootstrap/root-app-talos.yaml
+```
+
+Was danach per GitOps kommt, steht in `clusters/talos/kustomization.yaml`: die
+app-of-apps des neuen Clusters. Sie zieht die Application-Manifeste aus `apps/`
+und sagt nur, welche davon hier schon laufen und was sich unterscheidet. Ein
+Dienst wandert damit durch eine Zeile mehr in der Liste, nicht durch eine Kopie.
+
+Aktuell vier: `sealed-secrets`, `metallb`, `traefik`, `cert-manager`. Belegt
+funktionierend: Traefik auf `192.168.2.240` liefert das Let's-Encrypt-Wildcard,
+also greifen SealedSecrets (Cloudflare-Token), cert-manager (DNS-01) und der
+TLSStore-Default.
+
+**Die Sealing-Keys sind aus dem k3s-Cluster uebertragen**, alle sieben
+(30-Tage-Rotation, sieben Monate Historie). Deshalb funktioniert jedes
+`*-sealed.yaml` im Repo unveraendert und es gab keinen Reseal-Lauf.
+
+**Die UI ist in der Parallelphase nur per Port-Forward erreichbar.** Der
+Wildcard-Rewrite zeigt `*.elmstreet79.de` weiter auf die `.250`, also auf das
+k3s-Cluster.
+
+```bash
+KUBECONFIG=talos/clusterconfig/kubeconfig kubectl -n argocd port-forward svc/argocd-server 8080:80
+```
 
 ## Bedienung
 
@@ -98,11 +132,20 @@ talosctl apply-config --nodes 192.168.2.20 --file clusterconfig/homelab-talos-cp
 
 ## Fallen
 
-- **`node-role.kubernetes.io/worker` laesst sich nicht per machine config
-  setzen.** Rund 20 Manifeste selektieren darauf. Talos setzt Node-Labels mit
-  den Credentials der Node selbst, und die NodeRestriction-Admission verbietet
-  genau dieses Praefix. Das Label muss im Cluster gesetzt werden (kubectl oder
-  GitOps), sonst laufen die Dienste dort, wo Platz ist, statt dort, wo RAM ist.
+- **`node-role.kubernetes.io/worker` steht in der machine config** und muss da
+  bleiben. Rund 20 Manifeste selektieren darauf, unter anderem die nodeSelector
+  von MetalLB und cert-manager. Fehlt es, bleibt die halbe Plattform Pending,
+  ohne Fehlermeldung, nur mit "0/3 nodes are available". Dass Talos den fuer das
+  kubelet gesperrten Praefix setzen darf, liegt daran, dass es Node-Labels ueber
+  einen eigenen Controller anlegt und nicht ueber das kubelet.
+- **MetalLB braucht `speaker.ignoreExcludeLB`.** Vanilla Kubernetes setzt auf
+  Control-Plane-Nodes `node.kubernetes.io/exclude-from-external-load-balancers`,
+  k3s tut das nicht. MetalLB kuendigt von solchen Nodes nichts an, und im
+  Startaufbau sind alle drei Nodes Control-Plane. Der Fehler ist leise: der
+  Service bekommt seine IP, ArgoCD meldet Synced und Healthy, die Speaker haben
+  ARP-Responder und einen sauberen memberlist-Join, aber niemand beantwortet das
+  ARP. Zu sehen ist es nur an einem leeren `kubectl get servicel2status -A`.
+  Steht in `clusters/talos/kustomization.yaml`.
 - **PodSecurity steht auf `baseline`.** `longhorn-system` ist in
   `talconfig.yaml` ausgenommen. Alles andere mit `hostNetwork` oder `hostPath`
   (Home Assistant, csi-driver-smb) braucht beim Migrieren ein
@@ -110,9 +153,13 @@ talosctl apply-config --nodes 192.168.2.20 --file clusterconfig/homelab-talos-cp
   die Manifeste, nicht hierher: eine Aenderung hier rebootet die Control-Plane.
 - **`talosctl reset` nimmt `/var/lib/longhorn` mit.** Die Replikate liegen auf
   der EPHEMERAL-Partition.
-- **SealedSecrets:** ein neues Cluster hat einen neuen Controller-Key, damit
-  sind alle `*-sealed.yaml` im Repo wertlos. Entweder den bestehenden Key
-  uebertragen oder `reseal-all-secrets.sh` gegen den neuen Controller laufen
-  lassen. Vor dem Plattform-Bootstrap klaeren.
 - **Zwei Cluster heisst zwei kubeconfigs.** Ein Terraform-Stack mit umgebogenem
   kubeconfig zerlegt in der Parallelphase das jeweils andere Cluster.
+- **`coredns-custom` gibt es hier nicht.** Der Split-Horizon-Rewrite fuer Pods
+  haengt im k3s-Cluster an einer ConfigMap namens `coredns-custom`, und das ist
+  eine k3s-Eigenheit: Talos deployt vanilla CoreDNS, das diese ConfigMap nicht
+  kennt. Vor der Workload-Migration braucht es dafuer einen anderen Weg, sonst
+  loesen Pods `*.elmstreet79.de` nicht auf Traefik auf.
+- **kured und system-upgrade-controller gehoeren nicht mit herueber.** Beide
+  setzen ein OS mit Paketmanager und Reboot-Semantik voraus. Talos-Upgrades
+  laufen ueber `talosctl upgrade`.
