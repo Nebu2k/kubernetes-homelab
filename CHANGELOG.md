@@ -1,3 +1,10 @@
+# [4.71.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.70.2...v4.71.0) (2026-08-08)
+
+
+### Features
+
+* **home-assistant:** Bindung an prodesk aufloesen ([fe817f2](https://github.com/Nebu2k/kubernetes-homelab/commit/fe817f2f51f6d943c1d51251b9e48319d50770af))
+
 ## [4.70.2](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.70.1...v4.70.2) (2026-08-08)
 
 
