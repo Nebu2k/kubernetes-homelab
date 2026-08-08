@@ -332,7 +332,7 @@
       "id": 10,
       "type": "bargauge",
       "title": "Storage-Füllstand",
-      "description": "longhorn-storage ist der Ordner, in dem die Longhorn-Replicas der pve-VMs liegen, nas-nfs der NFS-Mount vom UniFi-NAS. local-lvm traegt die VM-Disks.",
+      "description": "nvme-2tb ist die 2TB-NVMe auf /mnt/nvme-2tb, dort liegen die Disks von k3s-worker-1 und vm-arch (frueher longhorn-storage). nas-nfs ist der NFS-Mount vom UniFi-NAS, local-lvm traegt die restlichen VM-Disks.",
       "datasource": { "type": "prometheus", "uid": "prometheus" },
       "gridPos": { "h": 8, "w": 8, "x": 16, "y": 4 },
       "targets": [
