@@ -1,3 +1,10 @@
+# [4.72.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.71.0...v4.72.0) (2026-08-08)
+
+
+### Features
+
+* **nodes:** node-lokalen Zustand ins Repo extrahieren ([7b60e5f](https://github.com/Nebu2k/kubernetes-homelab/commit/7b60e5f17224d27679ea52d196c8ea6c211388d7))
+
 # [4.71.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.70.2...v4.71.0) (2026-08-08)
 
 
