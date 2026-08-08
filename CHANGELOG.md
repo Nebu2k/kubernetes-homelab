@@ -1,3 +1,10 @@
+## [4.75.1](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.75.0...v4.75.1) (2026-08-08)
+
+
+### Bug Fixes
+
+* **talos:** worker-Label deklarativ, ServiceMonitors bis zum Monitoring aus ([f903450](https://github.com/Nebu2k/kubernetes-homelab/commit/f9034507f9fe4a9fbdffb1fda6127dbbcc916098))
+
 # [4.75.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.74.0...v4.75.0) (2026-08-08)
 
 
