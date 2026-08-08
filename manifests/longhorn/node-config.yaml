@@ -43,6 +43,17 @@ spec:
       path: /var/lib/longhorn/
       storageReserved: 285014057779
       tags: []
+    # Schritt 1 von 2. Der tote Eintrag kann nicht in einem Rutsch weg: der
+    # validator.longhorn.io-Webhook lehnt das Loeschen einer Disk ab, solange sie
+    # auf allowScheduling: true steht ("Please disable the disk first"), und das
+    # tut dieser hier, obwohl er seit jeher auf Ready=False liegt. Also erst
+    # deaktivieren, syncen lassen, dann im naechsten Commit streichen.
+    default-disk-k3s-worker-1:
+      allowScheduling: false
+      diskType: filesystem
+      evictionRequested: false
+      path: /var/lib/longhorn/
+      tags: []
 
 ---
 # raspi5 ist der umgekehrte Fall zu k3s-worker-1: hier hat der Eintrag aus diesem
