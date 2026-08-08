@@ -4,13 +4,23 @@
 
 # Storage-capable nodes
 #
-# Kein disks-Block, siehe die lange Begruendung beim prodesk-Eintrag unten. Hier
-# stand bis 2026-08-08 ein `default-disk-k3s-worker-1` auf /var/lib/longhorn/,
-# also ein Duplikat der Disk, die Longhorn selbst angelegt hat
-# (default-disk-72ae38d82baf8c92). Longhorn laesst pro Dateisystem-ID nur einen
-# Eintrag zu, der zweite lag seit jeher auf Ready=False/DiskFilesystemChanged.
-# Auf diesem Node hat die automatische Disk gewonnen, der Eintrag von hier war
-# der tote und konnte deshalb gefahrlos raus.
+# Hier stand bis 2026-08-08 ein `default-disk-k3s-worker-1` auf
+# /var/lib/longhorn/, also ein Duplikat der Disk, die Longhorn beim ersten Start
+# selbst angelegt hat. Longhorn laesst pro Dateisystem-ID nur einen Eintrag zu,
+# der zweite lag seit jeher auf Ready=False/DiskFilesystemChanged. Auf diesem
+# Node hat die automatische gewonnen, der Eintrag von hier war der tote.
+#
+# Der Name ist deshalb jetzt der fsid-Hash. Das ist haesslich und hat eine
+# Falle: bei einem Reimage von k3s-worker-1 aendert sich die Dateisystem-ID und
+# der Hash stimmt nicht mehr, dann entsteht das Duplikat neu. In dem Fall den
+# neuen Namen eintragen, nicht einen sprechenden erfinden.
+#
+# Den disks-Block ersatzlos zu streichen geht NICHT, auch wenn Longhorn die
+# Disk von allein anlegen wuerde. CRDs kennen keine Merge-Strategie pro Feld,
+# ein fehlendes `disks` wird als "ganze Map loeschen" angewendet, nicht als
+# "den einen Key aus last-applied loeschen". ArgoCD hat am 2026-08-08 genau das
+# versucht; abgefangen hat es der validator.longhorn.io-Webhook mit
+# "Please disable the disk and remove all replicas first".
 apiVersion: longhorn.io/v1beta2
 kind: Node
 metadata:
@@ -22,6 +32,17 @@ spec:
     - storage
   allowScheduling: true
   evictionRequested: false
+  disks:
+    # Werte 1:1 aus dem laufenden Cluster uebernommen. storageReserved stammt
+    # aus Longhorns Default von 30 Prozent bei der Anlage der Disk und wird hier
+    # nur festgeschrieben, nicht geaendert.
+    default-disk-72ae38d82baf8c92:
+      allowScheduling: true
+      diskType: filesystem
+      evictionRequested: false
+      path: /var/lib/longhorn/
+      storageReserved: 285014057779
+      tags: []
 
 ---
 # raspi5 ist der umgekehrte Fall zu k3s-worker-1: hier hat der Eintrag aus diesem
