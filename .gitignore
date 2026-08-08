@@ -53,6 +53,13 @@ coverage/
 # Ignore local kube configs
 .kube/
 
+# Talos: generierte machine configs und die talosconfig enthalten die etcd- und
+# Kubernetes-CAs im Klartext. Das Repo ist public, sie duerfen nie hinein.
+# Versioniert werden nur talconfig.yaml (Quelle) und talsecret.sops.yaml
+# (SOPS/age-verschluesselt).
+talos/clusterconfig/
+talos/talosconfig
+
 # Ignore Helm release cache
 .helm/
 

@@ -1,0 +1,160 @@
+# talhelper-Konfiguration fuer das neue Talos-Cluster.
+#
+# Einzige Quelle der Wahrheit fuer die machine configs. Generiert wird mit
+# "talhelper genconfig" nach ./clusterconfig/ (gitignored, enthaelt die CAs im
+# Klartext). Nie eine generierte Datei von Hand editieren, sie wird beim
+# naechsten genconfig ueberschrieben.
+#
+# Startaufbau: drei Control-Plane-VMs auf pve, die das Cluster parallel zum
+# bestehenden k3s-Cluster bootstrappen. Sie sind temporaer, spaeter ersetzen
+# prodesk und raspi5 zwei davon.
+
+clusterName: homelab
+
+talosVersion: v1.13.8
+kubernetesVersion: v1.36.3
+
+# VIP des neuen Clusters. Die .249 gehoert dem k3s-Cluster und kann in der
+# Parallelphase nicht doppelt belegt werden. Talos bringt den VIP eingebaut mit,
+# es braucht kein kube-vip.
+endpoint: https://192.168.2.248:6443
+
+# Bewusst dieselben CIDRs wie im k3s-Cluster statt der Talos-Defaults
+# (10.244.0.0/16 / 10.96.0.0/12). Beide Cluster sind getrennte L3-Domaenen, die
+# Ueberschneidung ist folgenlos, und die migrierten Manifeste stimmen ohne
+# Aenderung: home-assistant/configmap-configuration.yaml traegt 10.42.0.0/16 als
+# trusted_proxy, gatus/configmap.yaml prueft CoreDNS unter 10.43.0.10.
+clusterPodNets:
+  - 10.42.0.0/16
+clusterSvcNets:
+  - 10.43.0.0/16
+
+# Entspricht dem k3s-Ist-Zustand: k3s schedulet per Default auf Server-Nodes,
+# keine Node im heutigen Cluster hat einen Taint. Bedingung sind ehrliche
+# Requests und Limits, sonst kippt eine hungrige Workload den etcd-Member mit.
+allowSchedulingOnControlPlanes: true
+
+# Der VIP und alle Node-IPs muessen im API-Server-Cert stehen, sonst schlaegt
+# jeder Zugriff ueber eine andere Adresse als den Endpoint fehl.
+additionalApiServerCertSans:
+  - 192.168.2.248
+  - 192.168.2.20
+  - 192.168.2.21
+  - 192.168.2.22
+  - 127.0.0.1
+additionalMachineCertSans:
+  - 192.168.2.248
+  - 192.168.2.20
+  - 192.168.2.21
+  - 192.168.2.22
+
+# Flannel ist der Talos-Default und deckt sich mit k3s. Kein Grund, beim
+# Cluster-Neubau gleichzeitig die CNI zu wechseln.
+cniConfig:
+  name: flannel
+
+nodes:
+  - hostname: talos-cp-1
+    ipAddress: 192.168.2.20
+    controlPlane: true
+    installDisk: /dev/sda
+    # nocloud-installer, nicht installer: die VMs booten vom
+    # nocloud-Disk-Image, ein metal-Installer wuerde die Plattform beim ersten
+    # Upgrade umstellen. Die Schematic-ID ist dieselbe wie in
+    # homelab-terraform/proxmox/vm-talos.tf.
+    talosImageURL: factory.talos.dev/nocloud-installer/88d1f7a5c4f1d3aba7df787c448c1d3d008ed29cfb34af53fa0df4336a56040b
+    networkInterfaces:
+      # deviceSelector statt festem Namen: Talos vergibt vorhersagbare
+      # Interface-Namen (enp0s18 o.ae.), die von der Proxmox-Maschinenklasse
+      # abhaengen. Der Treiber ist stabil, der Name nicht.
+      - deviceSelector:
+          driver: virtio_net
+        dhcp: false
+        addresses:
+          - 192.168.2.20/24
+        routes:
+          - network: 0.0.0.0/0
+            gateway: 192.168.2.1
+        vip:
+          ip: 192.168.2.248
+
+  - hostname: talos-cp-2
+    ipAddress: 192.168.2.21
+    controlPlane: true
+    installDisk: /dev/sda
+    talosImageURL: factory.talos.dev/nocloud-installer/88d1f7a5c4f1d3aba7df787c448c1d3d008ed29cfb34af53fa0df4336a56040b
+    networkInterfaces:
+      - deviceSelector:
+          driver: virtio_net
+        dhcp: false
+        addresses:
+          - 192.168.2.21/24
+        routes:
+          - network: 0.0.0.0/0
+            gateway: 192.168.2.1
+        vip:
+          ip: 192.168.2.248
+
+  - hostname: talos-cp-3
+    ipAddress: 192.168.2.22
+    controlPlane: true
+    installDisk: /dev/sda
+    talosImageURL: factory.talos.dev/nocloud-installer/88d1f7a5c4f1d3aba7df787c448c1d3d008ed29cfb34af53fa0df4336a56040b
+    networkInterfaces:
+      - deviceSelector:
+          driver: virtio_net
+        dhcp: false
+        addresses:
+          - 192.168.2.22/24
+        routes:
+          - network: 0.0.0.0/0
+            gateway: 192.168.2.1
+        vip:
+          ip: 192.168.2.248
+
+patches:
+  # DNS wie auf den k3s-Nodes: AdGuard-LXC auf pve und die macmini-Instanz.
+  # Keine RA-v6-Resolver, die waren auf den k3s-Nodes die wiederkehrende Falle.
+  - |-
+    machine:
+      network:
+        nameservers:
+          - 192.168.2.16
+          - 192.168.2.4
+
+  # Longhorn braucht /var/lib/longhorn im kubelet-Mount-Namespace, sonst sieht
+  # der Manager die Replikate nicht. Die dafuer noetigen System Extensions
+  # (iscsi-tools, util-linux-tools) stecken in der Schematic-ID oben.
+  # Achtung: "talosctl reset" nimmt diese Daten mit.
+  - |-
+    machine:
+      kubelet:
+        extraMounts:
+          - destination: /var/lib/longhorn
+            type: bind
+            source: /var/lib/longhorn
+            options:
+              - bind
+              - rshared
+              - rw
+
+controlPlane:
+  patches:
+    # Talos erzwingt PodSecurity "baseline", Longhorns CSI-Pods brauchen mehr.
+    # Nur der Zusatz steht hier: talhelper merged den Patch in die
+    # Talos-Defaults, ein ausgeschriebener Block traegt kube-system doppelt ein.
+    #
+    # Andere Workloads mit hostNetwork oder hostPath (Home Assistant, csi-driver-smb)
+    # brauchen beim Migrieren ein Label am Namespace
+    # (pod-security.kubernetes.io/enforce: privileged) statt eines weiteren
+    # Eintrags hier: das ist GitOps und faellt beim Deployen auf, eine Aenderung
+    # hier rebootet die Control-Plane.
+    - |-
+      cluster:
+        apiServer:
+          admissionControl:
+            - name: PodSecurity
+              configuration:
+                exemptions:
+                  namespaces:
+                    - longhorn-system
