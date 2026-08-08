@@ -1,3 +1,10 @@
+## [4.73.3](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.73.2...v4.73.3) (2026-08-08)
+
+
+### Bug Fixes
+
+* **longhorn:** toten Disk-Eintrag auf k3s-worker-1 erst deaktivieren ([dae9e20](https://github.com/Nebu2k/kubernetes-homelab/commit/dae9e2021028a44c2b3ae87ffb4d6c870b5f2b4b))
+
 ## [4.73.2](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.73.1...v4.73.2) (2026-08-08)
 
 
