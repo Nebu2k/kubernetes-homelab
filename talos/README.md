@@ -80,10 +80,20 @@ app-of-apps des neuen Clusters. Sie zieht die Application-Manifeste aus `apps/`
 und sagt nur, welche davon hier schon laufen und was sich unterscheidet. Ein
 Dienst wandert damit durch eine Zeile mehr in der Liste, nicht durch eine Kopie.
 
-Aktuell vier: `sealed-secrets`, `metallb`, `traefik`, `cert-manager`. Belegt
-funktionierend: Traefik auf `192.168.2.240` liefert das Let's-Encrypt-Wildcard,
-also greifen SealedSecrets (Cloudflare-Token), cert-manager (DNS-01) und der
-TLSStore-Default.
+Aktuell fuenf: `sealed-secrets`, `metallb`, `traefik`, `cert-manager`,
+`longhorn`. Belegt funktionierend: Traefik auf `192.168.2.240` liefert das
+Let's-Encrypt-Wildcard, also greifen SealedSecrets (Cloudflare-Token),
+cert-manager (DNS-01) und der TLSStore-Default.
+
+Longhorn steht seit dem 2026-08-08, drei Storage-Nodes mit je 116 GiB frei.
+Ende zu Ende geprueft: PVC gebunden, Daten geschrieben und wieder gelesen, zwei
+Replikate auf zwei Nodes, Backup-Target `available: true`.
+
+**Beide Cluster teilen sich dasselbe CIFS-Backup-Target.** Das neue Cluster hat
+beim ersten Sync alle 18 BackupVolumes und 141 Backups des alten eingelesen,
+lesend, es wurde nichts geloescht (in beiden Clustern gezaehlt). Das ist die
+Voraussetzung fuer den Restore und kein Unfall. Ein Job ist deshalb bewusst aus:
+`system-backup-daily`, siehe `clusters/talos/longhorn/kustomization.yaml`.
 
 **Die Sealing-Keys sind aus dem k3s-Cluster uebertragen**, alle sieben
 (30-Tage-Rotation, sieben Monate Historie). Deshalb funktioniert jedes
@@ -151,6 +161,14 @@ talosctl apply-config --nodes 192.168.2.20 --file clusterconfig/homelab-talos-cp
   (Home Assistant, csi-driver-smb) braucht beim Migrieren ein
   `pod-security.kubernetes.io/enforce: privileged` am Namespace. Das gehoert in
   die Manifeste, nicht hierher: eine Aenderung hier rebootet die Control-Plane.
+- **Longhorn-Disks muessen unter GitOps deklariert werden.** Longhorn legt die
+  `default-disk` nur an, wenn es das Node-CR selbst erzeugt. ArgoCD ist
+  schneller, longhorn-manager adoptiert das vorhandene CR und ergaenzt nichts.
+  Ohne `spec.disks` im Manifest stehen die Nodes auf Ready und Schedulable und
+  haben null Kapazitaet, was erst am ersten Pending-Volume auffaellt. Steht in
+  `clusters/talos/longhorn/node-config.yaml`. Node-CRs deshalb auch nicht
+  loeschen: dann legt Longhorn seine eigene Disk daneben und das Duplikat ist
+  nicht mehr aufloesbar.
 - **`talosctl reset` nimmt `/var/lib/longhorn` mit.** Die Replikate liegen auf
   der EPHEMERAL-Partition.
 - **Zwei Cluster heisst zwei kubeconfigs.** Ein Terraform-Stack mit umgebogenem
