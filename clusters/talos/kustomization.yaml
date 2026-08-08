@@ -19,7 +19,20 @@ resources:
   - ../../apps/cert-manager.yaml
 
 patches:
-  # MetalLB: eigener Pool und PodSecurity.
+  # MetalLB: eigener Pool, PodSecurity und die Exclude-Label-Ausnahme.
+  #
+  # ignoreExcludeLB ist der Unterschied, der am meisten Zeit gekostet hat:
+  # vanilla Kubernetes setzt auf Control-Plane-Nodes
+  # node.kubernetes.io/exclude-from-external-load-balancers, k3s tut das nicht.
+  # MetalLB respektiert das Label und kuendigt von solchen Nodes nichts an. Im
+  # Startaufbau sind alle drei Nodes Control-Plane, also kuendigt niemand an:
+  # der Service bekommt seine IP, ArgoCD meldet Healthy, und trotzdem
+  # beantwortet kein Node das ARP fuer die .240. Sichtbar nur daran, dass
+  # ServiceL2Status leer bleibt.
+  #
+  # Das Label passt nicht zu allowSchedulingOnControlPlanes: diese Nodes SIND
+  # die Worker. Es hier zu ignorieren ist richtiger, als es an den Nodes zu
+  # loeschen: Talos setzt es beim naechsten Reconcile ohnehin wieder.
   - target:
       kind: Application
       name: metallb
@@ -27,6 +40,11 @@ patches:
       - op: replace
         path: /spec/sources/2/path
         value: clusters/talos/metallb
+      - op: add
+        path: /spec/sources/0/helm/valuesObject
+        value:
+          speaker:
+            ignoreExcludeLB: true
       - op: add
         path: /spec/syncPolicy/managedNamespaceMetadata
         value:
