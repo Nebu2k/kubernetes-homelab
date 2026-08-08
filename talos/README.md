@@ -49,19 +49,43 @@ stimmen ohne Aenderung: `home-assistant/configmap-configuration.yaml` traegt
 
 ## Image
 
-Image Factory, Schematic
-`88d1f7a5c4f1d3aba7df787c448c1d3d008ed29cfb34af53fa0df4336a56040b`:
+Image Factory, zwei Schematics. Beide tragen `siderolabs/iscsi-tools` und
+`siderolabs/util-linux-tools` fuer Longhorn, der `qemu-guest-agent` ist der
+einzige Unterschied:
 
-- `siderolabs/iscsi-tools` und `siderolabs/util-linux-tools` fuer Longhorn
-- `siderolabs/qemu-guest-agent` fuer Proxmox
+- **VMs auf pve**, zusaetzlich mit `siderolabs/qemu-guest-agent`:
+  `88d1f7a5c4f1d3aba7df787c448c1d3d008ed29cfb34af53fa0df4336a56040b`
+- **prodesk (Blech)**, ohne weitere Extensions:
+  `613e1592b2da41ae5e265e8789429f22e121aab91cb4deb6bc3c0b6262961245`
 
-Die ID steht an zwei Stellen (hier in `talconfig.yaml` und in
+Die getrennte Blech-Schematic gibt es seit dem 2026-08-09. Vorher lief prodesk
+auf der VM-Schematic: der Guest-Agent findet auf Blech keinen virtio-Port,
+bleibt dauerhaft in `Waiting` und steht damit in jedem `talosctl services` und
+`talosctl health` im Weg. Funktional folgenlos, aber Rauschen, das man bei jeder
+Diagnose erst wegdenken muss.
+
+Die VM-ID steht an zwei Stellen (hier in `talconfig.yaml` und in
 `homelab-terraform/proxmox/vm-talos.tf`) und muss zusammenpassen. Laufen sie
 auseinander, faellt die Node beim naechsten Upgrade auf ein Image ohne
-Extensions zurueck und Longhorn verliert seine Volumes.
+Extensions zurueck und Longhorn verliert seine Volumes. Fuer prodesk gilt
+dasselbe zwischen `talconfig.yaml` und der ISO, von der er installiert wurde.
 
 Die VMs booten vom `nocloud`-Disk-Image, Upgrades laufen ueber
 `nocloud-installer`. Ein `metal`-Installer wuerde die Plattform umstellen.
+prodesk umgekehrt: `metal-installer`, weil er von der ISO auf die NVMe
+installiert ist.
+
+Schematic-Wechsel ist ein Image-Wechsel, ein `apply-config` allein reicht nicht.
+Beides nacheinander, und bei Control-Plane-Nodes mit `--preserve`, sonst wird
+die EPHEMERAL-Partition samt etcd-Daten geleert und der Member muss neu syncen:
+
+```bash
+talhelper genconfig   # SOPS_AGE_KEY_FILE beachten, siehe unten
+talosctl --talosconfig clusterconfig/talosconfig apply-config -n <ip> \
+  --file clusterconfig/homelab-<node>.yaml
+talosctl --talosconfig clusterconfig/talosconfig upgrade -n <ip> --preserve \
+  --image factory.talos.dev/<platform>-installer/<schematic-id>:<talos-version>
+```
 
 ## Plattform (Stand 2026-08-08)
 

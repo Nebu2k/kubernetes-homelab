@@ -124,10 +124,12 @@ nodes:
   #
   # Unterschiede zu den VMs oben, beide sind Blech-bedingt:
   #
-  #  - talosImageURL ist der metal-installer, nicht der nocloud-installer. Die
-  #    Schematic-ID ist dieselbe, der qemu-guest-agent darin ist auf Blech
-  #    nutzlos aber harmlos. Eine eigene Schematic waere eine zweite ID, die
-  #    zur ISO passen muss, und genau das ist eine Fehlerquelle weniger.
+  #  - talosImageURL ist der metal-installer, nicht der nocloud-installer, und
+  #    eine eigene Schematic ohne siderolabs/qemu-guest-agent. Auf Blech gibt es
+  #    keinen virtio-Port, der Dienst haengt sonst dauerhaft in "Waiting" und
+  #    steht in jedem "talosctl services" und "talosctl health" im Weg. Beide
+  #    Schematics tragen iscsi-tools und util-linux-tools fuer Longhorn, der
+  #    Guest-Agent ist der einzige Unterschied.
   #  - installDiskSelector statt installDisk. Der Gastname /dev/nvme0n1 ist
   #    zwar stabil, aber im Maintenance-Mode haengen unter Umstaenden noch
   #    iSCSI-Geraete von Longhorn mit dran (auf prodesk waren es 19 als sda
@@ -137,7 +139,7 @@ nodes:
     controlPlane: true
     installDiskSelector:
       serial: 39MPA3T0PZXP
-    talosImageURL: factory.talos.dev/metal-installer/88d1f7a5c4f1d3aba7df787c448c1d3d008ed29cfb34af53fa0df4336a56040b
+    talosImageURL: factory.talos.dev/metal-installer/613e1592b2da41ae5e265e8789429f22e121aab91cb4deb6bc3c0b6262961245
     networkInterfaces:
       # Auswahl ueber die MAC statt ueber virtio_net wie bei den VMs: hier gibt
       # es genau eine physische NIC (eno1) und die Adresse ist unveraenderlich.
