@@ -4,23 +4,41 @@
 
 # Storage-capable nodes
 #
-# Hier stand bis 2026-08-08 ein `default-disk-k3s-worker-1` auf
-# /var/lib/longhorn/, also ein Duplikat der Disk, die Longhorn beim ersten Start
-# selbst angelegt hat. Longhorn laesst pro Dateisystem-ID nur einen Eintrag zu,
-# der zweite lag seit jeher auf Ready=False/DiskFilesystemChanged. Auf diesem
-# Node hat die automatische gewonnen, der Eintrag von hier war der tote.
+# ACHTUNG, spec.disks ist auf diesem Node und auf raspi5 faktisch eingefroren.
+# Nicht anfassen, ohne den Absatz hier gelesen zu haben.
 #
-# Der Name ist deshalb jetzt der fsid-Hash. Das ist haesslich und hat eine
-# Falle: bei einem Reimage von k3s-worker-1 aendert sich die Dateisystem-ID und
-# der Hash stimmt nicht mehr, dann entsteht das Duplikat neu. In dem Fall den
-# neuen Namen eintragen, nicht einen sprechenden erfinden.
+# Beide Nodes tragen zwei Disk-Eintraege auf demselben Pfad /var/lib/longhorn/:
+# den hier gepflegten und die default-disk-<fsid-hash>, die Longhorn beim ersten
+# Start selbst anlegt. Longhorn laesst pro Dateisystem-ID nur einen gelten, der
+# andere liegt auf Ready=False/DiskFilesystemChanged. Welcher gewinnt, ist
+# Registrierungsreihenfolge: hier die automatische, auf raspi5 die von hier.
 #
-# Den disks-Block ersatzlos zu streichen geht NICHT, auch wenn Longhorn die
-# Disk von allein anlegen wuerde. CRDs kennen keine Merge-Strategie pro Feld,
-# ein fehlendes `disks` wird als "ganze Map loeschen" angewendet, nicht als
-# "den einen Key aus last-applied loeschen". ArgoCD hat am 2026-08-08 genau das
-# versucht; abgefangen hat es der validator.longhorn.io-Webhook mit
-# "Please disable the disk and remove all replicas first".
+# Am 2026-08-08 versucht wegzuraeumen, drei Sackgassen, alle vom
+# validator.longhorn.io-Webhook:
+#
+#  1. disks-Block ersatzlos streichen -> "Delete Disk ... Please disable the
+#     disk and remove all replicas first". CRDs kennen keine Merge-Strategie pro
+#     Feld, ein fehlendes `disks` wird als "ganze Map loeschen" angewendet und
+#     haette die AKTIVE Disk mitgenommen. Nur der Webhook hat das verhindert.
+#  2. Nur den toten Eintrag streichen, den aktiven per fsid-Hash eintragen ->
+#     derselbe Fehler, diesmal fuer den toten. Der Loesch-Check haengt an
+#     allowScheduling: true, und das steht dort seit jeher.
+#  3. Den toten erst auf allowScheduling: false setzen -> "duplicate disk paths
+#     on node k3s-worker-1". Jedes Update, das beide Eintraege enthaelt, wird
+#     abgelehnt.
+#
+# Es gibt also keinen Uebergang, den der Webhook durchlaesst. Aufloesen liesse
+# sich das nur, indem alle Replikate von diesem Node wegziehen (177 GB), die
+# Disk dann leer geloescht wird und die Replikate zurueckkommen. Fuer einen
+# Eintrag, der ausser einem roten Haken im Longhorn-UI nichts tut, ist das nicht
+# verhaeltnismaessig.
+#
+# Praktische Folge, und die ist echt: **spec.disks ist auf diesen beiden Nodes
+# nicht mehr aenderbar**, auch nicht storageReserved. Was fuer Wartung gebraucht
+# wird, geht ueber die Node-Ebene (spec.allowScheduling, spec.tags), die ist
+# nicht betroffen. Sauber wird es erst bei einem Reimage des Nodes: dann diesen
+# disks-Block ersatzlos streichen und Longhorn die Disk allein anlegen lassen,
+# so wie es prodesk unten schon macht.
 apiVersion: longhorn.io/v1beta2
 kind: Node
 metadata:
@@ -33,27 +51,13 @@ spec:
   allowScheduling: true
   evictionRequested: false
   disks:
-    # Werte 1:1 aus dem laufenden Cluster uebernommen. storageReserved stammt
-    # aus Longhorns Default von 30 Prozent bei der Anlage der Disk und wird hier
-    # nur festgeschrieben, nicht geaendert.
-    default-disk-72ae38d82baf8c92:
+    default-disk-k3s-worker-1:
       allowScheduling: true
       diskType: filesystem
       evictionRequested: false
       path: /var/lib/longhorn/
-      storageReserved: 285014057779
-      tags: []
-    # Schritt 1 von 2. Der tote Eintrag kann nicht in einem Rutsch weg: der
-    # validator.longhorn.io-Webhook lehnt das Loeschen einer Disk ab, solange sie
-    # auf allowScheduling: true steht ("Please disable the disk first"), und das
-    # tut dieser hier, obwohl er seit jeher auf Ready=False liegt. Also erst
-    # deaktivieren, syncen lassen, dann im naechsten Commit streichen.
-    default-disk-k3s-worker-1:
-      allowScheduling: false
-      diskType: filesystem
-      evictionRequested: false
-      path: /var/lib/longhorn/
-      tags: []
+      tags:
+        - storage
 
 ---
 # raspi5 ist der umgekehrte Fall zu k3s-worker-1: hier hat der Eintrag aus diesem
