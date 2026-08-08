@@ -1,3 +1,10 @@
+# [4.78.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.77.0...v4.78.0) (2026-08-08)
+
+
+### Features
+
+* **talos:** prodesk als vierte Control-Plane-Node vorbereiten ([ad3d8d1](https://github.com/Nebu2k/kubernetes-homelab/commit/ad3d8d13af69b175f1898753fd3025e630f09987))
+
 # [4.77.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.76.1...v4.77.0) (2026-08-08)
 
 
