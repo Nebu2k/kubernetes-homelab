@@ -1,3 +1,10 @@
+# [4.75.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.74.0...v4.75.0) (2026-08-08)
+
+
+### Features
+
+* **clusters:** GitOps-Overlay und root-App fuer das Talos-Cluster ([c525f92](https://github.com/Nebu2k/kubernetes-homelab/commit/c525f921b79f4e562306ee54dcaa7ec5527aa110))
+
 # [4.74.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.73.3...v4.74.0) (2026-08-08)
 
 
