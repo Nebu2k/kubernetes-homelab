@@ -1,3 +1,10 @@
+# [4.73.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.72.0...v4.73.0) (2026-08-08)
+
+
+### Features
+
+* **longhorn:** prodesk als dritten Storage-Node aktivieren ([22727e3](https://github.com/Nebu2k/kubernetes-homelab/commit/22727e3c846cda8ff27514d91346d3fa812f31b7))
+
 # [4.72.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.71.0...v4.72.0) (2026-08-08)
 
 
