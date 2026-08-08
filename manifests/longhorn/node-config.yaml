@@ -37,8 +37,11 @@
 # nicht mehr aenderbar**, auch nicht storageReserved. Was fuer Wartung gebraucht
 # wird, geht ueber die Node-Ebene (spec.allowScheduling, spec.tags), die ist
 # nicht betroffen. Sauber wird es erst bei einem Reimage des Nodes: dann diesen
-# disks-Block ersatzlos streichen und Longhorn die Disk allein anlegen lassen,
-# so wie es prodesk unten schon macht.
+# disks-Block ersatzlos streichen und Longhorn die Disk allein anlegen lassen.
+#
+# ACHTUNG, im Talos-Cluster gilt das Gegenteil: dort MUSS spec.disks im Manifest
+# stehen, weil ArgoCD das Node-CR vor longhorn-manager anlegt und Longhorn dann
+# gar keine Disk erzeugt. Siehe clusters/talos/longhorn/node-config.yaml.
 apiVersion: longhorn.io/v1beta2
 kind: Node
 metadata:
@@ -92,58 +95,6 @@ spec:
       path: /var/lib/longhorn/
       tags:
         - storage
-
----
-# prodesk: dritter Storage-Node seit 2026-08-08.
-#
-# Vorher stand er hier auf allowScheduling: false, weil sein Root-LV nur 100 GB
-# hatte. Das war der Ubuntu-Installer-Default (subiquity legt bei "LVM group"
-# hoechstens 100 GB an und laesst den Rest der VG nicht allokiert), nicht die
-# Groesse der Platte: 135 GB der 238-GB-NVMe lagen ungenutzt in der VG. Am
-# 2026-08-08 per lvextend + resize2fs geholt, Longhorn meldet seitdem 248 GB.
-#
-# Damit liegen die Replikate erstmals auf drei Failure-Domains statt zwei:
-# k3s-worker-1 (VM auf pve), raspi5 (ARM, eigenes Blech), prodesk (x86, eigenes
-# Blech). Bei numberOfReplicas 2 gibt es endlich einen Ausweichnode, wenn einer
-# der beiden alten wegfaellt oder ein Upgrade laeuft.
-#
-# BEWUSST OHNE disks-Block, anders als bei k3s-worker-1 und raspi5 oben. Ein
-# eigener Disk-Key auf /var/lib/longhorn/ ist immer ein Duplikat der Disk, die
-# Longhorn beim ersten Start selbst anlegt (default-disk-<fsid-hash>), und
-# Longhorn laesst pro Dateisystem-ID nur einen Eintrag zu. Der zweite landet
-# dauerhaft auf Ready=False/DiskFilesystemChanged. Genau das ist auf beiden
-# Nodes oben passiert, seit jeher und unbemerkt: auf raspi5 gewann der Eintrag
-# aus diesem Manifest, auf k3s-worker-1 der automatische. Welcher gewinnt, ist
-# Registrierungsreihenfolge, nicht Absicht. Die Eintraege hier NICHT einfach
-# loeschen, auf raspi5 haengen die aktiven Replikate am Manifest-Eintrag.
-#
-# Wirksam ist ohnehin nur das Node-Tag: die StorageClass selektiert ueber
-# persistence.defaultNodeSelector (nodeSelector "storage"), nicht ueber
-# diskSelector. Die tags am Disk sind unbenutzt.
-#
-# ABGESCHALTET am 2026-08-09: prodesk wird fuer Talos plattgemacht (Schritt 5
-# der Migration). allowScheduling: false ist die Voraussetzung fuer den Drain,
-# nicht Kosmetik: Longhorn haelt fuer jeden laufenden instance-manager eine PDB
-# mit minAvailable 1, und die steht auf disruptionsAllowed 0. Ohne das hier
-# blockiert "kubectl drain" ewig, das ist dieselbe Falle, die kured zu
-# forceReboot zwingt.
-#
-# Er traegt dabei nichts: alle 19 Volumes liegen mit je zwei Replikaten auf
-# k3s-worker-1 und raspi5, prodesk hat null. Der Eintrag als dritte
-# Failure-Domain vom 2026-08-08 hat nie Replikate bekommen, weil jedes Volume
-# schon zwei hatte. Es geht also keine Redundanz verloren.
-#
-# Nach dem Drain faellt dieser Block ganz weg, zusammen mit dem Node.
-apiVersion: longhorn.io/v1beta2
-kind: Node
-metadata:
-  name: prodesk
-  namespace: longhorn-system
-spec:
-  name: prodesk
-  tags: []
-  allowScheduling: false
-  evictionRequested: false
 
 ---
 # Low-storage nodes (excluded from replica scheduling)

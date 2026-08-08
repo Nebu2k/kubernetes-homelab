@@ -41,12 +41,14 @@ additionalApiServerCertSans:
   - 192.168.2.20
   - 192.168.2.21
   - 192.168.2.22
+  - 192.168.2.23
   - 127.0.0.1
 additionalMachineCertSans:
   - 192.168.2.248
   - 192.168.2.20
   - 192.168.2.21
   - 192.168.2.22
+  - 192.168.2.23
 
 # Flannel ist der Talos-Default und deckt sich mit k3s. Kein Grund, beim
 # Cluster-Neubau gleichzeitig die CNI zu wechseln.
@@ -106,6 +108,44 @@ nodes:
         dhcp: false
         addresses:
           - 192.168.2.22/24
+        routes:
+          - network: 0.0.0.0/0
+            gateway: 192.168.2.1
+        vip:
+          ip: 192.168.2.248
+
+  # prodesk: erstes Blech im neuen Cluster, HP ProDesk 600 G4 DM, 31 GB RAM.
+  # Ersetzt spaeter eine der drei Start-VMs (Schritt 7). Er hebt die
+  # RAM-Decke des Clusters von 11.7 GB auf ueber 40 und macht damit die
+  # schwere zweite Welle (kube-prometheus-stack) ueberhaupt erst moeglich.
+  #
+  # Am 2026-08-09 aus dem k3s-Cluster gedraint: dort trug er 30 der Pods mit
+  # worker-nodeSelector und alle 19 Longhorn-Engines, aber null Replikate.
+  #
+  # Unterschiede zu den VMs oben, beide sind Blech-bedingt:
+  #
+  #  - talosImageURL ist der metal-installer, nicht der nocloud-installer. Die
+  #    Schematic-ID ist dieselbe, der qemu-guest-agent darin ist auf Blech
+  #    nutzlos aber harmlos. Eine eigene Schematic waere eine zweite ID, die
+  #    zur ISO passen muss, und genau das ist eine Fehlerquelle weniger.
+  #  - installDiskSelector statt installDisk. Der Gastname /dev/nvme0n1 ist
+  #    zwar stabil, aber im Maintenance-Mode haengen unter Umstaenden noch
+  #    iSCSI-Geraete von Longhorn mit dran (auf prodesk waren es 19 als sda
+  #    bis sds). Die Seriennummer ist eindeutig.
+  - hostname: prodesk
+    ipAddress: 192.168.2.23
+    controlPlane: true
+    installDiskSelector:
+      serial: 39MPA3T0PZXP
+    talosImageURL: factory.talos.dev/metal-installer/88d1f7a5c4f1d3aba7df787c448c1d3d008ed29cfb34af53fa0df4336a56040b
+    networkInterfaces:
+      # Auswahl ueber die MAC statt ueber virtio_net wie bei den VMs: hier gibt
+      # es genau eine physische NIC (eno1) und die Adresse ist unveraenderlich.
+      - deviceSelector:
+          hardwareAddr: c4:65:16:bb:4f:cb
+        dhcp: false
+        addresses:
+          - 192.168.2.23/24
         routes:
           - network: 0.0.0.0/0
             gateway: 192.168.2.1
