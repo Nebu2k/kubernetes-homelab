@@ -31,14 +31,40 @@
 # Eintrag dazu. Dann ist es dasselbe Problem wie im alten Cluster. Node-CRs also
 # nicht loeschen, auch nicht "zum Aufraeumen".
 #
-# storageReserved: 30 GiB. /var/lib/longhorn liegt auf der EPHEMERAL-Partition
-# (133 GB, xfs), und die traegt auch die Container-Images und die Logs. Ohne
-# Reserve fuellt Longhorn sie bis an den Rand und nimmt das kubelet mit.
+# Bei prodesk ist genau das am 2026-08-09 auf anderem Weg eingetreten, ohne dass
+# jemand etwas geloescht hat: er ist dem Cluster beigetreten, als Longhorn schon
+# lief. Damit war longhorn-manager zuerst da und hat das Node-CR selbst angelegt.
+# Fuer neue Nodes gilt die Reihenfolge oben also NICHT, sie ist genau umgedreht.
 #
-# Alle drei Nodes tragen Storage. Im Startaufbau sind alle drei Control-Plane
-# und alle drei tragen Workloads, eine Unterscheidung gaebe es nicht abzubilden.
-# Wenn prodesk und raspi5 in den Schritten 5 und 6 dazukommen, gehoeren sie hier
-# ergaenzt.
+# Deshalb traegt prodesk unten den vorgefundenen Namen default-disk-1030400000000
+# statt default-disk-prodesk. Ein eigener Name waere ein ZWEITER Eintrag auf
+# /var/lib/longhorn/ und damit die Sackgasse aus dem k3s-Cluster. Umbenennen
+# ginge auch nachtraeglich nicht: das waere ein Entfernen und Hinzufuegen auf
+# demselben Pfad in einem Schritt, und der validator.longhorn.io-Webhook laesst
+# das nicht durch. Der haessliche Name ist der Preis dafuer, den Webhook nicht
+# zu bekaempfen. Bei jedem weiteren Node, der spaeter dazukommt (raspi5): erst
+# "kubectl -n longhorn-system get nodes.longhorn.io <name> -o jsonpath=
+# '{.spec.disks}'" lesen, dann den vorgefundenen Schluessel uebernehmen.
+#
+# Die tags sind kein Schmuck. Die StorageClass longhorn selektiert
+# nodeSelector: storage. Ein Node ohne den Tag bekommt nie ein Replikat und
+# meldet trotzdem Ready und Schedulable. Longhorn legt Auto-CRs ohne Tags an,
+# prodesk waere also still unbeteiligt geblieben.
+#
+# storageReserved: 30 GiB, auf allen Nodes gleich. /var/lib/longhorn liegt auf
+# der EPHEMERAL-Partition (xfs), und die traegt auch die Container-Images und
+# die Logs. Ohne Reserve fuellt Longhorn sie bis an den Rand und nimmt das
+# kubelet mit.
+#
+# Der Betrag ist bewusst absolut und nicht anteilig, obwohl die Partitionen
+# unterschiedlich gross sind (VMs 124 GiB, prodesk 236 GiB): Images und Logs
+# brauchen, was sie brauchen, das skaliert nicht mit der Plattengroesse.
+# Longhorns Default waeren 30 Prozent gewesen, auf prodesk also 71 GiB
+# verschenkt. Nutzbar sind damit rund 93 GiB je VM und rund 206 GiB auf prodesk.
+#
+# Alle Nodes tragen Storage. Sie sind alle Control-Plane und tragen alle
+# Workloads, eine Unterscheidung gaebe es nicht abzubilden. Wenn raspi5
+# dazukommt, gehoert er hier ergaenzt.
 apiVersion: longhorn.io/v1beta2
 kind: Node
 metadata:
@@ -96,6 +122,30 @@ spec:
   evictionRequested: false
   disks:
     default-disk-talos-cp-3:
+      allowScheduling: true
+      diskType: filesystem
+      evictionRequested: false
+      path: /var/lib/longhorn/
+      storageReserved: 32212254720
+      tags:
+        - storage
+
+---
+# Disk-Schluessel von Longhorn vorgefunden, nicht frei gewaehlt. Begruendung
+# steht oben im Kopf, kurz: er kam nach Longhorn ins Cluster.
+apiVersion: longhorn.io/v1beta2
+kind: Node
+metadata:
+  name: prodesk
+  namespace: longhorn-system
+spec:
+  name: prodesk
+  tags:
+    - storage
+  allowScheduling: true
+  evictionRequested: false
+  disks:
+    default-disk-1030400000000:
       allowScheduling: true
       diskType: filesystem
       evictionRequested: false
