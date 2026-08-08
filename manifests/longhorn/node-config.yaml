@@ -3,6 +3,14 @@
 # Exclude low-storage nodes from replica scheduling
 
 # Storage-capable nodes
+#
+# Kein disks-Block, siehe die lange Begruendung beim prodesk-Eintrag unten. Hier
+# stand bis 2026-08-08 ein `default-disk-k3s-worker-1` auf /var/lib/longhorn/,
+# also ein Duplikat der Disk, die Longhorn selbst angelegt hat
+# (default-disk-72ae38d82baf8c92). Longhorn laesst pro Dateisystem-ID nur einen
+# Eintrag zu, der zweite lag seit jeher auf Ready=False/DiskFilesystemChanged.
+# Auf diesem Node hat die automatische Disk gewonnen, der Eintrag von hier war
+# der tote und konnte deshalb gefahrlos raus.
 apiVersion: longhorn.io/v1beta2
 kind: Node
 metadata:
@@ -14,16 +22,21 @@ spec:
     - storage
   allowScheduling: true
   evictionRequested: false
-  disks:
-    default-disk-k3s-worker-1:
-      allowScheduling: true
-      diskType: filesystem
-      evictionRequested: false
-      path: /var/lib/longhorn/
-      tags:
-        - storage
 
 ---
+# raspi5 ist der umgekehrte Fall zu k3s-worker-1: hier hat der Eintrag aus diesem
+# Manifest gewonnen, nicht der automatische. Welcher gewinnt, ist
+# Registrierungsreihenfolge, nicht Absicht.
+#
+# ACHTUNG, der disks-Block darf hier NICHT weg. An dieser Disk haengen die
+# aktiven Replikate aller Volumes. Das tote Gegenstueck
+# (default-disk-ba524caa2357cade) ist am 2026-08-08 stattdessen direkt aus
+# spec.disks entfernt worden, imperativ: es stand nie in git, und Longhorn legt
+# es nicht neu an, solange spec.disks nicht leer ist.
+#
+# Bei einem Reimage von raspi5 aendert sich die Dateisystem-ID und damit der
+# Name der automatischen Disk. Dann entsteht das Duplikat neu. In dem Fall diesen
+# Block ersatzlos streichen, statt ihn anzupassen.
 apiVersion: longhorn.io/v1beta2
 kind: Node
 metadata:
