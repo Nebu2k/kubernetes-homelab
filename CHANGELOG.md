@@ -1,3 +1,10 @@
+## [4.73.2](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.73.1...v4.73.2) (2026-08-08)
+
+
+### Bug Fixes
+
+* **longhorn:** aktive Disk auf k3s-worker-1 benennen statt disks zu streichen ([5908a5f](https://github.com/Nebu2k/kubernetes-homelab/commit/5908a5f35ef1ee4f99ab2d67d31cb4492a5deea2))
+
 ## [4.73.1](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.73.0...v4.73.1) (2026-08-08)
 
 
