@@ -120,6 +120,20 @@ spec:
 # Wirksam ist ohnehin nur das Node-Tag: die StorageClass selektiert ueber
 # persistence.defaultNodeSelector (nodeSelector "storage"), nicht ueber
 # diskSelector. Die tags am Disk sind unbenutzt.
+#
+# ABGESCHALTET am 2026-08-09: prodesk wird fuer Talos plattgemacht (Schritt 5
+# der Migration). allowScheduling: false ist die Voraussetzung fuer den Drain,
+# nicht Kosmetik: Longhorn haelt fuer jeden laufenden instance-manager eine PDB
+# mit minAvailable 1, und die steht auf disruptionsAllowed 0. Ohne das hier
+# blockiert "kubectl drain" ewig, das ist dieselbe Falle, die kured zu
+# forceReboot zwingt.
+#
+# Er traegt dabei nichts: alle 19 Volumes liegen mit je zwei Replikaten auf
+# k3s-worker-1 und raspi5, prodesk hat null. Der Eintrag als dritte
+# Failure-Domain vom 2026-08-08 hat nie Replikate bekommen, weil jedes Volume
+# schon zwei hatte. Es geht also keine Redundanz verloren.
+#
+# Nach dem Drain faellt dieser Block ganz weg, zusammen mit dem Node.
 apiVersion: longhorn.io/v1beta2
 kind: Node
 metadata:
@@ -127,9 +141,8 @@ metadata:
   namespace: longhorn-system
 spec:
   name: prodesk
-  tags:
-    - storage
-  allowScheduling: true
+  tags: []
+  allowScheduling: false
   evictionRequested: false
 
 ---
