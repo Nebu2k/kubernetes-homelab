@@ -1,3 +1,10 @@
+## [4.73.1](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.73.0...v4.73.1) (2026-08-08)
+
+
+### Bug Fixes
+
+* **longhorn:** toten Disk-Eintrag auf k3s-worker-1 entfernen ([c0f8868](https://github.com/Nebu2k/kubernetes-homelab/commit/c0f886836dd7862b34e22df698eba94e449fec37))
+
 # [4.73.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.72.0...v4.73.0) (2026-08-08)
 
 
