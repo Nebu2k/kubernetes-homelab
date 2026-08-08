@@ -1,0 +1,24 @@
+---
+apiVersion: metallb.io/v1beta1
+kind: IPAddressPool
+metadata:
+  name: homelab-pool
+  namespace: metallb-system
+spec:
+  addresses:
+    # Disjunkt zum k3s-Pool .250-.253. Beide Cluster haengen im selben
+    # L2-Segment; eine ueberlappende Adresse hiesse zwei Speaker, die dieselbe
+    # IP per ARP ankuendigen, und der Dienst waere abwechselnd erreichbar.
+    #
+    # Die .248 fehlt hier absichtlich, das ist der Talos-VIP fuer den
+    # Kubernetes-Endpoint und keine Adresse, die MetalLB vergeben darf.
+    - 192.168.2.240-192.168.2.247
+---
+apiVersion: metallb.io/v1beta1
+kind: L2Advertisement
+metadata:
+  name: homelab-l2
+  namespace: metallb-system
+spec:
+  ipAddressPools:
+    - homelab-pool

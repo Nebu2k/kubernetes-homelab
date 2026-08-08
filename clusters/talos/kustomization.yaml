@@ -1,0 +1,50 @@
+# App-of-Apps des Talos-Clusters.
+#
+# Bewusst kein zweiter Satz Application-Manifeste: die Dateien aus apps/ sind
+# die gemeinsame Basis, hier steht nur, WELCHE davon im neuen Cluster schon
+# laufen und WAS sich unterscheidet. Ein Dienst wandert damit durch genau eine
+# Zeile mehr in dieser Liste, und eine Aenderung an einem Dienst muss nie an
+# zwei Stellen nachgezogen werden.
+#
+# Reihenfolge egal, die sync-waves stehen in den Applications selbst.
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: argocd
+
+resources:
+  - ../../apps/sealed-secrets.yaml
+  - ../../apps/metallb.yaml
+  - ../../apps/traefik.yaml
+  - ../../apps/cert-manager.yaml
+
+patches:
+  # MetalLB: eigener Pool und PodSecurity.
+  - target:
+      kind: Application
+      name: metallb
+    patch: |-
+      - op: replace
+        path: /spec/sources/2/path
+        value: clusters/talos/metallb
+      - op: add
+        path: /spec/syncPolicy/managedNamespaceMetadata
+        value:
+          labels:
+            pod-security.kubernetes.io/enforce: privileged
+
+  # Traefik: eigene LoadBalancer-IP aus dem neuen Pool. Die .250 gehoert bis
+  # zum Schluss dem k3s-Cluster, an ihr haengen der UniFi-Portforward und der
+  # Split-Horizon-Wildcard. valuesObject wird nach den valueFiles gemergt,
+  # ueberschrieben wird deshalb nur diese eine Annotation, der Rest von
+  # manifests/traefik/values.yaml bleibt stehen.
+  - target:
+      kind: Application
+      name: traefik
+    patch: |-
+      - op: add
+        path: /spec/sources/0/helm/valuesObject
+        value:
+          service:
+            annotations:
+              metallb.io/loadBalancerIPs: "192.168.2.240"

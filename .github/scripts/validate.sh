@@ -5,6 +5,7 @@
 #
 #   .github/scripts/validate.sh            # alles
 #   .github/scripts/validate.sh manifests  # nur Kustomize-Teil
+#   .github/scripts/validate.sh clusters   # nur die Cluster-Overlays
 #   .github/scripts/validate.sh helm       # nur Chart-Teil
 #
 # Liegt unter .github/, weil es zur CI gehoert und nicht zum Cluster-Inhalt.
@@ -75,6 +76,42 @@ validate_manifests() {
     name=$(basename "$dir")
 
     if ! built=$(kbuild "$dir" 2>&1); then
+      echo "${RED}✗ $name${RESET} (kustomize build)"
+      echo "$built" | head -5 | sed 's/^/    /'
+      failures=$((failures + 1))
+      continue
+    fi
+
+    if out=$(printf '%s' "$built" | conform 2>&1); then
+      echo "${GREEN}✓ $name${RESET} ${out##*- }"
+    else
+      echo "${RED}✗ $name${RESET}"
+      echo "$out" | grep -v '^Summary' | head -5 | sed 's/^/    /'
+      failures=$((failures + 1))
+    fi
+  done
+}
+
+# Die Cluster-Overlays. Sie sind die fehleranfaelligste Stelle im Repo: die
+# JSON6902-Patches zeigen auf Indizes wie /spec/sources/2/path, und wer in
+# apps/metallb.yaml die sources umsortiert, bricht sie still. Ein Build faellt
+# dagegen laut um.
+#
+# Braucht die echte kustomize-Binary: das Overlay zieht Application-Manifeste
+# aus ../../apps/, und "kubectl kustomize" kennt --load-restrictor nicht. Lokal
+# ohne kustomize wird uebersprungen statt blockiert, in CI ist sie installiert.
+validate_clusters() {
+  echo "== Cluster-Overlays =="
+  if ! command -v kustomize >/dev/null 2>&1; then
+    echo "${YELLOW}uebersprungen${RESET} (kustomize-Binary fehlt, kubectl kustomize kann keinen Load-Restrictor)"
+    return
+  fi
+
+  for dir in clusters/*/; do
+    [ -f "$dir/kustomization.yaml" ] || continue
+    name=$(basename "$dir")
+
+    if ! built=$(kustomize build --load-restrictor LoadRestrictionsNone "$dir" 2>&1); then
       echo "${RED}✗ $name${RESET} (kustomize build)"
       echo "$built" | head -5 | sed 's/^/    /'
       failures=$((failures + 1))
@@ -167,9 +204,10 @@ PY
 
 case "${1:-all}" in
   manifests) validate_manifests ;;
+  clusters)  validate_clusters ;;
   helm)      helm repo update >/dev/null 2>&1; validate_helm ;;
-  all)       validate_manifests; echo; helm repo update >/dev/null 2>&1; validate_helm ;;
-  *)         echo "usage: $0 [all|manifests|helm]" >&2; exit 2 ;;
+  all)       validate_manifests; echo; validate_clusters; echo; helm repo update >/dev/null 2>&1; validate_helm ;;
+  *)         echo "usage: $0 [all|manifests|clusters|helm]" >&2; exit 2 ;;
 esac
 
 echo
