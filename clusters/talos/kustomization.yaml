@@ -42,6 +42,8 @@ resources:
   # monitoring.coreos.com-CRDs mitbringt: erst danach duerfen die uebrigen Apps
   # ihre ServiceMonitor anlegen.
   - ../../apps/kube-prometheus-stack.yaml
+  # Vorgezogen, weil paperless-ngx sein Consume-Verzeichnis darueber mountet.
+  - ../../apps/csi-driver-smb.yaml
 
 patches:
   # MetalLB: eigener Pool, PodSecurity und die Exclude-Label-Ausnahme.
@@ -130,6 +132,25 @@ patches:
         value:
           defaultSettings:
             replicaZoneSoftAntiAffinity: "false"
+
+  # csi-driver-smb: PodSecurity-Ausnahme. Der Node-DaemonSet mountet CIFS und
+  # braucht dafuer privileged plus hostPath, Talos erzwingt clusterweit
+  # baseline. Ueber managedNamespaceMetadata und nicht ueber ein
+  # Namespace-Manifest, weil der Namespace aus CreateNamespace=true entsteht.
+  # Gleiche Bauart wie beim metallb-Patch oben.
+  #
+  # Der Hinweis stand schon in talos/talconfig.yaml: solche Ausnahmen gehoeren
+  # ins GitOps und nicht in die machine config, eine Aenderung dort rebootet die
+  # Control-Plane.
+  - target:
+      kind: Application
+      name: csi-driver-smb
+    patch: |-
+      - op: add
+        path: /spec/syncPolicy/managedNamespaceMetadata
+        value:
+          labels:
+            pod-security.kubernetes.io/enforce: privileged
 
   # kube-prometheus-stack: eigener Manifest-Pfad. Abweichend sind die
   # etcd-Adressen und die beiden home-assistant-Dateien, Einzelheiten in
