@@ -40,8 +40,13 @@ resources:
   # https://192.168.2.240 mit passendem Host-Header erreichbar, unter ihrem
   # Namen laufen sie ins Leere. Genau der Ausfall, der in der ROADMAP als
   # billiger als per-Dienst-Rewrites in zwei AdGuard-Instanzen entschieden ist.
+  #
+  # Zweite Welle, die zustandsbehafteten Dienste. Je Dienst ein Longhorn-Restore
+  # aus dem NAS-Backup, deshalb einzeln und nicht als Block. Vor dem
+  # Herausnehmen hier steht immer ein erzwungenes frisches Backup, denn der
+  # Prune loescht PVC und Volume und das Backup ist danach die einzige Kopie:
+  #   - ripe-atlas.yaml
   - paperless-ngx.yaml
   - mealie.yaml
-  - ripe-atlas.yaml
   - backup-monitor.yaml
 
