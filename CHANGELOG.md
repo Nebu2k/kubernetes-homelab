@@ -1,3 +1,10 @@
+# [4.106.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.105.0...v4.106.0) (2026-08-09)
+
+
+### Features
+
+* **alerts:** Member, der den Leader dauernd verliert ([6c3e1f8](https://github.com/Nebu2k/kubernetes-homelab/commit/6c3e1f8059fdb8753797f8979bee20c3c96c09af))
+
 # [4.105.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.104.4...v4.105.0) (2026-08-09)
 
 
