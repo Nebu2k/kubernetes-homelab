@@ -6,6 +6,7 @@
 #   .github/scripts/validate.sh            # alles
 #   .github/scripts/validate.sh manifests  # nur Kustomize-Teil
 #   .github/scripts/validate.sh helm       # nur Chart-Teil
+#   .github/scripts/validate.sh arch       # nur der arm64-Test der Images
 #
 # Liegt unter .github/, weil es zur CI gehoert und nicht zum Cluster-Inhalt.
 # Ein Repo-Root-scripts/ gab es frueher, das war der Ablageort fuer lokale
@@ -41,6 +42,13 @@ SKIP_KINDS="RecurringJob"
 
 RED=$'\033[31m'; GREEN=$'\033[32m'; YELLOW=$'\033[33m'; RESET=$'\033[0m'
 failures=0
+
+# Alles gerenderte YAML landet hier, damit der arm64-Test der Images auf
+# demselben Durchlauf aufsetzt und nicht ein zweites Mal rendern muss. Er
+# braucht die gerenderten CHARTS: die Haelfte der Images des Clusters steht
+# nirgends im Repo, sondern kommt aus den Charts.
+RENDERED=$(mktemp)
+trap 'rm -f "$RENDERED"' EXIT
 
 # kustomize ist in CI installiert, lokal tut es das eingebaute kubectl kustomize.
 if command -v kustomize >/dev/null 2>&1; then
@@ -80,6 +88,8 @@ validate_manifests() {
       failures=$((failures + 1))
       continue
     fi
+
+    printf '%s\n---\n' "$built" >> "$RENDERED"
 
     if out=$(printf '%s' "$built" | conform 2>&1); then
       echo "${GREEN}✓ $name${RESET} ${out##*- }"
@@ -155,6 +165,8 @@ PY
     fi
     [ -n "$tmpvals" ] && rm -f "$tmpvals"
 
+    printf '%s\n---\n' "$rendered" >> "$RENDERED"
+
     if out=$(printf '%s' "$rendered" | conform 2>&1); then
       echo "${GREEN}✓ $name${RESET} ($version) ${out##*- }"
     else
@@ -165,11 +177,44 @@ PY
   done <<< "$charts"
 }
 
+# raspi5 ist arm64, die beiden anderen Nodes sind amd64, und alle drei tragen
+# das worker-Label. Ein Image ohne arm64 scheitert deshalb nicht zuverlaessig,
+# sondern nur dann, wenn der Scheduler den Pod zufaellig dorthin legt. Genau so
+# ein Fehler wuerde per Renovate-Automerge unbemerkt nach main wandern.
+validate_arch() {
+  echo "== arm64-Faehigkeit der Images =="
+
+  if [ ! -s "$RENDERED" ]; then
+    echo "${YELLOW}nichts gerendert, uebersprungen${RESET}"
+    return
+  fi
+
+  # Images aus dem gerenderten YAML ziehen. grep statt YAML-Parser, weil hier
+  # mehrere Dokumente ohne gemeinsame Wurzel aneinanderhaengen.
+  images=$(grep -hoE '^[[:space:]]*-?[[:space:]]*image:[[:space:]]*"?[^"[:space:]]+' "$RENDERED" \
+    | sed -E 's/.*image:[[:space:]]*"?//' \
+    | grep -v '^$' | sort -u)
+
+  if [ -z "$images" ]; then
+    echo "${YELLOW}keine Images gefunden${RESET}"
+    return
+  fi
+
+  if printf '%s\n' "$images" | python3 .github/scripts/check-image-arch.py; then
+    :
+  else
+    failures=$((failures + 1))
+  fi
+}
+
 case "${1:-all}" in
   manifests) validate_manifests ;;
   helm)      helm repo update >/dev/null 2>&1; validate_helm ;;
-  all)       validate_manifests; echo; echo; helm repo update >/dev/null 2>&1; validate_helm ;;
-  *)         echo "usage: $0 [all|manifests|helm]" >&2; exit 2 ;;
+  arch)      validate_manifests >/dev/null; helm repo update >/dev/null 2>&1
+             validate_helm >/dev/null; validate_arch ;;
+  all)       validate_manifests; echo; echo; helm repo update >/dev/null 2>&1
+             validate_helm; echo; echo; validate_arch ;;
+  *)         echo "usage: $0 [all|manifests|helm|arch]" >&2; exit 2 ;;
 esac
 
 echo
