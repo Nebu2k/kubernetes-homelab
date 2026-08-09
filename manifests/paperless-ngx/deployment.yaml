@@ -199,7 +199,7 @@ spec:
       
       # S3 Backup Sidecar - monitors /export and syncs to S3
       - name: s3-backup-sync
-        image: amazon/aws-cli:2.36.16
+        image: amazon/aws-cli:2.36.17
         command:
         - /bin/sh
         - -c
