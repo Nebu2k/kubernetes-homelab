@@ -1,3 +1,10 @@
+# [5.3.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v5.2.0...v5.3.0) (2026-08-09)
+
+
+### Features
+
+* **blocky:** Monitoring und Gatus-Checks fuer beide Resolver ([9784b9a](https://github.com/Nebu2k/kubernetes-homelab/commit/9784b9a6e5c867f79de62ecebfa01ac63d98c463))
+
 # [5.2.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v5.1.1...v5.2.0) (2026-08-09)
 
 
