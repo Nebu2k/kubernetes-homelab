@@ -64,7 +64,15 @@ jobs:
           # keine Workflows, semantic-release wuerde also nie greifen.
           token: ${{ secrets.RENOVATE_TOKEN }}
         env:
-          RENOVATE_REPOSITORIES: ${{ github.repository }}
+          # Beide Repos aus einem Lauf. Der PAT deckt seit dem 2026-08-09 beide
+          # ab, und ein GitHub-Secret laesst sich nicht auslesen: es ein zweites
+          # Mal zu hinterlegen haette bedeutet, den Token neu auszustellen.
+          #
+          # Renovate liest die Konfiguration je Repo aus dem Repo selbst, die
+          # beiden renovate.json5 bleiben also getrennt und unterschiedlich
+          # zugeschnitten (drueben kein Automerge, weil dort nichts von selbst
+          # ausrollt).
+          RENOVATE_REPOSITORIES: Nebu2k/kubernetes-homelab,Nebu2k/homelab-terraform
           # Die Action erwartet fuer "aus" den String "null", nicht leer.
           RENOVATE_DRY_RUN: ${{ inputs.dryRun == true && 'full' || 'null' }}
           LOG_LEVEL: ${{ inputs.logLevel || 'info' }}
