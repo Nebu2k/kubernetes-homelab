@@ -1,3 +1,10 @@
+## [4.96.1](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.96.0...v4.96.1) (2026-08-09)
+
+
+### Bug Fixes
+
+* **homepage:** ArgoCD-Token fuer das neue Cluster neu ausstellen ([cd71cc4](https://github.com/Nebu2k/kubernetes-homelab/commit/cd71cc4f6284b30878a29c3c135643fb96ab1b78))
+
 # [4.96.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.95.0...v4.96.0) (2026-08-09)
 
 
