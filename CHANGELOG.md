@@ -1,3 +1,10 @@
+## [5.3.1](https://github.com/Nebu2k/kubernetes-homelab/compare/v5.3.0...v5.3.1) (2026-08-09)
+
+
+### Bug Fixes
+
+* **blocky:** Requests auf die gemessenen Werte statt auf Schaetzungen ([76b30db](https://github.com/Nebu2k/kubernetes-homelab/commit/76b30db3678a6bd093ee774399785789196bd29b))
+
 # [5.3.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v5.2.0...v5.3.0) (2026-08-09)
 
 
