@@ -1,3 +1,10 @@
+# [4.97.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.96.2...v4.97.0) (2026-08-09)
+
+
+### Features
+
+* **renovate:** Talos- und Kubernetes-Version aufnehmen ([6f06837](https://github.com/Nebu2k/kubernetes-homelab/commit/6f0683790c7b0e14a40cbf02187377a044593a7a))
+
 ## [4.96.2](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.96.1...v4.96.2) (2026-08-09)
 
 
