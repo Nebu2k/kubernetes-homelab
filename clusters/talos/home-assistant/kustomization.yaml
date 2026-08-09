@@ -1,0 +1,34 @@
+# home-assistant im Talos-Cluster.
+#
+# Zwei Unterschiede zum k3s-Cluster: die PVs zu den restaurierten Volumes und
+# die PodSecurity-Ausnahme am Namespace.
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - ../../../manifests/home-assistant
+  - pv.yaml
+
+patches:
+  # Der Pod laeuft mit hostNetwork und setzt NET_ADMIN und NET_RAW. Alle drei
+  # verbietet das baseline-Profil, das Talos clusterweit erzwingt. Der Grund
+  # steht im Deployment: mDNS-Discovery, CoIoT-Multicast der Gen1-Shellys und
+  # die HomeKit-Bridges brauchen das Node-Netz.
+  #
+  # Als Patch am Namespace-Manifest und nicht per managedNamespaceMetadata:
+  # letzteres wirkt nur beim Anlegen durch CreateNamespace, hier bringt die App
+  # ihren Namespace selbst mit.
+  #
+  # Ohne die Ausnahme bleibt das Deployment bei 0/1 und die App meldet trotzdem
+  # Synced. Das ist genau die Falle, die beim node-exporter eine halbe Stunde
+  # gekostet hat.
+  - target:
+      kind: Namespace
+      name: home-assistant
+    patch: |-
+      apiVersion: v1
+      kind: Namespace
+      metadata:
+        name: home-assistant
+        labels:
+          pod-security.kubernetes.io/enforce: privileged
