@@ -1,3 +1,10 @@
+# [4.101.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.100.0...v4.101.0) (2026-08-09)
+
+
+### Features
+
+* **talos:** Kubernetes-VIP von der .248 auf die .29 ([d8cd8d3](https://github.com/Nebu2k/kubernetes-homelab/commit/d8cd8d3a5c6a0b4a82465268fb8e90579d4115cc))
+
 # [4.100.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.99.1...v4.100.0) (2026-08-09)
 
 
