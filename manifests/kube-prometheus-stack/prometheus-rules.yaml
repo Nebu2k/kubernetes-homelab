@@ -862,6 +862,57 @@ spec:
             summary: "etcd-fsync auf {{ $labels.node }} ist langsam (p99 {{ $value | humanizeDuration }})"
             description: "Die WAL-fsync-Dauer liegt ueber 50ms. etcd bestaetigt jeden Write erst nach dem fsync, eine langsame Platte bremst damit den gesamten API-Server. Auf jeder Node teilen sich /var/lib/etcd und /var/lib/longhorn dieselbe EPHEMERAL-Partition, der Wert haengt also an der Longhorn-Last dieser Node. Erst pruefen, ob dort Repliken neu aufgebaut werden (kubectl -n longhorn-system get replicas.longhorn.io -o wide): waehrend eines Rebuilds ist ein erhoehter Wert erwartbar und geht von selbst zurueck."
 
+        # Ein Member, der den Leader dauernd aus den Augen verliert
+        #
+        # WARUM DAS NEBEN etcdHighNumberOfLeaderChanges STEHT: die Upstream-Regel
+        # gibt es, sie prueft increase(...[15m:1m]) >= 4 mit for: 5m, und sie hat
+        # am 2026-08-09 den ganzen Vorfall verschlafen. Nicht weil die Schwelle
+        # zu hoch waere, sondern weil der Wert um sie herum oszilliert: er lag um
+        # 14:01, 14:06, 14:11 und 14:16 bei 4.29, fiel um 14:21 auf 3.21 und war
+        # um 14:26 wieder bei 4.29. Jeder Ausschlag nach unten setzt die
+        # Haltezeit zurueck, also kommen die noetigen fuenf Minuten am Stueck nie
+        # zustande. Ein laengeres Fenster hat dieses Problem nicht.
+        #
+        # WAS ES ANZEIGT, und was nicht: der Zaehler steht pro Member und meint
+        # "ich habe einen anderen Leader gesehen als vorher". Steigt er auf EINEM
+        # Member, waehrend der Raft-Term clusterweit steht, hat es keine Wahl
+        # gegeben: dieser eine Member verliert wiederholt den Kontakt zum Leader
+        # und findet ihn wieder. Das Quorum ist dabei nicht in Gefahr, die
+        # anderen beiden tragen es. Genau deshalb faellt es sonst nirgends auf.
+        #
+        # Am 2026-08-09 war das raspi5: 1 Wechsel um 11:18, 20 um 14:30, waehrend
+        # prodesk bei 2 und talos-cp-1 bei 1 standen und der Term bei 7 blieb.
+        # Angefangen hat es in dem Moment, in dem raspi5 seine ersten
+        # Longhorn-Repliken bekam. Ausgeschlossen waren zu dem Zeitpunkt Platte
+        # (WAL-fsync 5ms, Backend-Commit 7.8ms, beide flach), CPU (16%),
+        # Temperatur (62C) und Leitung (1000 Mbit/s, keine NIC-Fehler, MTU
+        # identisch zu den anderen Nodes, 3.3 MB/s Durchsatz).
+        #
+        # Die Diagnose beim naechsten Mal beginnt also NICHT bei der Platte:
+        #
+        #   talosctl -n <alle> etcd status     # Term und Index vergleichen
+        #   histogram_quantile(0.99, sum by (instance,To,le) (
+        #     rate(etcd_network_peer_round_trip_time_seconds_bucket[10m])))
+        #
+        # Der zweite Ausdruck ist der entscheidende: nach Quelle UND Ziel
+        # aufgeschluesselt zeigt er sofort, ob eine Node klemmt oder eine
+        # Strecke. Summiert man ihn nur nach Ziel, sieht es aus, als waeren alle
+        # drei betroffen.
+        #
+        # 6 pro Stunde liegt bewusst ueber dem, was ein rollendes Talos-Upgrade
+        # erzeugt (drei Neustarts, also hoechstens ein paar Wechsel).
+        - alert: EtcdMemberLosesLeader
+          expr: |
+            max by (node) (
+              increase(etcd_server_leader_changes_seen_total{job="etcd"}[1h])
+            ) > 6
+          for: 15m
+          labels:
+            severity: warning
+          annotations:
+            summary: "etcd auf {{ $labels.node }} verliert staendig den Leader ({{ $value | printf \"%.0f\" }} Wechsel in einer Stunde)"
+            description: "Dieser Member sieht laufend neue Leader, die anderen nicht. Zuerst mit talosctl etcd status pruefen, ob der Raft-Term wirklich steigt: steht er, hat es keine Wahl gegeben und der Member verliert nur wiederholt den Kontakt. Dann die Peer-Latenz nach Quelle UND Ziel aufschluesseln, nicht nur nach Ziel. Platte und CPU sind erst danach dran, sie waren beim bisher einzigen Auftreten am 2026-08-09 unauffaellig."
+
         # Sicherheitsnetz unter allen etcd-Alerts, gleiche Logik wie bei
         # cert-manager und unpoller. Faellt die ScrapeConfig weg oder wird
         # --etcd-expose-metrics auf einer Node beim Neubau vergessen, wird es
