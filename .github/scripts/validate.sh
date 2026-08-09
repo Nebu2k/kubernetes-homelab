@@ -179,6 +179,10 @@ PY
 # das worker-Label. Ein Image ohne arm64 scheitert deshalb nicht zuverlaessig,
 # sondern nur dann, wenn der Scheduler den Pod zufaellig dorthin legt. Genau so
 # ein Fehler wuerde per Renovate-Automerge unbemerkt nach main wandern.
+#
+# Das Skript bekommt das gerenderte YAML im Ganzen, nicht nur die Image-Namen:
+# ob ein amd64-only-Image erlaubt ist, haengt am nodeSelector des Workloads,
+# und der steht nur dort.
 validate_arch() {
   echo "== arm64-Faehigkeit der Images =="
 
@@ -187,20 +191,7 @@ validate_arch() {
     return
   fi
 
-  # Images aus dem gerenderten YAML ziehen. grep statt YAML-Parser, weil hier
-  # mehrere Dokumente ohne gemeinsame Wurzel aneinanderhaengen.
-  images=$(grep -hoE '^[[:space:]]*-?[[:space:]]*image:[[:space:]]*"?[^"[:space:]]+' "$RENDERED" \
-    | sed -E 's/.*image:[[:space:]]*"?//' \
-    | grep -v '^$' | sort -u)
-
-  if [ -z "$images" ]; then
-    echo "${YELLOW}keine Images gefunden${RESET}"
-    return
-  fi
-
-  if printf '%s\n' "$images" | python3 .github/scripts/check-image-arch.py; then
-    :
-  else
+  if ! python3 .github/scripts/check-image-arch.py "$RENDERED"; then
     failures=$((failures + 1))
   fi
 }

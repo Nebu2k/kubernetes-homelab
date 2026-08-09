@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
-"""Prueft, ob jedes Image im Cluster arm64 kann.
+"""Prueft, ob jedes Image im Cluster arm64 kann oder auf eine Arch festgenagelt ist.
 
-Liest Image-Referenzen von stdin (eine je Zeile) und fragt fuer jede die
-Registry nach ihrer Manifest-Liste. Aufgerufen wird das aus
-.github/scripts/validate.sh, das die Images aus den gerenderten Manifesten UND
-den gerenderten Helm-Charts zieht.
+Liest gerendertes YAML (Pfad als Argument, sonst stdin), zieht daraus jede
+Image-Referenz samt dem nodeSelector, der darueber steht, und fragt fuer jedes
+Image die Registry nach seiner Manifest-Liste. Aufgerufen wird das aus
+.github/scripts/validate.sh, das die Kustomize-Manifeste UND die Helm-Charts
+rendert.
 
 WARUM ES DAS GIBT: raspi5 ist arm64, die beiden anderen Nodes sind amd64, und
 alle drei tragen das worker-Label. Ein Image ohne arm64 scheitert deshalb NICHT
@@ -15,21 +16,23 @@ das ausloest, wuerde ausserdem automatisch gemergt.
 
 Dieser Test macht daraus einen roten PR, bevor es das Cluster erreicht.
 
-Die Allowlist ist leer, alle Images im Cluster koennen arm64. Sie ist trotzdem
-da, weil der Ausweg fuer den Ernstfall dokumentiert sein muss: ein
-amd64-only-Image ist erlaubt, wenn der zugehoerige Workload einen
-nodeSelector auf kubernetes.io/arch: amd64 traegt. So haelt es
-manifests/kube-prometheus-stack/values.yaml mit Prometheus, dort allerdings aus
-einem anderen Grund (Speicherhunger, nicht fehlendes Image).
+Ein Image ohne arm64 ist genau dann in Ordnung, wenn JEDE Stelle, an der es
+verwendet wird, einen nodeSelector auf kubernetes.io/arch traegt: dann kann der
+Scheduler es gar nicht erst auf raspi5 legen. Das prueft das Skript selbst am
+gerenderten YAML, eine Allowlist daneben gibt es deshalb nicht. Erkannt wird
+ausschliesslich nodeSelector, keine nodeAffinity.
+
+So haelt es manifests/kube-prometheus-stack/values.yaml mit Prometheus, dort
+allerdings aus einem anderen Grund (Speicherhunger, nicht fehlendes Image).
 """
 import json
-import os
-import pathlib
 import sys
 import urllib.error
 import urllib.request
 
-ALLOWLIST = pathlib.Path(__file__).parent / "image-arch-allowlist.txt"
+import yaml
+
+ARCH_LABEL = "kubernetes.io/arch"
 
 ACCEPT = ",".join([
     "application/vnd.oci.image.index.v1+json",
@@ -110,28 +113,54 @@ def architectures(image):
     return found, None
 
 
-def load_allowlist():
-    if not ALLOWLIST.exists():
-        return set()
-    entries = set()
-    for line in ALLOWLIST.read_text().splitlines():
-        line = line.split("#", 1)[0].strip()
-        if line:
-            entries.add(line)
-    return entries
+def collect(node, arch, found):
+    """Jede image-Referenz mit dem arch-Pin sammeln, der ueber ihr steht.
+
+    Der nodeSelector eines Pods steht im selben Mapping wie seine Container,
+    bei den Operator-CRs (Prometheus, Alertmanager) sogar neben dem image
+    selbst. Ein Pin gilt deshalb fuer das Mapping, in dem er steht, und fuer
+    alles darunter. Images ohne Pin landen mit None in der Menge.
+    """
+    if isinstance(node, dict):
+        selector = node.get("nodeSelector")
+        # Longhorn-Volumes haben ein gleichnamiges Feld, das ein String ist.
+        if isinstance(selector, dict) and selector.get(ARCH_LABEL):
+            arch = str(selector[ARCH_LABEL])
+        image = node.get("image")
+        if isinstance(image, str) and image.strip():
+            found.setdefault(image.strip(), set()).add(arch)
+        for value in node.values():
+            collect(value, arch, found)
+    elif isinstance(node, list):
+        for item in node:
+            collect(item, arch, found)
 
 
 def main():
-    allowed = load_allowlist()
-    images = sorted({line.strip() for line in sys.stdin if line.strip()})
+    if len(sys.argv) > 1:
+        with open(sys.argv[1]) as handle:
+            text = handle.read()
+    else:
+        text = sys.stdin.read()
+
+    red, green, yellow, reset = "\033[31m", "\033[32m", "\033[33m", "\033[0m"
+
+    images = {}
+    try:
+        for doc in yaml.safe_load_all(text):
+            collect(doc, None, images)
+    except yaml.YAMLError as exc:
+        print(f"{red}gerendertes YAML nicht parsebar: {exc}{reset}", file=sys.stderr)
+        return 2
+
     if not images:
         print("keine Images gefunden", file=sys.stderr)
         return 2
 
-    red, green, yellow, reset = "\033[31m", "\033[32m", "\033[33m", "\033[0m"
-    missing, unknown, waived, ok = [], [], [], 0
+    missing, unknown, pinned, ok = [], [], [], 0
 
-    for image in images:
+    for image in sorted(images):
+        pins = images[image]
         arches, err = architectures(image)
         name = image.split("@")[0]
         if err:
@@ -140,9 +169,10 @@ def main():
         elif any(a.endswith("/arm64") for a in arches):
             ok += 1
             print(f"{green}✓{reset} {name}")
-        elif name in allowed or image in allowed:
-            waived.append(image)
-            print(f"{yellow}~{reset} {name}  (amd64-only, bewusst per Allowlist)")
+        elif None not in pins and "arm64" not in pins:
+            pinned.append(image)
+            fixed = ", ".join(sorted(pins))
+            print(f"{yellow}~{reset} {name}  (kein arm64, per nodeSelector auf {fixed})")
         else:
             missing.append((image, sorted(arches)))
             print(f"{red}✗{reset} {name}  KEIN arm64: {sorted(arches) or 'unbekannt'}")
@@ -161,14 +191,14 @@ def main():
         print()
         print("  1. Multi-Arch-Alternative oder aeltere Version verwenden.")
         print("  2. Den Workload mit nodeSelector kubernetes.io/arch: amd64")
-        print("     festnageln UND das Image in")
-        print(f"     {ALLOWLIST.relative_to(pathlib.Path.cwd())} eintragen,")
-        print("     mit Begruendung.")
+        print("     festnageln, an JEDER Stelle, an der das Image vorkommt.")
+        print("     Dieser Test liest den Pin aus den gerenderten Manifesten,")
+        print("     eine Allowlist gibt es nicht.")
         return 1
 
     summary = f"{ok} von {len(images)} Images koennen arm64"
-    if waived:
-        summary += f", {len(waived)} per Allowlist ausgenommen"
+    if pinned:
+        summary += f", {len(pinned)} per nodeSelector festgenagelt"
     if unknown:
         summary += f", {len(unknown)} nicht geprueft"
     print(f"{green}{summary}{reset}")
