@@ -144,6 +144,115 @@ spec:
             summary: "Longhorn node storage usage is critical"
             description: "Node {{ $labels.node }} storage is {{ $value | humanizePercentage }} full (threshold: 90%)."
 
+    # Scheduling-Budget statt echter Belegung (seit 2026-08-09)
+    #
+    # Die beiden Alerts oben messen `usage / capacity`, also was wirklich auf der
+    # Platte liegt. Longhorn plant aber nach der ANGEFORDERTEN Volumegroesse,
+    # und ein Volume kann lange vorher unplatzierbar werden. Gemessen am
+    # 2026-08-09: prodesk lag bei 80,1 % seines Scheduling-Budgets und bei
+    # 16,3 % echter Belegung. Die Alerts oben haetten also geschwiegen,
+    # waehrend die Node keine neue Replik mehr angenommen haette.
+    #
+    # Das Fehlerbild ohne diese Regeln: eine neue PVC bleibt auf `Pending`, das
+    # Volume auf `Scheduling Failed`, der Pod startet nie. Nichts davon ist ein
+    # Fehlerzustand an einem bestehenden Objekt, deshalb faengt es keiner der
+    # anderen Longhorn-Alerts.
+    #
+    # Zwei Regeln entscheiden, ob eine Disk noch annimmt, und es gilt die
+    # jeweils engere:
+    #
+    #   Over-Provisioning (100 %): scheduled darf (capacity - reserved) nicht
+    #                              ueberschreiten
+    #   Mindestens frei   ( 25 %): nach dem Anlegen muessen 25 % der capacity
+    #                              frei bleiben
+    #
+    # PromQL kann zwei Vektoren nicht elementweise minimieren, deshalb der
+    # bool-Multiplikationstrick in der dritten Regel. Er ist haesslich, aber er
+    # haelt die eigentlichen Alerts lesbar.
+    - name: longhorn-scheduling
+      interval: 30s
+      rules:
+        - record: homelab:longhorn_node_headroom_overprovisioning_bytes
+          expr: |
+            max by (node) (
+                longhorn_node_storage_capacity_bytes
+              - longhorn_node_storage_reservation_bytes
+              - longhorn_node_storage_scheduled_bytes
+            )
+
+        - record: homelab:longhorn_node_headroom_minavailable_bytes
+          expr: |
+            max by (node) (
+                0.75 * longhorn_node_storage_capacity_bytes
+              - longhorn_node_storage_usage_bytes
+            )
+
+        # Was diese Node noch annimmt: das Minimum aus beiden Regeln, nie negativ.
+        - record: homelab:longhorn_node_schedulable_bytes
+          expr: |
+            clamp_min(
+                (
+                  homelab:longhorn_node_headroom_overprovisioning_bytes
+                  <= bool
+                  homelab:longhorn_node_headroom_minavailable_bytes
+                ) * homelab:longhorn_node_headroom_overprovisioning_bytes
+              + (
+                  homelab:longhorn_node_headroom_overprovisioning_bytes
+                  > bool
+                  homelab:longhorn_node_headroom_minavailable_bytes
+                ) * homelab:longhorn_node_headroom_minavailable_bytes
+            , 0)
+
+        # Das groesste Volume, das das Cluster noch anlegen kann.
+        #
+        # Jedes Volume braucht zwei Repliken auf zwei verschiedenen Nodes in zwei
+        # verschiedenen Zonen (replicaSoftAntiAffinity und
+        # replicaZoneSoftAntiAffinity stehen beide auf false, sind also hart).
+        # Jede Node ist ihre eigene Zone, also erfuellt jedes Paar die
+        # Zonenregel und es zaehlt schlicht die zweitgroesste Node.
+        # min(topk(2, ...)) ist genau das.
+        - record: homelab:longhorn_largest_placeable_volume_bytes
+          expr: min(topk(2, homelab:longhorn_node_schedulable_bytes))
+
+        - alert: LonghornNodeSchedulingBudgetLow
+          expr: homelab:longhorn_node_schedulable_bytes < 20 * 1024 * 1024 * 1024
+          for: 15m
+          labels:
+            severity: warning
+          annotations:
+            summary: "Longhorn node nimmt kaum noch neue Repliken an"
+            description: >-
+              Node {{ $labels.node }} kann nur noch {{ $value | humanize1024 }}B
+              an neuen Volumes aufnehmen. Sie faellt damit faktisch als Ziel aus,
+              alle neuen Volumes landen auf den uebrigen Nodes. Das ist noch kein
+              Ausfall, aber eine Fehlerdomaene weniger zur Auswahl.
+
+        - alert: LonghornCannotPlaceLargeVolume
+          expr: homelab:longhorn_largest_placeable_volume_bytes < 100 * 1024 * 1024 * 1024
+          for: 15m
+          labels:
+            severity: warning
+          annotations:
+            summary: "Longhorn kann keine grossen Volumes mehr anlegen"
+            description: >-
+              Das groesste Volume, das noch zwei Repliken unterbringt, waere
+              {{ $value | humanize1024 }}B. Zum Vergleich: paperless-media ist
+              50 GiB. Neue Volumes oberhalb dieser Groesse bleiben still auf
+              Pending stehen.
+
+        - alert: LonghornCannotPlaceVolume
+          expr: homelab:longhorn_largest_placeable_volume_bytes < 20 * 1024 * 1024 * 1024
+          for: 5m
+          labels:
+            severity: critical
+          annotations:
+            summary: "Longhorn kann praktisch keine Volumes mehr anlegen"
+            description: >-
+              Es gibt keine zwei Nodes mehr, die zusammen ein Volume von mehr als
+              {{ $value | humanize1024 }}B aufnehmen. Jede neue PVC bleibt auf
+              Pending, jeder zugehoerige Pod startet nicht. Auch ein Rebuild
+              nach einem Node-Ausfall findet dann kein Ziel mehr.
+
     # Backup-Ziel-Alerts (seit dem Wechsel MinIO -> SMB-Share am UniFi-NAS,
     # 2026-08-01). Vorher gab es hier eine Luecke: die Longhorn-Alerts oben
     # decken Volumes und Node-Disks ab, aber nichts davon haette gemeldet, dass
