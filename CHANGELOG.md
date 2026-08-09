@@ -1,3 +1,10 @@
+## [4.104.2](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.104.1...v4.104.2) (2026-08-09)
+
+
+### Bug Fixes
+
+* **rpi5-fan:** zweite Stufe von 60 auf 65 Grad, gegen das Pumpen ([819f1d6](https://github.com/Nebu2k/kubernetes-homelab/commit/819f1d6c892f4d55fe47060cc5dfc75cde31daff))
+
 ## [4.104.1](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.104.0...v4.104.1) (2026-08-09)
 
 
