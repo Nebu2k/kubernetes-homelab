@@ -1,0 +1,44 @@
+# ripe-atlas im Talos-Cluster.
+#
+# Gleiches Muster wie clusters/talos/longhorn: die Manifeste aus manifests/
+# werden referenziert, nicht kopiert, und nur der git-Pfad der Application zeigt
+# hierher (Patch in ../kustomization.yaml). Das funktioniert, weil ArgoCD mit
+# --load-restrictor LoadRestrictionsNone baut.
+#
+# Der erste zustandsbehaftete Dienst der Migration und damit die Vorlage fuer
+# die uebrigen vier. Zwei Dinge unterscheiden sich vom k3s-Cluster, beide sind
+# nicht ripe-atlas-spezifisch:
+#
+#   1. Die PVs zu den restaurierten Volumes (pv.yaml).
+#   2. Die PodSecurity-Ausnahme am Namespace (Patch unten).
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - ../../../manifests/ripe-atlas
+  - pv.yaml
+
+patches:
+  # Der Container laeuft als root und setzt NET_RAW: die Probe misst mit ICMP
+  # und Traceroute, dafuer braucht sie Raw Sockets. NET_RAW steht nicht auf der
+  # Liste erlaubter capabilities.add des baseline-Profils, das Talos clusterweit
+  # erzwingt (CHOWN, KILL, SETUID, SETGID, FOWNER und DAC_OVERRIDE dagegen
+  # schon). Ohne die Ausnahme lehnt der Namespace den Pod ab, das Deployment
+  # bleibt bei 0/1 und die App meldet trotzdem Synced.
+  #
+  # Als Patch am Namespace-Manifest und nicht per managedNamespaceMetadata:
+  # letzteres wirkt nur beim Anlegen durch CreateNamespace, hier bringt die App
+  # ihren Namespace selbst mit.
+  #
+  # Nur in diesem Cluster noetig, k3s erzwingt keine PodSecurity. Deshalb hier
+  # im Overlay und nicht in manifests/.
+  - target:
+      kind: Namespace
+      name: ripe-atlas
+    patch: |-
+      apiVersion: v1
+      kind: Namespace
+      metadata:
+        name: ripe-atlas
+        labels:
+          pod-security.kubernetes.io/enforce: privileged

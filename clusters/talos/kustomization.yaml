@@ -44,6 +44,10 @@ resources:
   - ../../apps/kube-prometheus-stack.yaml
   # Vorgezogen, weil paperless-ngx sein Consume-Verzeichnis darueber mountet.
   - ../../apps/csi-driver-smb.yaml
+  # Erster zustandsbehafteter Dienst: seine beiden Longhorn-Volumes sind aus dem
+  # NAS-Backup restauriert, im k3s-Cluster ist er dafuer geprunt. Der Ablauf
+  # steht in talos/README.md, das Cluster-Spezifische in clusters/talos/ripe-atlas/.
+  - ../../apps/ripe-atlas.yaml
 
 patches:
   # MetalLB: eigener Pool, PodSecurity und die Exclude-Label-Ausnahme.
@@ -188,6 +192,21 @@ patches:
             prometheusSpec:
               externalLabels:
                 cluster: talos
+
+  # ripe-atlas: eigener Manifest-Pfad. Abweichend sind die PVs zu den
+  # restaurierten Volumes und die PodSecurity-Ausnahme am Namespace,
+  # Einzelheiten in clusters/talos/ripe-atlas/.
+  #
+  # Anders als bei metallb, longhorn und kube-prometheus-stack ist es
+  # /spec/source/path und nicht /spec/sources/2/path: die Application hat nur
+  # eine einzige Source, es haengt kein Helm-Chart daran.
+  - target:
+      kind: Application
+      name: ripe-atlas
+    patch: |-
+      - op: replace
+        path: /spec/source/path
+        value: clusters/talos/ripe-atlas
 
   # Die vier ServiceMonitor-Ausnahmen (sealed-secrets, cert-manager, traefik,
   # gatus) sind am 2026-08-09 entfallen, weil kube-prometheus-stack seine CRDs
