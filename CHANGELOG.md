@@ -1,3 +1,10 @@
+## [4.84.2](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.84.1...v4.84.2) (2026-08-09)
+
+
+### Bug Fixes
+
+* **talos:** monitoring-Namespace als Manifest, damit das PS-Label sitzt ([1f4a91e](https://github.com/Nebu2k/kubernetes-homelab/commit/1f4a91e606b99892d2da796f9c280dff562dd635))
+
 ## [4.84.1](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.84.0...v4.84.1) (2026-08-09)
 
 
