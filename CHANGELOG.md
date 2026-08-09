@@ -1,3 +1,10 @@
+# [4.103.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.102.2...v4.103.0) (2026-08-09)
+
+
+### Features
+
+* **talos:** talos-cp-2 abgebaut, raspi5 ersetzt ihn ([56efc5d](https://github.com/Nebu2k/kubernetes-homelab/commit/56efc5d7c29e7c32b45fde57bbc03bbc1cbb79e2))
+
 ## [4.102.2](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.102.1...v4.102.2) (2026-08-09)
 
 
