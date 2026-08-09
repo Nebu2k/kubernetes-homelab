@@ -47,6 +47,12 @@ resources:
 # warten, sind die vier Jobs am 2026-08-09 einmal von Hand angestossen worden
 # (kubectl create job --from=cronjob/...). Das raeumt die Alarme sofort ab und
 # belegt zugleich, dass der Backup-Pfad aus dem neuen Cluster funktioniert.
+#
+# Der Job MUSS dabei den Namen seines CronJob als Praefix behalten. Die Regeln
+# selektieren auf job_name=~"<cronjob>.*", ein frei gewaehlter Name erzeugt
+# zwar eine Metrik, aber keine, die der absent()-Zweig sieht. Beim ersten
+# Versuch hiessen alle vier "manual-migration-<datum>" und die Alarme blieben
+# stehen, obwohl die Jobs sauber durchgelaufen waren.
 
 # Die Dashboards liegen neben den Manifesten und werden hier genauso erzeugt wie
 # dort. Bewusst kopiert statt referenziert: ein configMapGenerator laesst sich
