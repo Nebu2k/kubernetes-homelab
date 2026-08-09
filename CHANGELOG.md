@@ -1,3 +1,10 @@
+## [4.102.2](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.102.1...v4.102.2) (2026-08-09)
+
+
+### Performance Improvements
+
+* CPU-Limits streichen, Requests und Memory-Limits bleiben ([76c621f](https://github.com/Nebu2k/kubernetes-homelab/commit/76c621f0f6144946c9e8d2b0d9ee86786035aac3))
+
 ## [4.102.1](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.102.0...v4.102.1) (2026-08-09)
 
 
