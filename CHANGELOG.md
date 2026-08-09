@@ -1,3 +1,10 @@
+# [4.100.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.99.1...v4.100.0) (2026-08-09)
+
+
+### Features
+
+* **metallb:** freigewordene Adressen aus dem k3s-Pool aufnehmen ([e998b5f](https://github.com/Nebu2k/kubernetes-homelab/commit/e998b5f0a92fb474e0a2bed2aa1d76238c885cda))
+
 ## [4.99.1](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.99.0...v4.99.1) (2026-08-09)
 
 
