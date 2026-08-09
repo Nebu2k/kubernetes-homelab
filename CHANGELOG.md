@@ -1,3 +1,10 @@
+# [4.92.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.91.0...v4.92.0) (2026-08-09)
+
+
+### Features
+
+* **talos:** home-assistant ins neue Cluster, letzter Volume-Restore ([82c0a21](https://github.com/Nebu2k/kubernetes-homelab/commit/82c0a21f6ca14d38e641ec48572786bb336f92c0))
+
 # [4.91.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.90.0...v4.91.0) (2026-08-09)
 
 
