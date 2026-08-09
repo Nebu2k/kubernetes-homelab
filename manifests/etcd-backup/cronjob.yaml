@@ -90,7 +90,9 @@ spec:
                   set -eu
                   KEY="etcd-snapshot-${NODE_NAME}-$(date +%s)"
                   echo "lade $(stat -c %s /snapshot/db) Bytes nach s3://${ETCD_BUCKET}/${KEY}"
-                  aws s3 cp /snapshot/db "s3://${ETCD_BUCKET}/${KEY}"
+                  # --only-show-errors, sonst schreibt die aws-cli fuer jedes
+                  # MiB eine Fortschrittszeile und das Job-Log ist unlesbar.
+                  aws s3 cp --only-show-errors /snapshot/db "s3://${ETCD_BUCKET}/${KEY}"
               env:
                 - name: NODE_NAME
                   value: talos-cp-1
@@ -172,7 +174,9 @@ spec:
                   set -eu
                   KEY="etcd-snapshot-${NODE_NAME}-$(date +%s)"
                   echo "lade $(stat -c %s /snapshot/db) Bytes nach s3://${ETCD_BUCKET}/${KEY}"
-                  aws s3 cp /snapshot/db "s3://${ETCD_BUCKET}/${KEY}"
+                  # --only-show-errors, sonst schreibt die aws-cli fuer jedes
+                  # MiB eine Fortschrittszeile und das Job-Log ist unlesbar.
+                  aws s3 cp --only-show-errors /snapshot/db "s3://${ETCD_BUCKET}/${KEY}"
               env:
                 - name: NODE_NAME
                   value: talos-cp-2
@@ -253,7 +257,9 @@ spec:
                   set -eu
                   KEY="etcd-snapshot-${NODE_NAME}-$(date +%s)"
                   echo "lade $(stat -c %s /snapshot/db) Bytes nach s3://${ETCD_BUCKET}/${KEY}"
-                  aws s3 cp /snapshot/db "s3://${ETCD_BUCKET}/${KEY}"
+                  # --only-show-errors, sonst schreibt die aws-cli fuer jedes
+                  # MiB eine Fortschrittszeile und das Job-Log ist unlesbar.
+                  aws s3 cp --only-show-errors /snapshot/db "s3://${ETCD_BUCKET}/${KEY}"
               env:
                 - name: NODE_NAME
                   value: prodesk
