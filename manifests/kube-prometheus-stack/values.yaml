@@ -399,6 +399,54 @@ kube-state-metrics:
   nodeSelector:
     node-role.kubernetes.io/worker: "worker"
 
+  # Leserecht auf die Longhorn-Volumes, ausschliesslich fuer den Block
+  # customResourceState darunter. list+watch, mehr braucht ksm nicht.
+  rbac:
+    extraRules:
+      - apiGroups: ["longhorn.io"]
+        resources: ["volumes"]
+        verbs: ["list", "watch"]
+
+  # Traegt das Gruppenlabel eines Longhorn-Volumes als Metrik nach.
+  #
+  # Der Grund: ein Volume, das noch NIE gesichert wurde, meldet
+  # longhorn_volume_last_backup_at = 0 und faellt damit aus
+  # LonghornBackupStale heraus (das "> 0" dort ist Absicht, sonst feuert das
+  # bewusst ungesicherte Prometheus-Volume dauerhaft). Ob das Volume ueberhaupt
+  # gesichert werden SOLL, steht nur im Label
+  # recurring-job-group.longhorn.io/backup am Volume-Objekt, und kein
+  # Longhorn-Exporter gibt das heraus. Erst mit dieser Metrik laesst sich
+  # "soll gesichert werden, wurde aber nie" als Alert ausdruecken
+  # (LonghornBackupNeverRan in prometheus-rules.yaml).
+  #
+  # Anlass: beim Talos-Umzug am 2026-08-09 standen alle 15 restaurierten
+  # Volumes einen Tag lang unbesichert da, mit korrekten Gruppenlabels, und das
+  # Monitoring blieb gruen.
+  customResourceState:
+    enabled: true
+    config:
+      spec:
+        resources:
+          - groupVersionKind:
+              group: longhorn.io
+              version: v1beta2
+              kind: Volume
+            # Eigener Prefix statt des Default kube_customresource_, und
+            # bewusst NICHT longhorn_*: dieser Namensraum gehoert dem
+            # Longhorn-Exporter, eine Kollision waere schwer zu sehen.
+            metricNamePrefix: homelab_longhorn_volume
+            labelsFromPath:
+              volume: [metadata, name]
+            metrics:
+              - name: recurring_job_group
+                help: "Gruppenlabels eines Longhorn-Volumes, 1 je Volume"
+                each:
+                  type: Info
+                  info:
+                    labelsFromPath:
+                      backup_group:
+                        [metadata, labels, "recurring-job-group.longhorn.io/backup"]
+
 # Prometheus Operator
 prometheusOperator:
   resources:

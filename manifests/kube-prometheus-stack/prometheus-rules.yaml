@@ -270,7 +270,8 @@ spec:
         # auch das Prometheus-Volume automatisch raus, das bewusst nicht mehr
         # gesichert wird. Preis: ein Volume, das faelschlich NIE gesichert wird,
         # faellt durch dieses Netz. Das ist ein Konfigurationsfehler und wird
-        # ueber die Gruppenlabels geprueft, nicht ueber einen Alert.
+        # ueber die Gruppenlabels geprueft, und seit dem 2026-08-09 faengt
+        # LonghornBackupNeverRan darunter genau diesen Fall ab.
         #
         # 36h statt 24h, damit ein einzelner ausgefallener Lauf (backup-daily
         # laeuft 02:00) nicht sofort meldet, zwei aufeinanderfolgende aber schon.
@@ -287,6 +288,42 @@ spec:
           annotations:
             summary: "Longhorn volume has not been backed up recently"
             description: "Volume {{ $labels.volume }} had no successful backup for over 36h. Check the CIFS target //192.168.2.6/longhorn_backup (share full? NAS reachable? credentials still valid?)."
+
+        # Die Kehrseite von LonghornBackupStale, und der Grund, warum es diese
+        # Regel ueberhaupt gibt: das "> 0" oben laesst ein Volume, das NIE
+        # gesichert wurde, absichtlich durch. Ob es gesichert werden SOLL,
+        # steht nur im Label recurring-job-group.longhorn.io/backup am
+        # Volume-Objekt, und kein Longhorn-Exporter gibt das heraus. Die
+        # Metrik hier kommt deshalb aus dem customResourceState-Block der
+        # kube-state-metrics (values.yaml).
+        #
+        # Anlass: beim Talos-Umzug am 2026-08-09 standen alle 15 restaurierten
+        # Volumes einen Tag lang unbesichert da, mit korrekten Gruppenlabels,
+        # und nichts hat sich gemeldet. Gefunden von Hand.
+        #
+        # Die Altersschranke steckt bewusst im offset und NICHT in einem langen
+        # "for": ein frisch angelegtes Volume hat legitim noch kein Backup, es
+        # muss erst der 02:00-Lauf drueber. 26h deckt einen vollen Zyklus plus
+        # Reserve ab. Ein "for: 26h" wuerde dasselbe leisten, aber der Timer
+        # laeuft im Speicher und faengt nach jedem Prometheus-Neustart von vorn
+        # an. Das offset liest gespeicherte Daten und ueberlebt den Neustart.
+        #
+        # Folge davon: nach dem Ausrollen bleibt die Regel 26h still, so lange
+        # hat die Metrik noch keine Historie.
+        - alert: LonghornBackupNeverRan
+          expr: |
+            (
+              homelab_longhorn_volume_recurring_job_group_info{backup_group="enabled"}
+              and
+              homelab_longhorn_volume_recurring_job_group_info{backup_group="enabled"} offset 26h
+            )
+            unless on (volume) (longhorn_volume_last_backup_at > 0)
+          for: 30m
+          labels:
+            severity: warning
+          annotations:
+            summary: "Longhorn volume {{ $labels.volume }} soll gesichert werden, hat aber noch nie ein Backup gehabt"
+            description: "Das Volume traegt recurring-job-group.longhorn.io/backup=enabled und meldet trotzdem last_backup_at = 0, seit ueber 26h. Typischer Fall: per fromBackup restauriert und der erste 02:00-Lauf steht noch aus, oder ein RecurringJob greift nicht. Backup von Hand erzwingen: Snapshot-CR plus Backup-CR mit RecurringJob: backup-daily in spec.labels, Rezept in betrieb.md."
 
         # Ergaenzung zum Alert oben, meldet frueher und nennt das konkrete
         # Backup. longhorn_backup_state: 0=New 1=Pending 2=InProgress
