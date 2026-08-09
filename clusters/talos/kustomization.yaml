@@ -162,12 +162,18 @@ patches:
   # Label steht in der Mail nur der Alertname. Das group_by in values.yaml
   # enthaelt 'cluster' laengst, gesetzt war es nur nie.
   #
-  # Der dritte ist die PodSecurity-Ausnahme fuer den node-exporter: hostNetwork,
-  # hostPID, hostPort 9100 und drei hostPath-Volumes, alles unter baseline
-  # verboten. Der Fehler ist leise, weil er nur das DaemonSet trifft: Prometheus,
-  # Grafana und Alertmanager starten normal, die App meldet Synced, und nur die
-  # Cluster-Nodes fehlen unter den Targets. Die zwei node-exporter, die trotzdem
-  # antworten, sind pve und macmini aus dem statischen ScrapeConfig.
+  # Der dritte Unterschied, die PodSecurity-Ausnahme fuer den node-exporter,
+  # steht als Namespace-Manifest im Overlay statt als managedNamespaceMetadata.
+  #
+  # Der Unterschied zu csi-driver-smb weiter oben, wo genau das funktioniert:
+  # managedNamespaceMetadata wirkt beim ANLEGEN des Namespace. Fuer
+  # csi-driver-smb entstand er frisch und trug das Label sofort; monitoring gab
+  # es laengst, und ein nachtraeglich gesetztes managedNamespaceMetadata
+  # erreicht ihn nicht mehr. Live geprueft am 2026-08-09, das Label kam nicht
+  # an, auch nach terminierter Sync-Operation nicht.
+  #
+  # Faustregel fuer die restliche Migration: bei einem neuen Dienst reicht
+  # managedNamespaceMetadata, bei einem schon laufenden braucht es das Manifest.
   - target:
       kind: Application
       name: kube-prometheus-stack
@@ -182,11 +188,6 @@ patches:
             prometheusSpec:
               externalLabels:
                 cluster: talos
-      - op: add
-        path: /spec/syncPolicy/managedNamespaceMetadata
-        value:
-          labels:
-            pod-security.kubernetes.io/enforce: privileged
 
   # Die vier ServiceMonitor-Ausnahmen (sealed-secrets, cert-manager, traefik,
   # gatus) sind am 2026-08-09 entfallen, weil kube-prometheus-stack seine CRDs

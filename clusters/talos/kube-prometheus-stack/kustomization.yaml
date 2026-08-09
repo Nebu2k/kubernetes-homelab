@@ -22,6 +22,8 @@ kind: Kustomization
 namespace: monitoring
 
 resources:
+  # Traegt nur das PodSecurity-Label, Begruendung im Kopf der Datei.
+  - namespace.yaml
   - ../../../manifests/kube-prometheus-stack/grafana-ingress.yaml
   - ../../../manifests/kube-prometheus-stack/prometheus-ingress.yaml
   - ../../../manifests/kube-prometheus-stack/alertmanager-ingress.yaml
