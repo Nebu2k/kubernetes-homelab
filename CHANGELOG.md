@@ -1,3 +1,10 @@
+# [4.102.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.101.0...v4.102.0) (2026-08-09)
+
+
+### Features
+
+* **longhorn:** raspi5 als vierte Storage-Node aufnehmen ([55d5c2f](https://github.com/Nebu2k/kubernetes-homelab/commit/55d5c2f89c5fc9e2b0ab90413e9e8326b50e46af))
+
 # [4.101.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.100.0...v4.101.0) (2026-08-09)
 
 
