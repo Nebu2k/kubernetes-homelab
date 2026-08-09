@@ -207,11 +207,31 @@ talosctl apply-config --nodes 192.168.2.20 --file clusterconfig/homelab-talos-cp
   der EPHEMERAL-Partition.
 - **Zwei Cluster heisst zwei kubeconfigs.** Ein Terraform-Stack mit umgebogenem
   kubeconfig zerlegt in der Parallelphase das jeweils andere Cluster.
-- **`coredns-custom` gibt es hier nicht.** Der Split-Horizon-Rewrite fuer Pods
-  haengt im k3s-Cluster an einer ConfigMap namens `coredns-custom`, und das ist
-  eine k3s-Eigenheit: Talos deployt vanilla CoreDNS, das diese ConfigMap nicht
-  kennt. Vor der Workload-Migration braucht es dafuer einen anderen Weg, sonst
-  loesen Pods `*.elmstreet79.de` nicht auf Traefik auf.
+- **`coredns-custom` gibt es hier nicht, und das ist kein Blocker.** Der
+  Split-Horizon-Rewrite fuer Pods haengt im k3s-Cluster an einer ConfigMap
+  namens `coredns-custom`, eine k3s-Eigenheit. Talos deployt vanilla CoreDNS mit
+  `forward . /etc/resolv.conf`, also an AdGuard, und dort greift der Wildcard:
+  Pods loesen `*.elmstreet79.de` sauber auf. Belegt seit dem 2026-08-09 im
+  Betrieb durch die gatus-Checks.
+
+  Der Preis ist die Abhaengigkeit: stirbt AdGuard, verlieren die Pods dieses
+  Clusters jede Namensaufloesung, waehrend das k3s-Cluster direkt an Cloudflare
+  forwarded. Hinnehmbar, aber es ist die Vorbedingung fuer die Blocky-Ablösung,
+  siehe ROADMAP.
 - **kured und system-upgrade-controller gehoeren nicht mit herueber.** Beide
   setzen ein OS mit Paketmanager und Reboot-Semantik voraus. Talos-Upgrades
   laufen ueber `talosctl upgrade`.
+- **ArgoCD 3.x legt keine `Endpoints` an.** Seit 3.0 stehen `Endpoints` und
+  `EndpointSlice` per Default auf `resource.exclusions`, und ausgeschlossen
+  heisst nicht "wird nicht angezeigt", sondern "existiert fuer ArgoCD nicht":
+  die neun handgeschriebenen Endpoints aus `manifests/external-services/`
+  werden nicht angelegt, die App meldet trotzdem Synced und Healthy. Sichtbar
+  nur an 503 von Traefik fuer pve/unifi/plex/nas/dreambox/vscode/glances, weil
+  hinter den selektorlosen Services nichts steht. Behoben ueber die
+  `resource.exclusions` in `homelab-terraform/argocd-talos/main.tf`, die
+  core/`Endpoints` wieder hereinnimmt.
+
+  **Im k3s-Cluster gilt derselbe Ausschluss, faellt dort aber nicht auf**: die
+  Objekte stammen aus der Zeit vor 3.0 und werden aus demselben Grund auch
+  nicht geprunt. Wer dort eine Endpoint-IP im Repo aendert, aendert sie
+  praktisch nicht. Von Hand nachziehen oder den Dienst migrieren.
