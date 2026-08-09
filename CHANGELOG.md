@@ -1,3 +1,10 @@
+# [4.87.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.86.0...v4.87.0) (2026-08-09)
+
+
+### Features
+
+* **talos:** proxmox-exporter, unifi-poller und argocd-config ins neue Cluster ([c291cef](https://github.com/Nebu2k/kubernetes-homelab/commit/c291cefdbbe29e1ec2362bbe9225e7b3632441e5))
+
 # [4.86.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.85.0...v4.86.0) (2026-08-09)
 
 
