@@ -201,7 +201,6 @@ def get_documentation_links():
         'landing-page': 'https://github.com/nginx/nginx',
         'proxmox-exporter': 'https://github.com/prometheus-pve/prometheus-pve-exporter',
         'unifi-poller': 'https://unpoller.com/',
-        'system-upgrade-controller': 'https://docs.k3s.io/upgrades/automated',
     }
 
     # Extract unique charts from applications
@@ -244,7 +243,8 @@ def get_documentation_links():
             continue
 
     # Add always-present core components
-    docs['K3s'] = 'https://docs.k3s.io/'
+    docs['Talos Linux'] = 'https://www.talos.dev/latest/'
+    docs['talhelper'] = 'https://budimanjojo.github.io/talhelper/'
 
     # Sort by name (case-insensitive)
     return dict(sorted(docs.items(), key=lambda item: item[0].lower()))
@@ -285,8 +285,7 @@ def generate_tree_fallback():
     
     # Bootstrap directory
     lines.append("├── bootstrap/")
-    lines.append("│   ├── root-app.yaml              # App-of-Apps (deploys everything)")
-    lines.append("│   └── argocd-version.yaml        # Renovate-Anker fuer ArgoCD selbst (wird nicht ausgerollt)")
+    lines.append("│   └── root-app.yaml              # App-of-Apps (deploys everything)")
     
     # Apps directory with sync-waves
     lines.append("├── apps/")
@@ -324,7 +323,7 @@ def generate_tree_fallback():
     manifest_dirs = sorted([d for d in (REPO_ROOT / "manifests").iterdir() 
                           if d.is_dir() and not d.name.startswith('.') and not is_ignored(d, gitignore_spec)])
     
-    # manifests/ ist nicht mehr der letzte Top-Level-Block, nodes/ kommt danach.
+    # manifests/ ist nicht mehr der letzte Top-Level-Block, talos/ kommt danach.
     # Deshalb haengt alles darunter an einem durchlaufenden "│".
     for i, manifest_dir in enumerate(manifest_dirs):
         is_last_dir = i == len(manifest_dirs) - 1
@@ -345,17 +344,13 @@ def generate_tree_fallback():
 
             lines.append(f"{file_prefix}{manifest_file.name}")
 
-    # Node-lokaler Zustand. Kein GitOps, sondern die abgezogene Vorlage fuer
-    # einen Node-Neubau, siehe nodes/README.md.
-    lines.append("└── nodes/")
-    node_dirs = sorted([d for d in (REPO_ROOT / "nodes").iterdir()
-                        if d.is_dir() and not d.name.startswith('.')])
-    lines.append("    ├── README.md                  # Node-Typen, Abweichungen, Wiederaufbau")
-    lines.append("    ├── collect.sh                 # zieht den Ist-Zustand neu ab (Drift-Check)")
-    for i, node_dir in enumerate(node_dirs):
-        is_last = i == len(node_dirs) - 1
-        prefix = "    └── " if is_last else "    ├── "
-        lines.append(f"{prefix}{node_dir.name}/")
+    # Die Talos-Ebene. Kein GitOps: talconfig.yaml ist die Quelle, aus der
+    # talhelper die machine configs erzeugt, und die liegen verschluesselt
+    # daneben. Bedienung und Fallen stehen in talos/README.md.
+    lines.append("└── talos/")
+    lines.append("    ├── README.md                  # Bedienung, Restore-Rezept, Fallen")
+    lines.append("    ├── talconfig.yaml             # Quelle der machine configs (talhelper)")
+    lines.append("    └── talsecret.sops.yaml        # Secrets-Bundle, SOPS-verschluesselt")
 
     return "\n".join(lines)
 

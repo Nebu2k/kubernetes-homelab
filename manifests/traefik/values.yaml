@@ -65,16 +65,13 @@ providers:
 # metallb.io/ ist der aktuelle Prefix, metallb.universe.tf/ ist seit 0.14.9
 # deprecated.
 #
-# Dieser Wert gilt fuer das k3s-Cluster, das Talos-Overlay ueberschreibt ihn.
-# Am 2026-08-09 von der .250 auf die .251 gewichen: an der .250 haengen der
-# UniFi-Portforward (80/443) und der Split-Horizon-Wildcard
-# *.elmstreet79.de, und die zeigen ab jetzt auf das Talos-Cluster. Das
-# k3s-Traefik bedient danach nur noch die Ingresses seiner eigenen
-# Plattform (ArgoCD, Longhorn, Grafana), erreichbar ueber die .251 mit
-# passendem Host-Header.
+# An der .250 haengen der UniFi-Portforward (80/443) und der
+# Split-Horizon-Wildcard *.elmstreet79.de. Sie darf nicht wandern, und sie
+# gehoert explizit angefordert statt der Vergabereihenfolge von MetalLB
+# ueberlassen.
 service:
   annotations:
-    metallb.io/loadBalancerIPs: "192.168.2.251"
+    metallb.io/loadBalancerIPs: "192.168.2.250"
   # Ab Chart 41 liegt type unter spec, das fruehere top-level service.type
   # gibt es nicht mehr.
   spec:

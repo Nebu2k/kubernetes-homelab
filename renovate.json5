@@ -91,63 +91,27 @@
     managerFilePatterns: ['manifests/**/*.yaml'],
   },
 
-  // Zwei Versionen im system-upgrade-controller-Verzeichnis stehen NICHT in
-  // einem image:-Feld und sind fuer den kubernetes-Manager damit unsichtbar:
-  // die k3s-Zielversion in den Plans (spec.version, der Controller macht daraus
-  // selbst den Image-Tag) und das kubectl-Image im ConfigMap-Patch. Beide
-  // werden ueber die "# renovate:"-Kommentarzeile darueber angebunden, genauso
-  // wie es das githubActionsVersions-Preset fuer die Workflows macht.
+  // Was in keinem image:-Feld und in keinem Chart steht, wird ueber eine
+  // "# renovate:"-Kommentarzeile darueber angebunden, genauso wie es das
+  // githubActionsVersions-Preset fuer die Workflows macht.
   customManagers: [
-    // Die k3s-Zielversion der Plans. Steht als reine Version da, das Repo
-    // k3s-io/k3s taggt genau so ("v1.34.9+k3s1").
-    {
-      customType: 'regex',
-      // Glob, kein Regex. managerFilePatterns nimmt beides, aber ein Regex
-      // muss in Slashes stehen (/.../); ohne sie wird der Ausdruck still als
-      // Glob gelesen und matcht dann nichts.
-      managerFilePatterns: ['manifests/system-upgrade-controller/plan-*.yaml'],
-      matchStrings: [
-        '# renovate: datasource=(?<datasource>\\S+) depName=(?<depName>\\S+)\\s+version:\\s*(?<currentValue>\\S+)',
-      ],
-    },
-    // Das kubectl-Image im ConfigMap-Patch. Hier steht eine volle Image-Referenz,
-    // depName und Version kommen deshalb aus dem Wert selbst.
-    {
-      customType: 'regex',
-      managerFilePatterns: ['manifests/system-upgrade-controller/patch-*.yaml'],
-      matchStrings: [
-        '# renovate: datasource=(?<datasource>\\S+)\\s+\\S+:\\s*(?<depName>[^:\\s]+):(?<currentValue>\\S+)',
-      ],
-    },
     // Talos- und Kubernetes-Version des neuen Clusters. Beide stehen in
     // talos/talconfig.yaml, das kein Manager kennt: es ist weder ein Manifest
     // noch ein Helm-Chart, sondern die Quelle, aus der talhelper die machine
     // configs erzeugt.
     //
-    // Wie beim ArgoCD-Anker ist das eine Erinnerung und kein Rollout. Der Merge
-    // aendert nichts am Cluster, das Upgrade bleibt "talhelper genconfig" plus
-    // "talosctl upgrade" Node fuer Node.
+    // Es ist eine Erinnerung und kein Rollout: der Merge aendert nichts am
+    // Cluster, das Upgrade bleibt "talhelper genconfig" plus "talosctl upgrade"
+    // Node fuer Node.
     //
-    // kubernetesVersion faellt hier mit rein und traegt dieselbe Skip-Level-
-    // Regel wie k3s: immer nur EIN Minor am Stueck. Die Sperre dafuer steht
-    // unten bei den packageRules.
+    // kubernetesVersion faellt hier mit rein und traegt die Skip-Level-Regel:
+    // immer nur EIN Minor am Stueck. Die Sperre dafuer steht unten bei den
+    // packageRules.
     {
       customType: 'regex',
       managerFilePatterns: ['talos/talconfig.yaml'],
       matchStrings: [
         '# renovate: datasource=(?<datasource>\\S+) depName=(?<depName>\\S+)\\s+\\S+:\\s*(?<currentValue>\\S+)',
-      ],
-    },
-    // ArgoCD selbst wird von Hand per Helm installiert und verwaltet sich
-    // bewusst nicht selbst, seine Version steht deshalb in keinem Manifest.
-    // bootstrap/argocd-version.yaml haelt sie als reinen Anker, damit ein
-    // anstehendes Upgrade wenigstens als PR auffaellt. Automerge greift hier
-    // nicht, die Regel in Phase 3 filtert auf matchManagers: kubernetes.
-    {
-      customType: 'regex',
-      managerFilePatterns: ['bootstrap/argocd-version.yaml'],
-      matchStrings: [
-        '# renovate: datasource=(?<datasource>\\S+) depName=(?<depName>\\S+) registryUrl=(?<registryUrl>\\S+)\\s+chartVersion:\\s*(?<currentValue>\\S+)',
       ],
     },
   ],
@@ -187,16 +151,6 @@
         'https://github.com/Nebu2k/kubernetes-homelab.git',
       ],
       enabled: false,
-    },
-
-    // Der ArgoCD-Anker ist eine Erinnerung, kein Cluster-Zustand: der Merge
-    // rollt nichts aus, das helm upgrade bleibt Handarbeit. Also "chore", damit
-    // kein Release und kein CHANGELOG-Eintrag entsteht, der ein Upgrade
-    // behauptet, das noch gar nicht gelaufen ist.
-    {
-      matchPackageNames: ['argo-cd'],
-      semanticCommitType: 'chore',
-      semanticCommitScope: 'argocd',
     },
 
     // fr24 taggt mit einem monoton hochzaehlenden Build-Counter
@@ -249,36 +203,13 @@
     },
 
     // Die Kubernetes-Version aus talconfig.yaml: nur Patches automatisch
-    // anbieten. Grund ist die Skip-Level-Regel, dieselbe wie bei k3s weiter
-    // unten: es darf immer nur EIN Minor am Stueck gesprungen werden, und
-    // Renovate kennt diese Regel nicht.
+    // anbieten. Grund ist die Skip-Level-Regel: es darf immer nur EIN Minor am
+    // Stueck gesprungen werden, und Renovate kennt diese Regel nicht. Der
+    // Sprung gehoert zusammen mit talosVersion gemacht, dazu KUBE_VERSION in
+    // .github/scripts/validate.sh.
     {
       matchPackageNames: ['kubernetes/kubernetes'],
       matchUpdateTypes: ['minor', 'major'],
-      enabled: false,
-    },
-
-    // k3s selbst (Zielversion der Plans) und das kubectl-Image, das die
-    // Drain-Schritte faehrt: nur Patches automatisch.
-    //
-    // Grund ist NICHT Vorsicht im Allgemeinen, sondern die Skip-Level-Regel von
-    // Kubernetes: man darf immer nur EINEN Minor am Stueck springen. Renovate
-    // kennt diese Regel nicht und wuerde von v1.34 direkt den neuesten Stand
-    // anbieten (aktuell v1.36.2), also v1.35 ueberspringen. Dieselbe Klasse
-    // Problem wie bei Longhorn. Minor-Spruenge bleiben deshalb Handarbeit:
-    // Version in beiden Plans UND rancher/kubectl gemeinsam hochziehen, dazu
-    // KUBE_VERSION in .github/scripts/validate.sh.
-    {
-      matchPackageNames: ['k3s-io/k3s', 'rancher/kubectl'],
-      matchUpdateTypes: ['minor', 'major'],
-      enabled: false,
-    },
-
-    // Der Tag von rancher/k3s-upgrade wird vom Controller aus spec.version des
-    // Plans erzeugt, im Manifest steht das Image absichtlich ohne Tag. Nichts,
-    // was Renovate hier zu bumpen haette.
-    {
-      matchPackageNames: ['rancher/k3s-upgrade'],
       enabled: false,
     },
 
@@ -311,9 +242,9 @@
     // Nodes eingeschaltet. Alle drei waeren gruen durchgelaufen. Details in
     // ROADMAP.md.
     //
-    // Die customManager-Deps (k3s-io/k3s, rancher/kubectl) fallen hier schon
-    // durch matchManagers raus. Das ist Absicht: ein k3s-Patch faehrt ein
-    // Upgrade ueber alle fuenf Nodes, das bleibt eine bewusste Handlung.
+    // Die customManager-Deps (siderolabs/talos, kubernetes/kubernetes) fallen
+    // hier schon durch matchManagers raus. Das ist Absicht: ein Talos-Upgrade
+    // rebootet Node fuer Node, das bleibt eine bewusste Handlung.
     {
       matchManagers: ['kubernetes'],
       matchUpdateTypes: ['patch'],
@@ -337,13 +268,5 @@
       automerge: false,
     },
 
-    // system-upgrade-controller braucht nach jedem Image-Bump ein
-    // "make vendor-suc", weil crd.yaml sonst still auf dem alten Release
-    // stehen bleibt (siehe ROADMAP.md, Abschnitt CRD-Drift). Ein Automerge
-    // wuerde genau diesen Handgriff ueberspringen, ohne dass es jemand merkt.
-    {
-      matchPackageNames: ['rancher/system-upgrade-controller'],
-      automerge: false,
-    },
   ],
 }

@@ -72,8 +72,14 @@ kubeEtcd:
 
 # Prometheus configuration
 prometheus:
-  
   prometheusSpec:
+    # Steht seit der Parallelphase mit dem k3s-Cluster hier. Beide Instanzen
+    # alarmierten in dieselbe SNS-Topic, und ohne unterscheidendes Label stand
+    # in der Mail nur der Alertname. Bleibt stehen: das group_by in dieser Datei
+    # enthaelt 'cluster' ohnehin, und wenn je ein zweites Cluster dazukommt, ist
+    # die Unterscheidung schon da.
+    externalLabels:
+      cluster: talos
     # Use EndpointSlice instead of deprecated Endpoints API (required for Kubernetes v1.33+)
     discoveryRole: endpointslice
     

@@ -1,6 +1,6 @@
 # Kubernetes Homelab - GitOps with ArgoCD
 
-Production-ready K3s cluster managed via GitOps using ArgoCD App-of-Apps pattern.
+Talos Linux cluster managed via GitOps using the ArgoCD App-of-Apps pattern.
 
 ## 🎯 Architecture
 
@@ -9,8 +9,8 @@ Production-ready K3s cluster managed via GitOps using ArgoCD App-of-Apps pattern
 ### Deployment Flow
 
 ```text
-1. Manual: K3s + Kube-VIP → HA Control Plane
-2. Manual: ArgoCD via Helm → GitOps Engine
+1. Manual: Talos machine configs (talhelper) → HA control plane, VIP built in
+2. Manual: ArgoCD via Terraform (homelab-terraform/argocd-talos) → GitOps engine
 3. GitOps: bootstrap/root-app.yaml → App-of-Apps
 4. GitOps: Everything else deployed automatically with Sync-Waves
 ```
@@ -19,8 +19,8 @@ Production-ready K3s cluster managed via GitOps using ArgoCD App-of-Apps pattern
 
 | Wave | Component |
 |------|-----------|
-| 0 | Coredns Config, Sealed Secrets |
-| 1 | Etcd S3 Config, Kured, Metallb, Reloader, System Upgrade Controller |
+| 0 | Sealed Secrets |
+| 1 | Metallb, Reloader |
 | 2 | Etcd Backup, Kube Router, Metrics Server |
 | 3 | Traefik |
 | 4 | Cert Manager, Longhorn |
@@ -40,17 +40,12 @@ Production-ready K3s cluster managed via GitOps using ArgoCD App-of-Apps pattern
 ```text
 homelab/
 ├── bootstrap/
-│   ├── root-app.yaml              # App-of-Apps (deploys everything)
-│   └── argocd-version.yaml        # Renovate-Anker fuer ArgoCD selbst (wird nicht ausgerollt)
+│   └── root-app.yaml              # App-of-Apps (deploys everything)
 ├── apps/
 │   ├── kustomization.yaml         # List of all apps
-│   ├── coredns-config.yaml            # Wave 0
 │   ├── sealed-secrets.yaml            # Wave 0
-│   ├── etcd-s3-config.yaml            # Wave 1
-│   ├── kured.yaml                     # Wave 1
 │   ├── metallb.yaml                   # Wave 1
 │   ├── reloader.yaml                  # Wave 1
-│   ├── system-upgrade-controller.yaml # Wave 1
 │   ├── etcd-backup.yaml               # Wave 2
 │   ├── kube-router.yaml               # Wave 2
 │   ├── metrics-server.yaml            # Wave 2
@@ -93,9 +88,6 @@ homelab/
 │   │   ├── tls-store.yaml
 │   │   ├── values.yaml
 │   │   └── wildcard-certificate.yaml
-│   ├── coredns/
-│   │   ├── coredns-custom.yaml
-│   │   └── kustomization.yaml
 │   ├── csi-driver-smb/
 │   │   └── values.yaml
 │   ├── etcd-backup/
@@ -104,10 +96,6 @@ homelab/
 │   │   ├── s3-credentials-sealed.yaml
 │   │   ├── s3-credentials-unsealed.yaml.example
 │   │   └── talos-service-account.yaml
-│   ├── etcd-s3-config/
-│   │   ├── kustomization.yaml
-│   │   ├── s3-etcd-backup-credentials-sealed.yaml
-│   │   └── s3-etcd-backup-credentials-unsealed.yaml.example
 │   ├── external-services/
 │   │   ├── adguard-macmini-service.yaml
 │   │   ├── adguard-pve-service.yaml
@@ -151,6 +139,7 @@ homelab/
 │   │   ├── kustomization.yaml
 │   │   ├── matter-pvc.yaml
 │   │   ├── namespace.yaml
+│   │   ├── pv.yaml
 │   │   ├── pvc.yaml
 │   │   ├── s3-archive-credentials-sealed.yaml
 │   │   ├── s3-archive-credentials-unsealed.yaml.example
@@ -189,6 +178,7 @@ homelab/
 │   │   ├── home-assistant-token-sealed.yaml
 │   │   ├── home-assistant-token-unsealed.yaml.example
 │   │   ├── kustomization.yaml
+│   │   ├── namespace.yaml
 │   │   ├── node-exporter-external-scrapeconfig.yaml
 │   │   ├── prometheus-ingress.yaml
 │   │   ├── prometheus-rules.yaml
@@ -199,8 +189,6 @@ homelab/
 │   │   ├── rbac.yaml
 │   │   ├── service.yaml
 │   │   └── servicemonitor.yaml
-│   ├── kured/
-│   │   └── values.yaml
 │   ├── landing-page/
 │   │   ├── apex-redirect.yaml
 │   │   ├── configmap.yaml
@@ -210,7 +198,6 @@ homelab/
 │   │   ├── namespace.yaml
 │   │   └── service.yaml
 │   ├── longhorn/
-│   │   ├── disable-local-path-default.yaml
 │   │   ├── ingress.yaml
 │   │   ├── kustomization.yaml
 │   │   ├── nas-cifs-secret-sealed.yaml
@@ -228,6 +215,7 @@ homelab/
 │   │   ├── namespace.yaml
 │   │   ├── networkpolicy.yaml
 │   │   ├── postgresql.yaml
+│   │   ├── pv.yaml
 │   │   ├── pvc.yaml
 │   │   └── service.yaml
 │   ├── metallb/
@@ -247,6 +235,7 @@ homelab/
 │   │   ├── paperless-secrets-sealed.yaml
 │   │   ├── paperless-secrets-unsealed.yaml.example
 │   │   ├── postgresql.yaml
+│   │   ├── pv.yaml
 │   │   ├── pvc.yaml
 │   │   ├── redis.yaml
 │   │   ├── s3-backup-credentials-sealed.yaml
@@ -276,14 +265,8 @@ homelab/
 │   │   ├── deployment.yaml
 │   │   ├── kustomization.yaml
 │   │   ├── namespace.yaml
+│   │   ├── pv.yaml
 │   │   └── pvc.yaml
-│   ├── system-upgrade-controller/
-│   │   ├── crd.yaml
-│   │   ├── deployment.yaml
-│   │   ├── kustomization.yaml
-│   │   ├── patch-controller-env.yaml
-│   │   ├── plan-agent.yaml
-│   │   └── plan-server.yaml
 │   ├── teslamate/
 │   │   ├── backup-cronjob.yaml
 │   │   ├── database-deployment.yaml
@@ -303,6 +286,7 @@ homelab/
 │   │   ├── postgres-exporter-deployment.yaml
 │   │   ├── postgres-exporter-service.yaml
 │   │   ├── postgres-exporter-servicemonitor.yaml
+│   │   ├── pv.yaml
 │   │   ├── s3-backup-credentials-sealed.yaml
 │   │   ├── s3-backup-credentials-unsealed.yaml.example
 │   │   ├── teslamate-deployment.yaml
@@ -319,260 +303,60 @@ homelab/
 │       ├── servicemonitor.yaml
 │       ├── unifi-config-sealed.yaml
 │       └── unifi-config-unsealed.yaml.example
-└── nodes/
-    ├── README.md                  # Node-Typen, Abweichungen, Wiederaufbau
-    ├── collect.sh                 # zieht den Ist-Zustand neu ab (Drift-Check)
-    ├── k3s-cp-1/
-    ├── k3s-worker-1/
-    ├── prodesk/
-    ├── raspi4/
-    └── raspi5/
+└── talos/
+    ├── README.md                  # Bedienung, Restore-Rezept, Fallen
+    ├── talconfig.yaml             # Quelle der machine configs (talhelper)
+    └── talsecret.sops.yaml        # Secrets-Bundle, SOPS-verschluesselt
 ```
 
 ## 🚀 Fresh Installation
 
 ### Prerequisites
 
-- 2+ nodes
+- 3+ nodes running [Talos Linux](https://www.talos.dev/) (no SSH, no package manager, everything in the machine config)
 - Domain on Cloudflare (DNS-01 challenge + public records)
 - Cloudflare API token (for cert-manager DNS-01 wildcard TLS certificates)
-- S3-compatible storage for Longhorn backups (optional)
+- CIFS or S3 target for Longhorn backups
+- `talosctl`, `talhelper`, `kubectl`, `kustomize`, `kubeseal`, `sops`, `age`
 
-### Step 1: Install K3s Cluster (**on raspi4**)
+### Step 1: Build the cluster (**Talos**)
 
-**First control plane node:**
-
-```bash
-curl -sfL https://get.k3s.io | INSTALL_K3S_CHANNEL=stable sh -s - server \
-  --cluster-init \
-  --tls-san 192.168.2.249 \
-  --tls-san raspi4 \
-  --tls-san 192.168.2.2 \
-  --disable traefik \
-  --disable servicelb \
-  --etcd-expose-metrics=true \
-  --write-kubeconfig-mode 644 \
-  --node-ip 192.168.2.2
-
-# Save token for additional nodes
-sudo cat /var/lib/rancher/k3s/server/node-token
-```
-
-⚠️ **`--node-ip` is mandatory on every node, control plane and worker alike.**
-
-The LAN carries three global SLAAC prefixes (ISP GUA `2a00:1e:7c40:f100::/64`, the manual ULA `fd2e:9a71:c3b5::/64` used for DNS, and the UniFi auto-ULA `fd83:da8b:a382:4973::/64`). Without an explicit `--node-ip`, kubelet picks up one of them as a **second** InternalIP on every restart. The pod network is IPv4-only (PodCIDRs `10.42.x.0/24`, pods only get a link-local v6), so the Prometheus Operator then builds kubelet endpoints that nothing in the cluster can reach, and `TargetDown` plus `KubeletInstanceUnreachable` start firing. Pin the node's v4 address and the cluster stays single-stack on purpose instead of by accident.
-
-Do not disable the auto-ULA in UniFi to work around this: LAN clients need it to reach IPv6 targets.
-
-`--disable servicelb` is required as well, otherwise K3s' built-in ServiceLB fights MetalLB over LoadBalancer services.
-
-`--etcd-expose-metrics=true` is what makes etcd observable at all. K3s serves the etcd metrics on port 2381 in plaintext without client certs, but binds them to `127.0.0.1` unless this flag is set, so Prometheus cannot reach them from a pod. Server nodes only, and it is the precondition for `kubeEtcd` in the kube-prometheus-stack values.
-
-ℹ️ **After installation these flags live only in `/etc/systemd/system/k3s.service`** (`k3s-agent.service` on workers), as quoted arguments in `ExecStart`. There is no `/etc/rancher/k3s/config.yaml`. Changing them later means editing the unit per node, `systemctl daemon-reload && systemctl restart k3s`, and verifying with `kubectl get nodes` plus `kubectl get --raw='/readyz?verbose'` before touching the next one, so etcd quorum never drops below 2 of 3. Keep this section in sync when you do, it is the only place the flags are tracked in git.
-
-### Step 2: Install Kube-VIP (**on raspi4** - Control Plane HA)
+The machine configs are generated from a single `talos/talconfig.yaml` by
+[talhelper](https://github.com/budimanjojo/talhelper); the generated files and
+the secrets bundle are never edited by hand.
 
 ```bash
-kubectl apply -f https://kube-vip.io/manifests/rbac.yaml
+export SOPS_AGE_KEY_FILE=~/.config/sops/age/keys.txt
+cd talos && talhelper genconfig
 
-cat <<EOF | kubectl apply -f -
-apiVersion: apps/v1
-kind: DaemonSet
-metadata:
-  name: kube-vip-ds
-  namespace: kube-system
-spec:
-  selector:
-    matchLabels:
-      name: kube-vip-ds
-  template:
-    metadata:
-      labels:
-        name: kube-vip-ds
-    spec:
-      hostNetwork: true
-      nodeSelector:
-        node-role.kubernetes.io/control-plane: "true"
-      serviceAccountName: kube-vip
-      containers:
-      - name: kube-vip
-        image: ghcr.io/kube-vip/kube-vip:v1.0.1
-        args: ["manager"]
-        env:
-        - name: vip_arp
-          value: "true"
-        - name: port
-          value: "6443"
-        - name: vip_cidr
-          value: "32"
-        - name: cp_enable
-          value: "true"
-        - name: cp_namespace
-          value: kube-system
-        - name: vip_leaderelection
-          value: "true"
-        - name: address
-          value: "192.168.2.249"  # TODO: Your VIP
-        securityContext:
-          capabilities:
-            add: ["NET_ADMIN", "NET_RAW"]
-      tolerations:
-      - effect: NoSchedule
-        operator: Exists
-      - effect: NoExecute
-        operator: Exists
-EOF
-
-# Wait for Kube-VIP to be ready
-sleep 10
-
-# Test VIP
-ping -c 3 192.168.2.249
+talosctl apply-config --insecure --nodes <dhcp-ip> \
+  --file clusterconfig/homelab-talos-cp-1.yaml
+talosctl bootstrap --nodes <node-ip>   # exactly once for the whole cluster
+talosctl kubeconfig --nodes <node-ip>
 ```
 
-### Step 3: Configure kubectl with VIP (**on your laptop**)
+ℹ️ **Everything worth knowing about this cluster lives in
+[`talos/README.md`](talos/README.md)**: node roles and the image factory
+schematic, how to restore a Longhorn volume from the NAS backup, and the traps
+that cost time (PodSecurity `baseline` rejects more than you expect, MetalLB
+needs `speaker.ignoreExcludeLB` on an all-control-plane cluster, only one volume
+restore at a time). It is not repeated here so the two cannot drift apart.
+
+### Step 2: Install ArgoCD (**on your laptop, via Terraform**)
+
+ArgoCD manages everything except itself, so it is the one component that does
+not come from this repo. It is a `helm_release` in its own Terraform stack with
+its own state key, `homelab-terraform/argocd-talos/`:
 
 ```bash
-scp raspi4:/etc/rancher/k3s/k3s.yaml ~/.kube/config
-sed -i '' 's/127.0.0.1/192.168.2.249/g' ~/.kube/config
-kubectl get nodes
+cd homelab-terraform/argocd-talos
+terraform init && terraform apply
 ```
 
-### Step 4: Join Additional Control Plane Nodes (**on raspi5**)
+Terraform always sends the full value set and knows no `--reuse-values`, which
+is what makes a chart major upgrade predictable.
 
-```bash
-# Join via VIP (not node IP!)
-curl -sfL https://get.k3s.io | INSTALL_K3S_CHANNEL=stable sh -s - server \
-  --server https://192.168.2.249:6443 \
-  --token <token-from-step-1> \
-  --tls-san 192.168.2.249 \
-  --tls-san raspi5 \
-  --tls-san 192.168.2.9 \
-  --disable traefik \
-  --disable servicelb \
-  --etcd-expose-metrics=true \
-  --write-kubeconfig-mode 644 \
-  --node-ip 192.168.2.9
-```
-
-Adjust `--tls-san` and `--node-ip` per node (k3s-cp-1 uses `192.168.2.19`).
-
-### Step 4.5: Join Worker Nodes with Longhorn Storage (**on k3s-worker-1**)
-
-**Prerequisites:**
-
-- Second disk installed (e.g., 2TB NVMe for Longhorn storage)
-- Static IP configured via DHCP reservation in router
-
-**1. Install system essentials:**
-
-```bash
-sudo apt update && sudo apt upgrade -y
-sudo apt install -y curl wget git vim htop net-tools iptables qemu-guest-agent
-sudo systemctl start qemu-guest-agent
-```
-
-**2. Prepare second disk for Longhorn:**
-
-```bash
-# Identify disk (usually /dev/sdb for second disk)
-lsblk
-
-# Format disk with ext4
-sudo mkfs.ext4 -L longhorn-storage /dev/sdb
-
-# Create Longhorn mountpoint
-sudo mkdir -p /var/lib/longhorn
-
-# Get UUID for permanent mounting
-sudo blkid /dev/sdb
-
-# Add to fstab (replace <uuid> with actual UUID from blkid)
-echo "UUID=<uuid> /var/lib/longhorn ext4 defaults,noatime 0 2" | sudo tee -a /etc/fstab
-
-# Mount and verify
-sudo mount -a
-df -h /var/lib/longhorn
-```
-
-**3. Join as K3s worker:**
-
-```bash
-curl -sfL https://get.k3s.io | K3S_URL=https://192.168.2.249:6443 \
-  K3S_TOKEN=<token-from-step-1> \
-  INSTALL_K3S_EXEC="--node-ip=192.168.2.18" \
-  sh -
-```
-
-`--node-ip` is mandatory here too, for the same reason as in Step 1. Use the node's own v4 address (k3s-worker-1 `192.168.2.18`, prodesk `192.168.2.7`).
-
-⚠️ **For Multipass VMs with multiple network interfaces:**
-
-If the VM has both a NAT interface (e.g., 192.168.64.x) and a bridged interface (e.g., 192.168.2.x), pin the flannel interface on top of `--node-ip`:
-
-```bash
-curl -sfL https://get.k3s.io | K3S_URL=https://192.168.2.249:6443 \
-  K3S_TOKEN=<token-from-step-1> \
-  INSTALL_K3S_EXEC="--node-ip=<bridged-ip> --flannel-iface=ens4" \
-  sh -
-```
-
-Replace `<bridged-ip>` with the IP from your cluster network (e.g., 192.168.2.x) and adjust `ens4` to match your bridged interface name (check with `ip addr show`).
-
-**4. Label node as worker (from your laptop):**
-
-```bash
-kubectl label node k3s-worker-1 node-role.kubernetes.io/worker=worker
-```
-
-**5. Verify Longhorn detects storage:**
-
-```bash
-# From your laptop
-kubectl get nodes
-kubectl get pods -n longhorn-system -o wide | grep k3s-worker-1
-
-# Check Longhorn UI (http://longhorn.elmstreet79.de)
-# Node → k3s-worker-1 → should show full disk capacity
-```
-
-⚠️ **Note:** Longhorn automatically detects `/var/lib/longhorn` - no additional configuration needed!
-
-### Step 5: Install ArgoCD via Helm (**on your laptop**)
-
-⚠️ **ArgoCD is NOT managed via GitOps** (prevents self-management conflicts)
-
-```bash
-helm repo add argo https://argoproj.github.io/argo-helm
-helm repo update
-
-# Install with your domain
-# Note: Installs latest version (no --version flag)
-helm install argocd argo/argo-cd \
-  --namespace argocd \
-  --create-namespace \
-  --set global.domain=argocd.elmstreet79.de \
-  --set configs.cm.url=https://argocd.elmstreet79.de \
-  --set 'configs.params.server\.insecure'=true
-
-# Wait for ArgoCD to be ready
-kubectl wait --for=condition=available --timeout=300s \
-  deployment/argocd-server -n argocd
-
-# Get admin password
-kubectl -n argocd get secret argocd-initial-admin-secret \
-  -o jsonpath="{.data.password}" | base64 -d && echo
-```
-
-**Why `server.insecure=true`?**
-
-- ArgoCD runs on HTTP internally
-- Traefik terminates TLS
-- Prevents redirect loops
-
-**Note:** If you changed the domain in Step 5, update the Helm values accordingly.
-
-### Step 6: Fork & Configure Repository (**on your laptop**)
+### Step 3: Fork & Configure Repository (**on your laptop**)
 
 ```bash
 # Fork https://github.com/Nebu2k/kubernetes-homelab
@@ -619,8 +403,6 @@ cd kubernetes-homelab
       manifests/backup-monitor/s3-backup-monitor-credentials-unsealed.yaml
    cp manifests/etcd-backup/s3-credentials-unsealed.yaml.example \
       manifests/etcd-backup/s3-credentials-unsealed.yaml
-   cp manifests/etcd-s3-config/s3-etcd-backup-credentials-unsealed.yaml.example \
-      manifests/etcd-s3-config/s3-etcd-backup-credentials-unsealed.yaml
    cp manifests/fr24/fr24-secret-unsealed.yaml.example \
       manifests/fr24/fr24-secret-unsealed.yaml
    cp manifests/home-assistant/s3-archive-credentials-unsealed.yaml.example \
@@ -676,7 +458,7 @@ git commit -m "Configure for my environment"
 git push
 ```
 
-### Step 7: Bootstrap GitOps (**on your laptop**)
+### Step 4: Bootstrap GitOps (**on your laptop**)
 
 ```bash
 # Deploy App-of-Apps
@@ -692,7 +474,7 @@ kubectl get applications -n argocd -w
 - MetalLB, Traefik, cert-manager, etc. follow in order
 - Some apps will stay "Progressing" until secrets are sealed (next step)
 
-### Step 7.5: Seal Secrets (**on your laptop** - AFTER Step 7)
+### Step 4.5: Seal Secrets (**on your laptop** - AFTER Step 4)
 
 ⚠️ **Wait until Sealed Secrets Controller is ready:**
 
@@ -702,7 +484,7 @@ kubectl wait --for=condition=available --timeout=300s \
   deployment/sealed-secrets-controller -n kube-system
 ```
 
-**Seal every secret you created in Step 6** (requires cluster access):
+**Seal every secret you created in Step 3** (requires cluster access):
 
 ```bash
 # 1. backup-monitor: s3 backup monitor credentials
@@ -720,82 +502,77 @@ kubeseal --format=yaml --controller-namespace=kube-system \
   < manifests/etcd-backup/s3-credentials-unsealed.yaml \
   > manifests/etcd-backup/s3-credentials-sealed.yaml
 
-# 4. etcd-s3-config: s3 etcd backup credentials
-kubeseal --format=yaml --controller-namespace=kube-system \
-  < manifests/etcd-s3-config/s3-etcd-backup-credentials-unsealed.yaml \
-  > manifests/etcd-s3-config/s3-etcd-backup-credentials-sealed.yaml
-
-# 5. fr24: fr24 secret
+# 4. fr24: fr24 secret
 kubeseal --format=yaml --controller-namespace=kube-system \
   < manifests/fr24/fr24-secret-unsealed.yaml \
   > manifests/fr24/fr24-secret-sealed.yaml
 
-# 6. home-assistant: s3 archive credentials
+# 5. home-assistant: s3 archive credentials
 kubeseal --format=yaml --controller-namespace=kube-system \
   < manifests/home-assistant/s3-archive-credentials-unsealed.yaml \
   > manifests/home-assistant/s3-archive-credentials-sealed.yaml
 
-# 7. kube-prometheus-stack: aws credentials
+# 6. kube-prometheus-stack: aws credentials
 kubeseal --format=yaml --controller-namespace=kube-system \
   < manifests/kube-prometheus-stack/aws-credentials-unsealed.yaml \
   > manifests/kube-prometheus-stack/aws-credentials-sealed.yaml
 
-# 8. kube-prometheus-stack: grafana admin
+# 7. kube-prometheus-stack: grafana admin
 kubeseal --format=yaml --controller-namespace=kube-system \
   < manifests/kube-prometheus-stack/grafana-admin-unsealed.yaml \
   > manifests/kube-prometheus-stack/grafana-admin-sealed.yaml
 
-# 9. kube-prometheus-stack: home assistant token
+# 8. kube-prometheus-stack: home assistant token
 kubeseal --format=yaml --controller-namespace=kube-system \
   < manifests/kube-prometheus-stack/home-assistant-token-unsealed.yaml \
   > manifests/kube-prometheus-stack/home-assistant-token-sealed.yaml
 
-# 10. longhorn: nas cifs secret
+# 9. longhorn: nas cifs secret
 kubeseal --format=yaml --controller-namespace=kube-system \
   < manifests/longhorn/nas-cifs-secret-unsealed.yaml \
   > manifests/longhorn/nas-cifs-secret-sealed.yaml
 
-# 11. mealie: mealie secrets
+# 10. mealie: mealie secrets
 kubeseal --format=yaml --controller-namespace=kube-system \
   < manifests/mealie/mealie-secrets-unsealed.yaml \
   > manifests/mealie/mealie-secrets-sealed.yaml
 
-# 12. paperless-ngx: paperless secrets
+# 11. paperless-ngx: paperless secrets
 kubeseal --format=yaml --controller-namespace=kube-system \
   < manifests/paperless-ngx/paperless-secrets-unsealed.yaml \
   > manifests/paperless-ngx/paperless-secrets-sealed.yaml
 
-# 13. paperless-ngx: s3 backup credentials
+# 12. paperless-ngx: s3 backup credentials
 kubeseal --format=yaml --controller-namespace=kube-system \
   < manifests/paperless-ngx/s3-backup-credentials-unsealed.yaml \
   > manifests/paperless-ngx/s3-backup-credentials-sealed.yaml
 
-# 14. paperless-ngx: smb credentials
+# 13. paperless-ngx: smb credentials
 kubeseal --format=yaml --controller-namespace=kube-system \
   < manifests/paperless-ngx/smb-credentials-unsealed.yaml \
   > manifests/paperless-ngx/smb-credentials-sealed.yaml
 
-# 15. proxmox-exporter: pve api credentials
+# 14. proxmox-exporter: pve api credentials
 kubeseal --format=yaml --controller-namespace=kube-system \
   < manifests/proxmox-exporter/pve-api-credentials-unsealed.yaml \
   > manifests/proxmox-exporter/pve-api-credentials-sealed.yaml
 
-# 16. readsb: readsb secret
+# 15. readsb: readsb secret
 kubeseal --format=yaml --controller-namespace=kube-system \
   < manifests/readsb/readsb-secret-unsealed.yaml \
   > manifests/readsb/readsb-secret-sealed.yaml
 
-# 17. teslamate: s3 backup credentials
+# 16. teslamate: s3 backup credentials
 kubeseal --format=yaml --controller-namespace=kube-system \
   < manifests/teslamate/s3-backup-credentials-unsealed.yaml \
   > manifests/teslamate/s3-backup-credentials-sealed.yaml
 
-# 18. teslamate: teslamate secret
+# 17. teslamate: teslamate secret
 kubeseal --format=yaml --controller-namespace=kube-system \
   < manifests/teslamate/teslamate-secret-unsealed.yaml \
   > manifests/teslamate/teslamate-secret-sealed.yaml
 
-# 19. unifi-poller: unifi config
+# 18. unifi-poller: unifi config
 kubeseal --format=yaml --controller-namespace=kube-system \
   < manifests/unifi-poller/unifi-config-unsealed.yaml \
   > manifests/unifi-poller/unifi-config-sealed.yaml
@@ -820,7 +597,7 @@ kubectl get applications -n argocd -w
 
 ℹ️ **Why no offline certificate?** `kubeseal` can also seal against a public certificate file fetched with `kubeseal --fetch-cert`, which works without cluster access. This repo deliberately does not keep one: the controller rotates its sealing key every 30 days, a checked-out certificate silently goes stale, and sealing against a months-old key still succeeds without any error. Always seal against the live controller.
 
-### Step 7.6: Configure Homepage Widgets (**on your laptop** - AFTER Grafana is ready)
+### Step 4.6: Configure Homepage Widgets (**on your laptop** - AFTER Grafana is ready)
 
 **Create sealed secrets for Homepage widgets:**
 
@@ -914,7 +691,7 @@ git push
 
 ⚠️ **Note:** If you rebuild the cluster, passwords may change (e.g., Grafana admin password), so you'll need to recreate the affected sealed secrets.
 
-### Step 8: Verify Deployment (**on your laptop**)
+### Step 5: Verify Deployment (**on your laptop**)
 
 ```bash
 # All apps should be Synced + Healthy
@@ -928,7 +705,7 @@ kubectl get svc -n traefik
 kubectl get ingress -A
 ```
 
-### Step 9: Access UIs (**from your laptop browser**)
+### Step 6: Access UIs (**from your laptop browser**)
 
 ℹ️ **Exposure model**: Traefik (MetalLB LoadBalancer `192.168.2.250`) is the single ingress for cluster and external hosts, routing by SNI/Host. TLS is one wildcard cert `*.elmstreet79.de` from cert-manager (Let's Encrypt DNS-01 via Cloudflare), served as the Traefik default.
 
@@ -1156,7 +933,6 @@ kubectl get secret -n monitoring grafana-admin-credentials \
 | Home Assistant | 2026.7.4 | Home Assistant |
 | Homepage | v1.13.2 | Homepage |
 | Kube Prometheus Stack | 88.0.1 | Kube Prometheus Stack |
-| Kured | 6.1.0 | Kured |
 | Landing Page | 1.31.3-alpine | Landing Page |
 | Longhorn | 1.12.0 | Longhorn |
 | Mealie | v3.22.0 | Mealie |
@@ -1168,13 +944,12 @@ kubectl get secret -n monitoring grafana-admin-credentials \
 | Reloader | 2.2.14 | Reloader |
 | Ripe Atlas | 5120 | Ripe Atlas |
 | Sealed Secrets | 2.19.1 | Sealed Secrets |
-| System Upgrade Controller | v0.20.1 | System Upgrade Controller |
 | Teslamate | 4.0.1 | Teslamate |
 | Traefik | 41.1.0 | Traefik |
 | Unifi Poller | v3.3.4 | Unifi Poller |
-| K3s | v1.33.5 | Lightweight Kubernetes |
-| Kube-VIP | v1.0.1 | Control plane HA |
-| ArgoCD | v3.2.3 | Continuous Delivery |
+| Talos Linux | v1.13.8 | Immutable node OS, no SSH, no package manager |
+| Kubernetes | v1.36.3 | Shipped and managed by Talos |
+| ArgoCD | v3.5.0 | Continuous Delivery (installed via Terraform) |
 
 ## 📖 Documentation
 
@@ -1183,9 +958,7 @@ kubectl get secret -n monitoring grafana-admin-credentials \
 - [Gatus](https://github.com/TwiN/gatus)
 - [Home Assistant](https://www.home-assistant.io/docs/)
 - [Homepage](https://gethomepage.dev/latest/)
-- [K3s](https://docs.k3s.io/)
 - [Kube Prometheus Stack](https://prometheus-community.github.io/helm-charts)
-- [Kured](https://kubereboot.github.io/charts)
 - [Landing Page](https://github.com/nginx/nginx)
 - [Longhorn](https://charts.longhorn.io)
 - [Metallb](https://metallb.github.io/metallb)
@@ -1193,7 +966,8 @@ kubectl get secret -n monitoring grafana-admin-credentials \
 - [Proxmox Exporter](https://github.com/prometheus-pve/prometheus-pve-exporter)
 - [Reloader](https://stakater.github.io/stakater-charts)
 - [Sealed Secrets](https://bitnami.github.io/sealed-secrets/)
-- [System Upgrade Controller](https://docs.k3s.io/upgrades/automated)
+- [talhelper](https://budimanjojo.github.io/talhelper/)
+- [Talos Linux](https://www.talos.dev/latest/)
 - [Teslamate](https://docs.teslamate.org/)
 - [Traefik](https://traefik.github.io/charts)
 - [Unifi Poller](https://unpoller.com/)

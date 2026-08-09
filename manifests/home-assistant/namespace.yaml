@@ -1,6 +1,13 @@
+# Das PodSecurity-Label ist Pflicht: der Pod laeuft mit hostNetwork und setzt
+# NET_ADMIN und NET_RAW, alle drei verbietet das baseline-Profil, das Talos
+# clusterweit erzwingt. Der Grund steht im Deployment: mDNS-Discovery,
+# CoIoT-Multicast der Gen1-Shellys und die HomeKit-Bridges brauchen das
+# Node-Netz.
+#
+# Ohne das Label bleibt das Deployment bei 0/1, waehrend die App Synced meldet.
 apiVersion: v1
 kind: Namespace
 metadata:
   name: home-assistant
   labels:
-    name: home-assistant
+    pod-security.kubernetes.io/enforce: privileged

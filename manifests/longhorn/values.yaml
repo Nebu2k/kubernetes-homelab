@@ -26,6 +26,13 @@ defaultBackupStore:
     backupTargetCredentialSecret: longhorn-nas-cifs-secret
 # Default settings
 defaultSettings:
+  # Die Nodes tragen ein Zonen-Label (pve fuer die beiden VMs, blech fuer
+  # prodesk, gesetzt in talos/talconfig.yaml), und "false" zwingt Longhorn, die
+  # zwei Repliken auf zwei Zonen zu verteilen. Ohne das genuegt Longhorn schon,
+  # dass die Repliken auf zwei verschiedenen NODES liegen: talos-cp-1 und
+  # talos-cp-2 sind zwei Nodes, aber eine einzige NVMe in pve. Beide Repliken
+  # dort waeren keine Redundanz, nur zwei Kopien auf demselben Datentraeger.
+  replicaZoneSoftAntiAffinity: "false"
   defaultReplicaCount: "2"
   # RWX (ReadWriteMany) Support via NFS
   rwxVolumeFastFailover: "true"

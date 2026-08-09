@@ -169,31 +169,26 @@ spec:
                   # hochgeladen hatte. Ein Bucket-Alter sagt nichts darueber, ob
                   # noch drei Erzeuger leben.
                   #
-                  # Node-eigene Ordner (--etcd-s3-folder) braucht es dafuer
-                  # NICHT, auch wenn das Config-Secret fuer alle Nodes dasselbe
-                  # ist: k3s baut den Node-Namen in den Objektnamen ein
-                  # ("<snapshot-name>-<node>-<unix-ts>"). Das Praefix
-                  # "etcd-snapshot-<node>-" trifft damit genau die geplanten
-                  # Snapshots einer Node und laesst on-demand-Laeufe bewusst
-                  # aussen vor: geprueft werden soll der automatische Weg.
+                  # Der Objektname traegt den Node-Namen
+                  # ("etcd-snapshot-<node>-<unix-ts>"), node-eigene Ordner
+                  # braucht es dafuer nicht. Das Praefix trifft damit genau die
+                  # geplanten Snapshots einer Node und laesst Laeufe von Hand
+                  # bewusst aussen vor: geprueft werden soll der automatische Weg.
                   #
                   # Die Node-Namen stehen hier fest. Nach einem Node-Neubau oder
                   # Rename meldet sich diese Sonde mit "kein einziges Objekt" und
                   # muss nachgezogen werden. Das ist der gewollte laute Ausgang,
                   # ein stiller waere genau der Fehler von oben.
                   #
-                  # 26h statt 18h: pro Node ist der Abstand 12h, und ein einzelner
-                  # ausgefallener Lauf (Reboot durch kured im Zeitfenster) soll
-                  # nicht melden. Zwei ausgefallene Laeufe in Folge sind 24h und
-                  # damit ein echtes Signal. Zur Erinnerung: der Check laeuft
-                  # 06:00 UTC, die Snapshots fallen 00:00 und 12:00 LOKALZEIT der
-                  # jeweiligen Node, und die Raspis stehen auf Europe/Berlin
-                  # waehrend die x86-Nodes auf UTC stehen.
-                  # Beide Cluster schreiben in dasselbe Bucket und in dasselbe
-                  # Namensschema. Fuer k3s macht das der Server-Prozess selbst,
-                  # fuer Talos die drei CronJobs aus manifests/etcd-backup/.
-                  # Beim Abbau von k3s faellt die erste Zeile weg, sonst nichts.
-                  for NODE in k3s-cp-1 raspi4 raspi5 talos-cp-1 talos-cp-2 prodesk; do
+                  # 26h statt 18h: pro Node ist der Abstand 12h (die CronJobs in
+                  # manifests/etcd-backup/ laufen 00:00 und 12:00 UTC, gestaffelt
+                  # um 20 Minuten), und ein einzelner ausgefallener Lauf soll
+                  # nicht melden. Zwei in Folge sind 24h und damit ein echtes
+                  # Signal. Der Check selbst laeuft 06:00 UTC.
+                  #
+                  # Je CronJob eine Node, damit eine tote Node nur ihren eigenen
+                  # Lauf reisst und hier genau eine Zeile rot wird.
+                  for NODE in talos-cp-1 talos-cp-2 prodesk; do
                     pruefe "${ETCD_BUCKET}" "etcd-snapshot-${NODE}-" 26 "etcd ${NODE}"
                   done
 

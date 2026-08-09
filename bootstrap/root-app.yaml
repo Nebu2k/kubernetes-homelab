@@ -1,3 +1,11 @@
+# App-of-Apps. Alles andere im Cluster haengt daran.
+#
+# Wird von Hand appliziert, genau einmal nach dem ArgoCD-Bootstrap aus
+# homelab-terraform/argocd-talos/. Das ist der einzige Handgriff, der nicht
+# ueber ArgoCD laeuft: ArgoCD verwaltet alles ausser sich selbst.
+#
+#   KUBECONFIG=talos/clusterconfig/kubeconfig \
+#     kubectl apply -f bootstrap/root-app.yaml
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:

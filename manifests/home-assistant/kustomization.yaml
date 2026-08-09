@@ -4,6 +4,9 @@ kind: Kustomization
 namespace: home-assistant
 
 resources:
+  # PVs zu den aus dem NAS-Backup restaurierten Longhorn-Volumes.
+  # Warum sie ins git gehoeren, steht im Kopf von pv.yaml.
+  - pv.yaml
   - namespace.yaml
   - pvc.yaml
   - matter-pvc.yaml

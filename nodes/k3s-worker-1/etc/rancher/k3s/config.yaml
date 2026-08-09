@@ -1,3 +1,0 @@
-kubelet-arg:
-  - "image-gc-high-threshold=70"
-  - "image-gc-low-threshold=55"

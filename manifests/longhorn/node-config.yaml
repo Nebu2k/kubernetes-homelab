@@ -1,122 +1,145 @@
----
-# Longhorn Node Configuration
-# Exclude low-storage nodes from replica scheduling
-
-# Storage-capable nodes
+# Longhorn-Node-Konfiguration des Talos-Clusters.
 #
-# ACHTUNG, spec.disks ist auf diesem Node und auf raspi5 faktisch eingefroren.
-# Nicht anfassen, ohne den Absatz hier gelesen zu haben.
+# Eigene Datei statt manifests/longhorn/node-config.yaml: dort stehen die
+# k3s-Nodes (k3s-worker-1, raspi5, prodesk, k3s-cp-1, raspi4). Die gibt es hier
+# nicht, und Longhorn-Node-CRs fuer nicht existierende Nodes bleiben als Leichen
+# liegen.
 #
-# Beide Nodes tragen zwei Disk-Eintraege auf demselben Pfad /var/lib/longhorn/:
-# den hier gepflegten und die default-disk-<fsid-hash>, die Longhorn beim ersten
-# Start selbst anlegt. Longhorn laesst pro Dateisystem-ID nur einen gelten, der
-# andere liegt auf Ready=False/DiskFilesystemChanged. Welcher gewinnt, ist
-# Registrierungsreihenfolge: hier die automatische, auf raspi5 die von hier.
+# MIT disks-Block, und das ist der Unterschied zu prodesk im k3s-Cluster.
 #
-# Am 2026-08-08 versucht wegzuraeumen, drei Sackgassen, alle vom
-# validator.longhorn.io-Webhook:
+# Der erste Versuch am 2026-08-08 liess den Block weg, in der Annahme, Longhorn
+# lege die Disk wie dort selbst an. Tut es nicht: Longhorn erzeugt die
+# default-disk nur, wenn es das Node-CR SELBST anlegt. Unter GitOps ist ArgoCD
+# schneller, longhorn-manager findet das CR bereits vor, adoptiert es und
+# ergaenzt nichts. Ergebnis waren drei Nodes mit Ready=True, Schedulable=True
+# und null Kapazitaet. Das faellt nicht auf, bis das erste Volume Pending
+# bleibt: an der Node selbst ist nichts rot.
 #
-#  1. disks-Block ersatzlos streichen -> "Delete Disk ... Please disable the
-#     disk and remove all replicas first". CRDs kennen keine Merge-Strategie pro
-#     Feld, ein fehlendes `disks` wird als "ganze Map loeschen" angewendet und
-#     haette die AKTIVE Disk mitgenommen. Nur der Webhook hat das verhindert.
-#  2. Nur den toten Eintrag streichen, den aktiven per fsid-Hash eintragen ->
-#     derselbe Fehler, diesmal fuer den toten. Der Loesch-Check haengt an
-#     allowScheduling: true, und das steht dort seit jeher.
-#  3. Den toten erst auf allowScheduling: false setzen -> "duplicate disk paths
-#     on node k3s-worker-1". Jedes Update, das beide Eintraege enthaelt, wird
-#     abgelehnt.
+# prodesk ist deshalb kein Gegenbeispiel: er lief als k3s-Node schon mit
+# Longhorn, bevor er in dessen node-config.yaml auftauchte. Dort war Longhorn
+# zuerst da, hier ArgoCD.
 #
-# Es gibt also keinen Uebergang, den der Webhook durchlaesst. Aufloesen liesse
-# sich das nur, indem alle Replikate von diesem Node wegziehen (177 GB), die
-# Disk dann leer geloescht wird und die Replikate zurueckkommen. Fuer einen
-# Eintrag, der ausser einem roten Haken im Longhorn-UI nichts tut, ist das nicht
-# verhaeltnismaessig.
+# Aus demselben Grund kann die Duplikat-Falle aus dem k3s-Cluster hier nicht
+# zuschlagen. Dort tragen zwei Nodes zwei Eintraege auf /var/lib/longhorn/, den
+# manuellen und den automatischen, und der validator.longhorn.io-Webhook laesst
+# keinen Uebergang mehr durch, der das aufloest (die drei Sackgassen stehen in
+# manifests/longhorn/node-config.yaml). Voraussetzung dafuer sind ZWEI
+# Eintraege. Solange ArgoCD das CR anlegt, entsteht der automatische nie.
 #
-# Praktische Folge, und die ist echt: **spec.disks ist auf diesen beiden Nodes
-# nicht mehr aenderbar**, auch nicht storageReserved. Was fuer Wartung gebraucht
-# wird, geht ueber die Node-Ebene (spec.allowScheduling, spec.tags), die ist
-# nicht betroffen. Sauber wird es erst bei einem Reimage des Nodes: dann diesen
-# disks-Block ersatzlos streichen und Longhorn die Disk allein anlegen lassen.
+# Der Restrisiko-Fall ist, dass jemand ein Node-CR ganz loescht: dann legt
+# Longhorn es mit default-disk-<fsid-hash> neu an und ArgoCD schreibt seinen
+# Eintrag dazu. Dann ist es dasselbe Problem wie im alten Cluster. Node-CRs also
+# nicht loeschen, auch nicht "zum Aufraeumen".
 #
-# ACHTUNG, im Talos-Cluster gilt das Gegenteil: dort MUSS spec.disks im Manifest
-# stehen, weil ArgoCD das Node-CR vor longhorn-manager anlegt und Longhorn dann
-# gar keine Disk erzeugt. Siehe clusters/talos/longhorn/node-config.yaml.
+# Bei prodesk ist genau das am 2026-08-09 auf anderem Weg eingetreten, ohne dass
+# jemand etwas geloescht hat: er ist dem Cluster beigetreten, als Longhorn schon
+# lief. Damit war longhorn-manager zuerst da und hat das Node-CR selbst angelegt.
+# Fuer neue Nodes gilt die Reihenfolge oben also NICHT, sie ist genau umgedreht.
+#
+# Deshalb traegt prodesk unten den vorgefundenen Namen default-disk-1030400000000
+# statt default-disk-prodesk. Ein eigener Name waere ein ZWEITER Eintrag auf
+# /var/lib/longhorn/ und damit die Sackgasse aus dem k3s-Cluster. Umbenennen
+# ginge auch nachtraeglich nicht: das waere ein Entfernen und Hinzufuegen auf
+# demselben Pfad in einem Schritt, und der validator.longhorn.io-Webhook laesst
+# das nicht durch. Der haessliche Name ist der Preis dafuer, den Webhook nicht
+# zu bekaempfen. Bei jedem weiteren Node, der spaeter dazukommt (raspi5): erst
+# "kubectl -n longhorn-system get nodes.longhorn.io <name> -o jsonpath=
+# '{.spec.disks}'" lesen, dann den vorgefundenen Schluessel uebernehmen.
+#
+# Einen Node hier ZU ENTFERNEN reicht nicht, ArgoCD kommt beim Prune nicht
+# durch: der validator.longhorn.io-Webhook lehnt das Loeschen ab, solange
+# allowScheduling true ist, selbst wenn die Node laengst weg ist und null
+# Replikate und null Engines traegt. Die Fehlermeldung steht dann nur in
+# .status.operationState.message der Application, die App bleibt OutOfSync und
+# retryt endlos. Also vor dem Entfernen aus dieser Datei:
+#
+#   kubectl -n longhorn-system patch nodes.longhorn.io <name> \
+#     --type=merge -p '{"spec":{"allowScheduling":false}}'
+#
+# Am 2026-08-09 beim Abbau von talos-cp-3 aufgelaufen.
+#
+# Die tags sind kein Schmuck. Die StorageClass longhorn selektiert
+# nodeSelector: storage. Ein Node ohne den Tag bekommt nie ein Replikat und
+# meldet trotzdem Ready und Schedulable. Longhorn legt Auto-CRs ohne Tags an,
+# prodesk waere also still unbeteiligt geblieben.
+#
+# storageReserved: 30 GiB, auf allen Nodes gleich. /var/lib/longhorn liegt auf
+# der EPHEMERAL-Partition (xfs), und die traegt auch die Container-Images und
+# die Logs. Ohne Reserve fuellt Longhorn sie bis an den Rand und nimmt das
+# kubelet mit.
+#
+# Der Betrag ist bewusst absolut und nicht anteilig, obwohl die Partitionen
+# unterschiedlich gross sind (VMs 124 GiB, prodesk 236 GiB): Images und Logs
+# brauchen, was sie brauchen, das skaliert nicht mit der Plattengroesse.
+# Longhorns Default waeren 30 Prozent gewesen, auf prodesk also 71 GiB
+# verschenkt. Nutzbar sind damit rund 93 GiB je VM und rund 206 GiB auf prodesk.
+#
+# Alle Nodes tragen Storage. Sie sind alle Control-Plane und tragen alle
+# Workloads, eine Unterscheidung gaebe es nicht abzubilden. Wenn raspi5
+# dazukommt, gehoert er hier ergaenzt.
 apiVersion: longhorn.io/v1beta2
 kind: Node
 metadata:
-  name: k3s-worker-1
+  name: talos-cp-1
   namespace: longhorn-system
 spec:
-  name: k3s-worker-1
+  name: talos-cp-1
   tags:
     - storage
   allowScheduling: true
   evictionRequested: false
   disks:
-    default-disk-k3s-worker-1:
+    default-disk-talos-cp-1:
       allowScheduling: true
       diskType: filesystem
       evictionRequested: false
       path: /var/lib/longhorn/
+      storageReserved: 32212254720
       tags:
         - storage
 
 ---
-# raspi5 ist der umgekehrte Fall zu k3s-worker-1: hier hat der Eintrag aus diesem
-# Manifest gewonnen, nicht der automatische. Welcher gewinnt, ist
-# Registrierungsreihenfolge, nicht Absicht.
-#
-# ACHTUNG, der disks-Block darf hier NICHT weg. An dieser Disk haengen die
-# aktiven Replikate aller Volumes. Das tote Gegenstueck
-# (default-disk-ba524caa2357cade) ist am 2026-08-08 stattdessen direkt aus
-# spec.disks entfernt worden, imperativ: es stand nie in git, und Longhorn legt
-# es nicht neu an, solange spec.disks nicht leer ist.
-#
-# Bei einem Reimage von raspi5 aendert sich die Dateisystem-ID und damit der
-# Name der automatischen Disk. Dann entsteht das Duplikat neu. In dem Fall diesen
-# Block ersatzlos streichen, statt ihn anzupassen.
 apiVersion: longhorn.io/v1beta2
 kind: Node
 metadata:
-  name: raspi5
+  name: talos-cp-2
   namespace: longhorn-system
 spec:
-  name: raspi5
+  name: talos-cp-2
   tags:
     - storage
   allowScheduling: true
   evictionRequested: false
   disks:
-    default-disk-raspi5:
+    default-disk-talos-cp-2:
       allowScheduling: true
       diskType: filesystem
       evictionRequested: false
       path: /var/lib/longhorn/
+      storageReserved: 32212254720
       tags:
         - storage
 
 ---
-# Low-storage nodes (excluded from replica scheduling)
+# Disk-Schluessel von Longhorn vorgefunden, nicht frei gewaehlt. Begruendung
+# steht oben im Kopf, kurz: er kam nach Longhorn ins Cluster.
 apiVersion: longhorn.io/v1beta2
 kind: Node
 metadata:
-  name: k3s-cp-1
+  name: prodesk
   namespace: longhorn-system
 spec:
-  name: k3s-cp-1
-  tags: [] # No storage tag
-  allowScheduling: false # Disable storage scheduling
+  name: prodesk
+  tags:
+    - storage
+  allowScheduling: true
   evictionRequested: false
-
----
-apiVersion: longhorn.io/v1beta2
-kind: Node
-metadata:
-  name: raspi4
-  namespace: longhorn-system
-spec:
-  name: raspi4
-  tags: [] # No storage tag
-  allowScheduling: false # Disable storage scheduling
-  evictionRequested: false
+  disks:
+    default-disk-1030400000000:
+      allowScheduling: true
+      diskType: filesystem
+      evictionRequested: false
+      path: /var/lib/longhorn/
+      storageReserved: 32212254720
+      tags:
+        - storage

@@ -4,6 +4,9 @@ kind: Kustomization
 namespace: teslamate
 
 resources:
+  # PVs zu den aus dem NAS-Backup restaurierten Longhorn-Volumes.
+  # Warum sie ins git gehoeren, steht im Kopf von pv.yaml.
+  - pv.yaml
   - namespace.yaml
   - database-pvc.yaml
   - database-pdb.yaml

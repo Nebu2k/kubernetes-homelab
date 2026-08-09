@@ -17,3 +17,16 @@ speaker:
 # sind sechs überflüssige Pods nicht egal.
 frrk8s:
   enabled: false
+
+# Vanilla Kubernetes setzt auf Control-Plane-Nodes
+# node.kubernetes.io/exclude-from-external-load-balancers, k3s tat das nicht.
+# MetalLB respektiert das Label und kuendigt von solchen Nodes nichts an. Hier
+# sind alle Nodes Control-Plane, also kuendigt sonst NIEMAND an: der Service
+# bekommt seine IP, ArgoCD meldet Healthy, und trotzdem beantwortet kein Node
+# das ARP. Sichtbar nur an einem leeren "kubectl get servicel2status -A".
+#
+# Das Label zu ignorieren ist richtiger, als es an den Nodes zu loeschen: Talos
+# setzt es beim naechsten Reconcile ohnehin wieder, und es passt nicht zu
+# allowSchedulingOnControlPlanes, denn diese Nodes SIND die Worker.
+speaker:
+  ignoreExcludeLB: true

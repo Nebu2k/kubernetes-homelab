@@ -6,14 +6,19 @@ metadata:
   namespace: metallb-system
 spec:
   addresses:
-    # Die .250 ist am 2026-08-09 an das Talos-Cluster abgegeben worden, siehe
-    # clusters/talos/metallb/metallb-ip-pool.yaml. Sie muss hier RAUS, bevor sie
-    # dort dazukommt: beide Cluster haengen im selben L2-Segment, und zwei
-    # Speaker auf derselben Adresse heisst ARP-Flattern statt Umzug.
+    # Disjunkt zum k3s-Pool, der seit dem 2026-08-09 bei .251-.253 anfaengt.
+    # Beide Cluster haengen im selben L2-Segment; eine ueberlappende Adresse
+    # hiesse zwei Speaker, die dieselbe IP per ARP ankuendigen, und der Dienst
+    # waere abwechselnd erreichbar.
     #
-    # IPv4-only. Kein v6-Pool: Traefik ist SingleStack v4 und die ISP-GUA
-    # (2a00:1e:...) rotiert, deshalb intern ULA.
-    - 192.168.2.251-192.168.2.253
+    # Die .248 fehlt absichtlich, das ist der Talos-VIP fuer den
+    # Kubernetes-Endpoint und keine Adresse, die MetalLB vergeben darf. Deshalb
+    # zwei Bereiche statt einem durchgehenden.
+    - 192.168.2.240-192.168.2.247
+    # Die .250 ist der Split-Horizon-Wildcard *.elmstreet79.de und das Ziel des
+    # UniFi-Portforwards auf 80/443. Sie kam am 2026-08-09 aus dem k3s-Pool
+    # herueber, nachdem das dortige Traefik auf die .251 gewichen war.
+    - 192.168.2.250/32
 ---
 apiVersion: metallb.io/v1beta1
 kind: L2Advertisement
@@ -23,4 +28,3 @@ metadata:
 spec:
   ipAddressPools:
     - homelab-pool
-  # interfaces removed to auto-detect on all nodes (ens18, eno1, eth0)
