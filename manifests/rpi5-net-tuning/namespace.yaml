@@ -1,0 +1,12 @@
+# Eigener Namespace, gleiche Begruendung wie bei rpi5-fan: der Pod braucht
+# NET_ADMIN und den Host-Netzwerk-Namespace, und das soll eingegrenzt bleiben.
+# Die PodSecurity-Labels sind Pflicht, der restricted-Default weist so einen Pod
+# still bei der Erzeugung ab, nicht sichtbar am DaemonSet.
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: rpi5-net-tuning
+  labels:
+    pod-security.kubernetes.io/enforce: privileged
+    pod-security.kubernetes.io/audit: privileged
+    pod-security.kubernetes.io/warn: privileged

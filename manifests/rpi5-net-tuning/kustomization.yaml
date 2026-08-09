@@ -1,0 +1,16 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: rpi5-net-tuning
+
+resources:
+  - namespace.yaml
+  - daemonset.yaml
+
+# Wie bei rpi5-fan: das Skript liegt als eigene Datei daneben, nicht als
+# YAML-Block im DaemonSet. So ist es lesbar und man kann es einzeln pruefen.
+# Der Hash im Namen sorgt dafuer, dass eine Aenderung am Skript den Pod neu
+# startet, ohne dass jemand daran denken muss.
+configMapGenerator:
+  - name: rpi5-net-tuning-script
+    files:
+      - tune.sh

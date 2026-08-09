@@ -1,0 +1,87 @@
+# Netzwerk-Gegenmassnahmen fuer raspi5, nach siderolabs/sbc-raspberrypi#91
+#
+# WARUM ES DAS GIBT: am 2026-08-09 hat der etcd-Leader (prodesk) in Richtung
+# raspi5 2034 mal "dropped internal Raft message since sending buffer is full"
+# protokolliert, dazu 16 mal "lost TCP streaming connection with remote peer"
+# mit error=EOF und 38 mal "prober detected unhealthy status" mit i/o timeout.
+# raspi5 sah in derselben Zeit 20 Leader-Wechsel, prodesk 2 und talos-cp-1 1,
+# bei clusterweit stehendem Raft-Term. Es gab also keine Wahl, dieser eine
+# Member verlor wiederholt den Kontakt.
+#
+# WAS DABEI AUSGESCHLOSSEN WURDE, jeweils gemessen: die Leitung (ICMP 4,35 ms,
+# 0 % Verlust, identisch zu den anderen Nodes), der Link (1000 Mbit/s, null
+# NIC-Fehler, MTU wie ueberall), die Platte (WAL-fsync 5 ms, Backend-Commit
+# 7,8 ms, beide flach), die CPU (16 %), die Verdraengung (PSI 3,68 % gegen
+# prodesks 3,87 %, und prodesk ist gesund), Speicher, Temperatur (62 C) und
+# cgroup-Drosselung (alles max, Throttled 0s).
+#
+# Genau dieses Muster beschreibt Issue #91: ein macb-TX-Ring, der lautlos
+# haengt, langlebige TCP-Verbindungen, die offen aussehen und trotzdem keine
+# Writes durchbringen, und dabei NULL Fehlerzaehler in ethtool und nichts in
+# dmesg. Deshalb faellt es mit den ueblichen Netzwerk-Alerts nicht auf.
+#
+# DREI TRIGGER, DREI GEGENMASSNAHMEN:
+#   1. EEE-AutogrEEEn-LPI-Wake-Race auf PHY-Ebene  -> eee off
+#   2. macb TSO/GSO TX-Ring-Hang, ohne Treiberfehler -> tso off, gso off
+#   3. zu kleiner Default-Ring (512)                -> rx 4096, tx 2048
+#
+# Der macb-TX-Fix aus netdev ist in Talos v1.13.3 eingeflossen und wir laufen
+# v1.13.8, Trigger 2 sollte also bereits entschaerft sein. Trigger 1 gilt im
+# Issue ausdruecklich nur als reduziert, nicht behoben. Deshalb hier alle drei:
+# sie kosten nichts ausser etwas TX-Effizienz und sind jederzeit reversibel.
+#
+# DAS IST EIN VERSUCH, KEINE BELEGTE URSACHE. Verschwinden die etcd-Stalls auf
+# raspi5 danach, war es das. Bleiben sie, ist der naechste Verdaechtige die
+# Longhorn-Last auf raspi5 (die Stalls begannen, als raspi5 seine ersten
+# Repliken bekam, und verschlechterten sich mit jeder weiteren). Dann diesen
+# DaemonSet wieder entfernen, statt ihn als Altlast stehen zu lassen.
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: rpi5-net-tuning
+  namespace: rpi5-net-tuning
+  labels:
+    app: rpi5-net-tuning
+spec:
+  selector:
+    matchLabels:
+      app: rpi5-net-tuning
+  template:
+    metadata:
+      labels:
+        app: rpi5-net-tuning
+    spec:
+      # Nur raspi5. Die Einstellungen sind eine Pi-5-Eigenheit und haetten auf
+      # prodesk oder talos-cp-1 nichts zu suchen.
+      nodeSelector:
+        kubernetes.io/hostname: raspi5
+      tolerations:
+        - operator: Exists
+      # ethtool wirkt auf das Interface der Node, nicht auf das des Pods.
+      hostNetwork: true
+      dnsPolicy: ClusterFirstWithHostNet
+      priorityClassName: system-node-critical
+      terminationGracePeriodSeconds: 5
+      containers:
+        - name: tune
+          image: alpine:3.24.1
+          command:
+            - /bin/sh
+            - -c
+            - apk add --no-cache ethtool >/dev/null && exec /bin/sh /opt/tune/tune.sh
+          securityContext:
+            capabilities:
+              add: ["NET_ADMIN"]
+          volumeMounts:
+            - name: script
+              mountPath: /opt/tune
+          resources:
+            requests:
+              cpu: 5m
+              memory: 16Mi
+            limits:
+              memory: 64Mi
+      volumes:
+        - name: script
+          configMap:
+            name: rpi5-net-tuning-script
