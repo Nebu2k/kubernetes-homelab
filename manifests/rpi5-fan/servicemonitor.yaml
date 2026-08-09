@@ -1,0 +1,19 @@
+# Ohne diese Metriken waere ein ausgefallener Regler unsichtbar: der Luefter
+# bliebe auf seinem letzten Wert stehen, und ein leiser Pi sieht von aussen
+# genauso aus wie ein leiser Pi mit totem Regler. Die zugehoerige Alert-Regel
+# steht in manifests/kube-prometheus-stack/prometheus-rules.yaml.
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: rpi5-fan
+  namespace: rpi5-fan
+  labels:
+    app: rpi5-fan
+    release: kube-prometheus-stack
+spec:
+  selector:
+    matchLabels:
+      app: rpi5-fan
+  endpoints:
+    - port: metrics
+      interval: 30s

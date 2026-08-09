@@ -32,6 +32,10 @@ resources:
   - proxmox-exporter.yaml
   - unifi-poller.yaml
 
+  # Hardware. Ersetzt auf raspi5 einen Kernel-Treiber, den der Talos-Kernel
+  # nicht mitbringt, siehe manifests/rpi5-fan/fan.py.
+  - rpi5-fan.yaml
+
   # Anwendungen
   - landing-page.yaml
   - homepage.yaml

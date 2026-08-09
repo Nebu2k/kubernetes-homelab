@@ -1,0 +1,33 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: rpi5-fan
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "11"
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/Nebu2k/kubernetes-homelab
+    targetRevision: main
+    path: manifests/rpi5-fan
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: rpi5-fan
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      # Der Namespace kommt aus namespace.yaml und nicht von ArgoCD: er braucht
+      # die PodSecurity-Labels, und ein von ArgoCD angelegter Namespace haette
+      # sie nicht.
+      - CreateNamespace=false
+    retry:
+      limit: 5
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 3m

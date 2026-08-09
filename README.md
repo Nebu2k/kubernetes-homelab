@@ -29,7 +29,7 @@ Talos Linux cluster managed via GitOps using the ArgoCD App-of-Apps pattern.
 | 7 | Home Assistant, Unifi Poller |
 | 8 | Gatus, Ripe Atlas |
 | 9 | Homepage, Mealie, Paperless Ngx |
-| 11 | Backup Monitor, Proxmox Exporter |
+| 11 | Backup Monitor, Proxmox Exporter, Rpi5 Fan |
 | 12 | Argocd Config |
 | 14 | Readsb |
 | 15 | Fr24 |
@@ -65,6 +65,7 @@ homelab/
 │   ├── paperless-ngx.yaml             # Wave 9
 │   ├── backup-monitor.yaml            # Wave 11
 │   ├── proxmox-exporter.yaml          # Wave 11
+│   ├── rpi5-fan.yaml                  # Wave 11
 │   ├── argocd-config.yaml             # Wave 12
 │   ├── readsb.yaml                    # Wave 14
 │   ├── fr24.yaml                      # Wave 15
@@ -272,6 +273,12 @@ homelab/
 │   │   ├── pv 2.yaml
 │   │   ├── pv.yaml
 │   │   └── pvc.yaml
+│   ├── rpi5-fan/
+│   │   ├── daemonset.yaml
+│   │   ├── kustomization.yaml
+│   │   ├── namespace.yaml
+│   │   ├── service.yaml
+│   │   └── servicemonitor.yaml
 │   ├── teslamate/
 │   │   ├── backup-cronjob.yaml
 │   │   ├── database-deployment.yaml

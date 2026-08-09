@@ -1,0 +1,85 @@
+# DaemonSet und nicht Deployment, obwohl es genau eine Node trifft: so steht die
+# Bedingung ("die Node, die ein Pi 5 ist") im nodeSelector statt in einer
+# Replikatzahl, und ein zweiter Pi 5 im Cluster braeuchte keine Aenderung.
+#
+# Der nodeSelector geht ueber den Hostnamen, nicht ueber ein eigenes Label. Ein
+# eigenes Label muesste in talos/talconfig.yaml gesetzt werden, und das kostet
+# ein apply-config auf der Node. Die Node ist ohnehin ein Pet, siehe
+# ROADMAP-Randbedingung zur Hardware-Diversitaet.
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: rpi5-fan
+  namespace: rpi5-fan
+  labels:
+    app: rpi5-fan
+spec:
+  selector:
+    matchLabels:
+      app: rpi5-fan
+  template:
+    metadata:
+      labels:
+        app: rpi5-fan
+    spec:
+      nodeSelector:
+        kubernetes.io/hostname: raspi5
+      # Die Node ist Control-Plane. Sie traegt zwar auch das worker-Label und
+      # hat keinen Taint, aber ein Taint kaeme bei einem Talos-Upgrade
+      # voruebergehend zurueck, und dann soll die Luefterregelung gerade NICHT
+      # verschwinden.
+      tolerations:
+        - operator: Exists
+      # Ohne das laeuft der Pod beim Node-Shutdown eventuell noch, waehrend das
+      # Netz schon weg ist. 10 Sekunden reichen fuer den SIGTERM-Handler, der
+      # den Luefter auf 100 Prozent stellt.
+      terminationGracePeriodSeconds: 10
+      priorityClassName: system-node-critical
+      containers:
+        - name: fan
+          # Renovate haelt den Tag aktuell. Es ist das offizielle Image, der
+          # Regler selbst kommt aus der ConfigMap daneben.
+          image: python:3.14-slim
+          command:
+            - python3
+            - -u
+            - /opt/fan/fan.py
+          ports:
+            - name: metrics
+              containerPort: 9101
+          securityContext:
+            # privileged, nicht einzelne Capabilities. Gebraucht wird der
+            # Schreibzugriff auf das PCI-Resource-File des RP1 und dessen
+            # mmap; mit CAP_SYS_RAWIO allein scheitert schon das Oeffnen mit
+            # O_RDWR, weil sysfs-Resource-Dateien root plus die Lockdown-Freigabe
+            # verlangen.
+            privileged: true
+          volumeMounts:
+            - name: sys
+              mountPath: /host-sys
+            - name: script
+              mountPath: /opt/fan
+          # Die Sonde prueft den Regelkreis, nicht nur den Prozess: der
+          # Metrics-Endpunkt wird vom selben Thread bedient, der auch laeuft,
+          # solange Python lebt. Faellt der Regelkreis aus, bleibt der Luefter
+          # auf seinem letzten Wert stehen, und genau das soll auffallen.
+          livenessProbe:
+            httpGet:
+              path: /metrics
+              port: metrics
+            initialDelaySeconds: 10
+            periodSeconds: 30
+          resources:
+            requests:
+              cpu: 10m
+              memory: 32Mi
+            limits:
+              memory: 64Mi
+      volumes:
+        - name: sys
+          hostPath:
+            path: /sys
+            type: Directory
+        - name: script
+          configMap:
+            name: rpi5-fan-controller

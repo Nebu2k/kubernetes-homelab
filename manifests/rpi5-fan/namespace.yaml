@@ -1,0 +1,12 @@
+# Eigener Namespace, weil der Pod privilegiert laufen muss und das hier
+# eingegrenzt bleiben soll. Die PodSecurity-Labels sind Pflicht: der
+# restricted-Default weist einen privilegierten Pod ab, und zwar still bei der
+# Erzeugung, nicht sichtbar am DaemonSet.
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: rpi5-fan
+  labels:
+    pod-security.kubernetes.io/enforce: privileged
+    pod-security.kubernetes.io/audit: privileged
+    pod-security.kubernetes.io/warn: privileged

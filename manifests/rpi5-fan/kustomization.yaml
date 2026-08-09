@@ -1,0 +1,25 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: rpi5-fan
+
+resources:
+  - namespace.yaml
+  - daemonset.yaml
+  - service.yaml
+  - servicemonitor.yaml
+
+# Der Regler kommt als ConfigMap ins Cluster und nicht als eigenes
+# Container-Image. Ein eigenes Image braeuchte eine Build-Kette, eine Registry
+# und einen Renovate-Eintrag; fan.py sind rund 240 Zeilen ohne Abhaengigkeiten
+# ausser der Python-Standardbibliothek. Das offizielle python-Image reicht, und
+# Renovate haelt dessen Tag im DaemonSet aktuell.
+#
+# generator statt handgeschriebener ConfigMap wegen des Hash-Suffixes: der Pod
+# liest fan.py nur beim Start. Ohne Suffix wuerde eine Aenderung zwar brav
+# synchronisiert, der laufende Pod behielte aber die alte Fassung, bis ihn
+# zufaellig etwas neu startet. Mit Suffix aendert sich der ConfigMap-Name, und
+# das DaemonSet rollt von selbst.
+configMapGenerator:
+  - name: rpi5-fan-controller
+    files:
+      - fan.py
