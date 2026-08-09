@@ -1,0 +1,10 @@
+# teslamate im Talos-Cluster.
+#
+# Einziger Unterschied zum k3s-Cluster sind die PVs zu den vier restaurierten
+# Volumes. Kein Pod braucht mehr als das baseline-Profil.
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - ../../../manifests/teslamate
+  - pv.yaml

@@ -28,7 +28,6 @@ resources:
   # darin zuruecknehmen.
   - argocd-config.yaml
   - home-assistant.yaml
-  - teslamate.yaml
   # fr24 ist am 2026-08-08 ins Talos-Cluster gezogen, zusammen mit dem SDR.
   # Steht dort in clusters/talos/kustomization.yaml. Hier herausgenommen, damit
   # ArgoCD es im alten Cluster abraeumt: die Datenquelle (dump1090 auf raspi5)
@@ -58,6 +57,7 @@ resources:
   # Prune loescht PVC und Volume und das Backup ist danach die einzige Kopie:
   #   - ripe-atlas.yaml
   #   - mealie.yaml
+  #   - teslamate.yaml
   - paperless-ngx.yaml
   - backup-monitor.yaml
 

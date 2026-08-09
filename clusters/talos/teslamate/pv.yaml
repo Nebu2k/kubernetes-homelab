@@ -1,0 +1,126 @@
+# PVs zu den aus dem NAS-Backup restaurierten Longhorn-Volumes.
+#
+# Warum das noetig ist und wie das Restore ablaeuft, steht einmal ausfuehrlich
+# in clusters/talos/ripe-atlas/pv.yaml und als Rezept in talos/README.md.
+#
+# Die beiden mosquitto-Volumes heissen im Longhorn teslamate-mosquitto-*: Volume-
+# und PV-Namen sind clusterweit, die PVC-Namen nur im Namespace eindeutig.
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: teslamate-db
+  annotations:
+    pv.kubernetes.io/provisioned-by: driver.longhorn.io
+spec:
+  capacity:
+    storage: 5Gi
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Delete
+  storageClassName: longhorn
+  volumeMode: Filesystem
+  claimRef:
+    apiVersion: v1
+    kind: PersistentVolumeClaim
+    name: teslamate-db
+    namespace: teslamate
+  csi:
+    driver: driver.longhorn.io
+    fsType: ext4
+    volumeHandle: teslamate-db
+    volumeAttributes:
+      numberOfReplicas: "2"
+      staleReplicaTimeout: "30"
+      nodeSelector: storage
+      dataEngine: v1
+      backupTargetName: default
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: teslamate-grafana
+  annotations:
+    pv.kubernetes.io/provisioned-by: driver.longhorn.io
+spec:
+  capacity:
+    storage: 1Gi
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Delete
+  storageClassName: longhorn
+  volumeMode: Filesystem
+  claimRef:
+    apiVersion: v1
+    kind: PersistentVolumeClaim
+    name: teslamate-grafana
+    namespace: teslamate
+  csi:
+    driver: driver.longhorn.io
+    fsType: ext4
+    volumeHandle: teslamate-grafana
+    volumeAttributes:
+      numberOfReplicas: "2"
+      staleReplicaTimeout: "30"
+      nodeSelector: storage
+      dataEngine: v1
+      backupTargetName: default
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: teslamate-mosquitto-conf
+  annotations:
+    pv.kubernetes.io/provisioned-by: driver.longhorn.io
+spec:
+  capacity:
+    storage: 100Mi
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Delete
+  storageClassName: longhorn
+  volumeMode: Filesystem
+  claimRef:
+    apiVersion: v1
+    kind: PersistentVolumeClaim
+    name: mosquitto-conf
+    namespace: teslamate
+  csi:
+    driver: driver.longhorn.io
+    fsType: ext4
+    volumeHandle: teslamate-mosquitto-conf
+    volumeAttributes:
+      numberOfReplicas: "2"
+      staleReplicaTimeout: "30"
+      nodeSelector: storage
+      dataEngine: v1
+      backupTargetName: default
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: teslamate-mosquitto-data
+  annotations:
+    pv.kubernetes.io/provisioned-by: driver.longhorn.io
+spec:
+  capacity:
+    storage: 1Gi
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Delete
+  storageClassName: longhorn
+  volumeMode: Filesystem
+  claimRef:
+    apiVersion: v1
+    kind: PersistentVolumeClaim
+    name: mosquitto-data
+    namespace: teslamate
+  csi:
+    driver: driver.longhorn.io
+    fsType: ext4
+    volumeHandle: teslamate-mosquitto-data
+    volumeAttributes:
+      numberOfReplicas: "2"
+      staleReplicaTimeout: "30"
+      nodeSelector: storage
+      dataEngine: v1
+      backupTargetName: default

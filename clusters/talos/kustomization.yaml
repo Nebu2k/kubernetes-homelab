@@ -62,6 +62,7 @@ resources:
   # ersetzen. Genau so laeuft es im k3s-Cluster seit Monaten.
   - ../../apps/argocd-config.yaml
   - ../../apps/mealie.yaml
+  - ../../apps/teslamate.yaml
 
 patches:
   # MetalLB: eigener Pool, PodSecurity und die Exclude-Label-Ausnahme.
@@ -231,6 +232,16 @@ patches:
       - op: replace
         path: /spec/source/path
         value: clusters/talos/mealie
+
+  # teslamate: eigener Manifest-Pfad, nur wegen der PVs zu den vier
+  # restaurierten Volumes.
+  - target:
+      kind: Application
+      name: teslamate
+    patch: |-
+      - op: replace
+        path: /spec/source/path
+        value: clusters/talos/teslamate
 
   # Die vier ServiceMonitor-Ausnahmen (sealed-secrets, cert-manager, traefik,
   # gatus) sind am 2026-08-09 entfallen, weil kube-prometheus-stack seine CRDs
