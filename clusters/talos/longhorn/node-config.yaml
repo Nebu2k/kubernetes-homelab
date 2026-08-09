@@ -109,28 +109,6 @@ spec:
         - storage
 
 ---
-apiVersion: longhorn.io/v1beta2
-kind: Node
-metadata:
-  name: talos-cp-3
-  namespace: longhorn-system
-spec:
-  name: talos-cp-3
-  tags:
-    - storage
-  allowScheduling: true
-  evictionRequested: false
-  disks:
-    default-disk-talos-cp-3:
-      allowScheduling: true
-      diskType: filesystem
-      evictionRequested: false
-      path: /var/lib/longhorn/
-      storageReserved: 32212254720
-      tags:
-        - storage
-
----
 # Disk-Schluessel von Longhorn vorgefunden, nicht frei gewaehlt. Begruendung
 # steht oben im Kopf, kurz: er kam nach Longhorn ins Cluster.
 apiVersion: longhorn.io/v1beta2

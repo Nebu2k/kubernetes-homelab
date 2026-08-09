@@ -40,14 +40,12 @@ additionalApiServerCertSans:
   - 192.168.2.248
   - 192.168.2.20
   - 192.168.2.21
-  - 192.168.2.22
   - 192.168.2.23
   - 127.0.0.1
 additionalMachineCertSans:
   - 192.168.2.248
   - 192.168.2.20
   - 192.168.2.21
-  - 192.168.2.22
   - 192.168.2.23
 
 # Flannel ist der Talos-Default und deckt sich mit k3s. Kein Grund, beim
@@ -97,27 +95,15 @@ nodes:
         vip:
           ip: 192.168.2.248
 
-  - hostname: talos-cp-3
-    ipAddress: 192.168.2.22
-    controlPlane: true
-    installDisk: /dev/sda
-    talosImageURL: factory.talos.dev/nocloud-installer/88d1f7a5c4f1d3aba7df787c448c1d3d008ed29cfb34af53fa0df4336a56040b
-    networkInterfaces:
-      - deviceSelector:
-          driver: virtio_net
-        dhcp: false
-        addresses:
-          - 192.168.2.22/24
-        routes:
-          - network: 0.0.0.0/0
-            gateway: 192.168.2.1
-        vip:
-          ip: 192.168.2.248
+  # talos-cp-3 (.22, vmid 112) stand hier bis zum 2026-08-09. Mit prodesk waren
+  # es vier etcd-Member, und eine gerade Anzahl vertraegt nicht mehr Ausfaelle
+  # als drei. Abgebaut per drain und "talosctl reset --graceful", danach in
+  # homelab-terraform/proxmox/vm-talos.tf geloescht. Die .22 ist wieder frei.
 
   # prodesk: erstes Blech im neuen Cluster, HP ProDesk 600 G4 DM, 31 GB RAM.
-  # Ersetzt spaeter eine der drei Start-VMs (Schritt 7). Er hebt die
-  # RAM-Decke des Clusters von 11.7 GB auf ueber 40 und macht damit die
-  # schwere zweite Welle (kube-prometheus-stack) ueberhaupt erst moeglich.
+  # Er hat talos-cp-3 ersetzt und hebt die RAM-Decke des Clusters von 11.7 GB
+  # auf ueber 40. Damit ist die schwere zweite Welle (kube-prometheus-stack)
+  # ueberhaupt erst moeglich.
   #
   # Am 2026-08-09 aus dem k3s-Cluster gedraint: dort trug er 30 der Pods mit
   # worker-nodeSelector und alle 19 Longhorn-Engines, aber null Replikate.
