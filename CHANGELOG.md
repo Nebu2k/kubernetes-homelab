@@ -1,3 +1,10 @@
+# [4.104.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.103.0...v4.104.0) (2026-08-09)
+
+
+### Features
+
+* **rpi5-fan:** Luefterregelung fuer raspi5 im Userspace ([0406bf5](https://github.com/Nebu2k/kubernetes-homelab/commit/0406bf5dc17304557bd6f67a19312bffa1f3a119)), closes [siderolabs/sbc-raspberrypi#90](https://github.com/siderolabs/sbc-raspberrypi/issues/90)
+
 # [4.103.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.102.2...v4.103.0) (2026-08-09)
 
 
