@@ -1,3 +1,10 @@
+# [4.105.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.104.4...v4.105.0) (2026-08-09)
+
+
+### Features
+
+* **alerts:** Longhorn-Scheduling-Budget ueberwachen ([709a54e](https://github.com/Nebu2k/kubernetes-homelab/commit/709a54ed68d630c7985a86059afd28dde9c91ef2))
+
 ## [4.104.4](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.104.3...v4.104.4) (2026-08-09)
 
 
