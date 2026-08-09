@@ -775,13 +775,27 @@ spec:
         # genau wie ein leiser Pi mit totem Regler, nur dass der zweite bis zum
         # Throttling hochheizt.
         - alert: Rpi5FanControllerDown
-          expr: absent(rpi5_fan_controller_up)
+          expr: absent(rpi5_fan_last_loop_timestamp_seconds)
           for: 15m
           labels:
             severity: warning
           annotations:
             summary: "Die Luefterregelung auf raspi5 liefert keine Metriken mehr"
             description: "Der Luefter steht auf seinem letzten Wert. Beim Beenden per SIGTERM setzt der Regler auf 100 Prozent, das gilt aber nicht, wenn der Pod hart stirbt oder gar nicht erst startet. Nachsehen mit: kubectl -n rpi5-fan logs ds/rpi5-fan"
+
+        # Der Fall, den weder absent() noch die Liveness-Probe sehen: der Pod
+        # laeuft, der Metrics-Thread antwortet, aber die Regelschleife im
+        # Hauptthread kommt nicht mehr durch. Dann ist alles gruen und der
+        # Luefter trotzdem unreguliert. Die Schleife laeuft alle 5 Sekunden,
+        # 120 Sekunden Stillstand sind also eindeutig.
+        - alert: Rpi5FanControllerStalled
+          expr: time() - rpi5_fan_last_loop_timestamp_seconds > 120
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            summary: "Die Luefterregelung auf raspi5 laeuft, regelt aber nicht mehr"
+            description: "Der letzte Regeldurchlauf ist {{ $value | humanizeDuration }} her, erwartet werden 5 Sekunden. Der Prozess lebt und antwortet auf /metrics, die Schleife steht aber. Pod neu starten: kubectl -n rpi5-fan rollout restart ds/rpi5-fan"
 
         # Zweite, unabhaengige Sicht auf dasselbe Problem: die Temperatur. Sie
         # meldet auch dann, wenn der Regler zwar laeuft und Metriken liefert,

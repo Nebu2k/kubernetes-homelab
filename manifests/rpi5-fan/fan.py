@@ -163,7 +163,7 @@ def target_percent(temp, current):
     return 0
 
 
-state = {"temp": 0.0, "percent": 0, "since": time.time()}
+state = {"temp": 0.0, "percent": 0, "since": time.time(), "loop": time.time()}
 
 
 class Metrics(BaseHTTPRequestHandler):
@@ -175,9 +175,14 @@ class Metrics(BaseHTTPRequestHandler):
             "# HELP rpi5_fan_temperature_celsius Temperatur, nach der geregelt wird.\n"
             "# TYPE rpi5_fan_temperature_celsius gauge\n"
             f"rpi5_fan_temperature_celsius {state['temp']:.1f}\n"
-            "# HELP rpi5_fan_controller_up 1, solange der Regelkreis laeuft.\n"
-            "# TYPE rpi5_fan_controller_up gauge\n"
-            "rpi5_fan_controller_up 1\n"
+            # Ein konstantes "up 1" waere hier wertlos: dieser Handler laeuft in
+            # einem eigenen Thread und antwortet auch dann noch brav, wenn die
+            # Regelschleife im Hauptthread haengt. Der Luefter waere dann
+            # unreguliert, und Liveness-Probe wie Alert blieben gruen. Nur der
+            # Zeitstempel des letzten Durchlaufs belegt, dass geregelt wird.
+            "# HELP rpi5_fan_last_loop_timestamp_seconds Zeitpunkt des letzten Regeldurchlaufs.\n"
+            "# TYPE rpi5_fan_last_loop_timestamp_seconds gauge\n"
+            f"rpi5_fan_last_loop_timestamp_seconds {state['loop']:.0f}\n"
         ).encode()
         self.send_response(200)
         self.send_header("Content-Type", "text/plain; version=0.0.4")
@@ -222,6 +227,7 @@ def main():
         temp = read_temp()
         want = target_percent(temp, current)
         state["temp"] = temp
+        state["loop"] = time.time()
         if want != current:
             pwm.set_percent(want)
             # Nur Aenderungen loggen. Eine Zeile alle 5 Sekunden waere in
