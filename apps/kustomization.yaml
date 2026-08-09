@@ -57,7 +57,7 @@ resources:
   # Herausnehmen hier steht immer ein erzwungenes frisches Backup, denn der
   # Prune loescht PVC und Volume und das Backup ist danach die einzige Kopie:
   #   - ripe-atlas.yaml
+  #   - mealie.yaml
   - paperless-ngx.yaml
-  - mealie.yaml
   - backup-monitor.yaml
 
