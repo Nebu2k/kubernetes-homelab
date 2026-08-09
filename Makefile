@@ -1,4 +1,4 @@
-.PHONY: docs help vendor-suc
+.PHONY: docs help
 
 # Einziger Einstiegspunkt fuer die README-Generierung. Der pre-commit-Hook und
 # .github/workflows/docs.yml rufen beide dieses Target auf, damit lokal und in
@@ -12,24 +12,12 @@ PYTHON ?= python3
 help:
 	@echo "Available targets:"
 	@echo "  make docs        - Generate README.md from template"
-	@echo "  make vendor-suc  - system-upgrade-controller-Manifeste neu ziehen"
 
 # Das Skript gibt selbst Fortschritt und Ergebnis aus, deshalb hier kein echo.
 docs:
 	@$(PYTHON) docs-generator/generate_readme.py
 
-# --- system-upgrade-controller ---------------------------------------------
-# crd.yaml und deployment.yaml sind Upstream-Releaseartefakte. Renovate pflegt
-# nur den Image-Tag im Deployment, die CRD wuerde ohne dieses Target still
-# zurueckbleiben. Deshalb ist der Image-Tag die einzige Quelle der Wahrheit und
-# die Version wird daraus abgeleitet, statt sie hier ein zweites Mal zu pflegen.
-SUC_DIR := manifests/system-upgrade-controller
-SUC_VERSION ?= $(shell sed -n 's|.*image: rancher/system-upgrade-controller:\(v[0-9.]*\).*|\1|p' $(SUC_DIR)/deployment.yaml | head -1)
-SUC_URL := https://github.com/rancher/system-upgrade-controller/releases/download/$(SUC_VERSION)
-
-vendor-suc:
-	@test -n "$(SUC_VERSION)" || { echo "Version nicht aus $(SUC_DIR)/deployment.yaml ableitbar"; exit 1; }
-	@echo "Ziehe system-upgrade-controller $(SUC_VERSION)"
-	@curl -fsSL -o $(SUC_DIR)/crd.yaml $(SUC_URL)/crd.yaml
-	@curl -fsSL -o $(SUC_DIR)/deployment.yaml $(SUC_URL)/system-upgrade-controller.yaml
-	@echo "Fertig. Diff pruefen: git diff $(SUC_DIR)"
+# Das Target vendor-suc ist am 2026-08-09 mit dem k3s-Cluster entfallen. Es zog
+# crd.yaml und deployment.yaml des system-upgrade-controllers als
+# Upstream-Releaseartefakte nach; Talos-Upgrades laufen ueber "talosctl upgrade"
+# und brauchen keinen Controller im Cluster.
