@@ -58,6 +58,19 @@ nodes:
     ipAddress: 192.168.2.20
     controlPlane: true
     installDisk: /dev/sda
+    # Fehlerdomaene fuer Longhorn. talos-cp-1 und talos-cp-2 sind zwei Nodes,
+    # aber ihre Disks liegen auf derselben NVMe in pve: zwei Repliken dort sind
+    # keine Redundanz, sie sterben zusammen. Longhorns Node-Anti-Affinity sieht
+    # nur zwei verschiedene Nodes und ist damit zufrieden, erst die Zone macht
+    # den Unterschied sichtbar.
+    #
+    # Gegenstueck ist replicaZoneSoftAntiAffinity: "false" im Talos-Overlay
+    # (clusters/talos/kustomization.yaml). Bewusst nur dort und nicht in den
+    # geteilten Longhorn-Values: im k3s-Cluster traegt keine Node ein
+    # Zonen-Label, ein hartes Zonen-Anti-Affinity liesse dort nur noch eine
+    # einzige Replik je Volume zu.
+    nodeLabels:
+      topology.kubernetes.io/zone: pve
     # nocloud-installer, nicht installer: die VMs booten vom
     # nocloud-Disk-Image, ein metal-Installer wuerde die Plattform beim ersten
     # Upgrade umstellen. Die Schematic-ID ist dieselbe wie in
@@ -82,6 +95,9 @@ nodes:
     ipAddress: 192.168.2.21
     controlPlane: true
     installDisk: /dev/sda
+    # Gleiche NVMe wie talos-cp-1, siehe dort.
+    nodeLabels:
+      topology.kubernetes.io/zone: pve
     talosImageURL: factory.talos.dev/nocloud-installer/88d1f7a5c4f1d3aba7df787c448c1d3d008ed29cfb34af53fa0df4336a56040b
     networkInterfaces:
       - deviceSelector:
@@ -125,6 +141,12 @@ nodes:
     controlPlane: true
     installDiskSelector:
       serial: 39MPA3T0PZXP
+    # Eigene Fehlerdomaene: eigenes Blech, eigene NVMe, eigenes Netzteil. Das
+    # ist die Zone, die bei einem pve-Ausfall stehen bleibt, und damit die
+    # Bedingung aus der Diversitaets-Regel. Faellt spaeter raspi5 dazu, bekommt
+    # sie eine eigene Zone und nicht diese.
+    nodeLabels:
+      topology.kubernetes.io/zone: blech
     talosImageURL: factory.talos.dev/metal-installer/613e1592b2da41ae5e265e8789429f22e121aab91cb4deb6bc3c0b6262961245
     networkInterfaces:
       # Auswahl ueber die MAC statt ueber virtio_net wie bei den VMs: hier gibt

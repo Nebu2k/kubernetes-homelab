@@ -105,6 +105,19 @@ patches:
   # /var/lib/longhorn, die PodSecurity-Ausnahme fuer longhorn-system und die
   # System Extensions iscsi-tools und util-linux-tools in der Schematic-ID.
   # Am 2026-08-08 auf allen drei Nodes geprueft (ext-iscsid Running).
+  #
+  # replicaZoneSoftAntiAffinity ist der eine Wert, der NICHT geteilt werden
+  # darf. Hier tragen die Nodes ein Zonen-Label (pve fuer die beiden VMs, blech
+  # fuer prodesk, gesetzt in talos/talconfig.yaml), und "false" zwingt Longhorn,
+  # die zwei Repliken auf zwei Zonen zu verteilen. Ohne das genuegt Longhorn
+  # schon, dass die Repliken auf zwei verschiedenen NODES liegen: talos-cp-1 und
+  # talos-cp-2 sind zwei Nodes, aber eine einzige NVMe in pve. Beide Repliken
+  # dort waeren keine Redundanz, nur zwei Kopien auf demselben Datentraeger.
+  #
+  # Im k3s-Cluster traegt keine Node ein Zonen-Label. Der Wert dort waere nicht
+  # bloss wirkungslos, er wuerde schaden: ohne Zonen faellt alles in dieselbe
+  # leere Zone und Longhorn koennte nur noch eine einzige Replik je Volume
+  # unterbringen.
   - target:
       kind: Application
       name: longhorn
@@ -112,6 +125,11 @@ patches:
       - op: replace
         path: /spec/sources/2/path
         value: clusters/talos/longhorn
+      - op: add
+        path: /spec/sources/0/helm/valuesObject
+        value:
+          defaultSettings:
+            replicaZoneSoftAntiAffinity: "false"
 
   # kube-prometheus-stack: eigener Manifest-Pfad. Abweichend sind die
   # etcd-Adressen und die beiden home-assistant-Dateien, Einzelheiten in
