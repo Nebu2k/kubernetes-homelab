@@ -46,15 +46,24 @@ METRICS_PORT = 9101
 
 # Kennlinie: (Einschaltschwelle in Grad, Drehzahl in Prozent).
 #
-# Unter 50 Grad bleibt er aus. Der Active Cooler haelt den Pi im Leerlauf
-# passiv gut darunter, und "aus" ist die einzige wirklich lautlose Stufe.
+# Unter 50 Grad bleibt er aus. "Aus" ist die einzige wirklich lautlose Stufe.
 #
 # 30 Prozent ist die unterste Stufe, die noch dreht: darunter bleibt der
 # Luefter je nach Exemplar stehen oder brummt, ohne Luft zu bewegen.
+#
+# DIE ZWEITE STUFE STEHT AUF 65 UND NICHT AUF 60, und das ist gemessen, nicht
+# geschaetzt. Am 2026-08-09 lag das Gleichgewicht bei 30 Prozent im Leerlauf
+# stabil bei 57-59 Grad. Mit der Schwelle bei 60 streift die Node sie alle paar
+# Minuten, faehrt kurz auf 55 Prozent, kuehlt in 40 Sekunden unter die
+# Hysteresegrenze und faellt zurueck. Dieses Pumpen faellt deutlich mehr auf als
+# eine konstante niedrige Drehzahl, und es ist genau das, was die Hysterese
+# eigentlich verhindern soll: sie kann nur nicht helfen, wenn der Ruhepunkt
+# direkt unter der Schwelle liegt. 65 legt die naechste Stufe ueber den
+# Leerlauf, sie greift dann unter echter Last. Der Pi 5 drosselt erst ab 80.
 CURVE = [
     (78, 100),
-    (70, 80),
-    (60, 55),
+    (72, 80),
+    (65, 55),
     (50, 30),
     (0, 0),
 ]
