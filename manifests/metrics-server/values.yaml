@@ -6,7 +6,7 @@
 # jede HorizontalPodAutoscaler-Idee liefe ins Leere. Gefunden am 2026-08-09
 # ueber genau diese Kachel oben links.
 #
-# Eingebunden ist es entsprechend nur in clusters/talos/kustomization.yaml.
+# Eingebunden ueber apps/metrics-server.yaml.
 
 # Das kubelet stellt seine Metriken ueber ein selbstsigniertes Zertifikat
 # bereit, das auf die Node-IP und nicht auf eine im Cluster aufloesbare CA

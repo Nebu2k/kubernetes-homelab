@@ -202,8 +202,37 @@ im Kopf von `manifests/ripe-atlas/pv.yaml`: ohne vorgebundenes PV bindet
 die PVC an ein frisch provisioniertes, leeres Volume, der Pod startet, und das
 faellt erst auf, wenn die Daten fehlen.
 
+**5. Die Recurring-Job-Gruppen auf das Volume labeln.** Der Schritt, der beim
+Umzug am 2026-08-09 fehlte und deshalb hier steht:
+
+```bash
+kubectl -n longhorn-system label volumes.longhorn.io <volume> \
+  recurring-job-group.longhorn.io/backup=enabled \
+  recurring-job-group.longhorn.io/snapshot=enabled \
+  recurring-job-group.longhorn.io/maintenance=enabled \
+  recurring-job-group.longhorn.io/default- --overwrite
+```
+
+Ein per `fromBackup` erzeugtes Volume laeuft **nicht** durch den
+StorageClass-Provisioner, also greift dessen `recurringJobSelector` nicht und
+das Volume traegt keine Gruppe. Longhorn stempelt ihm daraufhin selbst
+`default` auf, und in `default` liegt kein einziger Job. Ergebnis: kein Backup,
+kein Snapshot, kein Trim.
+
+**Das meldet nichts.** Das Volume ist `healthy`, die App laeuft, ArgoCD ist
+gruen, und `backup-monitor` prueft die S3-Ziele, nicht Longhorn. Aufgefallen
+sind die 15 unbesicherten Volumes erst am 2026-08-09 bei einem Drift-Durchgang,
+also einen Tag nach dem Umzug. Nach dem Labeln kontrollieren:
+
+```bash
+kubectl -n longhorn-system get volumes.longhorn.io -o json | \
+  jq -r '.items[] | "\(.metadata.name) \(.metadata.labels | keys | map(select(startswith("recurring-job-group"))))"'
+```
+
 Das Restore selbst gehoert bewusst **nicht** ins git: die Backup-URL ist eine
 Momentaufnahme, ein Re-Sync duerfte daraus nie einen alten Stand herstellen.
+Das Labeln ist aus demselben Grund ein Handgriff und keine YAML im Repo: das
+Volume-CR entsteht beim Restore, nicht aus einem Manifest.
 
 ## Fallen
 

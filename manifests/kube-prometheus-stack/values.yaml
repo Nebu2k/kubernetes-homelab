@@ -135,6 +135,24 @@ prometheus:
     # Restore aus einem Monate alten Backup waere wertlos. snapshot und
     # maintenance bleiben: Snapshots sind lokal und billig, filesystem-trim gibt
     # sogar Platz zurueck.
+    #
+    # ACHTUNG, diese Labels allein reichen nicht. Longhorn liest keine
+    # PVC-Labels: die Gruppen eines dynamisch provisionierten Volumes kommen aus
+    # dem "recurringJobSelector" der StorageClass (manifests/longhorn/values.yaml),
+    # und der setzt backup, snapshot und maintenance. Das frisch provisionierte
+    # Volume traegt also backup, egal was hier steht.
+    #
+    # Beim Neubau des Clusters am 2026-08-09 war die Ausnahme deshalb wieder weg
+    # und die 40-GiB-TSDB landete erneut auf dem NAS. Am 2026-08-09 von Hand
+    # abgestellt:
+    #
+    #   kubectl -n longhorn-system label volumes.longhorn.io <pvc-...> \
+    #     recurring-job-group.longhorn.io/backup-
+    #
+    # Nach jedem Neuanlegen dieses Volumes (Cluster-Neubau, PVC geloescht und
+    # neu gebunden) faellt der Handgriff wieder an. Die Labels hier bleiben
+    # trotzdem stehen: sie dokumentieren die Absicht an der Stelle, an der man
+    # sie sucht.
     storageSpec:
       volumeClaimTemplate:
         metadata:

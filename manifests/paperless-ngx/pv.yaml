@@ -1,7 +1,7 @@
 # PVs zu den aus dem NAS-Backup restaurierten Longhorn-Volumes.
 #
 # Warum das noetig ist und wie das Restore ablaeuft, steht einmal ausfuehrlich
-# in clusters/talos/ripe-atlas/pv.yaml und als Rezept in talos/README.md.
+# in manifests/ripe-atlas/pv.yaml und als Rezept in talos/README.md.
 #
 # Nicht hier drin: paperless-consume-smb. Das ist ein CIFS-Share und kein
 # Longhorn-Volume, sein PV steht in manifests/paperless-ngx/smb-consume-pv.yaml

@@ -1,7 +1,7 @@
 # PVs zu den aus dem NAS-Backup restaurierten Longhorn-Volumes.
 #
 # Warum das noetig ist und wie das Restore ablaeuft, steht einmal ausfuehrlich
-# in clusters/talos/ripe-atlas/pv.yaml und als Rezept in talos/README.md.
+# in manifests/ripe-atlas/pv.yaml und als Rezept in talos/README.md.
 #
 # home-assistant-config ist mit 20 Gi das groesste Volume der Migration und
 # traegt die Recorder-Datenbank. Alles, was zwischen dem Snapshot und dem Prune

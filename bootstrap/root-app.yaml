@@ -20,6 +20,30 @@ spec:
   destination:
     server: https://kubernetes.default.svc
     namespace: argocd
+  # Ohne das steht "homelab" dauerhaft auf OutOfSync, und zwar wegen genau einer
+  # Application: longhorn.
+  #
+  # Der Longhorn-Chart bringt einen PreDelete-Hook mit (das Uninstall-Job).
+  # ArgoCD haengt der Application deshalb von sich aus zwei eigene Finalizer an,
+  # "pre-delete-finalizer.argocd.argoproj.io" und ".../cleanup", damit es den
+  # Hook vor dem Loeschen noch ausfuehren kann. In git steht nur
+  # "resources-finalizer.argocd.argoproj.io". Die Application selbst ist Synced
+  # und Healthy, ihre spec deckt sich mit git, der Diff besteht ausschliesslich
+  # aus diesen zwei Feldern.
+  #
+  # Der Preis des Nichtstuns war Gewoehnung: eine App, die immer gelb steht,
+  # verdeckt beim Drueberschauen eine, die es zu Recht ist.
+  #
+  # Bewusst auf longhorn eingegrenzt und nicht auf alle Applications. Bekaeme
+  # eine zweite App einen PreDelete-Hook, soll sie wieder auffallen, statt dass
+  # eine pauschale Regel auch ein echtes Entfernen von resources-finalizer
+  # stillstellt.
+  ignoreDifferences:
+    - group: argoproj.io
+      kind: Application
+      name: longhorn
+      jsonPointers:
+        - /metadata/finalizers
   syncPolicy:
     automated:
       prune: true

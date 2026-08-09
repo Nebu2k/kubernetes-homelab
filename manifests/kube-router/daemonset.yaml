@@ -22,7 +22,7 @@
 # dort nichts ab. Stattdessen der ServiceAccount und die In-Cluster-Config.
 #
 # Nur fuer das Talos-Cluster, im k3s-Cluster macht das k3s selbst. Eingebunden
-# in clusters/talos/kustomization.yaml.
+# ueber apps/kube-router.yaml.
 apiVersion: apps/v1
 kind: DaemonSet
 metadata:
