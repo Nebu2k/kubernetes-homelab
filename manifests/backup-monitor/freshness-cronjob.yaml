@@ -197,7 +197,7 @@ spec:
                   #
                   # Je CronJob eine Node, damit eine tote Node nur ihren eigenen
                   # Lauf reisst und hier genau eine Zeile rot wird.
-                  for NODE in talos-cp-1 talos-cp-2 prodesk raspi5; do
+                  for NODE in talos-cp-1 prodesk raspi5; do
                     pruefe "${ETCD_BUCKET}" "etcd-snapshot-${NODE}-" 26 "etcd ${NODE}"
                   done
 

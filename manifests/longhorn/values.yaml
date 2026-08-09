@@ -26,12 +26,16 @@ defaultBackupStore:
     backupTargetCredentialSecret: longhorn-nas-cifs-secret
 # Default settings
 defaultSettings:
-  # Jede Node traegt ein Zonen-Label, gesetzt in talos/talconfig.yaml: "pve" die
-  # VMs, "blech" prodesk, "raspi5" der Pi. "false" zwingt Longhorn, die zwei
-  # Repliken auf zwei Zonen zu verteilen. Ohne das genuegt Longhorn schon, dass
-  # die Repliken auf zwei verschiedenen NODES liegen: talos-cp-1 und talos-cp-2
-  # sind zwei Nodes, aber eine einzige NVMe in pve. Beide Repliken dort waeren
-  # keine Redundanz, nur zwei Kopien auf demselben Datentraeger.
+  # Jede Node traegt ein Zonen-Label, gesetzt in talos/talconfig.yaml: "pve"
+  # talos-cp-1, "blech" prodesk, "raspi5" der Pi. "false" zwingt Longhorn, die
+  # zwei Repliken auf zwei Zonen zu verteilen.
+  #
+  # Ohne das genuegt Longhorn schon, dass die Repliken auf zwei verschiedenen
+  # NODES liegen, und das ist hier zu wenig: bis zum 2026-08-09 waren talos-cp-1
+  # und talos-cp-2 zwei Nodes, aber eine einzige NVMe in pve. Beide Repliken
+  # dort waeren keine Redundanz gewesen, nur zwei Kopien auf demselben
+  # Datentraeger. cp-2 ist inzwischen abgebaut, aber die Falle kaeme mit jeder
+  # zweiten pve-VM zurueck, deshalb bleibt die Einstellung.
   #
   # Je Geraet eine Zone, nicht je Geraeteklasse: laegen prodesk und raspi5
   # zusammen in "blech", gaebe es nur zwei Zonen und damit zwangslaeufig immer

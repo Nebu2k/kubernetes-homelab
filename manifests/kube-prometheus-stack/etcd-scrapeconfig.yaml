@@ -23,15 +23,20 @@ metadata:
 spec:
   scheme: HTTP
   metricsPath: /metrics
+  # Die Liste ist statisch und muss den etcd-Membern folgen. Eine fehlende Node
+  # faellt hier NICHT auf: Prometheus scrapet dann einfach zwei statt drei
+  # Ziele, alle gruen, und die etcd-Alerts gelten stillschweigend nur noch fuer
+  # die Ziele, die dastehen. Genau so war raspi5 vom Join am 2026-08-09 bis zum
+  # Abbau von talos-cp-2 unbeobachtet.
   staticConfigs:
     - targets:
         - 192.168.2.20:2381
       labels:
         node: talos-cp-1
     - targets:
-        - 192.168.2.21:2381
+        - 192.168.2.22:2381
       labels:
-        node: talos-cp-2
+        node: raspi5
     - targets:
         - 192.168.2.23:2381
       labels:

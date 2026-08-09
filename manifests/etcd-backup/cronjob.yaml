@@ -27,10 +27,10 @@
 # Am 2026-08-09 aufgelaufen: raspi5 war seit dem Join etcd-Member, hatte aber
 # weder CronJob noch Sonde und war damit als einzige Node offsite ungesichert.
 #
-# Der Zeitplan ist gestaffelt (00:00, 00:20, 00:40, 00:50 UTC und dieselben
-# Zeiten mittags), damit nicht mehrere Snapshots gleichzeitig ueber dieselbe
-# Leitung gehen. timeZone ist Pflicht und nicht Kosmetik: ohne das Feld laeuft
-# ein CronJob in der Zeitzone der Node, die gerade den kube-controller-manager
+# Der Zeitplan ist gestaffelt (00:00, 00:20, 00:40 UTC und dieselben Zeiten
+# mittags), damit nicht mehrere Snapshots gleichzeitig ueber dieselbe Leitung
+# gehen. timeZone ist Pflicht und nicht Kosmetik: ohne das Feld laeuft ein
+# CronJob in der Zeitzone der Node, die gerade den kube-controller-manager
 # haelt.
 #
 # Der Objektname "etcd-snapshot-<node>-<unix-ts>" ist bewusst derselbe, den k3s
@@ -129,89 +129,6 @@ spec:
 apiVersion: batch/v1
 kind: CronJob
 metadata:
-  name: etcd-snapshot-talos-cp-2
-  namespace: kube-system
-  labels:
-    app.kubernetes.io/name: etcd-snapshot-offsite
-spec:
-  schedule: "20 0,12 * * *"
-  timeZone: "Etc/UTC"
-  concurrencyPolicy: Forbid
-  successfulJobsHistoryLimit: 3
-  failedJobsHistoryLimit: 3
-  jobTemplate:
-    spec:
-      backoffLimit: 0
-      template:
-        metadata:
-          labels:
-            app.kubernetes.io/name: etcd-snapshot-offsite
-        spec:
-          restartPolicy: Never
-          initContainers:
-            - name: snapshot
-              image: ghcr.io/siderolabs/talosctl:v1.13.8
-              command:
-                - /talosctl
-                - --talosconfig
-                - /talos/config
-                - --nodes
-                - 192.168.2.21
-                - etcd
-                - snapshot
-                - /snapshot/db
-              volumeMounts:
-                - name: talosconfig
-                  mountPath: /talos
-                  readOnly: true
-                - name: snapshot
-                  mountPath: /snapshot
-              resources:
-                requests:
-                  cpu: 50m
-                  memory: 64Mi
-                limits:
-                  memory: 256Mi
-          containers:
-            - name: upload
-              image: amazon/aws-cli:2.36.17
-              command:
-                - /bin/sh
-                - -c
-                - |
-                  set -eu
-                  KEY="etcd-snapshot-${NODE_NAME}-$(date +%s)"
-                  echo "lade $(stat -c %s /snapshot/db) Bytes nach s3://${ETCD_BUCKET}/${KEY}"
-                  # --only-show-errors, sonst schreibt die aws-cli fuer jedes
-                  # MiB eine Fortschrittszeile und das Job-Log ist unlesbar.
-                  aws s3 cp --only-show-errors /snapshot/db "s3://${ETCD_BUCKET}/${KEY}"
-              env:
-                - name: NODE_NAME
-                  value: talos-cp-2
-              envFrom:
-                - secretRef:
-                    name: etcd-backup-s3
-              volumeMounts:
-                - name: snapshot
-                  mountPath: /snapshot
-                  readOnly: true
-              resources:
-                requests:
-                  cpu: 50m
-                  memory: 128Mi
-                limits:
-                  memory: 512Mi
-          volumes:
-            - name: talosconfig
-              secret:
-                secretName: etcd-backup
-            - name: snapshot
-              emptyDir:
-                sizeLimit: 2Gi
----
-apiVersion: batch/v1
-kind: CronJob
-metadata:
   name: etcd-snapshot-prodesk
   namespace: kube-system
   labels:
@@ -292,10 +209,8 @@ spec:
               emptyDir:
                 sizeLimit: 2Gi
 ---
-# raspi5, seit dem 2026-08-09 vierte Control-Plane. Die 00:50 ist der vierte
-# freie Staffel-Slot; wenn talos-cp-2 abgebaut ist, wird die 00:20 frei und
-# diese Node kann dorthin ruecken. Muss sie aber nicht, der Upload dauert
-# Sekunden.
+# raspi5, seit dem 2026-08-09 Control-Plane. Er hat den 00:20-Slot von
+# talos-cp-2 uebernommen, als der abgebaut wurde.
 #
 # Der Snapshot laeuft ueber die Talos-API und nicht auf der Node, der Pod kann
 # also irgendwo im Cluster liegen. arm64 spielt hier keine Rolle.
@@ -307,7 +222,7 @@ metadata:
   labels:
     app.kubernetes.io/name: etcd-snapshot-offsite
 spec:
-  schedule: "50 0,12 * * *"
+  schedule: "20 0,12 * * *"
   timeZone: "Etc/UTC"
   concurrencyPolicy: Forbid
   successfulJobsHistoryLimit: 3

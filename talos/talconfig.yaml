@@ -56,7 +56,6 @@ additionalApiServerCertSans:
   # darauf zeigt.
   - 192.168.2.248
   - 192.168.2.20
-  - 192.168.2.21
   - 192.168.2.22
   - 192.168.2.23
   - 127.0.0.1
@@ -64,7 +63,6 @@ additionalMachineCertSans:
   - 192.168.2.29
   - 192.168.2.248
   - 192.168.2.20
-  - 192.168.2.21
   - 192.168.2.22
   - 192.168.2.23
 
@@ -78,11 +76,12 @@ nodes:
     ipAddress: 192.168.2.20
     controlPlane: true
     installDisk: /dev/sda
-    # Fehlerdomaene fuer Longhorn. talos-cp-1 und talos-cp-2 sind zwei Nodes,
-    # aber ihre Disks liegen auf derselben NVMe in pve: zwei Repliken dort sind
-    # keine Redundanz, sie sterben zusammen. Longhorns Node-Anti-Affinity sieht
-    # nur zwei verschiedene Nodes und ist damit zufrieden, erst die Zone macht
-    # den Unterschied sichtbar.
+    # Fehlerdomaene fuer Longhorn. Seit dem Abbau von talos-cp-2 ist er die
+    # einzige Node in dieser Zone, das Label bleibt trotzdem noetig: es sagt,
+    # dass seine Disk in pve liegt. Kaeme je eine zweite pve-VM dazu, waeren das
+    # fuer Longhorns Node-Anti-Affinity zwei verschiedene Nodes und damit in
+    # Ordnung, obwohl beide Repliken auf derselben NVMe laegen und zusammen
+    # sterben wuerden. Erst die Zone macht den Unterschied sichtbar.
     #
     # Gegenstueck ist replicaZoneSoftAntiAffinity: "false" in
     # manifests/longhorn/values.yaml. Die beiden gehoeren zusammen: ohne
@@ -111,25 +110,12 @@ nodes:
         vip:
           ip: 192.168.2.29
 
-  - hostname: talos-cp-2
-    ipAddress: 192.168.2.21
-    controlPlane: true
-    installDisk: /dev/sda
-    # Gleiche NVMe wie talos-cp-1, siehe dort.
-    nodeLabels:
-      topology.kubernetes.io/zone: pve
-    talosImageURL: factory.talos.dev/nocloud-installer/88d1f7a5c4f1d3aba7df787c448c1d3d008ed29cfb34af53fa0df4336a56040b
-    networkInterfaces:
-      - deviceSelector:
-          driver: virtio_net
-        dhcp: false
-        addresses:
-          - 192.168.2.21/24
-        routes:
-          - network: 0.0.0.0/0
-            gateway: 192.168.2.1
-        vip:
-          ip: 192.168.2.29
+  # talos-cp-2 (.21, vmid 111) stand hier bis zum 2026-08-09 und ist von raspi5
+  # ersetzt worden. Damit liegt die etcd-Mehrheit nicht mehr auf pve: von den
+  # drei Membern sitzt nur noch talos-cp-1 dort, prodesk und raspi5 sind Blech.
+  # Genau das fordert die Diversitaets-Regel in der ROADMAP. Abgebaut per drain,
+  # "talosctl etcd leave" und "kubectl delete node", danach in
+  # homelab-terraform/proxmox/vm-talos.tf geloescht. Die .21 ist wieder frei.
 
   # talos-cp-3 (.22, vmid 112) stand hier bis zum 2026-08-09. Mit prodesk waren
   # es vier etcd-Member, und eine gerade Anzahl vertraegt nicht mehr Ausfaelle
