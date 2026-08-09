@@ -216,6 +216,15 @@ Momentaufnahme, ein Re-Sync duerfte daraus nie einen alten Stand herstellen.
   faulted Volume ist nicht reparierbar, es muss geloescht und neu restauriert
   werden. **Backups** duerfen dagegen parallel laufen, dort ist es nie
   aufgetreten.
+- **Pool-Aenderung und IP-Aenderung nicht in denselben Push.** Beim
+  .250-Schwenk am 2026-08-09 lagen die neue Pool-Adresse (App `metallb`,
+  sync-wave 1) und die neue Traefik-Annotation (App `traefik`, wave 3) in einem
+  Commit. ArgoCD hat trotzdem zuerst den Service angefasst: die Waves ordnen die
+  Ressourcen INNERHALB einer Application, die App-of-Apps-Sync wartet auf
+  Health und lief zu dem Zeitpunkt noch. Ergebnis war ein Traefik, das eine
+  Adresse anforderte, die in keinem Pool stand, also gar keine bekam und den
+  Ingress fuer ein paar Minuten stilllegte. Erst den Pool pushen und die
+  `ipaddresspool` live pruefen, dann die Annotation.
 - **NetworkPolicies sind hier wirkungslos.** Talos deployt vanilla Flannel, und
   Flannel bringt keinen NetworkPolicy-Controller mit. k3s hatte einen
   eingebauten. Die `default-deny-ingress` von mealie, paperless-ngx und
