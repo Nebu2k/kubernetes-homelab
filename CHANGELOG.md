@@ -1,3 +1,10 @@
+# [4.90.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.89.0...v4.90.0) (2026-08-09)
+
+
+### Features
+
+* **talos:** paperless-ngx ins neue Cluster, fuenf Volumes restauriert ([d3958b3](https://github.com/Nebu2k/kubernetes-homelab/commit/d3958b3e4dc8dfbbbe4b8d9b75a3bd165b9f1c20))
+
 # [4.89.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.88.0...v4.89.0) (2026-08-09)
 
 
