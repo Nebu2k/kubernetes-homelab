@@ -1,3 +1,10 @@
+# [4.85.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.84.2...v4.85.0) (2026-08-09)
+
+
+### Features
+
+* **talos:** ripe-atlas aus dem k3s-Cluster prunen ([205ecac](https://github.com/Nebu2k/kubernetes-homelab/commit/205ecac1a0280ce075a40044f0c5b73f3007b498))
+
 ## [4.84.2](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.84.1...v4.84.2) (2026-08-09)
 
 
