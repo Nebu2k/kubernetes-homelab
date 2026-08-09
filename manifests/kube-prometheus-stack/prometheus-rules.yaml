@@ -880,13 +880,24 @@ spec:
         # und findet ihn wieder. Das Quorum ist dabei nicht in Gefahr, die
         # anderen beiden tragen es. Genau deshalb faellt es sonst nirgends auf.
         #
-        # Am 2026-08-09 war das raspi5: 1 Wechsel um 11:18, 20 um 14:30, waehrend
+        # Am 2026-08-09 war das raspi5: 1 Wechsel um 11:18, 27 um 14:43, waehrend
         # prodesk bei 2 und talos-cp-1 bei 1 standen und der Term bei 7 blieb.
-        # Angefangen hat es in dem Moment, in dem raspi5 seine ersten
-        # Longhorn-Repliken bekam. Ausgeschlossen waren zu dem Zeitpunkt Platte
-        # (WAL-fsync 5ms, Backend-Commit 7.8ms, beide flach), CPU (16%),
-        # Temperatur (62C) und Leitung (1000 Mbit/s, keine NIC-Fehler, MTU
-        # identisch zu den anderen Nodes, 3.3 MB/s Durchsatz).
+        #
+        # URSACHE WAR DER TX-RING DES PI, nicht die Platte und nicht die Last:
+        # end0 lief mit dem 512er-Default-Ring und aktivem TSO/GSO, siehe
+        # siderolabs/sbc-raspberrypi#91 und manifests/rpi5-net-tuning/. Nach
+        # "ethtool -G end0 rx 4096 tx 2048" plus tso/gso off waren die Stalls
+        # sofort weg und der Zaehler stand still.
+        #
+        # DIE IRREFUEHRENDE SPUR, auf die man garantiert wieder hereinfaellt:
+        # es begann in dem Moment, in dem raspi5 seine ersten Longhorn-Repliken
+        # bekam. Die Longhorn-Last war aber nur der Verkehr, der den zu kleinen
+        # Ring erstmals gefuellt hat, nicht die Ursache. Ausgeschlossen waren
+        # damals bereits Platte (WAL-fsync 5ms, Backend-Commit 7.8ms, beide
+        # flach), CPU (16%), Temperatur (62C) und die Leitung selbst (ICMP
+        # 4,35 ms bei 0 % Verlust, 1000 Mbit/s, keine NIC-Fehler, MTU wie
+        # ueberall). Genau das ist die Tuecke: ein haengender TX-Ring erzeugt
+        # NULL Fehlerzaehler.
         #
         # Die Diagnose beim naechsten Mal beginnt also NICHT bei der Platte:
         #

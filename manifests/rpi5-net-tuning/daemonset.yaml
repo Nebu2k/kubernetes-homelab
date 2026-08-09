@@ -30,11 +30,34 @@
 # Issue ausdruecklich nur als reduziert, nicht behoben. Deshalb hier alle drei:
 # sie kosten nichts ausser etwas TX-Effizienz und sind jederzeit reversibel.
 #
-# DAS IST EIN VERSUCH, KEINE BELEGTE URSACHE. Verschwinden die etcd-Stalls auf
-# raspi5 danach, war es das. Bleiben sie, ist der naechste Verdaechtige die
-# Longhorn-Last auf raspi5 (die Stalls begannen, als raspi5 seine ersten
-# Repliken bekam, und verschlechterten sich mit jeder weiteren). Dann diesen
-# DaemonSet wieder entfernen, statt ihn als Altlast stehen zu lassen.
+# BELEGT AM 2026-08-09, der Verdacht hat sich bestaetigt. Gemessen wurde beim
+# Ausrollen um 14:42:53:
+#
+#   Ring-Buffer standen auf 512/512, also exakt dem Default aus dem Issue.
+#   TSO und GSO waren an.
+#
+#   etcd-Stalls auf raspi5   vorher 8 bis 42 pro Minute, durchgehend ueber
+#                            Stunden, mit bis zu 3,8 s
+#                            nachher 0 in 16 Minuten
+#   Peer-Latenz prodesk->raspi5   370,7 ms -> 12,7 ms
+#              talos-cp-1->raspi5 195,1 ms ->  6,3 ms
+#              raspi5->prodesk    185,3 ms -> 12,7 ms
+#              raspi5->talos-cp-1 331,8 ms -> 10,4 ms
+#   Leader-Wechsel raspi5    vorher rund 9 je 30 Minuten, danach 16 Minuten
+#                            unveraendert bei 27
+#
+# Die Spitze um 14:42/14:43 (6,4 s und 7,2 s) ist der Link-Reset von
+# "ethtool -G" selbst und gehoert dazu.
+#
+# Die Longhorn-Last auf raspi5 war also NICHT die Ursache, obwohl die Stalls
+# zeitlich mit den ersten Repliken begannen. Sie war nur der Verkehr, der den
+# zu kleinen TX-Ring erstmals gefuellt hat. Das ist der Grund, warum es
+# ausgerechnet an dem Tag auffiel, an dem raspi5 Speicher-Node wurde.
+#
+# EEE liess sich nicht pruefen: "ethtool --show-eee end0" antwortet mit
+# "netlink error: Not supported", der Treiber gibt es nicht her. Trigger 1 aus
+# dem Issue ist damit weder ausgeschlossen noch entschaerft. Da die zwei
+# uebrigen Massnahmen gereicht haben, bleibt das offen und braucht nichts.
 apiVersion: apps/v1
 kind: DaemonSet
 metadata:

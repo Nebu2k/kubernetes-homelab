@@ -236,6 +236,26 @@ Volume-CR entsteht beim Restore, nicht aus einem Manifest.
 
 ## Fallen
 
+- **raspi5 braucht `ethtool`-Nachhilfe, sonst zerlegt es etcd.** `end0` kommt
+  mit einem 512er-TX-Ring und aktivem TSO/GSO hoch. Sobald echter Verkehr
+  anliegt, haengt der TX-Ring lautlos: der etcd-Leader verwirft Raft-Nachrichten
+  ("sending buffer is full"), die TCP-Streamverbindung bricht mit EOF, raspi5
+  verliert reihenweise den Leader, und Applies dauern Sekunden statt 100 ms.
+
+  **Dabei ist jeder Fehlerzaehler null.** Link oben, 1000 Mbit/s, keine
+  NIC-Fehler, MTU korrekt, ICMP 4,35 ms bei 0 % Verlust, Platte und CPU
+  unauffaellig. Man sucht garantiert erst an der falschen Stelle.
+
+  Gefixt am 2026-08-09 durch `manifests/rpi5-net-tuning/`, einen DaemonSet, der
+  `tso off`, `gso off` und `rx 4096 tx 2048` setzt und haelt (die Werte
+  ueberleben einen Link-Reset nicht). Danach 0 Stalls statt 8 bis 42 pro Minute
+  und Peer-Latenz von 370 ms auf 12,7 ms. Hintergrund und Messwerte im Kopf von
+  `manifests/rpi5-net-tuning/daemonset.yaml`, upstream
+  siderolabs/sbc-raspberrypi#91.
+
+  **Gilt fuer jeden weiteren Pi**, der ins Cluster kommt: der `nodeSelector`
+  steht heute fest auf `raspi5`.
+
 - **`talconfig.yaml` zu aendern aendert keine einzige Node.** talhelper erzeugt
   daraus nur Dateien, erst `talosctl apply-config` traegt sie auf ein Geraet.
   Alles, was cluster-weit gilt (die beiden certSAN-Listen, der Endpoint, die
