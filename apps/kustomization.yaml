@@ -27,7 +27,6 @@ resources:
   # wuerde argocd-cm und argocd-rbac-cm loeschen, nicht bloss die zwei Keys
   # darin zuruecknehmen.
   - argocd-config.yaml
-  - home-assistant.yaml
   # fr24 ist am 2026-08-08 ins Talos-Cluster gezogen, zusammen mit dem SDR.
   # Steht dort in clusters/talos/kustomization.yaml. Hier herausgenommen, damit
   # ArgoCD es im alten Cluster abraeumt: die Datenquelle (dump1090 auf raspi5)
@@ -59,5 +58,6 @@ resources:
   #   - mealie.yaml
   #   - teslamate.yaml
   #   - paperless-ngx.yaml
+  #   - home-assistant.yaml
   - backup-monitor.yaml
 
