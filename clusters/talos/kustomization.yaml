@@ -70,6 +70,11 @@ resources:
   # seine Snapshots selbst hoch, hier macht das ein CronJob. Nur in diesem
   # Cluster, deshalb steht es nicht in apps/kustomization.yaml.
   - ../../apps/etcd-backup.yaml
+  # k3s brachte metrics-server eingebaut mit, vanilla Kubernetes nicht. Fehlt er,
+  # sagt "kubectl top" nur "Metrics API not available" und die
+  # Kubernetes-Widgets der Homepage melden "API error". Nur hier, drueben
+  # erledigt das k3s selbst.
+  - ../../apps/metrics-server.yaml
 
 patches:
   # MetalLB: eigener Pool, PodSecurity und die Exclude-Label-Ausnahme.

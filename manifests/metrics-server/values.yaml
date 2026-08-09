@@ -1,0 +1,41 @@
+# metrics-server.
+#
+# NUR fuer das Talos-Cluster. k3s bringt metrics-server eingebaut mit, vanilla
+# Kubernetes nicht, und das faellt leise aus: `kubectl top` sagt "Metrics API
+# not available", die Kubernetes-Widgets der Homepage melden "API error", und
+# jede HorizontalPodAutoscaler-Idee liefe ins Leere. Gefunden am 2026-08-09
+# ueber genau diese Kachel oben links.
+#
+# Eingebunden ist es entsprechend nur in clusters/talos/kustomization.yaml.
+
+# Das kubelet stellt seine Metriken ueber ein selbstsigniertes Zertifikat
+# bereit, das auf die Node-IP und nicht auf eine im Cluster aufloesbare CA
+# ausgestellt ist. Ohne das Flag scheitert jeder Scrape mit "x509: cannot
+# validate certificate". Der uebliche Weg dagegen waere, das kubelet seine
+# Server-Zertifikate von der Cluster-CA signieren zu lassen
+# (rotateKubeletServerCertificates plus einen Approver); das ist bei Talos eine
+# Aenderung an der machine config und damit ein Reboot der Control-Plane fuer
+# eine Kennzahl. Der Scrape laeuft im eigenen Cluster-Netz gegen die eigenen
+# Nodes, das ist der Preis wert.
+args:
+  - --kubelet-insecure-tls
+  # Node-IP zuerst. Die Talos-Nodes haben keinen im Cluster aufloesbaren
+  # Hostnamen, der Default ginge ueber InternalDNS/Hostname ins Leere.
+  - --kubelet-preferred-address-types=InternalIP,ExternalIP,Hostname
+
+# Eine Replik. Zwei waeren HA fuer eine Kennzahl, die nach 15 Sekunden ohnehin
+# neu erhoben wird, und kosten auf drei Nodes mehr als sie bringen.
+replicas: 1
+
+resources:
+  requests:
+    cpu: 20m
+    memory: 64Mi
+  limits:
+    memory: 192Mi
+
+# Der ServiceMonitor kommt mit, kube-prometheus-stack laeuft in diesem Cluster.
+metrics:
+  enabled: true
+serviceMonitor:
+  enabled: true

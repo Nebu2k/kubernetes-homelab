@@ -21,7 +21,7 @@ Production-ready K3s cluster managed via GitOps using ArgoCD App-of-Apps pattern
 |------|-----------|
 | 0 | Coredns Config, Sealed Secrets |
 | 1 | Etcd S3 Config, Kured, Metallb, Reloader, System Upgrade Controller |
-| 2 | Etcd Backup |
+| 2 | Etcd Backup, Metrics Server |
 | 3 | Traefik |
 | 4 | Cert Manager, Longhorn |
 | 5 | Csi Driver Smb, Landing Page, Teslamate |
@@ -52,6 +52,7 @@ homelab/
 │   ├── reloader.yaml                  # Wave 1
 │   ├── system-upgrade-controller.yaml # Wave 1
 │   ├── etcd-backup.yaml               # Wave 2
+│   ├── metrics-server.yaml            # Wave 2
 │   ├── traefik.yaml                   # Wave 3
 │   ├── cert-manager.yaml              # Wave 4
 │   ├── longhorn.yaml                  # Wave 4
@@ -225,6 +226,8 @@ homelab/
 │   ├── metallb/
 │   │   ├── kustomization.yaml
 │   │   ├── metallb-ip-pool.yaml
+│   │   └── values.yaml
+│   ├── metrics-server/
 │   │   └── values.yaml
 │   ├── paperless-ngx/
 │   │   ├── backup-cronjob.yaml
@@ -1151,6 +1154,7 @@ kubectl get secret -n monitoring grafana-admin-credentials \
 | Longhorn | 1.12.0 | Longhorn |
 | Mealie | v3.22.0 | Mealie |
 | Metallb | 0.16.1 | Metallb |
+| Metrics Server | 3.13.1 | Metrics Server |
 | Paperless Ngx | 3.0.5 | Paperless Ngx |
 | Proxmox Exporter | 1.0.8 | Proxmox Exporter |
 | Readsb | latest-build-845 | Readsb |
@@ -1178,6 +1182,7 @@ kubectl get secret -n monitoring grafana-admin-credentials \
 - [Landing Page](https://github.com/nginx/nginx)
 - [Longhorn](https://charts.longhorn.io)
 - [Metallb](https://metallb.github.io/metallb)
+- [Metrics Server](https://kubernetes-sigs.github.io/metrics-server/)
 - [Proxmox Exporter](https://github.com/prometheus-pve/prometheus-pve-exporter)
 - [Reloader](https://stakater.github.io/stakater-charts)
 - [Sealed Secrets](https://bitnami.github.io/sealed-secrets/)
