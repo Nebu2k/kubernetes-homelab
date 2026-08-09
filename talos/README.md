@@ -369,36 +369,138 @@ customization:
 overlay:
   name: rpi_5
   image: siderolabs/sbc-raspberrypi
+  options:
+    configTxtAppend: |
+      dtparam=cooling_fan=on
 EOF
 ```
 
 Die Antwort ist die Schematic-ID. Fuer raspi5 ist sie am 2026-08-09 erzeugt
 worden und lautet
-`b00ac8400b2ad823d3d5e972136dd89c0d960d58e0ff2b12d5b8b87e9d53e670`; sie gehoert
-beim Eintragen der Node auch in `talconfig.yaml`. Das Disk-Image dazu:
+`5a66af048bde96b95010bf8bba792973932e5bb7359e77f2ef7d8edb9aacc2a6`; sie steht
+seit dem 2026-08-09 auch in `talconfig.yaml`. Das Disk-Image dazu:
 
 ```text
-https://factory.talos.dev/image/b00ac8400b2ad823d3d5e972136dd89c0d960d58e0ff2b12d5b8b87e9d53e670/v1.13.8/metal-arm64.raw.zst
+https://factory.talos.dev/image/5a66af048bde96b95010bf8bba792973932e5bb7359e77f2ef7d8edb9aacc2a6/v1.13.8/metal-arm64.raw.zst
 ```
 
-Auf die NVMe schreiben (nicht auf SD, das war der ganze Grund fuer den Tausch):
+Die `configTxtAppend`-Option ist beim ersten Bau noch nicht dabei gewesen; die
+Schematic ohne sie war
+`b00ac8400b2ad823d3d5e972136dd89c0d960d58e0ff2b12d5b8b87e9d53e670`. Sie schaltet
+den Device-Tree-Knoten des Luefters ein, ohne den der Kernel den Active Cooler
+gar nicht kennt. Ein Nachtrag ist ein **Image**-Wechsel und braucht
+`talosctl upgrade --preserve`, nicht `apply-config`, siehe oben. Beim Neubau
+also gleich mit einbauen.
+
+Der Luefter dreht damit trotzdem noch ungeregelt: der Talos-Kernel bringt
+`CONFIG_PWM_RP1` ueberhaupt nicht mit, und ohne PWM-Provider findet `pwm-fan`
+nichts, an dem er haengen koennte. Der Device-Tree-Knoten oben ist die haelfte
+der Loesung, die dann greift, sobald ein Treiber da ist. Was dafuer noch fehlt,
+steht in der ROADMAP.
+
+**Das Image gehoert auf eine SD-Karte. Nicht auf die NVMe, nicht auf einen
+USB-Stick.** Auf dem Pi 5 kann u-boot nur von SD booten: ihm fehlt der
+PCIe-Treiber fuer den RP1-Chip, und an dem haengen sowohl die USB-Ports als
+auch der M.2-Slot. Beides ist am 2026-08-09 durchprobiert worden, hier steht
+das Ergebnis, damit es niemand wiederholt.
+
+Der Ablauf sieht taeuschend gesund aus: der EEPROM-Bootloader der Firmware kann
+USB und NVMe sehr wohl, liest die `config.txt` und laedt `u-boot.bin` brav vom
+Stick. Erst danach initialisiert u-boot USB selbst neu, findet nichts mehr und
+bleibt mit seinem Logo oben rechts stehen. Keine Fehlermeldung, kein Prompt,
+kein Netz, auch nicht ueber IPv6-Link-Local. Wer nur auf den Bildschirm schaut,
+sucht den Fehler zwangslaeufig an der falschen Stelle.
+
+Zwei Sackgassen auf dem Weg dorthin, beide echt und beide nicht die Loesung:
+
+- **"USB boot requires high current power supply".** Der Pi 5 drosselt die
+  USB-Ports auf 600 mA, wenn er beim Netzteil keine 5 A aushandelt, und
+  verweigert dann USB-Boot. Das trat auch mit dem Originalnetzteil auf. Der
+  Hinweis auf `usb_max_current_enable=1` in der `config.txt` laeuft ins Leere,
+  die Datei liegt ja auf dem Medium, das er nicht bootet. Richtig ist
+  `PSU_MAX_CURRENT=5000` im EEPROM, das wirkt davor:
+
+  ```bash
+  rpi-eeprom-config --out /tmp/boot.conf
+  sed -i 's/^PSU_MAX_CURRENT=.*/PSU_MAX_CURRENT=5000/' /tmp/boot.conf  # oder anhaengen
+  sudo rpi-eeprom-config --apply /tmp/boot.conf
+  ```
+
+  Damit bootet der Pi tatsaechlich von USB. Es hilft nur nichts, weil u-boot
+  danach trotzdem aussteigt.
+- **Ein neuerer Bootloader.** Naheliegend, aber falsch: dass u-boot ueberhaupt
+  startet, beweist, dass die Firmware ihren Teil erledigt hat.
+
+Auf macOS schreibt man das Image so. `rdiskN` statt `diskN` ist um ein
+Vielfaches schneller, und `bs=4m` gehoert klein geschrieben, BSD-`dd` kennt
+kein `4M`:
 
 ```bash
 zstd -d metal-arm64.raw.zst -o talos.raw
-sudo dd if=talos.raw of=/dev/<nvme> bs=4M status=progress conv=fsync
+diskutil list                  # richtige Karte suchen
+diskutil unmountDisk /dev/diskN
+sudo dd if=talos.raw of=/dev/rdiskN bs=4m status=progress
 ```
 
-**2. In `talconfig.yaml` eintragen.** Als vierte Node, `controlPlane: true`,
-`ipAddress: 192.168.2.9` (die bisherige raspi5-Adresse, sie ist frei). Drei
-Dinge, die dabei anders sind als bei den pve-VMs:
+Die NVMe bleibt dabei nicht ungenutzt, im Gegenteil: der VolumeConfig-Patch an
+der Node zieht `EPHEMERAL` (`/var`, also Container-Images, Logs und
+`/var/lib/longhorn`) auf sie. Auf der SD liegen nur EFI, BOOT, META und STATE,
+also ein paar hundert MB, die praktisch nur bei Upgrades beschrieben werden.
+Der Verschleissgrund, aus dem raspi5 damals ueberhaupt auf NVMe umgezogen ist,
+bleibt damit erledigt.
 
-- `talosImageURL: factory.talos.dev/metal-installer/<schematic-id>` — `metal`,
-  nicht `nocloud`, wie bei prodesk.
-- `nodeLabels: topology.kubernetes.io/zone: blech` — **nicht vergessen**, sonst
-  legt Longhorn zwei Repliken in dieselbe Zone (siehe Fallen unten).
-- `deviceSelector` auf den echten Treiber. Beim Pi 5 ist das nicht
-  `virtio_net`; im Zweifel `talosctl -n <ip> get links` im Maintenance-Mode
-  lesen und danach eintragen.
+**Der Pi hat kein Bootmenue**, es gibt keine Taste fuer "einmal von diesem
+Medium" (Shift startet den Network-Install, sonst nichts). Die Reihenfolge
+steht im EEPROM und wird von rechts nach links gelesen. Seit dem 2026-08-09
+steht dort `BOOT_ORDER=0xf641`, also SD (1), dann USB (4), dann NVMe (6). Die
+SD gewinnt damit, sobald eine steckt, und ohne Karte faellt er auf das
+zurueck, was sonst da ist.
+
+**2. In `talconfig.yaml` eintragen.** Steht dort seit dem 2026-08-09 fertig
+drin, mit Begruendung an der Node selbst. Die Punkte, die anders sind als bei
+den pve-VMs:
+
+- `ipAddress: 192.168.2.22`, **nicht** die alte raspi5-Adresse `.9`. Der
+  Node-Block ist `.20-.29`, und die UniFi-Regel fuer die beiden Gast-VLANs im
+  Haus erlaubt `.2-.20`: auf der `.9` haengen Talos-API und kubelet in genau
+  diesem Bereich. Im Repo haengt an der `.9` nichts mehr.
+- `talosImageURL: factory.talos.dev/metal-installer/<schematic-id>`, also
+  `metal`, nicht `nocloud`, wie bei prodesk.
+- `installDisk: /dev/mmcblk0`, die SD-Karte, aus dem Grund weiter oben.
+- Ein `VolumeConfig`-Patch zieht `EPHEMERAL` per `diskSelector` auf die NVMe.
+  **Der muss beim ersten `apply-config` dabei sein**: Talos wendet eine
+  VolumeConfig nur an, solange das Volume noch nicht provisioniert ist.
+  Nachtraeglich liegt `/var` auf der SD und bleibt dort, ohne dass irgendetwas
+  meckert. Der Patch haengt bewusst an der Node und nicht global, prodesk hat
+  ebenfalls eine NVMe und der Ausdruck traefe dort genauso zu.
+- `nodeLabels: topology.kubernetes.io/zone: raspi5`, eine **eigene** Zone und
+  nicht `blech` zu prodesk dazu. Bei zwei Zonen liegt zwangslaeufig immer eine
+  der beiden Repliken auf pve, siehe Fallen unten.
+- `deviceSelector: hardwareAddr`. Beim Pi 5 ist der Treibername nicht
+  `virtio_net`, und es gibt ohnehin nur eine NIC. Falls die Adresse einmal
+  nicht stimmt, faellt das nicht als Fehler auf: die Node kommt schlicht ohne
+  Netz hoch. Ablesen im Maintenance-Mode:
+
+  ```bash
+  talosctl -n <dhcp-ip> get links --insecure
+  ```
+
+**Vorher die NVMe leeren.** Talos legt `EPHEMERAL` nur auf einer Disk an, die
+genug freien Platz hat, und die NVMe traegt noch die zwei Partitionen des alten
+Raspberry Pi OS ueber die volle Kapazitaet. Passiert das nicht, faellt
+`EPHEMERAL` stillschweigend auf die Systemdisk zurueck, also auf die SD-Karte,
+und dann liegt genau die Schreiblast dort, die dort nicht hingehoert. Zu sehen
+ist das erst hinterher an `talosctl -n <ip> get discoveredvolumes`. Aus dem
+Maintenance-Mode heraus:
+
+```bash
+talosctl -n <dhcp-ip> disks --insecure
+talosctl -n <dhcp-ip> wipe disk nvme0n1 --insecure
+```
+
+Nicht schon vorher aus dem laufenden Raspberry Pi OS heraus wipen, auch wenn es
+ginge: solange nicht belegt ist, dass der Pi von der SD hochkommt, ist das alte
+System der einzige Rueckweg auf die Node.
 
 Danach `talhelper genconfig` und die Config anwenden, im Maintenance-Mode noch
 `--insecure`:
@@ -414,12 +516,29 @@ zweiter Aufruf zerlegt das Cluster.
 **3. Warten, bis er wirklich Member ist**, nicht nur `Ready`:
 
 ```bash
-talosctl -n 192.168.2.9 etcd members
+talosctl -n 192.168.2.22 etcd members
 kubectl get nodes
 ```
 
 Vier Member sind ein bewusst kurzer Zustand: eine gerade Anzahl vertraegt nicht
 mehr Ausfaelle als drei.
+
+Longhorn braucht hier einen eigenen Handgriff, und zwar **nach** dem Join, nicht
+davor: fuer eine Node, die dazukommt, waehrend Longhorn schon laeuft, legt
+longhorn-manager das Node-CR selbst an, mit einem fsid-abgeleiteten Disk-Namen
+und ohne Tags. Also erst den vorgefundenen Schluessel lesen und ihn dann
+unveraendert in `manifests/longhorn/node-config.yaml` uebernehmen, samt
+`storage`-Tag (die StorageClass selektiert darauf, ohne Tag meldet die Node
+Ready und Schedulable und bekommt trotzdem nie ein Replikat):
+
+```bash
+kubectl -n longhorn-system get nodes.longhorn.io raspi5 \
+  -o jsonpath='{.spec.disks}'
+```
+
+Ein eigener Name waere ein zweiter Eintrag auf demselben Pfad und damit die
+Webhook-Sackgasse aus dem alten Cluster. Die lange Fassung steht im Kopf von
+`manifests/longhorn/node-config.yaml`.
 
 **4. talos-cp-2 sauber entfernen**, in dieser Reihenfolge:
 

@@ -57,6 +57,7 @@ additionalApiServerCertSans:
   - 192.168.2.248
   - 192.168.2.20
   - 192.168.2.21
+  - 192.168.2.22
   - 192.168.2.23
   - 127.0.0.1
 additionalMachineCertSans:
@@ -64,6 +65,7 @@ additionalMachineCertSans:
   - 192.168.2.248
   - 192.168.2.20
   - 192.168.2.21
+  - 192.168.2.22
   - 192.168.2.23
 
 # Flannel ist der Talos-Default und deckt sich mit k3s. Kein Grund, beim
@@ -132,7 +134,8 @@ nodes:
   # talos-cp-3 (.22, vmid 112) stand hier bis zum 2026-08-09. Mit prodesk waren
   # es vier etcd-Member, und eine gerade Anzahl vertraegt nicht mehr Ausfaelle
   # als drei. Abgebaut per drain und "talosctl reset --graceful", danach in
-  # homelab-terraform/proxmox/vm-talos.tf geloescht. Die .22 ist wieder frei.
+  # homelab-terraform/proxmox/vm-talos.tf geloescht. Seine .22 hat raspi5
+  # uebernommen, siehe unten.
 
   # prodesk: erstes Blech im neuen Cluster, HP ProDesk 600 G4 DM, 31 GB RAM.
   # Er hat talos-cp-3 ersetzt und hebt die RAM-Decke des Clusters von 11.7 GB
@@ -174,6 +177,100 @@ nodes:
         dhcp: false
         addresses:
           - 192.168.2.23/24
+        routes:
+          - network: 0.0.0.0/0
+            gateway: 192.168.2.1
+        vip:
+          ip: 192.168.2.29
+
+  # raspi5: Raspberry Pi 5 mit NVMe, zweites Blech im Cluster. Er ersetzt
+  # talos-cp-2 und holt damit die etcd-Mehrheit von pve herunter: heute liegen
+  # zwei der drei Member auf derselben Maschine, ein pve-Ausfall kostet das
+  # Quorum. Das ist die Randbedingung aus der ROADMAP, sonst nichts.
+  #
+  # Reihenfolge: erst joinen, dann talos-cp-2 entfernen. Der Weg dorthin steht
+  # in README.md, hier nur, was an dieser Node anders ist:
+  #
+  #  - Die .22 statt der alten raspi5-Adresse .9. Der Node-Block ist .20-.29,
+  #    und vor allem erlaubt die UniFi-Regel den beiden Gast-VLANs im Haus den
+  #    Zugriff auf .2-.20: auf der .9 waeren Talos-API und kubelet von dort
+  #    erreichbar, auf der .22 nicht. Die alte .9 faellt zurueck in den
+  #    Infrastruktur-Block und ist an keiner Stelle mehr verdrahtet.
+  #  - Eigene Schematic mit dem rpi_5-Overlay (siderolabs/sbc-raspberrypi), der
+  #    Pi bringt keine UEFI-Firmware mit. Extensions sind dieselben zwei wie
+  #    ueberall, der Guest-Agent fehlt wie bei prodesk. metal-installer, nicht
+  #    nocloud.
+  #  - Die SD-Karte ist das Systemziel, die NVMe traegt nur EPHEMERAL. Das ist
+  #    keine Vorliebe, sondern die einzige Moeglichkeit, siehe unten.
+  #  - Eigene Fehlerdomaene, siehe nodeLabels unten.
+  #
+  # WARUM SD UND NICHT NVMe (2026-08-09 die Stunde gekostet, die das hier
+  # spart): auf dem Pi 5 kann u-boot ausschliesslich von der SD-Karte booten.
+  # Weder USB noch NVMe, weil ihm der PCIe-Treiber fuer den RP1-Chip fehlt, an
+  # dem beim Pi 5 sowohl die USB-Ports als auch der M.2-Slot haengen. Der
+  # EEPROM-Bootloader der Firmware kann beides und laedt u-boot auch brav vom
+  # Stick; danach findet u-boot nichts mehr und bleibt mit seinem Logo stehen,
+  # ohne Fehlermeldung und ohne Netz. Genau so sah es aus.
+  #
+  # Der Verschleissgrund, aus dem raspi5 damals von SD auf NVMe umgezogen ist,
+  # bleibt trotzdem erledigt: auf der SD liegen nur EFI, BOOT, META und STATE,
+  # zusammen ein paar hundert MB, beschrieben praktisch nur bei Upgrades. Alles
+  # Schreibintensive steckt in EPHEMERAL (/var, also Container-Images, Logs und
+  # /var/lib/longhorn), und das zieht der VolumeConfig-Patch unten auf die NVMe.
+  - hostname: raspi5
+    ipAddress: 192.168.2.22
+    controlPlane: true
+    # /dev/mmcblk0 ist der SD-Slot und beim Pi stabil benannt. Ein Selector auf
+    # type: sd waere gleichwertig.
+    installDisk: /dev/mmcblk0
+    # EPHEMERAL auf die NVMe. Node-spezifisch und nicht global, weil prodesk
+    # ebenfalls eine NVMe hat und der Ausdruck dort genauso zutraefe.
+    #
+    # Muss beim ERSTEN apply-config dabei sein: Talos wendet eine VolumeConfig
+    # nur an, solange das Volume noch nicht provisioniert ist. Nachtraeglich
+    # liegt EPHEMERAL auf der SD und bleibt dort.
+    patches:
+      - |-
+        apiVersion: v1alpha1
+        kind: VolumeConfig
+        name: EPHEMERAL
+        provisioning:
+          diskSelector:
+            match: disk.transport == 'nvme'
+          grow: true
+    # Eigene Zone, NICHT "blech" zu prodesk dazu. Mit zwei Zonen und
+    # replicaZoneSoftAntiAffinity: "false" liegt bei zwei Repliken zwangslaeufig
+    # immer eine davon auf pve. Erst eine dritte Zone erlaubt Longhorn, beide
+    # Repliken auf Blech zu legen, und genau das fordert die Diversitaets-Regel
+    # in der ROADMAP ("mindestens eine Replik ausserhalb von pve").
+    #
+    # Dass "blech" ein Klassenname ist und "raspi5" ein Geraetename, ist kein
+    # Bruch: die Zone ist hier wie dort genau ein Geraet, "blech" meint faktisch
+    # prodesk. Gegenstueck ist manifests/longhorn/values.yaml.
+    nodeLabels:
+      topology.kubernetes.io/zone: raspi5
+    # Dritte Schematic im Cluster, und die einzige mit einer Overlay-Option:
+    # configTxtAppend haengt "dtparam=cooling_fan=on" an die config.txt.
+    #
+    # Ohne das kennt der Kernel den Luefter des Active Cooler gar nicht: es gibt
+    # keinen pwm-fan in /sys/class/hwmon und null cooling_devices, also auch
+    # nichts zu regeln, und der Luefter laeuft dauerhaft auf voller Drehzahl.
+    # Bei 49 Grad CPU. Am Kernel liegt es nicht, CONFIG_SENSORS_PWM_FAN,
+    # CONFIG_PWM_BCM2835 und der step_wise-Governor sind alle gebaut, es fehlt
+    # allein der Device-Tree-Knoten.
+    #
+    # Die Vorgaengerschematic ohne die Option war
+    # b00ac8400b2ad823d3d5e972136dd89c0d960d58e0ff2b12d5b8b87e9d53e670.
+    talosImageURL: factory.talos.dev/metal-installer/5a66af048bde96b95010bf8bba792973932e5bb7359e77f2ef7d8edb9aacc2a6
+    networkInterfaces:
+      # Auswahl ueber die MAC wie bei prodesk: eine physische NIC, unveraender-
+      # liche Adresse, und der Treibername des Pi-5-Ethernets muss so gar nicht
+      # erst geraten werden.
+      - deviceSelector:
+          hardwareAddr: 2c:cf:67:4b:83:14
+        dhcp: false
+        addresses:
+          - 192.168.2.22/24
         routes:
           - network: 0.0.0.0/0
             gateway: 192.168.2.1
