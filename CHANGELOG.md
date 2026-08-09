@@ -1,3 +1,10 @@
+# [4.96.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.95.0...v4.96.0) (2026-08-09)
+
+
+### Features
+
+* **talos:** etcd-Offsite-Backup fuer das neue Cluster ([1f03cfa](https://github.com/Nebu2k/kubernetes-homelab/commit/1f03cfa03ef836c7e4b27365b8ac6e5680371ed7))
+
 # [4.95.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.94.0...v4.95.0) (2026-08-09)
 
 
