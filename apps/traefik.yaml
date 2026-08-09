@@ -17,9 +17,8 @@ spec:
       helm:
         valueFiles:
           - $values/manifests/traefik/values.yaml
-    # Nur als Quelle fuer die valueFiles oben. Eine dritte Source mit
-    # path: manifests/traefik gab es bis 2026-08-06, sie trug ausschliesslich
-    # den toten Service traefik-dashboard.
+    # Nur als Quelle fuer die valueFiles oben, kein eigener path: unter
+    # manifests/traefik/ liegt nichts, was ArgoCD anwenden soll.
     - repoURL: https://github.com/Nebu2k/kubernetes-homelab
       targetRevision: main
       ref: values

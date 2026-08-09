@@ -5,12 +5,11 @@ deployment:
 nodeSelector:
   node-role.kubernetes.io/worker: "worker"
 
-# Beide Replicas sind vorher auf k3s-worker-1 gelandet, weil nichts sie
-# auseinanderhielt. Mit externalTrafficPolicy: Local (siehe service unten)
-# kuendigt MetalLB die .250 nur noch von Nodes an, auf denen ein bereiter
-# Traefik-Pod laeuft. Ohne Spreizung waere worker-1 damit ein Single Point
-# of Failure geworden: bei Ausfall haette es erst einen Pod-Start auf
-# prodesk gebraucht, bevor die VIP ueberhaupt wieder angekuendigt wird.
+# Ohne das landen beide Replicas auf derselben Node. Mit
+# externalTrafficPolicy: Local (siehe service unten) kuendigt MetalLB die .250
+# nur noch von Nodes an, auf denen ein bereiter Traefik-Pod laeuft: diese eine
+# Node waere dann ein Single Point of Failure, bei ihrem Ausfall braucht es
+# erst einen Pod-Start anderswo, bevor die Adresse wieder angekuendigt wird.
 topologySpreadConstraints:
   - labelSelector:
       matchLabels:
@@ -59,9 +58,7 @@ providers:
 # MetalLB LoadBalancer IP.
 # MUSS als Annotation gesetzt werden. Das Traefik-Chart kennt keinen
 # service.loadBalancerIP-Wert, Helm hat den Key bisher stillschweigend
-# ignoriert (im gerenderten Service stand nie eine IP). Traefik bekam die
-# .250 frueher nur deshalb, weil es der einzige LoadBalancer im Cluster ist und
-# MetalLB die erste freie Adresse aus dem Pool vergibt.
+# ignoriert (im gerenderten Service stuende dann nie eine IP).
 # metallb.io/ ist der aktuelle Prefix, metallb.universe.tf/ ist seit 0.14.9
 # deprecated.
 #
@@ -72,8 +69,8 @@ providers:
 service:
   annotations:
     metallb.io/loadBalancerIPs: "192.168.2.250"
-  # Ab Chart 41 liegt type unter spec, das fruehere top-level service.type
-  # gibt es nicht mehr.
+  # Ab Chart 41 liegt type unter spec, ein top-level service.type gibt es
+  # nicht mehr.
   spec:
     type: LoadBalancer
     # Ohne das SNAT-tet kube-proxy jedes eingehende Paket auf das
@@ -103,18 +100,14 @@ log:
 accessLog:
   enabled: true
 
-# Frueher stand hier ein globalArguments-Block mit --api.dashboard=true,
-# --ping=true und einem readTimeout von 24h. Der war nachweislich
-# wirkungslos: das Chart kennt globalArguments nicht mehr (seit dem Wechsel
-# auf global.xx), und im gerenderten wie im laufenden Pod tauchte keines
-# der drei Argumente aus diesem Block auf.
-# api.dashboard und ping setzt das Chart ohnehin selbst.
-# Der readTimeout war damit nie aktiv, Traefik laeuft auf seinem Default
-# von 60s. Am 2026-08-04 entschieden, das so zu lassen: das Cluster lief
-# jahrelang auf 60s ohne ein einziges Problem, ein Timeout ohne Leidensdruck
-# ist keine Verbesserung. Falls doch mal noetig (Kandidaten: HA-Websockets,
-# Plex), waere der native Key in v41
-# ports.websecure.transport.respondingTimeouts.readTimeout.
+# KEIN globalArguments-Block. Den Key kennt das Chart seit dem Wechsel auf
+# global.xx nicht mehr, er wird stillschweigend geschluckt und taucht weder im
+# gerenderten noch im laufenden Pod auf. api.dashboard und ping setzt das Chart
+# ohnehin selbst.
+#
+# Traefik laeuft damit auf seinem readTimeout-Default von 60s, und das reicht.
+# Falls doch mal noetig (Kandidaten: HA-Websockets, Plex), waere der native Key
+# in v41 ports.websecure.transport.respondingTimeouts.readTimeout.
 
 # Dashboard
 ingressRoute:

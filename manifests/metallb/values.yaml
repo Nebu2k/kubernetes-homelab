@@ -10,16 +10,15 @@ speaker:
     enabled: false
 
 # FRR als eigenständiges DaemonSet, seit Chart 0.16 ein separater Schalter und
-# per Default AN. Das ist NICHT dasselbe wie speaker.frr oben: nach dem Upgrade
-# auf 0.16.1 liefen dadurch plötzlich metallb-frr-k8s auf allen 5 Nodes plus
-# ein statuscleaner-Deployment, obwohl speaker.frr.enabled seit jeher false ist.
-# Wir fahren reines Layer2 und kein BGP, FRR ist hier nutzlos. Auf den Raspis
-# sind sechs überflüssige Pods nicht egal.
+# per Default AN. Das ist NICHT dasselbe wie speaker.frr oben: bleibt der hier
+# ungesetzt, laufen metallb-frr-k8s auf jeder Node plus ein
+# statuscleaner-Deployment, auch wenn speaker.frr.enabled false ist. Hier läuft
+# reines Layer2 und kein BGP, FRR ist nutzlos.
 frrk8s:
   enabled: false
 
-# Vanilla Kubernetes setzt auf Control-Plane-Nodes
-# node.kubernetes.io/exclude-from-external-load-balancers, k3s tat das nicht.
+# Kubernetes setzt auf Control-Plane-Nodes
+# node.kubernetes.io/exclude-from-external-load-balancers.
 # MetalLB respektiert das Label und kuendigt von solchen Nodes nichts an. Hier
 # sind alle Nodes Control-Plane, also kuendigt sonst NIEMAND an: der Service
 # bekommt seine IP, ArgoCD meldet Healthy, und trotzdem beantwortet kein Node

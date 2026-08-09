@@ -1,6 +1,4 @@
-# App-of-Apps. Die einzige Liste, seit das k3s-Cluster am 2026-08-09 abgebaut
-# ist: bis dahin gab es daneben clusters/talos/ mit einer zweiten Liste und
-# einem Satz Patches, weil beide Cluster denselben Branch lasen.
+# App-of-Apps: die vollstaendige Liste dessen, was im Cluster laeuft.
 #
 # Reihenfolge egal, die sync-waves stehen in den Applications selbst.
 apiVersion: kustomize.config.k8s.io/v1beta1
@@ -10,14 +8,12 @@ resources:
   # Plattform
   - sealed-secrets.yaml
   - metallb.yaml
-  # Setzt die NetworkPolicies durch. Vanilla Flannel tut das nicht, k3s brachte
-  # denselben Controller eingebaut mit.
+  # Setzt die NetworkPolicies durch, Flannel allein tut das nicht.
   - kube-router.yaml
-  # kubectl top und die Kubernetes-Widgets der Homepage. Ebenfalls etwas, das
-  # k3s eingebaut mitbrachte.
+  # kubectl top und die Kubernetes-Widgets der Homepage.
   - metrics-server.yaml
-  # Der Talos-Ersatz fuer k3s' --etcd-s3-config: Talos schreibt Snapshots nur
-  # auf Anforderung heraus, der Upload ist Sache des Clusters.
+  # etcd-Snapshots nach S3. Talos schreibt sie nur auf Anforderung heraus, der
+  # Upload ist deshalb Sache des Clusters.
   - etcd-backup.yaml
   - reloader.yaml
   - traefik.yaml
@@ -35,8 +31,9 @@ resources:
   # Hardware. Ersetzt auf raspi5 einen Kernel-Treiber, den der Talos-Kernel
   # nicht mitbringt, siehe manifests/rpi5-fan/fan.py.
   - rpi5-fan.yaml
-  # Ebenfalls raspi5, aber ein Versuch auf Widerruf gegen die etcd-Aussetzer,
-  # siehe Kopf von manifests/rpi5-net-tuning/daemonset.yaml.
+  # Ebenfalls raspi5: haelt die ethtool-Einstellungen von end0, ohne die der
+  # etcd-Member Raft-Nachrichten verwirft. Siehe Kopf von
+  # manifests/rpi5-net-tuning/daemonset.yaml.
   - rpi5-net-tuning.yaml
 
   # Anwendungen

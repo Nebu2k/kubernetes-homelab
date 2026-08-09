@@ -14,7 +14,7 @@
 # laedt zwar hoch, erzeugt aber ein automatisches Backup, das damit wieder unter
 # HAs Retention faellt. Einen benannten, S3-gerichteten, retention-freien Stand
 # gibt es nur ueber die WebSocket-API, und die ist aus einer Automation nicht
-# aufrufbar. Geprueft am Quelltext der laufenden Instanz, 2026-08-05.
+# aufrufbar.
 #
 # ENTSCHEIDEND: kopiert wird NUR das .tar, NICHT die zugehoerige
 # .metadata.json. HAs S3-Agent listet Backups ausschliesslich ueber die
@@ -38,8 +38,8 @@ spec:
   #
   # timeZone ist Pflicht: ohne das Feld laeuft der Job in der Zeitzone der Node,
   # die gerade den kube-controller-manager haelt, und der Zeitplan wandert mit
-  # dem Lease. Ohne das Feld waere dieser Job am 2026-08-05 um 02:00 UTC
-  # gelaufen, also VOR dem HA-Backup, und haette den Vortagsstand archiviert.
+  # dem Lease. Faellt er dadurch vor das HA-Backup, archiviert er den
+  # Vortagsstand.
   schedule: "0 4 1 * *"
   timeZone: "Etc/UTC"
   successfulJobsHistoryLimit: 3
@@ -103,7 +103,7 @@ spec:
                   # Das High-Level-Kommando liest beim Kopieren die Objekt-Tags,
                   # um sie mitzunehmen, und braucht dafuer s3:GetObjectTagging.
                   # Der IAM-Key hat das nicht, "aws s3 cp" scheitert hier mit
-                  # AccessDenied (belegt im Testlauf am 2026-08-05).
+                  # AccessDenied.
                   #
                   # copy-object kopiert server-seitig und kommt mit GetObject auf
                   # der Quelle und PutObject auf dem Ziel aus. --tagging-directive

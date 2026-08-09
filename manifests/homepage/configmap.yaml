@@ -191,9 +191,7 @@ data:
     mode: cluster
 
   # Leer, aber vorhanden: ohne die Datei sucht homepage sie und schreibt bei
-  # jedem Rendern eine Warnung. Der frueher hier stehende Docker-Host raspi5
-  # (192.168.2.9:2375) ist am 2026-08-09 entfallen, dort lief dump1090 und der
-  # SDR ist seit dem 2026-08-09 an pve. Der Eintrag hat danach nur noch alle
-  # paar Sekunden ECONNREFUSED ins Log geschrieben.
+  # jedem Rendern eine Warnung. Es gibt hier keinen Docker-Host, alles laeuft
+  # im Cluster.
   docker.yaml: |
     {}

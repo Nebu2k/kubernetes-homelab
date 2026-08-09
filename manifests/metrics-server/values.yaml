@@ -1,10 +1,9 @@
 # metrics-server.
 #
-# NUR fuer das Talos-Cluster. k3s bringt metrics-server eingebaut mit, vanilla
-# Kubernetes nicht, und das faellt leise aus: `kubectl top` sagt "Metrics API
-# not available", die Kubernetes-Widgets der Homepage melden "API error", und
-# jede HorizontalPodAutoscaler-Idee liefe ins Leere. Gefunden am 2026-08-09
-# ueber genau diese Kachel oben links.
+# Vanilla Kubernetes bringt keinen metrics-server mit, und das faellt leise
+# aus: `kubectl top` sagt "Metrics API not available", die Kubernetes-Widgets
+# der Homepage melden "API error", und jede HorizontalPodAutoscaler-Idee liefe
+# ins Leere.
 #
 # Eingebunden ueber apps/metrics-server.yaml.
 

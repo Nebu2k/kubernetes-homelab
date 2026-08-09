@@ -1,10 +1,10 @@
 # kube-router, ausschliesslich als NetworkPolicy-Controller.
 #
 # WARUM: Talos deployt vanilla Flannel, und Flannel setzt NetworkPolicies nicht
-# durch. k3s tat es, weil es genau diesen Controller eingebaut mitbringt. Ohne
-# ihn nimmt das API die default-deny-ingress von mealie, paperless-ngx und
-# teslamate an, `kubectl get netpol` zeigt sie, und sie bewirken nichts. Das ist
-# die unangenehmste Sorte Fehler: Schutz, der auf dem Papier steht.
+# durch. Ohne diesen Controller nimmt das API die default-deny-ingress von
+# mealie, paperless-ngx und teslamate an, `kubectl get netpol` zeigt sie, und
+# sie bewirken nichts. Das ist die unangenehmste Sorte Fehler: Schutz, der auf
+# dem Papier steht.
 #
 # WAS HIER ANDERS IST ALS IM UPSTREAM-MANIFEST, und das ist der Teil, der
 # schiefgehen kann: kube-routers "firewall-daemonset.yaml" bringt trotz seines
@@ -21,8 +21,7 @@
 # /var/lib/kube-router/kubeconfig auf der Node, ein kubeadm-Detail. Talos legt
 # dort nichts ab. Stattdessen der ServiceAccount und die In-Cluster-Config.
 #
-# Nur fuer das Talos-Cluster, im k3s-Cluster macht das k3s selbst. Eingebunden
-# ueber apps/kube-router.yaml.
+# Eingebunden ueber apps/kube-router.yaml.
 apiVersion: apps/v1
 kind: DaemonSet
 metadata:

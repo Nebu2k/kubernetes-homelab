@@ -11,16 +11,10 @@ persistence:
 
 # Backup-Target: SMB-Share direkt auf dem UniFi-NAS (192.168.2.6, 300 GB).
 #
-# Loest MinIO auf der Proxmox-VM ab. Vorher lief es doppelt: Longhorn sicherte
-# nach MinIO, und die MinIO-VM wurde ihrerseits per Proxmox-Job aufs selbe NAS
-# gesichert. Ein Umweg ueber eine VM, die nur Zwischenlager war.
-#
-# Bewusst NICHT migriert: der alte Bestand blieb in MinIO liegen und ist mit der
-# VM weg. Auf dem NAS wurde bei null angefangen.
-#
-# Es gibt KEINEN Rollback mehr: die MinIO-VM ist am 2026-08-04 abgebaut worden,
-# das longhorn-minio-secret am 2026-08-05 aus dem Repo entfernt. Ein Weg zurueck
-# waere ein Neubau, kein Zurueckstellen dieser zwei Zeilen.
+# Das NAS ist das einzige Backup-Ziel von Longhorn. Es gibt keine
+# Offsite-Kopie der Volume-Backups: nach S3 gehen nur die etcd-Snapshots
+# (manifests/etcd-backup/) und die anwendungseigenen Dumps
+# (paperless-ngx, teslamate, Home Assistant).
 defaultBackupStore:
     backupTarget: "cifs://192.168.2.6/longhorn_backup"
     backupTargetCredentialSecret: longhorn-nas-cifs-secret
@@ -31,11 +25,9 @@ defaultSettings:
   # zwei Repliken auf zwei Zonen zu verteilen.
   #
   # Ohne das genuegt Longhorn schon, dass die Repliken auf zwei verschiedenen
-  # NODES liegen, und das ist hier zu wenig: bis zum 2026-08-09 waren talos-cp-1
-  # und talos-cp-2 zwei Nodes, aber eine einzige NVMe in pve. Beide Repliken
-  # dort waeren keine Redundanz gewesen, nur zwei Kopien auf demselben
-  # Datentraeger. cp-2 ist inzwischen abgebaut, aber die Falle kaeme mit jeder
-  # zweiten pve-VM zurueck, deshalb bleibt die Einstellung.
+  # NODES liegen, und das waere hier zu wenig: zwei pve-VMs sind zwei Nodes,
+  # aber eine einzige NVMe. Beide Repliken dort waeren keine Redundanz, nur
+  # zwei Kopien auf demselben Datentraeger.
   #
   # Je Geraet eine Zone, nicht je Geraeteklasse: laegen prodesk und raspi5
   # zusammen in "blech", gaebe es nur zwei Zonen und damit zwangslaeufig immer
@@ -51,27 +43,25 @@ defaultSettings:
   concurrentReplicaRebuildPerNodeLimit: "2"
   # Reduce backup concurrency to prevent overwhelming ARM nodes during nightly backups
   backupConcurrentLimit: "1"  # Default is 2, reduce to 1 to prevent raspi5 overload
-  # Volume-Engines automatisch mit der Manager-Version mitziehen.
-  # Stand vorher auf 0, dadurch liefen alle Volumes noch auf Engine v1.10.1,
-  # waehrend der Manager schon weiter war. Longhorn erlaubt nur einen
-  # Minor-Schritt am Stueck (1.10 -> 1.11 -> 1.12); bleiben die Engines
-  # zurueck, ist der naechste Schritt nicht mehr sauber abgedeckt.
-  # 1 statt hoeher, gleiche Ruecksicht auf die ARM-Nodes wie oben.
-  # Live-Upgrade greift nur bei gesunden Volumes ohne iSCSI-Frontend,
-  # beides erfuellt (22x blockdev, alle healthy).
+  # Volume-Engines automatisch mit der Manager-Version mitziehen. Auf 0 bleiben
+  # die Engines auf ihrer alten Version stehen, waehrend der Manager weiterlaeuft;
+  # Longhorn erlaubt aber nur einen Minor-Schritt am Stueck (1.10 -> 1.11 ->
+  # 1.12), und dann ist der naechste Schritt nicht mehr sauber abgedeckt.
+  # 1 statt hoeher, gleiche Ruecksicht auf die ARM-Node wie oben.
+  # Live-Upgrade greift nur bei gesunden Volumes ohne iSCSI-Frontend.
   concurrentAutomaticEngineUpgradePerNodeLimit: "1"
   concurrentVolumeBackupRestorePerNodeLimit: "2"  # Default is 5, reduce to 2
   # Do not block on replica availability when a node is drained.
   # "allow-if-replica-is-stopped" only handles replicas, not engines of attached
   # volumes. "always-allow" force-detaches volumes instead of holding the drain.
   # NOTE: this does NOT remove the instance-manager PodDisruptionBudgets, which
-  # is what actually blocks a drain here. Verified live 2026-07-31: setting is
-  # active, and all 7 PDBs still sit at minAvailable: 1 / disruptionsAllowed: 0.
-  # kured therefore needs forceReboot, see manifests/kured/values.yaml.
+  # is what actually blocks a drain here: they sit at minAvailable: 1 /
+  # disruptionsAllowed: 0. A `kubectl drain` on a storage node therefore still
+  # needs the replicas evicted from the Longhorn UI first.
   nodeDrainPolicy: "always-allow"
   # Reclaim space from removed snapshots during filesystem-trim.
   # Without this, the weekly trim only releases free filesystem blocks but leaves
-  # marked-removed snapshots on disk — high-churn volumes (Prometheus) bloat to
+  # marked-removed snapshots on disk: high-churn volumes (Prometheus) bloat to
   # 10x their nominal size.
   removeSnapshotsDuringFilesystemTrim: "true"
 

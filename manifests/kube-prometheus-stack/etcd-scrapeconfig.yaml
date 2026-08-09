@@ -26,8 +26,7 @@ spec:
   # Die Liste ist statisch und muss den etcd-Membern folgen. Eine fehlende Node
   # faellt hier NICHT auf: Prometheus scrapet dann einfach zwei statt drei
   # Ziele, alle gruen, und die etcd-Alerts gelten stillschweigend nur noch fuer
-  # die Ziele, die dastehen. Genau so war raspi5 vom Join am 2026-08-09 bis zum
-  # Abbau von talos-cp-2 unbeobachtet.
+  # die Ziele, die dastehen. Bei jedem Node-Tausch also mit anfassen.
   staticConfigs:
     - targets:
         - 192.168.2.20:2381

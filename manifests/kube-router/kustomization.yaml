@@ -1,6 +1,5 @@
 # kube-router als reiner NetworkPolicy-Controller.
 #
-# NUR fuer das Talos-Cluster: k3s bringt denselben Controller eingebaut mit.
 # Eingebunden ueber apps/kube-router.yaml. Was genau vom
 # Upstream-Manifest abweicht und warum, steht im Kopf von daemonset.yaml.
 apiVersion: kustomize.config.k8s.io/v1beta1

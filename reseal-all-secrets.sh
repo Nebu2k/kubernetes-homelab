@@ -4,11 +4,10 @@ set -euo pipefail
 # Versiegelt alle *-unsealed.yaml unter manifests/ neu.
 #
 # Sealt direkt gegen den Controller (--controller-namespace) statt gegen ein
-# lokales Cert-File. Das Cert im Repo gab es frueher, es war eine reine
-# Fehlerquelle: der Controller rotiert seinen Sealing-Key alle 30 Tage, das
-# File blieb stehen, und man versiegelte irgendwann gegen einen ein halbes Jahr
-# alten Key, ohne dass etwas fehlschlug. Preis dafuer: das Skript braucht
-# Cluster-Zugriff.
+# lokales Cert-File. Ein Cert im Repo waere eine reine Fehlerquelle: der
+# Controller rotiert seinen Sealing-Key alle 30 Tage, das File bliebe stehen,
+# und man versiegelte irgendwann gegen einen Monate alten Key, ohne dass etwas
+# fehlschlaegt. Preis dafuer: das Skript braucht Cluster-Zugriff.
 
 HOMELAB_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 CONTROLLER_NS="kube-system"

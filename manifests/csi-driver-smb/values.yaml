@@ -1,10 +1,10 @@
 # SMB CSI Driver
 #
-# Ersetzt den frueheren in-Container-CIFS-Mount des paperless-smb-sync-Sidecars.
-# Der Mount passiert jetzt im Node-Plugin (das ist privilegiert, aber eine
-# abgegrenzte Infrastrukturkomponente), nicht mehr im Anwendungs-Pod.
+# Mountet CIFS-Shares als Volume. Der Mount passiert im Node-Plugin (das ist
+# privilegiert, aber eine abgegrenzte Infrastrukturkomponente) und nicht im
+# Anwendungs-Pod, wo er ein privileged: true erzwingen wuerde.
 #
-# Die kubelet-Directory ist bei k3s der Default /var/lib/kubelet, deshalb bleibt
+# Die kubelet-Directory ist der Default /var/lib/kubelet, deshalb bleibt
 # linux.kubelet unveraendert. Der cifs-Kernelmodul-Support reicht, cifs-utils
 # muss NICHT auf den Nodes installiert sein: die Mount-Tools liegen im
 # smbplugin-Image.

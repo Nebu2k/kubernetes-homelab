@@ -59,10 +59,8 @@ A `python3` with the packages in `docs-generator/requirements.txt`:
 python3 -m pip install -r docs-generator/requirements.txt
 ```
 
-No conda environment is needed. Earlier versions of this hook required one
-named `jinja2` and aborted with `exit 1` when it was missing, which blocked
-every commit in the repository. The hook now skips generation with a warning
-instead, since CI regenerates the README after the push anyway.
+If they are missing, the hook skips generation with a warning instead of
+failing the commit. CI regenerates the README after the push anyway.
 
 Use a different interpreter with `PYTHON=/path/to/python git commit ...`.
 

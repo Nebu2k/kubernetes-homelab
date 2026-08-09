@@ -1,21 +1,16 @@
 # Der monitoring-Namespace als echte Ressource, nur damit das PodSecurity-Label
 # verlaesslich sitzt.
 #
-# Erster Versuch war managedNamespaceMetadata an der Application. Das wirkt aber
-# beim ANLEGEN des Namespace: bei csi-driver-smb, der frisch entstand, sitzt das
-# Label damit sofort, bei monitoring gab es den Namespace laengst und das Label
-# kam nicht mehr an (live geprueft am 2026-08-09, auch nach terminierter
-# Sync-Operation). Als Manifest ist der Namespace Teil des Sync und die Sache
-# eindeutig.
+# managedNamespaceMetadata an der Application taugt dafuer nicht: das wirkt nur
+# beim ANLEGEN des Namespace. Existiert er schon, kommt das Label nicht mehr an,
+# auch nicht nach einer terminierten Sync-Operation. Als Manifest ist der
+# Namespace Teil des Sync und die Sache eindeutig.
 #
 # Gebraucht wird die Ausnahme fuer den node-exporter-DaemonSet: hostNetwork,
 # hostPID, hostPort 9100 und drei hostPath-Volumes, alles unter dem
 # baseline-Profil verboten, das Talos clusterweit erzwingt. Ohne das Label
 # bleibt der DaemonSet bei 0/3, waehrend Prometheus, Grafana und Alertmanager
 # normal starten und die App Synced meldet.
-#
-# Nur in diesem Cluster noetig, k3s erzwingt keine PodSecurity. Deshalb hier im
-# Overlay und nicht in manifests/.
 apiVersion: v1
 kind: Namespace
 metadata:

@@ -1,13 +1,10 @@
 # ADSB-Ultrafeeder: readsb plus tar1090, direkt am RTL-Stick.
 #
-# Loest dump1090-mutability ab, das als apt-Paket auf raspi5 lief und dessen
-# Config nur in /etc/default/dump1090-mutability stand. Der Stick steckt jetzt
-# an pve und wird per qemu-USB in talos-cp-1 durchgereicht.
+# Der Stick steckt an pve und wird per qemu-USB in talos-cp-1 durchgereicht,
+# siehe talos/README.md.
 #
-# Warum Ultrafeeder und nicht docker-readsb-protobuf, das in der ROADMAP als
-# gleichwertige Alternative stand: das Repo ist seit April 2025 archiviert
-# (geprueft am 2026-08-08). Ultrafeeder wird aktiv gepflegt und ist bei
-# sdr-enthusiasts der Nachfolger.
+# Ultrafeeder und nicht docker-readsb-protobuf: dessen Repo ist archiviert,
+# Ultrafeeder wird aktiv gepflegt und ist bei sdr-enthusiasts der Nachfolger.
 apiVersion: apps/v1
 kind: Deployment
 metadata:

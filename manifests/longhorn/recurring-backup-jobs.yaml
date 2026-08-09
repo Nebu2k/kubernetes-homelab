@@ -10,7 +10,7 @@
 # - keep_yearly  = 1  (1 jährliches)
 #
 # Snapshots: Lokal im Cluster (schnelles Recovery)
-# Backups: S3 MinIO (Disaster Recovery)
+# Backups: CIFS-Share am NAS (Disaster Recovery)
 ---
 # === SNAPSHOTS (Lokal) ===
 # Täglicher Snapshot um 1:00 Uhr (behält 7 Tage)
@@ -60,7 +60,7 @@ spec:
     - maintenance
   labels: {}
 ---
-# === BACKUPS (S3 MinIO) ===
+# === BACKUPS (CIFS-Share am NAS) ===
 # Tägliches Backup um 2:00 Uhr (behält 7 Tage)
 apiVersion: longhorn.io/v1beta2
 kind: RecurringJob

@@ -164,25 +164,16 @@
     {
       matchPackageNames: [
         'ghcr.io/sdr-enthusiasts/docker-flightradar24',
-        // Ultrafeeder taggt nach demselben Schema. Seit dem 2026-08-08 im
-        // Talos-Cluster, es ersetzt dump1090-mutability auf raspi5.
+        // Ultrafeeder taggt nach demselben Schema.
         'ghcr.io/sdr-enthusiasts/docker-adsb-ultrafeeder',
       ],
       versioning: 'regex:^latest-build-(?<major>\\d+)$',
     },
 
-    // paperless-ngx: die Major-Sperre ist am 2026-08-04 mit dem Sprung auf
-    // v3.0.5 entfallen. Die drei Settings-Gruppen aus den Breaking Changes sind
-    // im Deployment nachgezogen, der tantivy-Index wurde beim ersten Start neu
-    // gebaut. Damit greift wieder die allgemeine Regel; der Automerge bleibt
-    // aber aus (Regel weiter unten), weil auch Patch-Releases Migrationen
-    // mitbringen koennen und hier persoenliche Dokumente haengen.
-
-    // unpoller: die Major-Sperre ist am 2026-08-01 mit dem Sprung auf v3.3.4
-    // entfallen. Der befuerchtete Metrik-Bruch war keiner (gemessener Diff
-    // v2.39.0 gegen v3.3.4: eine Metrik weg, die niemand referenziert, alle
-    // Label-Aenderungen rein additiv). unpoller faellt damit unter die
-    // allgemeinen Regeln: Patches automergen, Majors werden ein PR.
+    // paperless-ngx und unpoller haben keine eigene Major-Sperre. Fuer
+    // paperless bleibt der Automerge trotzdem aus (Regel weiter unten): auch
+    // Patch-Releases koennen Migrationen mitbringen, und dort haengen
+    // persoenliche Dokumente.
 
     // Talos: dieselbe Bauart wie der ArgoCD-Anker. Der Merge rollt nichts aus,
     // also "chore" ohne Release und ohne CHANGELOG-Eintrag, der ein Upgrade
@@ -234,13 +225,12 @@
     // sofort aus.
     //
     // Helm-Charts (Manager "argocd") sind bewusst NICHT dabei, unabhaengig vom
-    // Versionssprung. Der erste grosse Durchlauf am 2026-07-30 hat gezeigt,
-    // dass gruene CI bei Charts nichts ueber Upgrade-Pfade und Cluster-Schema
-    // aussagt: Longhorn 1.10 -> 1.12 rendert sauber und haette die
-    // Storage-Schicht beschaedigt, kube-prometheus-stack 80 -> 87 blockierte
-    // ArgoCD mit einem ComparisonError, MetalLB 0.15 -> 0.16 hat FRR auf allen
-    // Nodes eingeschaltet. Alle drei waeren gruen durchgelaufen. Details in
-    // ROADMAP.md.
+    // Versionssprung. Gruene CI sagt bei Charts nichts ueber Upgrade-Pfade und
+    // Cluster-Schema aus: ein Longhorn-Sprung ueber mehrere Minors rendert
+    // sauber und beschaedigt die Storage-Schicht, kube-prometheus-stack
+    // blockiert ArgoCD mit einem ComparisonError, wenn die CRDs nicht vorlaufen,
+    // und MetalLB hat mit 0.16 FRR auf allen Nodes eingeschaltet. Alles drei
+    // waere gruen durchgelaufen.
     //
     // Die customManager-Deps (siderolabs/talos, kubernetes/kubernetes) fallen
     // hier schon durch matchManagers raus. Das ist Absicht: ein Talos-Upgrade

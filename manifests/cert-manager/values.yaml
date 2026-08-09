@@ -26,8 +26,8 @@ startupapicheck:
 # prometheus.enabled ist der Chart-Default und heisst NUR, dass die Pods
 # prometheus.io-Annotationen bekommen. Die wertet dieser Stack nicht aus, er
 # arbeitet ausschliesslich mit ServiceMonitors. Ohne servicemonitor.enabled
-# gab es hier deshalb bis 2026-08-06 keine einzige certmanager_*-Metrik,
-# obwohl die Services auf 9402 die ganze Zeit welche lieferten.
+# kommt deshalb keine einzige certmanager_*-Metrik an, obwohl die Services auf
+# 9402 durchgehend welche liefern.
 prometheus:
   enabled: true
   servicemonitor:

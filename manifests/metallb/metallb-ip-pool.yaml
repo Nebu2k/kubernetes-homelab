@@ -6,10 +6,10 @@ metadata:
   namespace: metallb-system
 spec:
   addresses:
-    # Ein durchgehender Bereich, seit der Talos-VIP am 2026-08-09 von der .248
-    # auf die .29 gezogen ist. Vorher musste der Pool um die .248 herumgebaut
-    # werden (.240-.247 plus .249-.253), sonst haette MetalLB irgendwann den
-    # Kubernetes-Endpoint des Clusters an einen Service vergeben.
+    # Ein durchgehender Bereich. Der VIP des Clusters liegt bewusst ausserhalb
+    # (192.168.2.29, siehe talos/talconfig.yaml), sonst muesste der Pool ein
+    # Loch haben, damit MetalLB die Kubernetes-API nicht an einen Service
+    # vergibt.
     #
     # Die .250 traegt Traefik (UniFi-Portforward auf 80/443 und der
     # Split-Horizon-Wildcard *.elmstreet79.de). Sie ist in

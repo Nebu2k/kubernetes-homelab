@@ -1,8 +1,6 @@
 # Offsite-Backup des Talos-etcd.
 #
-# Nur fuer das Talos-Cluster gedacht, im k3s-Cluster macht das der
-# Server-Prozess selbst (manifests/etcd-s3-config/). Eingebunden ist es
-# entsprechend ueber apps/etcd-backup.yaml.
+# Eingebunden ueber apps/etcd-backup.yaml.
 #
 # Kein namespace.yaml: kube-system existiert immer. Frei waehlbar ist der
 # Namespace hier trotzdem nicht, machine.features.kubernetesTalosAPIAccess in

@@ -38,31 +38,26 @@ defaultRules:
     kubeControllerManager: false  # K3s controller metrics not exposed
     kubeProxy: false  # K3s uses kube-router instead of kube-proxy
 
-# Disable K3s components that don't expose metrics
+# Ohne im Cluster erreichbaren Metrik-Endpoint, deshalb aus.
 kubeScheduler:
   enabled: false
 kubeControllerManager:
   enabled: false
 kubeProxy:
   enabled: false
-# etcd laeuft hier sehr wohl: drei Member auf cp-1, raspi4 und raspi5.
-# (Der fruehere Kommentar "K3s uses embedded SQLite by default" an dieser Stelle
-# und bei defaultRules war schlicht falsch, das Cluster wurde mit --cluster-init
-# aufgesetzt.)
-#
-# enabled: true schaltet hier nur die Alert-Regeln und das etcd-Dashboard frei.
-# Gescrapt wird NICHT ueber den Chart, sondern ueber etcd-scrapeconfig.yaml.
+# etcd laeuft auf allen drei Control-Plane-Nodes. enabled: true schaltet hier
+# nur die Alert-Regeln und das etcd-Dashboard frei, gescrapt wird NICHT ueber
+# den Chart, sondern ueber etcd-scrapeconfig.yaml.
 #
 # Grund: der Chart-Weg fuer externe etcd-Member ist `endpoints:`, und daraus
-# entsteht ein Endpoints-Objekt. ArgoCD hat `Endpoints` und `EndpointSlice`
-# global in `resource.exclusions` (argocd-cm) und wendet sie deshalb nie an. Der
-# Service kam am 2026-08-07 sauber im Cluster an, das Endpoints-Objekt lautlos
-# nicht: ein Ziel, das nie erscheint, und keine Fehlermeldung dazu. Service und
-# ServiceMonitor bleiben darum aus, sonst stehen sie leer herum.
+# entsteht ein Endpoints-Objekt. ArgoCD hat `Endpoints` und `EndpointSlice` in
+# `resource.exclusions` und wendet sie deshalb nie an: der Service kaeme sauber
+# im Cluster an, das Endpoints-Objekt lautlos nicht, also ein Ziel, das nie
+# erscheint, ohne Fehlermeldung dazu. Service und ServiceMonitor bleiben darum
+# aus, sonst stehen sie leer herum.
 #
-# Voraussetzung auf den Nodes: --etcd-expose-metrics=true in der k3s.service,
-# sonst bindet Port 2381 nur auf 127.0.0.1. Gesetzt am 2026-08-07 auf allen drei
-# Servern, siehe README.
+# Voraussetzung auf den Nodes ist listen-metrics-urls in talos/talconfig.yaml,
+# sonst bindet Port 2381 nur auf 127.0.0.1.
 kubeEtcd:
   enabled: true
   service:
@@ -73,11 +68,10 @@ kubeEtcd:
 # Prometheus configuration
 prometheus:
   prometheusSpec:
-    # Steht seit der Parallelphase mit dem k3s-Cluster hier. Beide Instanzen
-    # alarmierten in dieselbe SNS-Topic, und ohne unterscheidendes Label stand
-    # in der Mail nur der Alertname. Bleibt stehen: das group_by in dieser Datei
-    # enthaelt 'cluster' ohnehin, und wenn je ein zweites Cluster dazukommt, ist
-    # die Unterscheidung schon da.
+    # Steht in jedem Alert und damit in der Mail. Bei nur einem Cluster
+    # redundant, aber das group_by in dieser Datei enthaelt 'cluster' ohnehin:
+    # kommt je eine zweite Instanz dazu, die in dieselbe SNS-Topic alarmiert,
+    # ist die Unterscheidung schon da.
     externalLabels:
       cluster: talos
     # Use EndpointSlice instead of deprecated Endpoints API (required for Kubernetes v1.33+)
@@ -95,12 +89,10 @@ prometheus:
     # Run on worker nodes only.
     #
     # arch ist hier bewusst zusaetzlich gesetzt und keine Doppelung: das
-    # worker-Label tragen heute nur worker-1 und prodesk (beide amd64), aber es
-    # ist eine Konvention, die jeder Node bekommen kann. Prometheus ist der
-    # speicherhungrigste Pod im Cluster, auf einem der ARM-Raspis waere er ein
-    # Problem fuer die Node und fuer sich selbst. amd64 macht daraus eine
-    # Eigenschaft der Hardware statt eines Versprechens ueber Labels.
-    # Gegenstueck zur verworfenen VictoriaMetrics-Migration (siehe ROADMAP).
+    # worker-Label tragen alle Nodes, es sagt nur "traegt Workloads". Prometheus
+    # ist der speicherhungrigste Pod im Cluster, auf raspi5 waere er ein Problem
+    # fuer die Node und fuer sich selbst. amd64 macht daraus eine Eigenschaft
+    # der Hardware statt eines Versprechens ueber Labels.
     nodeSelector:
       node-role.kubernetes.io/worker: worker
       kubernetes.io/arch: amd64
@@ -124,9 +116,10 @@ prometheus:
     # snapshot-daily, snapshot-cleanup-daily, filesystem-trim-weekly).
     # Without these, the volume falls into the "default" group, which has no jobs.
     #
-    # BEWUSST OHNE die backup-Gruppe (2026-08-01). Dieses Volume war mit Abstand
-    # der teuerste Posten im Backup-Bestand: 97 GB von insgesamt 126 GB, bei nur
-    # 37 GiB Live-Daten. Grund ist die Kombination aus TSDB und Retention-Kette:
+    # BEWUSST OHNE die backup-Gruppe. Dieses Volume ist sonst mit Abstand der
+    # teuerste Posten im Backup-Bestand, in der Groessenordnung 97 GB von 126 GB
+    # bei 37 GiB Live-Daten. Grund ist die Kombination aus TSDB und
+    # Retention-Kette:
     # Prometheus schreibt seine Blocks permanent um, und jeder der bis zu 18
     # Behaltepunkte (7 daily + 4 weekly + 6 monthly + 1 yearly) haelt die
     # geaenderten Bloecke fest.
@@ -142,17 +135,15 @@ prometheus:
     # und der setzt backup, snapshot und maintenance. Das frisch provisionierte
     # Volume traegt also backup, egal was hier steht.
     #
-    # Beim Neubau des Clusters am 2026-08-09 war die Ausnahme deshalb wieder weg
-    # und die 40-GiB-TSDB landete erneut auf dem NAS. Am 2026-08-09 von Hand
-    # abgestellt:
+    # Nach jedem Neuanlegen dieses Volumes (Cluster-Neubau, PVC geloescht und
+    # neu gebunden) muss die Gruppe deshalb von Hand wieder weg, sonst landet
+    # die TSDB erneut im Backup:
     #
     #   kubectl -n longhorn-system label volumes.longhorn.io <pvc-...> \
     #     recurring-job-group.longhorn.io/backup-
     #
-    # Nach jedem Neuanlegen dieses Volumes (Cluster-Neubau, PVC geloescht und
-    # neu gebunden) faellt der Handgriff wieder an. Die Labels hier bleiben
-    # trotzdem stehen: sie dokumentieren die Absicht an der Stelle, an der man
-    # sie sucht.
+    # Die Labels hier bleiben trotzdem stehen: sie dokumentieren die Absicht an
+    # der Stelle, an der man sie sucht.
     storageSpec:
       volumeClaimTemplate:
         metadata:
@@ -234,27 +225,13 @@ grafana:
   # sondern als ConfigMap mit dem Label grafana_dashboard=1, siehe
   # kustomization.yaml und dashboards/.
   #
-  # Am 2026-08-07 sind drei Eintraege rausgeflogen, weil ihre Queries auf
-  # Metriken zeigen, die dieses Cluster nicht hat. Alle drei liefen still
-  # weiter und zeigten leere Panels statt einer Fehlermeldung:
-  #
-  # - nginx-ingress (9614): 12 von 12 Metriken fehlten. Das Dashboard ist fuer
-  #   den ingress-nginx-Controller, hier laeuft Traefik. Ersetzt durch das
-  #   eigene Board "Traefik (Ingress)".
-  # - kubernetes-cluster (7249, revision 1): kubelet_running_pod_count gibt es
-  #   nicht mehr, und die Panels selektieren auf die cAdvisor-Labels
-  #   container_name und pod_name, die mit k8s 1.16 verschwunden sind. Die
-  #   Chart-eigenen Boards (k8s-resources-*, nodes, namespace-by-pod) deckten
-  #   dasselbe ohnehin besser ab.
-  # - proxmox-prometheus (24550): 28 von 50 Metriken fehlten. Das Dashboard
-  #   erwartet den prometheus-pve-exporter mit SMART- und Disk-Collectors, hier
-  #   laeuft bigtcze/pve-exporter. Ersetzt durch das eigene Board
-  #   "Proxmox (pve)", das nur die vorhandenen Metriken nutzt.
-  #
-  # Vor jedem neuen gnetId-Eintrag lohnt derselbe Test: Dashboard-JSON ziehen,
-  # die Metriknamen aus den Queries gegen /api/v1/label/__name__/values
-  # abgleichen. Ein Dashboard, das nicht passt, sieht sonst genauso aus wie
-  # eines, bei dem gerade nichts passiert.
+  # Vor jedem neuen gnetId-Eintrag lohnt ein Test: Dashboard-JSON ziehen, die
+  # Metriknamen aus den Queries gegen /api/v1/label/__name__/values abgleichen.
+  # Ein Community-Board, dessen Metriken es hier nicht gibt, meldet sich nicht,
+  # es zeigt leere Panels und sieht damit genauso aus wie eines, bei dem gerade
+  # nichts passiert. Genau daran sind mehrere gescheitert (nginx-Boards fuer
+  # Traefik, pve-Boards fuer einen anderen Exporter): eigene Boards unter
+  # dashboards/ sind in solchen Faellen der kuerzere Weg.
   dashboards:
     default:
       # Node exporter full
@@ -435,23 +412,16 @@ prometheusOperator:
   nodeSelector:
     node-role.kubernetes.io/worker: worker
   
-  # KEIN prometheusOperator.namespaces mehr, der Operator sieht alle Namespaces.
+  # KEIN prometheusOperator.namespaces setzen, der Operator soll alle
+  # Namespaces sehen.
   #
-  # Das Feld war eine Allowlist und ihr Versagen war still: ein ServiceMonitor
-  # ausserhalb der Liste wurde nicht abgelehnt, sondern ignoriert. Kein
-  # Scrape-Pool, kein Target, keine Zeile im Operator-Log, in ArgoCD stand er
-  # gruen und synced da. Gekostet hat das den Traefik-ServiceMonitor: in
-  # manifests/traefik/values.yaml steht seit jeher metrics.prometheus.
-  # serviceMonitor.enabled = true, und trotzdem gab es bis 2026-08-06 keine
-  # einzige traefik_*-Metrik. Der einzige Eingang ins Cluster war unbeobachtet.
-  # Aufgefallen ist es erst, als Gatus denselben Fehler ausloeste.
+  # Das Feld ist eine Allowlist und ihr Versagen ist still: ein ServiceMonitor
+  # ausserhalb der Liste wird nicht abgelehnt, sondern ignoriert. Kein
+  # Scrape-Pool, kein Target, keine Zeile im Operator-Log, in ArgoCD steht er
+  # gruen und synced da. Eine Liste, die man bei jedem neuen Dienst nachziehen
+  # muss und deren Vergessen nicht auffaellt, ist im Homelab die schlechtere
+  # Wahl als der Default. Zugriffsrechte kostet das nichts: der Operator haengt
+  # an einer ClusterRole, Namespace-Roles gibt es keine.
   #
-  # Die Liste war ausserdem in beide Richtungen falsch: ingress-nginx stand
-  # drin, obwohl es den Namespace hier gar nicht gibt (Traefik hat nginx
-  # abgeloest). Eine Liste, die man bei jedem neuen Dienst nachziehen muss und
-  # deren Vergessen nicht auffaellt, ist im Homelab die schlechtere Wahl als
-  # der Default. Zugriffsrechte kostet das nichts: der Operator haengt an einer
-  # ClusterRole, Namespace-Roles gibt es keine.
-  #
-  # Was bleibt, ist die serviceMonitorSelector-Ebene weiter oben
+  # Die Auswahl passiert stattdessen ueber serviceMonitorSelector weiter oben
   # (serviceMonitorSelectorNilUsesHelmValues: false = alle Labels erlaubt).

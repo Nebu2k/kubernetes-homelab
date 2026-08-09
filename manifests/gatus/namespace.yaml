@@ -10,7 +10,6 @@ metadata:
     # waere also genau der stille, gegen den der Relay gebaut wurde.
     #
     # Wie bei manifests/readsb/namespace.yaml bewusst am Namespace und nicht
-    # als Ausnahme im Cluster-Overlay: die Bedingung haengt am Pod, nicht am
-    # Cluster. Unter k3s ist das Label wirkungslos, dort ist keine
-    # PodSecurity-Erzwingung konfiguriert.
+    # als Ausnahme in talos/talconfig.yaml: die Bedingung haengt am Pod, nicht
+    # am Cluster, und eine Aenderung dort rebootet die Control-Plane.
     pod-security.kubernetes.io/enforce: privileged

@@ -9,8 +9,6 @@
 #   .github/scripts/validate.sh arch       # nur der arm64-Test der Images
 #
 # Liegt unter .github/, weil es zur CI gehoert und nicht zum Cluster-Inhalt.
-# Ein Repo-Root-scripts/ gab es frueher, das war der Ablageort fuer lokale
-# Skripte mit Credentials und ist am 2026-08-05 samt .gitignore-Regel weg.
 #
 # Zweck: Gate fuer Renovate-Automerge. Faengt kaputte Manifeste ab, BEVOR sie
 # auf main landen, weil ArgoCD dort mit selfHeal + prune sofort ausrollt.

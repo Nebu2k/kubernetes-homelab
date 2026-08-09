@@ -22,7 +22,7 @@ SPECIAL_CASES = {}
 
 # Common acronyms that should stay uppercase
 ACRONYMS = {'nfs', 's3', 'api', 'dns', 'tls', 'ssl', 'http', 'https',
-            'k3s', 'k8s', 'cpu', 'ram', 'gpu', 'io', 'ip', 'vpn', 'ssh'}
+            'k8s', 'cpu', 'ram', 'gpu', 'io', 'ip', 'vpn', 'ssh'}
 
 
 def get_sync_waves():
@@ -362,9 +362,9 @@ def get_sealed_secrets():
 
     The .example files are the single source of truth here: a new secret shows
     up in the README as soon as its template is committed, and a removed one
-    disappears with it. Nothing about secrets is hardcoded in the template
-    anymore -- that is how the README kept advertising MinIO months after the
-    backup target had moved to the NAS.
+    disappears with it. Nothing about secrets is hardcoded in the template, so
+    the generated README cannot keep advertising a backup target that has
+    already moved.
 
     Returns a list of dicts, sorted by component then secret name.
     """

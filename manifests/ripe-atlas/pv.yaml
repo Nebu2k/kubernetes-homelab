@@ -1,9 +1,9 @@
 # Die beiden PVs zu den aus dem NAS-Backup restaurierten Longhorn-Volumes.
 #
-# Sie stehen hier und nicht in manifests/, weil sie ein Zustand dieses Clusters
-# sind: im k3s-Cluster hat der Provisioner die PVs dynamisch angelegt und sie
-# heissen dort pvc-<uuid>. Ein Restore erzeugt dagegen ein Volume mit einem
-# gewaehlten Namen, und dazu gehoert ein handgeschriebenes PV.
+# Dynamisch provisionierte PVs legt der Provisioner selbst an, sie heissen
+# pvc-<uuid> und stehen in keinem Manifest. Ein Restore erzeugt dagegen ein
+# Volume mit einem gewaehlten Namen, und dazu gehoert ein handgeschriebenes
+# PV.
 #
 # Warum ueberhaupt ins git und nicht bloss von Hand angelegt: ohne PV bindet die
 # PVC aus manifests/ripe-atlas/pvc.yaml an ein FRISCH provisioniertes, leeres
@@ -34,9 +34,8 @@ spec:
     storage: 128Mi
   accessModes:
     - ReadWriteOnce
-  # Delete wie bei den dynamisch provisionierten PVs im k3s-Cluster. Ein Prune
-  # der App nimmt damit auch hier das Volume mit, so wie es die ROADMAP fuer den
-  # Migrationsschritt beschreibt.
+  # Delete wie bei den dynamisch provisionierten PVs: ein Prune der App nimmt
+  # damit auch hier das Longhorn-Volume mit.
   persistentVolumeReclaimPolicy: Delete
   storageClassName: longhorn
   volumeMode: Filesystem

@@ -1,63 +1,42 @@
-# Netzwerk-Gegenmassnahmen fuer raspi5, nach siderolabs/sbc-raspberrypi#91
+# Netzwerk-Einstellungen fuer raspi5, nach siderolabs/sbc-raspberrypi#91
 #
-# WARUM ES DAS GIBT: am 2026-08-09 hat der etcd-Leader (prodesk) in Richtung
-# raspi5 2034 mal "dropped internal Raft message since sending buffer is full"
-# protokolliert, dazu 16 mal "lost TCP streaming connection with remote peer"
-# mit error=EOF und 38 mal "prober detected unhealthy status" mit i/o timeout.
-# raspi5 sah in derselben Zeit 20 Leader-Wechsel, prodesk 2 und talos-cp-1 1,
-# bei clusterweit stehendem Raft-Term. Es gab also keine Wahl, dieser eine
-# Member verlor wiederholt den Kontakt.
+# WARUM ES DAS GIBT: end0 kommt mit einem 512er-TX-Ring und aktivem TSO/GSO
+# hoch. Sobald echter Verkehr anliegt, haengt der macb-TX-Ring lautlos. Fuer
+# etcd sieht das so aus: der Leader protokolliert massenhaft "dropped internal
+# Raft message since sending buffer is full" in Richtung raspi5, dazu "lost TCP
+# streaming connection with remote peer" mit error=EOF und "prober detected
+# unhealthy status" mit i/o timeout. raspi5 sieht dabei laufend neue Leader,
+# waehrend der Raft-Term clusterweit steht: es gibt keine Wahl, dieser eine
+# Member verliert nur wiederholt den Kontakt.
 #
-# WAS DABEI AUSGESCHLOSSEN WURDE, jeweils gemessen: die Leitung (ICMP 4,35 ms,
-# 0 % Verlust, identisch zu den anderen Nodes), der Link (1000 Mbit/s, null
-# NIC-Fehler, MTU wie ueberall), die Platte (WAL-fsync 5 ms, Backend-Commit
-# 7,8 ms, beide flach), die CPU (16 %), die Verdraengung (PSI 3,68 % gegen
-# prodesks 3,87 %, und prodesk ist gesund), Speicher, Temperatur (62 C) und
-# cgroup-Drosselung (alles max, Throttled 0s).
+# DAS TUECKISCHE DARAN IST, DASS ALLES ANDERE GESUND AUSSIEHT. Leitung (ICMP um
+# 4 ms, 0 % Verlust), Link (1000 Mbit/s, null NIC-Fehler, MTU wie ueberall),
+# Platte (WAL-fsync im einstelligen Millisekundenbereich), CPU, Speicher,
+# Temperatur und cgroup-Drosselung sind unauffaellig, ethtool zaehlt NULL
+# Fehler und dmesg schweigt. Mit den ueblichen Netzwerk-Alerts faellt es nicht
+# auf.
 #
-# Genau dieses Muster beschreibt Issue #91: ein macb-TX-Ring, der lautlos
-# haengt, langlebige TCP-Verbindungen, die offen aussehen und trotzdem keine
-# Writes durchbringen, und dabei NULL Fehlerzaehler in ethtool und nichts in
-# dmesg. Deshalb faellt es mit den ueblichen Netzwerk-Alerts nicht auf.
+# DIE IRREFUEHRENDE SPUR: die Stalls setzen ein, wenn raspi5 Longhorn-Repliken
+# bekommt. Die Longhorn-Last ist aber nicht die Ursache, sie ist nur der
+# Verkehr, der den zu kleinen TX-Ring erstmals fuellt.
 #
 # DREI TRIGGER, DREI GEGENMASSNAHMEN:
-#   1. EEE-AutogrEEEn-LPI-Wake-Race auf PHY-Ebene  -> eee off
+#   1. EEE-AutogrEEEn-LPI-Wake-Race auf PHY-Ebene    -> eee off
 #   2. macb TSO/GSO TX-Ring-Hang, ohne Treiberfehler -> tso off, gso off
-#   3. zu kleiner Default-Ring (512)                -> rx 4096, tx 2048
+#   3. zu kleiner Default-Ring (512)                 -> rx 4096, tx 2048
 #
-# Der macb-TX-Fix aus netdev ist in Talos v1.13.3 eingeflossen und wir laufen
-# v1.13.8, Trigger 2 sollte also bereits entschaerft sein. Trigger 1 gilt im
-# Issue ausdruecklich nur als reduziert, nicht behoben. Deshalb hier alle drei:
-# sie kosten nichts ausser etwas TX-Effizienz und sind jederzeit reversibel.
+# Der macb-TX-Fix aus netdev ist in Talos v1.13.3 eingeflossen, Trigger 2
+# sollte damit bereits entschaerft sein. Trigger 1 gilt im Issue ausdruecklich
+# nur als reduziert, nicht behoben, und laesst sich hier gar nicht pruefen:
+# "ethtool --show-eee end0" antwortet mit "netlink error: Not supported".
+# Deshalb alle drei, sie kosten nichts ausser etwas TX-Effizienz und sind
+# jederzeit reversibel.
 #
-# BELEGT AM 2026-08-09, der Verdacht hat sich bestaetigt. Gemessen wurde beim
-# Ausrollen um 14:42:53:
+# WAS ES BRINGT, gemessen beim Ausrollen: etcd-Stalls von 8 bis 42 pro Minute
+# auf 0, Peer-Latenz zu und von raspi5 von 200 bis 370 ms auf 6 bis 13 ms.
 #
-#   Ring-Buffer standen auf 512/512, also exakt dem Default aus dem Issue.
-#   TSO und GSO waren an.
-#
-#   etcd-Stalls auf raspi5   vorher 8 bis 42 pro Minute, durchgehend ueber
-#                            Stunden, mit bis zu 3,8 s
-#                            nachher 0 in 16 Minuten
-#   Peer-Latenz prodesk->raspi5   370,7 ms -> 12,7 ms
-#              talos-cp-1->raspi5 195,1 ms ->  6,3 ms
-#              raspi5->prodesk    185,3 ms -> 12,7 ms
-#              raspi5->talos-cp-1 331,8 ms -> 10,4 ms
-#   Leader-Wechsel raspi5    vorher rund 9 je 30 Minuten, danach 16 Minuten
-#                            unveraendert bei 27
-#
-# Die Spitze um 14:42/14:43 (6,4 s und 7,2 s) ist der Link-Reset von
-# "ethtool -G" selbst und gehoert dazu.
-#
-# Die Longhorn-Last auf raspi5 war also NICHT die Ursache, obwohl die Stalls
-# zeitlich mit den ersten Repliken begannen. Sie war nur der Verkehr, der den
-# zu kleinen TX-Ring erstmals gefuellt hat. Das ist der Grund, warum es
-# ausgerechnet an dem Tag auffiel, an dem raspi5 Speicher-Node wurde.
-#
-# EEE liess sich nicht pruefen: "ethtool --show-eee end0" antwortet mit
-# "netlink error: Not supported", der Treiber gibt es nicht her. Trigger 1 aus
-# dem Issue ist damit weder ausgeschlossen noch entschaerft. Da die zwei
-# uebrigen Massnahmen gereicht haben, bleibt das offen und braucht nichts.
+# Die Werte ueberleben einen Link-Reset nicht, deshalb ein DaemonSet, das sie
+# haelt, und kein einmaliger Aufruf.
 apiVersion: apps/v1
 kind: DaemonSet
 metadata:

@@ -8,21 +8,18 @@
 #     eigenem Timer. Scheitert der Upload, schreibt der Sidecar "ERROR" ins Log
 #     und schlaeft weiter. Der Job bleibt gruen.
 #   - Home Assistant: es gibt gar keinen Job. HA laedt selbst hoch, und wenn das
-#     ausfaellt, faellt es still aus. Beleg vom 2026-08-05: nach dem Key-Tausch
-#     wechselte die Agenten-ID, das automatische Backup ging nur noch nach
-#     backup.local, und HA hat dazu genau eine WARNING-Zeile geschrieben. In der
-#     UI sah alles gesund aus. Auch der Sensor
-#     sensor.backup_last_successful_automatic_backup stand danach auf gruen, denn
-#     ein Backup war ja entstanden.
+#     ausfaellt, faellt es still aus. Wechselt zum Beispiel beim Key-Tausch die
+#     Agenten-ID, geht das automatische Backup nur noch nach backup.local, und
+#     HA schreibt dazu genau eine WARNING-Zeile. In der UI sieht alles gesund
+#     aus, und der Sensor sensor.backup_last_successful_automatic_backup steht
+#     auf gruen, denn ein Backup ist ja entstanden.
 #   - teslamate: hier ist die Luecke am kleinsten (Dump und Upload sind derselbe
 #     Job), aber der Bucket ist trotzdem die einzige Stelle, an der man das
 #     Ergebnis sieht statt der Absicht.
 #   - etcd: hier zaehlt, dass JEDE Control-Plane einzeln geprueft wird. Den
-#     Upload machen seit dem Talos-Umstieg eigene CronJobs je Node
-#     (manifests/etcd-backup/), einer davon kann still ausfallen, ohne dass die
-#     Summe im Bucket auffaellig aussieht. Unter k3s war die Luecke noch
-#     groesser: dort lud der Server-Prozess selbst hoch, ohne Pod, ohne Job und
-#     ohne Kubernetes-Event, nur mit einer Zeile im journal der Node.
+#     Upload machen eigene CronJobs je Node (manifests/etcd-backup/), einer
+#     davon kann still ausfallen, ohne dass die Summe im Bucket auffaellig
+#     aussieht.
 #
 # Der Job faellt mit exit 1 aus, sobald ein Bucket zu alt ist. Das Melden macht
 # die Alert-Regel OffsiteBackupFreshnessCheckFailing in
@@ -41,10 +38,8 @@ spec:
   #
   # timeZone ist hier PFLICHT und nicht Kosmetik. Ohne das Feld laeuft ein
   # CronJob in der Zeitzone der Node, die gerade den kube-controller-manager
-  # haelt, und das sind im Cluster mal Europe/Berlin (die Raspis) und mal
-  # Etc/UTC (die x86-Nodes). Der Zeitplan wandert also mit dem Lease. Gemessen
-  # am 2026-08-05: "0 2 * * *" feuerte um 00:00 UTC, weil der Lease bei raspi5
-  # lag.
+  # haelt, und die Nodes haben nicht alle dieselbe. Der Zeitplan wandert also
+  # mit dem Lease: "0 2 * * *" kann genauso gut um 00:00 UTC feuern.
   schedule: "0 6 * * *"
   timeZone: "Etc/UTC"
   successfulJobsHistoryLimit: 3
@@ -149,10 +144,9 @@ spec:
                   # --delete und laedt nur hoch, was sich geaendert hat, und
                   # "document_exporter" behaelt die alten mtimes der Medien-
                   # Dateien bei. Aendert sich an den Dokumenten tagelang nichts,
-                  # wird auch tagelang nichts hochgeladen: gemessen am
-                  # 2026-08-05 stammten von 218 Objekten die aeltesten aus dem
-                  # Maerz und am 2026-08-03 kam gar nichts an. "Juengstes Objekt"
-                  # waere also ein Fehlalarm-Generator.
+                  # wird auch tagelang nichts hochgeladen, und die aeltesten
+                  # Objekte im Bucket sind Monate alt. "Juengstes Objekt" waere
+                  # also ein Fehlalarm-Generator.
                   #
                   # last-export.txt schreibt der Export-CronJob nach jedem
                   # erfolgreichen Lauf frisch, damit hat sie immer eine neue
@@ -164,11 +158,11 @@ spec:
                   # etcd: auf JEDER Control-Plane laeuft alle 12h ein eigener
                   # Snapshot-CronJob, und geprueft wird JEDE Node einzeln.
                   #
-                  # Bis 2026-08-05 stand hier eine einzige Pruefung ueber den
-                  # ganzen Bucket. Die war gruen, sobald EINE Node lieferte, und
-                  # hat genau deshalb verdeckt, dass ueberhaupt nur cp-1 je etwas
-                  # hochgeladen hatte. Ein Bucket-Alter sagt nichts darueber, ob
-                  # noch drei Erzeuger leben.
+                  # Eine einzige Pruefung ueber den ganzen Bucket waere gruen,
+                  # sobald EINE Node liefert, und wuerde damit verdecken, dass
+                  # die anderen beiden seit Wochen nichts mehr hochladen. Ein
+                  # Bucket-Alter sagt nichts darueber, ob noch drei Erzeuger
+                  # leben.
                   #
                   # Der Objektname traegt den Node-Namen
                   # ("etcd-snapshot-<node>-<unix-ts>"), node-eigene Ordner
@@ -184,9 +178,8 @@ spec:
                   # Die Liste muss deshalb zu den CronJobs in
                   # manifests/etcd-backup/ passen, in BEIDE Richtungen. Eine
                   # Node, die dort fehlt, sichert nicht; eine Node, die hier
-                  # fehlt, sichert unbeobachtet. raspi5 war am 2026-08-09 genau
-                  # der zweite Fall. Beim Abbau von talos-cp-2 gehoert er aus
-                  # beiden Dateien entfernt, sonst meldet diese Zeile ab 26h
+                  # fehlt, sichert unbeobachtet. Beim Abbau einer Node gehoert
+                  # sie aus beiden Dateien raus, sonst meldet diese Zeile ab 26h
                   # nach dem letzten Snapshot dauerhaft rot.
                   #
                   # 26h statt 18h: pro Node ist der Abstand 12h (die CronJobs in

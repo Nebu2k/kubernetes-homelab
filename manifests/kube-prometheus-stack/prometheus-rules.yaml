@@ -11,8 +11,8 @@ spec:
   groups:
     # Node filesystem alerts
     #
-    # Zwei Filter, die seit 2026-08-07 dazugehoeren, seit pve und macmini per
-    # ScrapeConfig unter job=node-exporter mit drinhaengen:
+    # Zwei Filter, die dazugehoeren, weil pve und macmini per ScrapeConfig
+    # unter job=node-exporter mit drinhaengen:
     #
     # - `unless ... node_filesystem_readonly == 1`: macOS mountet die
     #   CoreSimulator-Runtimes als readonly-Volumes, die konstruktionsbedingt zu
@@ -144,14 +144,14 @@ spec:
             summary: "Longhorn node storage usage is critical"
             description: "Node {{ $labels.node }} storage is {{ $value | humanizePercentage }} full (threshold: 90%)."
 
-    # Scheduling-Budget statt echter Belegung (seit 2026-08-09)
+    # Scheduling-Budget statt echter Belegung
     #
     # Die beiden Alerts oben messen `usage / capacity`, also was wirklich auf der
     # Platte liegt. Longhorn plant aber nach der ANGEFORDERTEN Volumegroesse,
-    # und ein Volume kann lange vorher unplatzierbar werden. Gemessen am
-    # 2026-08-09: prodesk lag bei 80,1 % seines Scheduling-Budgets und bei
-    # 16,3 % echter Belegung. Die Alerts oben haetten also geschwiegen,
-    # waehrend die Node keine neue Replik mehr angenommen haette.
+    # und ein Volume kann lange vorher unplatzierbar werden. Die beiden Zahlen
+    # gehen weit auseinander: 80 % Scheduling-Budget bei 16 % echter Belegung
+    # ist ein normaler Betriebspunkt. Die Alerts oben schweigen dann, waehrend
+    # die Node keine neue Replik mehr annimmt.
     #
     # Das Fehlerbild ohne diese Regeln: eine neue PVC bleibt auf `Pending`, das
     # Volume auf `Scheduling Failed`, der Pod startet nie. Nichts davon ist ein
@@ -253,11 +253,10 @@ spec:
               Pending, jeder zugehoerige Pod startet nicht. Auch ein Rebuild
               nach einem Node-Ausfall findet dann kein Ziel mehr.
 
-    # Backup-Ziel-Alerts (seit dem Wechsel MinIO -> SMB-Share am UniFi-NAS,
-    # 2026-08-01). Vorher gab es hier eine Luecke: die Longhorn-Alerts oben
-    # decken Volumes und Node-Disks ab, aber nichts davon haette gemeldet, dass
-    # Backups nicht mehr durchlaufen. Bei MinIO war das folgenlos (eigene VM mit
-    # 484 GB), beim NAS-Share mit 300 GB waere ein stiller Ausfall teuer.
+    # Backup-Ziel-Alerts. Die Longhorn-Alerts oben decken Volumes und
+    # Node-Disks ab, aber keiner davon meldet, dass Backups nicht mehr
+    # durchlaufen. Das Ziel ist ein SMB-Share am UniFi-NAS mit 300 GB, ein
+    # stiller Ausfall waere teuer.
     - name: longhorn-backup
       interval: 60s
       rules:
@@ -460,9 +459,9 @@ spec:
 
         # Job-owned pods are excluded, same as in PodCrashLooping above. A Job
         # that retries leaves its failed attempt lying around until the
-        # controller cleans up, which used to fire this alert on every k3s
-        # upgrade and on every CronJob retry. Genuinely failed Jobs are already
-        # covered by the upstream KubeJobFailed, so this closes no gap.
+        # controller cleans up, which would otherwise fire this alert on every
+        # CronJob retry. Genuinely failed Jobs are already covered by the
+        # upstream KubeJobFailed, so this closes no gap.
         - alert: PodNotReady
           expr: |
             kube_pod_status_phase{phase!~"Succeeded|Running"} > 0
@@ -540,8 +539,8 @@ spec:
         # Luecke, die man nur beim Hinschauen findet.
         #
         # "Verfuegbar" ist auf macOS free + inactive + purgeable; wired, active
-        # und compressed sind belegt. Gegenprobe 2026-08-07: 11.4 GiB belegt zu
-        # 10.2 GiB verfuegbar von 20 GiB, die Summe geht auf.
+        # und compressed sind belegt. Die Summe der beiden Seiten geht auf die
+        # Gesamtgroesse auf, das ist die Gegenprobe.
         - alert: NodeHighMemoryDarwin
           expr: |
             (
@@ -630,8 +629,7 @@ spec:
             summary: "unpoller liefert keine Metriken mehr"
             description: "unpoller_prometheus_cache_age_seconds fehlt seit >15m. Die beiden anderen unpoller-Alerts sind damit blind. Deployment monitoring/unifi-poller pruefen."
 
-    # SealedSecrets. Der Controller wurde bis 2026-08-05 gar nicht gescrapt,
-    # der ServiceMonitor haengt jetzt an apps/sealed-secrets.yaml.
+    # SealedSecrets. Der ServiceMonitor dazu haengt an apps/sealed-secrets.yaml.
     #
     # Das Ziel ist genau EIN Signal: ein SealedSecret, das sich nicht mehr
     # entschluesseln laesst. Das ist der Fall, der sonst erst beim naechsten
@@ -741,10 +739,11 @@ spec:
 
     # === cert-manager ===
     #
-    # Bis zum 2026-08-06 gab es hier gar nichts: der Chart-Default setzt nur
-    # prometheus.io-Annotationen, und die wertet dieser Stack nicht aus. Das
-    # Wildcard-Cert *.elmstreet79.de haengt an genau einem ClusterIssuer mit
-    # DNS-01 ueber Cloudflare, und an ihm haengt jeder Host im Haus.
+    # Der Chart-Default von cert-manager setzt nur prometheus.io-Annotationen,
+    # und die wertet dieser Stack nicht aus: der ServiceMonitor steht deshalb in
+    # manifests/cert-manager/values.yaml. Das Wildcard-Cert *.elmstreet79.de
+    # haengt an genau einem ClusterIssuer mit DNS-01 ueber Cloudflare, und an
+    # ihm haengt jeder Host im Haus.
     #
     # Reihenfolge der Alarme nach Frueherkennung: NotReady und
     # RenewalOverdue schlagen an, waehrend das alte Cert noch laenger gilt,
@@ -837,10 +836,9 @@ spec:
         # WAS DEN WERT HIER TREIBT: auf jeder Node liegen /var/lib/etcd UND
         # /var/lib/longhorn auf derselben EPHEMERAL-Partition. Longhorn-IO und
         # etcds fsync konkurrieren also um dieselbe Platte, auf allen dreien
-        # gleichermassen. Gemessen am 2026-08-09, monoton mit der Replikenzahl:
-        # talos-cp-1 2.68ms bei 8 Repliken, raspi5 6.20ms bei 11, prodesk
-        # 11.44ms bei 19. Am selben Tag zweimal belegt: raspi5 lag vor der
-        # Uebernahme von talos-cp-2s Repliken bei 4.41ms.
+        # gleichermassen. Der Wert waechst monoton mit der Replikenzahl der
+        # Node und liegt im Normalbetrieb im einstelligen bis niedrigen
+        # zweistelligen Millisekundenbereich.
         #
         # Feuert das hier, ist die Frage also nicht "welche Node ist kaputt",
         # sondern "ist irgendwo deutlich mehr Longhorn-Last dazugekommen".
@@ -865,13 +863,12 @@ spec:
         # Ein Member, der den Leader dauernd aus den Augen verliert
         #
         # WARUM DAS NEBEN etcdHighNumberOfLeaderChanges STEHT: die Upstream-Regel
-        # gibt es, sie prueft increase(...[15m:1m]) >= 4 mit for: 5m, und sie hat
-        # am 2026-08-09 den ganzen Vorfall verschlafen. Nicht weil die Schwelle
-        # zu hoch waere, sondern weil der Wert um sie herum oszilliert: er lag um
-        # 14:01, 14:06, 14:11 und 14:16 bei 4.29, fiel um 14:21 auf 3.21 und war
-        # um 14:26 wieder bei 4.29. Jeder Ausschlag nach unten setzt die
-        # Haltezeit zurueck, also kommen die noetigen fuenf Minuten am Stueck nie
-        # zustande. Ein laengeres Fenster hat dieses Problem nicht.
+        # prueft increase(...[15m:1m]) >= 4 mit for: 5m und verschlaeft genau
+        # diesen Fall. Nicht weil die Schwelle zu hoch waere, sondern weil der
+        # Wert in einem so kurzen Fenster um sie herum oszilliert: jeder
+        # Ausschlag nach unten setzt die Haltezeit zurueck, also kommen die
+        # noetigen fuenf Minuten am Stueck nie zustande. Ein laengeres Fenster
+        # hat dieses Problem nicht.
         #
         # WAS ES ANZEIGT, und was nicht: der Zaehler steht pro Member und meint
         # "ich habe einen anderen Leader gesehen als vorher". Steigt er auf EINEM
@@ -880,26 +877,16 @@ spec:
         # und findet ihn wieder. Das Quorum ist dabei nicht in Gefahr, die
         # anderen beiden tragen es. Genau deshalb faellt es sonst nirgends auf.
         #
-        # Am 2026-08-09 war das raspi5: 1 Wechsel um 11:18, 27 um 14:43, waehrend
-        # prodesk bei 2 und talos-cp-1 bei 1 standen und der Term bei 7 blieb.
+        # DIE WAHRSCHEINLICHSTE URSACHE IST DAS NETZ, nicht die Platte und nicht
+        # die Last. Auf raspi5 ist es der TX-Ring von end0, siehe
+        # siderolabs/sbc-raspberrypi#91 und manifests/rpi5-net-tuning/: ein
+        # haengender TX-Ring erzeugt NULL Fehlerzaehler, waehrend Platte, CPU,
+        # Temperatur, Linkgeschwindigkeit, MTU und ICMP-Latenz alle unauffaellig
+        # sind. Die irrefuehrende Spur ist dabei die Longhorn-Last, die
+        # zeitgleich einsetzt: sie ist nur der Verkehr, der den zu kleinen Ring
+        # erstmals fuellt.
         #
-        # URSACHE WAR DER TX-RING DES PI, nicht die Platte und nicht die Last:
-        # end0 lief mit dem 512er-Default-Ring und aktivem TSO/GSO, siehe
-        # siderolabs/sbc-raspberrypi#91 und manifests/rpi5-net-tuning/. Nach
-        # "ethtool -G end0 rx 4096 tx 2048" plus tso/gso off waren die Stalls
-        # sofort weg und der Zaehler stand still.
-        #
-        # DIE IRREFUEHRENDE SPUR, auf die man garantiert wieder hereinfaellt:
-        # es begann in dem Moment, in dem raspi5 seine ersten Longhorn-Repliken
-        # bekam. Die Longhorn-Last war aber nur der Verkehr, der den zu kleinen
-        # Ring erstmals gefuellt hat, nicht die Ursache. Ausgeschlossen waren
-        # damals bereits Platte (WAL-fsync 5ms, Backend-Commit 7.8ms, beide
-        # flach), CPU (16%), Temperatur (62C) und die Leitung selbst (ICMP
-        # 4,35 ms bei 0 % Verlust, 1000 Mbit/s, keine NIC-Fehler, MTU wie
-        # ueberall). Genau das ist die Tuecke: ein haengender TX-Ring erzeugt
-        # NULL Fehlerzaehler.
-        #
-        # Die Diagnose beim naechsten Mal beginnt also NICHT bei der Platte:
+        # Die Diagnose beginnt also NICHT bei der Platte:
         #
         #   talosctl -n <alle> etcd status     # Term und Index vergleichen
         #   histogram_quantile(0.99, sum by (instance,To,le) (
@@ -922,17 +909,17 @@ spec:
             severity: warning
           annotations:
             summary: "etcd auf {{ $labels.node }} verliert staendig den Leader ({{ $value | printf \"%.0f\" }} Wechsel in einer Stunde)"
-            description: "Dieser Member sieht laufend neue Leader, die anderen nicht. Zuerst mit talosctl etcd status pruefen, ob der Raft-Term wirklich steigt: steht er, hat es keine Wahl gegeben und der Member verliert nur wiederholt den Kontakt. Dann die Peer-Latenz nach Quelle UND Ziel aufschluesseln, nicht nur nach Ziel. Platte und CPU sind erst danach dran, sie waren beim bisher einzigen Auftreten am 2026-08-09 unauffaellig."
+            description: "Dieser Member sieht laufend neue Leader, die anderen nicht. Zuerst mit talosctl etcd status pruefen, ob der Raft-Term wirklich steigt: steht er, hat es keine Wahl gegeben und der Member verliert nur wiederholt den Kontakt. Dann die Peer-Latenz nach Quelle UND Ziel aufschluesseln, nicht nur nach Ziel. Platte und CPU sind erst danach dran."
 
         # Sicherheitsnetz unter allen etcd-Alerts, gleiche Logik wie bei
-        # cert-manager und unpoller. Faellt die ScrapeConfig weg oder wird
-        # --etcd-expose-metrics auf einer Node beim Neubau vergessen, wird es
-        # sonst einfach still.
+        # cert-manager und unpoller. Faellt die ScrapeConfig weg oder fehlt
+        # listen-metrics-urls in der machine config einer Node, wird es sonst
+        # einfach still.
         # ACHTUNG, die Grenze dieser Regel: sie zaehlt Ziele, sie prueft nicht,
-        # WELCHE. Am 2026-08-09 fehlte raspi5 nach seinem Join in der
-        # ScrapeConfig, es blieben aber drei Ziele (cp-1, cp-2, prodesk) und
-        # diese Regel blieb still, waehrend saemtliche etcd-Alerts fuer raspi5
-        # stillschweigend gar nicht galten. Die Liste steht in
+        # WELCHE. Steht nach einem Node-Tausch die alte Node noch in der
+        # ScrapeConfig und die neue nicht, bleiben es drei Ziele und diese Regel
+        # bleibt still, waehrend saemtliche etcd-Alerts fuer die neue Node
+        # stillschweigend gar nicht gelten. Die Liste steht in
         # manifests/kube-prometheus-stack/etcd-scrapeconfig.yaml und muss den
         # Membern folgen.
         - alert: EtcdMetricsMissing

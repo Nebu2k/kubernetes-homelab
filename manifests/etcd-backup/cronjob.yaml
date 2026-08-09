@@ -1,9 +1,8 @@
 # Offsite-Backup des Talos-etcd, je ein CronJob pro Control-Plane.
 #
-# WARUM ES DAS UEBERHAUPT BRAUCHT: k3s laedt seine Snapshots selbst nach S3
-# (--etcd-s3-config-secret, siehe manifests/etcd-s3-config/). Talos kennt
-# nichts Vergleichbares, es schreibt einen Snapshot nur auf Anforderung ueber
-# die API heraus. Der Upload ist damit Sache des Clusters und nicht der Node.
+# WARUM ES DAS UEBERHAUPT BRAUCHT: Talos laedt Snapshots nicht selbst
+# irgendwohin hoch, es schreibt einen nur auf Anforderung ueber die API heraus.
+# Der Upload ist damit Sache des Clusters und nicht der Node.
 #
 # WARUM EIN CRONJOB JE NODE UND NICHT EINER MIT MEHREREN SCHRITTEN: damit eine
 # nicht erreichbare Node nur ihren eigenen Lauf reisst. In einem gemeinsamen Job
@@ -24,8 +23,6 @@
 # weg, muss sie aus beiden raus. Sonst faellt es entweder gar nicht auf, dass
 # eine Node nicht sichert (fehlt sie hier), oder die Sonde meldet dauerhaft
 # "kein einziges Objekt" fuer eine Node, die es nicht mehr gibt (fehlt sie dort).
-# Am 2026-08-09 aufgelaufen: raspi5 war seit dem Join etcd-Member, hatte aber
-# weder CronJob noch Sonde und war damit als einzige Node offsite ungesichert.
 #
 # Der Zeitplan ist gestaffelt (00:00, 00:20, 00:40 UTC und dieselben Zeiten
 # mittags), damit nicht mehrere Snapshots gleichzeitig ueber dieselbe Leitung
@@ -33,9 +30,9 @@
 # CronJob in der Zeitzone der Node, die gerade den kube-controller-manager
 # haelt.
 #
-# Der Objektname "etcd-snapshot-<node>-<unix-ts>" ist bewusst derselbe, den k3s
-# gebaut hat. Damit muss die Frische-Sonde beim Abbau von k3s nur ihre
-# Node-Liste tauschen und nicht ihre Logik.
+# Der Objektname ist "etcd-snapshot-<node>-<unix-ts>". Die Frische-Sonde in
+# manifests/backup-monitor/ prueft je Node auf dieses Praefix, ihre Node-Liste
+# muss also zu den CronJobs hier passen.
 ---
 apiVersion: batch/v1
 kind: CronJob
@@ -209,10 +206,7 @@ spec:
               emptyDir:
                 sizeLimit: 2Gi
 ---
-# raspi5, seit dem 2026-08-09 Control-Plane. Er hat den 00:20-Slot von
-# talos-cp-2 uebernommen, als der abgebaut wurde.
-#
-# Der Snapshot laeuft ueber die Talos-API und nicht auf der Node, der Pod kann
+# raspi5. Der Snapshot laeuft ueber die Talos-API und nicht auf der Node, der Pod kann
 # also irgendwo im Cluster liegen. arm64 spielt hier keine Rolle.
 apiVersion: batch/v1
 kind: CronJob

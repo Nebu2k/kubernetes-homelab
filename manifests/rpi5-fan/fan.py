@@ -52,10 +52,10 @@ METRICS_PORT = 9101
 # Luefter je nach Exemplar stehen oder brummt, ohne Luft zu bewegen.
 #
 # DIE ZWEITE STUFE STEHT AUF 65 UND NICHT AUF 60, und das ist gemessen, nicht
-# geschaetzt. Am 2026-08-09 lag das Gleichgewicht bei 30 Prozent im Leerlauf
-# stabil bei 57-59 Grad. Mit der Schwelle bei 60 streift die Node sie alle paar
-# Minuten, faehrt kurz auf 55 Prozent, kuehlt in 40 Sekunden unter die
-# Hysteresegrenze und faellt zurueck. Dieses Pumpen faellt deutlich mehr auf als
+# geschaetzt: bei 30 Prozent liegt das Gleichgewicht im Leerlauf stabil bei
+# 57-59 Grad. Mit der Schwelle bei 60 streift die Node sie alle paar Minuten,
+# faehrt kurz auf 55 Prozent, kuehlt in 40 Sekunden unter die Hysteresegrenze
+# und faellt zurueck. Dieses Pumpen faellt deutlich mehr auf als
 # eine konstante niedrige Drehzahl, und es ist genau das, was die Hysterese
 # eigentlich verhindern soll: sie kann nur nicht helfen, wenn der Ruhepunkt
 # direkt unter der Schwelle liegt. 65 legt die naechste Stufe ueber den
@@ -209,8 +209,7 @@ def main():
 
     # Volle Drehzahl beim Beenden. Wenn dieser Prozess weg ist, regelt
     # niemand mehr, und ein Luefter, der auf 30 Prozent stehenbleibt, ist
-    # schlechter als einer, der laut ist. Das ist der sichere Zustand und
-    # zugleich der, in dem die Node vorher war.
+    # schlechter als einer, der laut ist.
     def on_signal(signum, frame):
         print("beende, setze Luefter auf 100 Prozent", flush=True)
         pwm.set_percent(100)

@@ -1,9 +1,9 @@
 # node-exporter der zwei Hosts ausserhalb des Clusters: pve und macmini.
 #
-# Die fuenf Cluster-Nodes bringt das DaemonSet aus dem Chart mit, diese beiden
-# nicht. Sie waren bis 2026-08-07 nur ueber Beszel sichtbar, pve zusaetzlich
-# ueber den pve-exporter (API-Sicht: Node-, VM-, Storage-Status, aber kein
-# Disk-IO, keine Interface-Zaehler, keine Temperaturen, kein SMART).
+# Die Cluster-Nodes bringt das DaemonSet aus dem Chart mit, diese beiden nicht.
+# Der pve-exporter deckt fuer pve nur die API-Sicht ab (Node-, VM- und
+# Storage-Status, aber kein Disk-IO, keine Interface-Zaehler, keine
+# Temperaturen, kein SMART).
 #
 # Statische Targets statt Service+Endpoints wie sonst im external-services-
 # Muster: ArgoCD hat Endpoints und EndpointSlice global in resource.exclusions,

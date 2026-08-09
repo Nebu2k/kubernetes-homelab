@@ -1,9 +1,7 @@
 # Der Scanner-Share des UniFi-NAS wird direkt als paperless-Consume-Verzeichnis
-# gemountet. Damit entfaellt der fruehere smb-sync-Sidecar komplett: kein
-# privileged-Container, kein Eigenbau-Image und keine Kopie ueber ein
-# Longhorn-Zwischenvolume mehr. Paperless raeumt den Share selbst auf, es
-# loescht konsumierte Dateien - genau das, was vorher rsync
-# --remove-source-files gemacht hat.
+# gemountet, ueber csi-driver-smb. Kein privileged-Container im Anwendungs-Pod,
+# kein Eigenbau-Image und keine Kopie ueber ein Longhorn-Zwischenvolume.
+# Paperless raeumt den Share selbst auf und loescht konsumierte Dateien.
 #
 # Statisches PV (kein StorageClass-Provisioning): der Share existiert bereits
 # und wir wollen genau sein Wurzelverzeichnis, nicht ein pro-PV angelegtes
@@ -40,8 +38,7 @@ spec:
     volumeHandle: paperless-consume-smb
     volumeAttributes:
       source: //192.168.2.6/scans
-    # Dasselbe Secret wie frueher der Sidecar: Keys username + password sind
-    # genau die, die der Treiber erwartet.
+    # Keys username + password, genau so erwartet der Treiber sie.
     nodeStageSecretRef:
       name: smb-credentials
       namespace: paperless-ngx

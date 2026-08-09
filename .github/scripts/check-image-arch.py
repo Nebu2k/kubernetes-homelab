@@ -15,9 +15,9 @@ das ausloest, wuerde ausserdem automatisch gemergt.
 
 Dieser Test macht daraus einen roten PR, bevor es das Cluster erreicht.
 
-Stand 2026-08-09: alle 71 Images im Cluster koennen arm64, die Allowlist ist
-leer. Sie ist trotzdem da, weil der Ausweg fuer den Ernstfall dokumentiert sein
-muss: ein amd64-only-Image ist erlaubt, wenn der zugehoerige Workload einen
+Die Allowlist ist leer, alle Images im Cluster koennen arm64. Sie ist trotzdem
+da, weil der Ausweg fuer den Ernstfall dokumentiert sein muss: ein
+amd64-only-Image ist erlaubt, wenn der zugehoerige Workload einen
 nodeSelector auf kubernetes.io/arch: amd64 traegt. So haelt es
 manifests/kube-prometheus-stack/values.yaml mit Prometheus, dort allerdings aus
 einem anderen Grund (Speicherhunger, nicht fehlendes Image).
