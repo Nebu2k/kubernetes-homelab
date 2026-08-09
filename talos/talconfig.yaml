@@ -48,20 +48,19 @@ allowSchedulingOnControlPlanes: true
 
 # Der VIP und alle Node-IPs muessen im API-Server-Cert stehen, sonst schlaegt
 # jeder Zugriff ueber eine andere Adresse als den Endpoint fehl.
+#
+# Die alte VIP 192.168.2.248 stand hier bis zum 2026-08-09, damit ein kubeconfig
+# oder talosconfig, das noch darauf zeigt, nicht mit einem Zertifikatsfehler
+# abbricht, sondern schlicht nichts findet. Sie ist raus, nachdem das ganze Repo
+# und beide Terraform-Repos keinen Verweis mehr darauf enthielten.
 additionalApiServerCertSans:
   - 192.168.2.29
-  # Die alte VIP-Adresse. Bleibt vorerst im Cert, damit ein kubeconfig oder
-  # talosconfig, das noch darauf zeigt, nicht mit einem Zertifikatsfehler
-  # abbricht, sondern schlicht nichts findet. Kann raus, sobald nichts mehr
-  # darauf zeigt.
-  - 192.168.2.248
   - 192.168.2.20
   - 192.168.2.22
   - 192.168.2.23
   - 127.0.0.1
 additionalMachineCertSans:
   - 192.168.2.29
-  - 192.168.2.248
   - 192.168.2.20
   - 192.168.2.22
   - 192.168.2.23

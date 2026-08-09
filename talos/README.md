@@ -236,6 +236,37 @@ Volume-CR entsteht beim Restore, nicht aus einem Manifest.
 
 ## Fallen
 
+- **`talconfig.yaml` zu aendern aendert keine einzige Node.** talhelper erzeugt
+  daraus nur Dateien, erst `talosctl apply-config` traegt sie auf ein Geraet.
+  Alles, was cluster-weit gilt (die beiden certSAN-Listen, der Endpoint, die
+  apiserver-Argumente), muss deshalb auf **jede** Node einzeln appliziert
+  werden, auch auf die, an der sich augenscheinlich nichts geaendert hat.
+
+  Am 2026-08-09 gefunden: beim Tausch von talos-cp-2 gegen raspi5 war
+  `talconfig.yaml` richtig gepflegt, appliziert wurde die neue Liste aber nur
+  auf die neue Node. Danach trugen alle drei Nodes wochenlang die `.21` des
+  abgebauten cp-2 im Cert und **nicht** die `.22` von raspi5. Folge: das
+  apiserver-Zertifikat deckte raspi5' eigene Adresse nicht ab, jeder Zugriff
+  ueber `https://192.168.2.22:6443` waere am Zertifikat gescheitert. Nichts
+  davon meldet sich: die Nodes sind `Ready`, etcd hat drei Member, ArgoCD ist
+  gruen, und ueber den VIP laeuft ohnehin alles.
+
+  **Der Soll-Ist-Vergleich ist ein Einzeiler und kostet nichts.** Er gehoert
+  nach jeder Aenderung an `talconfig.yaml` einmal ueber alle Nodes:
+
+  ```bash
+  for n in talos-cp-1:192.168.2.20 raspi5:192.168.2.22 prodesk:192.168.2.23; do
+    talosctl -n ${n##*:} apply-config --dry-run \
+      -f clusterconfig/homelab-${n%%:*}.yaml
+  done
+  ```
+
+  Ein leerer Diff heisst, die Node traegt was in git steht. certSAN-Aenderungen
+  brauchen dabei **keinen Reboot**, Talos zieht das Zertifikat neu und startet
+  den apiserver-Pod. Ueber drei Control-Planes nacheinander gerollt merkt das
+  Cluster nichts, ausser einem Aussetzer von rund einer halben Minute auf der
+  Node, die gerade den VIP haelt.
+
 - **`cluster.endpoint` zu aendern macht JEDES ausgestellte ServiceAccount-Token
   ungueltig.** Talos leitet `--service-account-issuer` des apiservers aus dem
   Endpoint ab. Steht dort danach eine andere Adresse, traegt jedes vorher
