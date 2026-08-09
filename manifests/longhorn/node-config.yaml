@@ -99,6 +99,19 @@ spec:
         - storage
 
 ---
+# talos-cp-2 WIRD ABGEBAUT (Stand 2026-08-09). raspi5 hat ihn ersetzt, und
+# solange cp-2 steht, liegen mit talos-cp-1 zwei etcd-Member auf pve: ein
+# pve-Ausfall kostet das Quorum.
+#
+# Dieser Zwischenschritt raeumt die Repliken herunter, bevor die Node geht.
+# Beides ist noetig und keins reicht allein: allowScheduling: false haelt nur
+# NEUE Repliken fern, evictionRequested: true schiebt die vorhandenen aktiv
+# weg. Longhorn baut sie woanders neu auf, BEVOR es sie hier entfernt, das
+# Volume bleibt also durchgehend healthy.
+#
+# Erst wenn hier keine Replik mehr liegt, darf der Node-Eintrag ganz raus: der
+# validator.longhorn.io-Webhook blockt das Loeschen eines Node-CRs, auf dem noch
+# Repliken liegen, und "kubectl drain" haengt an den Longhorn-PDBs.
 apiVersion: longhorn.io/v1beta2
 kind: Node
 metadata:
@@ -108,13 +121,13 @@ spec:
   name: talos-cp-2
   tags:
     - storage
-  allowScheduling: true
-  evictionRequested: false
+  allowScheduling: false
+  evictionRequested: true
   disks:
     default-disk-talos-cp-2:
-      allowScheduling: true
+      allowScheduling: false
       diskType: filesystem
-      evictionRequested: false
+      evictionRequested: true
       path: /var/lib/longhorn/
       storageReserved: 32212254720
       tags:
