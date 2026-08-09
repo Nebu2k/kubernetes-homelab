@@ -1,0 +1,73 @@
+# Rechte des NetworkPolicy-Controllers: ausschliesslich lesen.
+#
+# Er muss wissen, welche Policies es gibt und welche Pods, Namespaces und
+# Services deren Selektoren treffen. Geschrieben wird nichts im API, die
+# Wirkung entsteht in iptables auf der Node.
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: kube-router
+  namespace: kube-system
+  labels:
+    app.kubernetes.io/name: kube-router
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: kube-router
+  labels:
+    app.kubernetes.io/name: kube-router
+rules:
+  - apiGroups:
+      - ""
+    resources:
+      - namespaces
+      - pods
+      - services
+      - nodes
+      - endpoints
+    verbs:
+      - list
+      - get
+      - watch
+  - apiGroups:
+      - networking.k8s.io
+    resources:
+      - networkpolicies
+    verbs:
+      - list
+      - get
+      - watch
+  - apiGroups:
+      - discovery.k8s.io
+    resources:
+      - endpointslices
+    verbs:
+      - list
+      - get
+      - watch
+  # Der Controller meldet Fehler als Event am betroffenen Objekt, statt sie nur
+  # ins eigene Log zu schreiben.
+  - apiGroups:
+      - ""
+    resources:
+      - events
+    verbs:
+      - create
+      - patch
+      - update
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: kube-router
+  labels:
+    app.kubernetes.io/name: kube-router
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: kube-router
+subjects:
+  - kind: ServiceAccount
+    name: kube-router
+    namespace: kube-system

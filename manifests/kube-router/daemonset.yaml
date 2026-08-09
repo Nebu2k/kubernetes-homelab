@@ -1,0 +1,111 @@
+# kube-router, ausschliesslich als NetworkPolicy-Controller.
+#
+# WARUM: Talos deployt vanilla Flannel, und Flannel setzt NetworkPolicies nicht
+# durch. k3s tat es, weil es genau diesen Controller eingebaut mitbringt. Ohne
+# ihn nimmt das API die default-deny-ingress von mealie, paperless-ngx und
+# teslamate an, `kubectl get netpol` zeigt sie, und sie bewirken nichts. Das ist
+# die unangenehmste Sorte Fehler: Schutz, der auf dem Papier steht.
+#
+# WAS HIER ANDERS IST ALS IM UPSTREAM-MANIFEST, und das ist der Teil, der
+# schiefgehen kann: kube-routers "firewall-daemonset.yaml" bringt trotz seines
+# Namens eine CNI-Konfiguration mit, legt sie per initContainer nach
+# /etc/cni/net.d/10-kuberouter.conflist und LOESCHT dabei vorhandene *.conf.
+# In diesem Cluster waere das der Flannel-Config und damit das Netzwerk. Also:
+#
+#   - kein ConfigMap kube-router-cfg,
+#   - kein install-cni-initContainer,
+#   - kein Mount von /etc/cni/net.d,
+#   - --enable-cni=false, damit kube-router auch von sich aus nichts schreibt.
+#
+# Ebenfalls abweichend: der Upstream holt sich seine Zugangsdaten aus
+# /var/lib/kube-router/kubeconfig auf der Node, ein kubeadm-Detail. Talos legt
+# dort nichts ab. Stattdessen der ServiceAccount und die In-Cluster-Config.
+#
+# Nur fuer das Talos-Cluster, im k3s-Cluster macht das k3s selbst. Eingebunden
+# in clusters/talos/kustomization.yaml.
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: kube-router
+  namespace: kube-system
+  labels:
+    app.kubernetes.io/name: kube-router
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: kube-router
+  updateStrategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: kube-router
+    spec:
+      # Faellt der Pod aus, sind die Policies still wirkungslos. Er gehoert
+      # damit in dieselbe Klasse wie kube-proxy.
+      priorityClassName: system-node-critical
+      serviceAccountName: kube-router
+      hostNetwork: true
+      dnsPolicy: ClusterFirstWithHostNet
+      tolerations:
+        # Auf JEDE Node, auch auf welche, die gerade nicht schedulen. Eine Node
+        # ohne kube-router ist eine Node ohne Policy-Durchsetzung.
+        - operator: Exists
+      containers:
+        - name: kube-router
+          image: docker.io/cloudnativelabs/kube-router:v2.10.0
+          args:
+            # Die einzige Aufgabe. Router, Service-Proxy und Loadbalancer sind
+            # aus: fuers Routing ist Flannel zustaendig, fuer Services
+            # kube-proxy und fuer LoadBalancer MetalLB.
+            - --run-firewall=true
+            - --run-router=false
+            - --run-service-proxy=false
+            - --run-loadbalancer=false
+            # Siehe Kopf: ohne das schreibt kube-router eine CNI-Konfiguration.
+            - --enable-cni=false
+            - --health-port=20244
+            - --metrics-port=20245
+          securityContext:
+            # iptables und ipset im Host-Namespace. NET_ADMIN allein reicht
+            # nicht, kube-router laedt auch Kernel-Module nach.
+            privileged: true
+          env:
+            - name: NODE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 20244
+            initialDelaySeconds: 15
+            periodSeconds: 10
+          ports:
+            - name: metrics
+              containerPort: 20245
+              protocol: TCP
+          resources:
+            requests:
+              cpu: 50m
+              memory: 128Mi
+            limits:
+              memory: 256Mi
+          volumeMounts:
+            - name: lib-modules
+              mountPath: /lib/modules
+              readOnly: true
+            # Ohne den Lock stolpern kube-router und kube-proxy uebereinander,
+            # sobald beide gleichzeitig iptables anfassen.
+            - name: xtables-lock
+              mountPath: /run/xtables.lock
+      volumes:
+        - name: lib-modules
+          hostPath:
+            path: /lib/modules
+        - name: xtables-lock
+          hostPath:
+            path: /run/xtables.lock
+            type: FileOrCreate

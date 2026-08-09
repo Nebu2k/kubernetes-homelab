@@ -75,6 +75,10 @@ resources:
   # Kubernetes-Widgets der Homepage melden "API error". Nur hier, drueben
   # erledigt das k3s selbst.
   - ../../apps/metrics-server.yaml
+  # Ebenfalls etwas, das k3s eingebaut mitbrachte: der NetworkPolicy-Controller.
+  # Vanilla Flannel setzt Policies nicht durch, die default-deny-ingress von
+  # mealie, paperless-ngx und teslamate waren hier bis zum 2026-08-09 wirkungslos.
+  - ../../apps/kube-router.yaml
 
 patches:
   # MetalLB: eigener Pool, PodSecurity und die Exclude-Label-Ausnahme.

@@ -1,0 +1,31 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: kube-router
+  namespace: argocd
+  annotations:
+    # Netzwerkschicht, vor allem was Policies mitbringt. metallb ist 1, die
+    # Dienste mit default-deny beginnen bei 9.
+    argocd.argoproj.io/sync-wave: "2"
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/Nebu2k/kubernetes-homelab.git
+    targetRevision: main
+    path: manifests/kube-router
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: kube-system
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    retry:
+      limit: 5
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 3m

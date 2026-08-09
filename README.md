@@ -21,7 +21,7 @@ Production-ready K3s cluster managed via GitOps using ArgoCD App-of-Apps pattern
 |------|-----------|
 | 0 | Coredns Config, Sealed Secrets |
 | 1 | Etcd S3 Config, Kured, Metallb, Reloader, System Upgrade Controller |
-| 2 | Etcd Backup, Metrics Server |
+| 2 | Etcd Backup, Kube Router, Metrics Server |
 | 3 | Traefik |
 | 4 | Cert Manager, Longhorn |
 | 5 | Csi Driver Smb, Landing Page, Teslamate |
@@ -52,6 +52,7 @@ homelab/
 │   ├── reloader.yaml                  # Wave 1
 │   ├── system-upgrade-controller.yaml # Wave 1
 │   ├── etcd-backup.yaml               # Wave 2
+│   ├── kube-router.yaml               # Wave 2
 │   ├── metrics-server.yaml            # Wave 2
 │   ├── traefik.yaml                   # Wave 3
 │   ├── cert-manager.yaml              # Wave 4
@@ -192,6 +193,12 @@ homelab/
 │   │   ├── prometheus-ingress.yaml
 │   │   ├── prometheus-rules.yaml
 │   │   └── values.yaml
+│   ├── kube-router/
+│   │   ├── daemonset.yaml
+│   │   ├── kustomization.yaml
+│   │   ├── rbac.yaml
+│   │   ├── service.yaml
+│   │   └── servicemonitor.yaml
 │   ├── kured/
 │   │   └── values.yaml
 │   ├── landing-page/
