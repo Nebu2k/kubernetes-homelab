@@ -1,3 +1,10 @@
+# [4.95.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.94.0...v4.95.0) (2026-08-09)
+
+
+### Features
+
+* **talos:** Traefik uebernimmt die .250 ([b7e7293](https://github.com/Nebu2k/kubernetes-homelab/commit/b7e729313849b58f830d3074366d47bcd0a592c3))
+
 # [4.94.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.93.0...v4.94.0) (2026-08-09)
 
 
