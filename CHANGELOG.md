@@ -1,3 +1,10 @@
+# [4.80.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.79.0...v4.80.0) (2026-08-09)
+
+
+### Features
+
+* **talos:** talos-cp-3 abbauen, zurueck auf drei etcd-Member ([28ac2bb](https://github.com/Nebu2k/kubernetes-homelab/commit/28ac2bb30608754f4b42c51be9d09a51c7db27ed))
+
 # [4.79.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.78.0...v4.79.0) (2026-08-08)
 
 
