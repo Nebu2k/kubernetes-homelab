@@ -1,3 +1,10 @@
+## [4.102.1](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.102.0...v4.102.1) (2026-08-09)
+
+
+### Bug Fixes
+
+* **backup:** raspi5 offsite sichern und ueberwachen ([b3b3600](https://github.com/Nebu2k/kubernetes-homelab/commit/b3b3600c1d1b0b4aff8c6659e4d599c121f983b6))
+
 # [4.102.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.101.0...v4.102.0) (2026-08-09)
 
 
