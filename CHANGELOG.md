@@ -1,3 +1,10 @@
+## [5.1.1](https://github.com/Nebu2k/kubernetes-homelab/compare/v5.1.0...v5.1.1) (2026-08-09)
+
+
+### Bug Fixes
+
+* **alerts:** _info-Suffix an der ksm-Metrik, sonst zeigt die Regel ins Leere ([3fc88a8](https://github.com/Nebu2k/kubernetes-homelab/commit/3fc88a8bb04a7342567554c558e21d09044f24da))
+
 # [5.1.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v5.0.0...v5.1.0) (2026-08-09)
 
 
