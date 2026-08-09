@@ -1,3 +1,10 @@
+# [4.82.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.81.0...v4.82.0) (2026-08-09)
+
+
+### Features
+
+* **talos:** kube-prometheus-stack ins neue Cluster ([22be0a3](https://github.com/Nebu2k/kubernetes-homelab/commit/22be0a34d9e6efee555a11313fd31fb36c26aeb3))
+
 # [4.81.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.80.0...v4.81.0) (2026-08-09)
 
 
