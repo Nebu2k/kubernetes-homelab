@@ -46,6 +46,18 @@
 # "kubectl -n longhorn-system get nodes.longhorn.io <name> -o jsonpath=
 # '{.spec.disks}'" lesen, dann den vorgefundenen Schluessel uebernehmen.
 #
+# Einen Node hier ZU ENTFERNEN reicht nicht, ArgoCD kommt beim Prune nicht
+# durch: der validator.longhorn.io-Webhook lehnt das Loeschen ab, solange
+# allowScheduling true ist, selbst wenn die Node laengst weg ist und null
+# Replikate und null Engines traegt. Die Fehlermeldung steht dann nur in
+# .status.operationState.message der Application, die App bleibt OutOfSync und
+# retryt endlos. Also vor dem Entfernen aus dieser Datei:
+#
+#   kubectl -n longhorn-system patch nodes.longhorn.io <name> \
+#     --type=merge -p '{"spec":{"allowScheduling":false}}'
+#
+# Am 2026-08-09 beim Abbau von talos-cp-3 aufgelaufen.
+#
 # Die tags sind kein Schmuck. Die StorageClass longhorn selektiert
 # nodeSelector: storage. Ein Node ohne den Tag bekommt nie ein Replikat und
 # meldet trotzdem Ready und Schedulable. Longhorn legt Auto-CRs ohne Tags an,
