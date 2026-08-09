@@ -48,6 +48,19 @@ resources:
   # NAS-Backup restauriert, im k3s-Cluster ist er dafuer geprunt. Der Ablauf
   # steht in talos/README.md, das Cluster-Spezifische in clusters/talos/ripe-atlas/.
   - ../../apps/ripe-atlas.yaml
+  # Die drei ohne Restore. proxmox-exporter und unifi-poller haben keinen
+  # eigenen Zustand, sie sind im k3s-Cluster geprunt.
+  - ../../apps/proxmox-exporter.yaml
+  - ../../apps/unifi-poller.yaml
+  # argocd-config laeuft bewusst in BEIDEN Clustern: es setzt zwei Keys in
+  # argocd-cm (accounts.readonly, timeout.reconciliation) und legt den Ingress
+  # an, betrifft also jeweils das ArgoCD des eigenen Clusters. Hier kommt es
+  # dazu, drueben bleibt es stehen, bis k3s abgebaut ist.
+  #
+  # Es kollidiert nicht mit dem Wertesatz aus homelab-terraform/argocd-talos:
+  # ArgoCD merged in die von Helm angelegte ConfigMap hinein, statt sie zu
+  # ersetzen. Genau so laeuft es im k3s-Cluster seit Monaten.
+  - ../../apps/argocd-config.yaml
 
 patches:
   # MetalLB: eigener Pool, PodSecurity und die Exclude-Label-Ausnahme.

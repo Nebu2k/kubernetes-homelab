@@ -13,8 +13,19 @@ resources:
   - csi-driver-smb.yaml
   - longhorn.yaml
   - kube-prometheus-stack.yaml
-  - proxmox-exporter.yaml
-  - unifi-poller.yaml
+  # proxmox-exporter und unifi-poller sind am 2026-08-09 ins Talos-Cluster
+  # gezogen, ohne Restore: beide sind reine Exporter ohne eigenen Zustand. Sie
+  # scrapen pve bzw. den UniFi-Controller, es waere also nicht falsch, sie in
+  # beiden Clustern laufen zu lassen, aber das haette die Zielsysteme doppelt
+  # abgefragt und beide Prometheus-Instanzen dieselben Werte zaehlen lassen:
+  #   - proxmox-exporter.yaml
+  #   - unifi-poller.yaml
+  #
+  # argocd-config bleibt dagegen HIER STEHEN, obwohl es zusaetzlich im
+  # Talos-Cluster laeuft. Es konfiguriert das ArgoCD des jeweiligen Clusters,
+  # und das hiesige muss bis zum Abbau von k3s arbeitsfaehig bleiben. Ein Prune
+  # wuerde argocd-cm und argocd-rbac-cm loeschen, nicht bloss die zwei Keys
+  # darin zuruecknehmen.
   - argocd-config.yaml
   - home-assistant.yaml
   - teslamate.yaml
