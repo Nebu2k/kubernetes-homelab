@@ -193,6 +193,7 @@ def get_documentation_links():
 
     # Official documentation URLs for custom deployed apps
     OFFICIAL_DOCS = {
+        'blocky': 'https://0xerr0r.github.io/blocky/latest/',
         'home-assistant': 'https://www.home-assistant.io/docs/',
         'homepage': 'https://gethomepage.dev/latest/',
         'gatus': 'https://github.com/TwiN/gatus',

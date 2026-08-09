@@ -17,6 +17,12 @@ spec:
     # Vergabereihenfolge ueberlassen: bei einer Adresse, an der ein
     # Portforward haengt, muss das fest sein.
     #
+    # Die .253 traegt Blocky (Haus-Resolver), ebenfalls explizit angefordert in
+    # manifests/blocky/service.yaml. Sie steht im DHCP-Feld des UniFi-
+    # Controllers und darf genauso wenig wandern. Die Nachbaradresse .254 ist
+    # die zweite Blocky-Instanz als LXC auf pve und liegt absichtlich
+    # ausserhalb des Pools.
+    #
     # ACHTUNG bei allem ab .249: die UniFi-Regel fuer die beiden Gast-VLANs
     # erlaubt .249-.254. Was MetalLB von dort vergibt, ist aus den Gast-VLANs
     # erreichbar, aus dem vorderen Teil dagegen nicht. MetalLB vergibt der

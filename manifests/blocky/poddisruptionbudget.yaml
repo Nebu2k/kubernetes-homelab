@@ -1,0 +1,23 @@
+# Schuetzt das Haus-DNS bei freiwilligen Stoerungen, vor allem beim Node-Drain
+# eines Talos-Upgrades. Ohne PDB darf ein Drain beide Pods gleichzeitig raeumen,
+# und mit externalTrafficPolicy: Local haette dann keine Node mehr einen
+# bereiten Endpoint: MetalLB kuendigt die .253 nicht mehr an, das halbe Haus
+# hat kein DNS.
+#
+# minAvailable statt maxUnavailable, weil die Zusage dann an der absoluten Zahl
+# haengt und nicht an replicas: bei einem versehentlichen Scale-Down auf 1
+# blockiert der PDB den Drain, statt stillschweigend alles freizugeben.
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: blocky
+  namespace: blocky
+  labels:
+    app.kubernetes.io/name: blocky
+    app.kubernetes.io/instance: blocky
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: blocky
+      app.kubernetes.io/instance: blocky

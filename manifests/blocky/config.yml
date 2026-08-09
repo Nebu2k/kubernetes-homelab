@@ -1,0 +1,133 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/0xERR0R/blocky/main/docs/config.schema.json
+#
+# EINE Wahrheit fuer BEIDE Blocky-Instanzen. Das Cluster zieht diese Datei per
+# configMapGenerator, der LXC-Container auf pve bekommt exakt dieselbe Datei per
+# Terraform (homelab-terraform/proxmox/lxc-blocky.tf). Aenderungen hier brauchen
+# deshalb zusaetzlich ein "terraform apply" im proxmox-Stack, sonst laufen die
+# beiden Instanzen auseinander.
+#
+# Die Datei enthaelt bewusst nichts Instanz-Spezifisches: kein Bind-Interface,
+# keine eigene IP, kein Hostname. Was beide Instanzen unterscheidet, steht in
+# ihrem jeweiligen Deployment.
+
+# Einziger Upstream ist der lokale Unbound. Im Cluster ist das ein Sidecar im
+# selben Pod, auf dem LXC das Alpine-Paket, in beiden Faellen 127.0.0.1:5335.
+upstreams:
+  init:
+    # Nicht am hochfahrenden Unbound haengen bleiben: Blocky nimmt den Dienst
+    # sofort an und probiert den Upstream beim ersten Query.
+    strategy: fast
+  # strict, nicht parallel_best. Bei parallel_best waehlt Blocky pro Query zwei
+  # zufaellige Resolver aus der Gruppe; steht dort neben Unbound irgendwann ein
+  # oeffentlicher Fallback, leckt die Haelfte aller Queries nach draussen,
+  # obwohl Unbound laeuft. Mit strict ist die Reihenfolge bindend.
+  strategy: strict
+  groups:
+    default:
+      - tcp+udp:127.0.0.1:5335
+  # Grosszuegiger als der Default (2s): ein Cold-Cache-Query geht bei Unbound
+  # rekursiv bis zur Root und ist spuerbar langsamer als ein Cloudflare-Anycast.
+  timeout: 5s
+
+# Aufloesung der Blocklisten-URLs laeuft ebenfalls ueber den lokalen Unbound und
+# nicht ueber /etc/resolv.conf. Im Cluster zeigt resolv.conf auf CoreDNS, und
+# CoreDNS forwardet an den Haus-Resolver: ohne diese Zeile haengt der Start der
+# Cluster-Instanz an genau dem Resolver, den sie ersetzen soll.
+bootstrapDns:
+  - tcp+udp:127.0.0.1:5335
+
+# Ausgehend nur v4, passend zu "do-ip6: no" im Unbound.
+connectIPVersion: v4
+
+# Split-Horizon. Deckt Apex und alle Subdomains ab; den Apex faengt Traefik mit
+# einem 301 auf www (manifests/landing-page/apex-redirect.yaml).
+# filterUnmappedTypes bleibt an: AAAA und alles andere ausser A wird leer
+# beantwortet statt an Unbound weitergereicht, sonst antwortet fuer
+# elmstreet79.de mal Traefik und mal die oeffentliche Adresse.
+customDNS:
+  customTTL: 1h
+  filterUnmappedTypes: true
+  mapping:
+    elmstreet79.de: 192.168.2.250
+
+# Reverse-Lookups der drei Haus-Subnetze gehen an das jeweilige UniFi-Gateway.
+# Unbound kann sie nicht beantworten, private Adressen haben keine Delegation
+# in der oeffentlichen Root.
+conditional:
+  fallbackUpstream: false
+  mapping:
+    2.168.192.in-addr.arpa: 192.168.2.1
+    4.168.192.in-addr.arpa: 192.168.4.1
+    5.168.192.in-addr.arpa: 192.168.5.1
+
+blocking:
+  denylists:
+    ads:
+      # AdAway im Hosts-Format. Die AdGuard-Fassung derselben Liste
+      # (HostlistsRegistry/filter_2.txt) ist Adblock-Syntax ("||domain^") und
+      # fuer Blocky unbrauchbar: Blocky liest Hosts-Format, nackte Domains,
+      # Wildcards und Regexe, sonst nichts.
+      - https://adaway.org/hosts.txt
+      # Ersatz fuer den "AdGuard DNS filter", der aus demselben Grund ausfaellt.
+      # HaGeZi Pro im Wildcard-Format, rund 215k Eintraege und damit deutlich
+      # breiter als die AdGuard-Liste. Bei False Positives ist
+      # wildcard/light.txt (rund 40k) die kleinere Stufe derselben Reihe.
+      - https://raw.githubusercontent.com/hagezi/dns-blocklists/main/wildcard/pro.txt
+      # iCloud Private Relay. Umgeht sonst den Haus-Resolver und damit
+      # Split-Horizon und Filterung. Entspricht dem AdGuard-Dienst
+      # "icloud_private_relay".
+      - |
+        mask.icloud.com
+        mask-h2.icloud.com
+        mask-canary.icloud.com
+  clientGroupsBlock:
+    default:
+      - ads
+  # 0.0.0.0 als Antwort, wie AdGuards blocking_mode "default".
+  blockType: zeroIp
+  loading:
+    refreshPeriod: 24h
+    downloads:
+      timeout: 60s
+      attempts: 5
+      cooldown: 10s
+    # fast, nicht failOnError: ein Resolver, der wegen einer nicht erreichbaren
+    # Blockliste gar nicht erst antwortet, ist schlimmer als ein Resolver, der
+    # eine Minute lang ungefiltert antwortet.
+    strategy: fast
+
+caching:
+  # Federt den kalten Unbound-Cache ab: haeufig gefragte Namen werden erneuert,
+  # bevor ihre TTL ablaeuft.
+  prefetching: true
+  prefetchExpires: 2h
+  prefetchThreshold: 5
+
+# Client-Namen fuer Metriken und spaetere Client-Gruppen. Wirkt nur, wenn Blocky
+# die echte Client-IP sieht, im Cluster also nur mit
+# externalTrafficPolicy: Local am LoadBalancer-Service.
+clientLookup:
+  upstream: 192.168.2.1
+
+prometheus:
+  enable: true
+  path: /metrics
+
+ports:
+  dns: 53
+  http: 4000
+
+# Kein Query-Log. Ein CSV im Pod waere nach jedem Neustart weg, und eine
+# Datenbank dafuer ist der Sache nicht angemessen. Wer sehen will, was gefragt
+# und was geblockt wurde, nimmt die Prometheus-Metriken.
+queryLog:
+  type: none
+
+log:
+  level: info
+  format: text
+
+# Extended DNS Errors: Blocky schreibt den Grund (geblockt, Upstream-Fehler,
+# SERVFAIL aus der DNSSEC-Pruefung) in die Antwort, statt ihn zu verschlucken.
+ede:
+  enable: true

@@ -1,0 +1,65 @@
+# Der Resolver-Eingang fuer das Haus. Die .253 liegt am oberen Ende des
+# MetalLB-Pools (.240-.253) und wird explizit angefordert statt der
+# Vergabereihenfolge ueberlassen: sie steht im DHCP-Feld des UniFi-Controllers.
+#
+# Nachbaradresse ist die .254, das ist die zweite Blocky-Instanz als LXC auf
+# pve. Die liegt ausserhalb des Pools, MetalLB vergibt sie nie.
+#
+# Beide Adressen fallen unter die UniFi-Regel, die den Gast-VLANs .249-.254
+# erlaubt. Fuer einen Resolver ist das hier ausnahmsweise erwuenscht: die
+# Gast-VLANs brauchen den Split-Horizon-Rewrite, sonst laufen fuer sie auch die
+# oeffentlich erreichbaren Dienste ins Leere.
+apiVersion: v1
+kind: Service
+metadata:
+  name: blocky-dns
+  namespace: blocky
+  labels:
+    app.kubernetes.io/name: blocky
+    app.kubernetes.io/instance: blocky
+  annotations:
+    metallb.io/loadBalancerIPs: "192.168.2.253"
+spec:
+  type: LoadBalancer
+  # Pflicht, nicht Kosmetik: Blocky gruppiert Clients nach IP. Ohne Local
+  # SNAT-tet kube-proxy jedes Paket auf das CNI-Gateway der Node, Blocky saehe
+  # nur eine einzige Client-IP und saemtliche Client-Regeln waeren still
+  # wirkungslos. Dasselbe gilt fuer clientLookup und die Client-Labels der
+  # Prometheus-Metriken.
+  externalTrafficPolicy: Local
+  ports:
+    - name: dns-udp
+      port: 53
+      targetPort: dns-udp
+      protocol: UDP
+    - name: dns-tcp
+      port: 53
+      targetPort: dns-tcp
+      protocol: TCP
+  selector:
+    app.kubernetes.io/name: blocky
+    app.kubernetes.io/instance: blocky
+---
+# Getrennt vom LoadBalancer, damit die Metriken nicht ueber die .253 im LAN
+# haengen. Prometheus scrapt clusterintern.
+apiVersion: v1
+kind: Service
+metadata:
+  name: blocky-metrics
+  namespace: blocky
+  labels:
+    app.kubernetes.io/name: blocky
+    app.kubernetes.io/instance: blocky
+    # Der ServiceMonitor waehlt ueber dieses Label. Ohne es traefe sein Selektor
+    # auch den LoadBalancer und Prometheus haette ein Target ohne http-Port.
+    app.kubernetes.io/component: metrics
+spec:
+  type: ClusterIP
+  ports:
+    - name: http
+      port: 4000
+      targetPort: http
+      protocol: TCP
+  selector:
+    app.kubernetes.io/name: blocky
+    app.kubernetes.io/instance: blocky

@@ -26,7 +26,7 @@ Talos Linux cluster managed via GitOps using the ArgoCD App-of-Apps pattern.
 | 4 | Cert Manager, Longhorn |
 | 5 | Csi Driver Smb, Landing Page, Teslamate |
 | 6 | Kube Prometheus Stack |
-| 7 | Home Assistant, Unifi Poller |
+| 7 | Blocky, Home Assistant, Unifi Poller |
 | 8 | Gatus, Ripe Atlas |
 | 9 | Homepage, Mealie, Paperless Ngx |
 | 11 | Backup Monitor, Proxmox Exporter, Rpi5 Fan |
@@ -57,6 +57,7 @@ homelab/
 │   ├── landing-page.yaml              # Wave 5
 │   ├── teslamate.yaml                 # Wave 5
 │   ├── kube-prometheus-stack.yaml     # Wave 6
+│   ├── blocky.yaml                    # Wave 7
 │   ├── home-assistant.yaml            # Wave 7
 │   ├── unifi-poller.yaml              # Wave 7
 │   ├── gatus.yaml                     # Wave 8
@@ -82,6 +83,13 @@ homelab/
 │   │   ├── kustomization.yaml
 │   │   ├── s3-backup-monitor-credentials-sealed.yaml
 │   │   └── s3-backup-monitor-credentials-unsealed.yaml.example
+│   ├── blocky/
+│   │   ├── deployment.yaml
+│   │   ├── kustomization.yaml
+│   │   ├── namespace.yaml
+│   │   ├── poddisruptionbudget.yaml
+│   │   ├── service.yaml
+│   │   └── servicemonitor.yaml
 │   ├── cert-manager/
 │   │   ├── cloudflare-api-token-sealed.yaml
 │   │   ├── cloudflare-api-token-unsealed.yaml.example
@@ -935,6 +943,7 @@ kubectl get secret -n monitoring grafana-admin-credentials \
 
 | Component | Version | Purpose |
 |-----------|---------|---------|
+| Blocky | v0.34.0 | Blocky |
 | Cert Manager | v1.21.1 | Cert Manager |
 | Csi Driver Smb | 1.20.3 | Csi Driver Smb |
 | Fr24 | latest-build-858 | Fr24 |
@@ -962,6 +971,7 @@ kubectl get secret -n monitoring grafana-admin-credentials \
 
 ## 📖 Documentation
 
+- [Blocky](https://0xerr0r.github.io/blocky/latest/)
 - [Cert Manager](https://charts.jetstack.io)
 - [Csi Driver Smb](https://raw.githubusercontent.com/kubernetes-csi/csi-driver-smb/master/charts)
 - [Gatus](https://github.com/TwiN/gatus)

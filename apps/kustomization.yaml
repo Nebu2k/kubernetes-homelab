@@ -23,6 +23,10 @@ resources:
   - kube-prometheus-stack.yaml
   - argocd-config.yaml
   - backup-monitor.yaml
+  # Haus-Resolver, Cluster-Instanz auf 192.168.2.253. Die zweite Instanz laeuft
+  # als LXC auf pve (.254) und steht in homelab-terraform, damit ein Cluster-
+  # oder ein pve-Ausfall nie beide gleichzeitig trifft.
+  - blocky.yaml
 
   # Exporter
   - proxmox-exporter.yaml
