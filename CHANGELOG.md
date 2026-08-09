@@ -1,3 +1,10 @@
+# [4.98.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.97.0...v4.98.0) (2026-08-09)
+
+
+### Features
+
+* **talos:** metrics-server, den k3s eingebaut mitbrachte ([40b1743](https://github.com/Nebu2k/kubernetes-homelab/commit/40b1743fbfce9bd11a46317fce9fd051ef85549e))
+
 # [4.97.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.96.2...v4.97.0) (2026-08-09)
 
 
