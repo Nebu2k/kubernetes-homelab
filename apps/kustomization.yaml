@@ -58,6 +58,6 @@ resources:
   #   - ripe-atlas.yaml
   #   - mealie.yaml
   #   - teslamate.yaml
-  - paperless-ngx.yaml
+  #   - paperless-ngx.yaml
   - backup-monitor.yaml
 

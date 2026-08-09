@@ -1,0 +1,160 @@
+# PVs zu den aus dem NAS-Backup restaurierten Longhorn-Volumes.
+#
+# Warum das noetig ist und wie das Restore ablaeuft, steht einmal ausfuehrlich
+# in clusters/talos/ripe-atlas/pv.yaml und als Rezept in talos/README.md.
+#
+# Nicht hier drin: paperless-consume-smb. Das ist ein CIFS-Share und kein
+# Longhorn-Volume, sein PV steht in manifests/paperless-ngx/smb-consume-pv.yaml
+# und gilt in beiden Clustern unveraendert.
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: paperless-data
+  annotations:
+    pv.kubernetes.io/provisioned-by: driver.longhorn.io
+spec:
+  capacity:
+    storage: 10Gi
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Delete
+  storageClassName: longhorn
+  volumeMode: Filesystem
+  claimRef:
+    apiVersion: v1
+    kind: PersistentVolumeClaim
+    name: paperless-data
+    namespace: paperless-ngx
+  csi:
+    driver: driver.longhorn.io
+    fsType: ext4
+    volumeHandle: paperless-data
+    volumeAttributes:
+      numberOfReplicas: "2"
+      staleReplicaTimeout: "30"
+      nodeSelector: storage
+      dataEngine: v1
+      backupTargetName: default
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: paperless-media
+  annotations:
+    pv.kubernetes.io/provisioned-by: driver.longhorn.io
+spec:
+  capacity:
+    storage: 50Gi
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Delete
+  storageClassName: longhorn
+  volumeMode: Filesystem
+  claimRef:
+    apiVersion: v1
+    kind: PersistentVolumeClaim
+    name: paperless-media
+    namespace: paperless-ngx
+  csi:
+    driver: driver.longhorn.io
+    fsType: ext4
+    volumeHandle: paperless-media
+    volumeAttributes:
+      numberOfReplicas: "2"
+      staleReplicaTimeout: "30"
+      nodeSelector: storage
+      dataEngine: v1
+      backupTargetName: default
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: paperless-export
+  annotations:
+    pv.kubernetes.io/provisioned-by: driver.longhorn.io
+spec:
+  capacity:
+    storage: 10Gi
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Delete
+  storageClassName: longhorn
+  volumeMode: Filesystem
+  claimRef:
+    apiVersion: v1
+    kind: PersistentVolumeClaim
+    name: paperless-export
+    namespace: paperless-ngx
+  csi:
+    driver: driver.longhorn.io
+    fsType: ext4
+    volumeHandle: paperless-export
+    volumeAttributes:
+      numberOfReplicas: "2"
+      staleReplicaTimeout: "30"
+      nodeSelector: storage
+      dataEngine: v1
+      backupTargetName: default
+---
+# postgresql-data und redis-data heissen im Longhorn mit paperless-Praefix:
+# Volume- und PV-Namen sind clusterweit, mealie bringt eine PVC namens
+# postgresql-data mit.
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: paperless-postgresql-data
+  annotations:
+    pv.kubernetes.io/provisioned-by: driver.longhorn.io
+spec:
+  capacity:
+    storage: 8Gi
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Delete
+  storageClassName: longhorn
+  volumeMode: Filesystem
+  claimRef:
+    apiVersion: v1
+    kind: PersistentVolumeClaim
+    name: postgresql-data
+    namespace: paperless-ngx
+  csi:
+    driver: driver.longhorn.io
+    fsType: ext4
+    volumeHandle: paperless-postgresql-data
+    volumeAttributes:
+      numberOfReplicas: "2"
+      staleReplicaTimeout: "30"
+      nodeSelector: storage
+      dataEngine: v1
+      backupTargetName: default
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: paperless-redis-data
+  annotations:
+    pv.kubernetes.io/provisioned-by: driver.longhorn.io
+spec:
+  capacity:
+    storage: 1Gi
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Delete
+  storageClassName: longhorn
+  volumeMode: Filesystem
+  claimRef:
+    apiVersion: v1
+    kind: PersistentVolumeClaim
+    name: redis-data
+    namespace: paperless-ngx
+  csi:
+    driver: driver.longhorn.io
+    fsType: ext4
+    volumeHandle: paperless-redis-data
+    volumeAttributes:
+      numberOfReplicas: "2"
+      staleReplicaTimeout: "30"
+      nodeSelector: storage
+      dataEngine: v1
+      backupTargetName: default
