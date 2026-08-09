@@ -100,11 +100,19 @@ patches:
           labels:
             pod-security.kubernetes.io/enforce: privileged
 
-  # Traefik: eigene LoadBalancer-IP aus dem neuen Pool. Die .250 gehoert bis
-  # zum Schluss dem k3s-Cluster, an ihr haengen der UniFi-Portforward und der
-  # Split-Horizon-Wildcard. valuesObject wird nach den valueFiles gemergt,
-  # ueberschrieben wird deshalb nur diese eine Annotation, der Rest von
-  # manifests/traefik/values.yaml bleibt stehen.
+  # Traefik: eigene LoadBalancer-IP. Seit dem 2026-08-09 ist das die .250, an
+  # der der UniFi-Portforward (80/443) und der Split-Horizon-Wildcard
+  # *.elmstreet79.de haengen. Damit sind die migrierten Dienste wieder unter
+  # ihren Namen erreichbar, ohne dass in zwei AdGuard-Instanzen ein Rewrite
+  # angefasst werden musste: die Adresse ist umgezogen, nicht der Name.
+  #
+  # Reihenfolge war Pflicht: erst das k3s-Traefik auf die .251, dann die .250 in
+  # den hiesigen Pool, dann diese Annotation. Andersherum kuendigen zwei
+  # MetalLB-Speaker dieselbe IP an.
+  #
+  # valuesObject wird nach den valueFiles gemergt, ueberschrieben wird deshalb
+  # nur diese eine Annotation, der Rest von manifests/traefik/values.yaml bleibt
+  # stehen.
   - target:
       kind: Application
       name: traefik
@@ -114,7 +122,7 @@ patches:
         value:
           service:
             annotations:
-              metallb.io/loadBalancerIPs: "192.168.2.240"
+              metallb.io/loadBalancerIPs: "192.168.2.250"
 
   # Longhorn: eigener Manifest-Pfad, weil die Node-CRs im k3s-Cluster auf
   # k3s-worker-1, raspi5 und prodesk lauten und der ServiceMonitor hier noch
