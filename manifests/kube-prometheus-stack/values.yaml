@@ -438,7 +438,13 @@ kube-state-metrics:
             labelsFromPath:
               volume: [metadata, name]
             metrics:
-              - name: recurring_job_group
+              # Der Suffix _info ist Pflicht, nicht Geschmack: bei type: Info
+              # haengt ksm ihn NICHT selbst an, sondern uebernimmt den Namen
+              # wie er dasteht und loggt nur ein "Info metric does not have
+              # _info suffix" auf Info-Level weg. Die Metrik entsteht dann
+              # unter dem verkuerzten Namen und jede Regel, die den
+              # konventionellen erwartet, laeuft still ins Leere.
+              - name: recurring_job_group_info
                 help: "Gruppenlabels eines Longhorn-Volumes, 1 je Volume"
                 each:
                   type: Info
