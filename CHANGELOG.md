@@ -1,3 +1,10 @@
+# [4.86.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.85.0...v4.86.0) (2026-08-09)
+
+
+### Features
+
+* **talos:** ripe-atlas ins neue Cluster, erster Volume-Restore ([b9f1577](https://github.com/Nebu2k/kubernetes-homelab/commit/b9f15776990a2aa65947fe8f24526433e0f0637d))
+
 # [4.85.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.84.2...v4.85.0) (2026-08-09)
 
 
