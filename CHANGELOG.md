@@ -1,3 +1,10 @@
+# [5.2.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v5.1.1...v5.2.0) (2026-08-09)
+
+
+### Features
+
+* **blocky:** Haus-Resolver als Cluster-Instanz auf 192.168.2.253 ([6373557](https://github.com/Nebu2k/kubernetes-homelab/commit/6373557e4a274ab2b72ad3733738a8ab9166eca6))
+
 ## [5.1.1](https://github.com/Nebu2k/kubernetes-homelab/compare/v5.1.0...v5.1.1) (2026-08-09)
 
 
