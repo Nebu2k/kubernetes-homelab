@@ -1,3 +1,10 @@
+## [4.84.1](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.84.0...v4.84.1) (2026-08-09)
+
+
+### Bug Fixes
+
+* **talos:** PodSecurity-Ausnahme fuer den node-exporter ([cc416b5](https://github.com/Nebu2k/kubernetes-homelab/commit/cc416b5746893a3f480755da40cc4edb871fe0f2))
+
 # [4.84.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.83.0...v4.84.0) (2026-08-09)
 
 
