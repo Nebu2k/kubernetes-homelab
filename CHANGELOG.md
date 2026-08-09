@@ -1,3 +1,10 @@
+# [4.81.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.80.0...v4.81.0) (2026-08-09)
+
+
+### Features
+
+* **talos:** erste Welle Workloads ins neue Cluster ([e5f44ba](https://github.com/Nebu2k/kubernetes-homelab/commit/e5f44ba50c9d39f2aac7d1d29133feb8d3d07b56))
+
 # [4.80.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.79.0...v4.80.0) (2026-08-09)
 
 
