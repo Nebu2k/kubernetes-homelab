@@ -66,11 +66,11 @@ nodes:
     # nur zwei verschiedene Nodes und ist damit zufrieden, erst die Zone macht
     # den Unterschied sichtbar.
     #
-    # Gegenstueck ist replicaZoneSoftAntiAffinity: "false" im Talos-Overlay
-    # (clusters/talos/kustomization.yaml). Bewusst nur dort und nicht in den
-    # geteilten Longhorn-Values: im k3s-Cluster traegt keine Node ein
-    # Zonen-Label, ein hartes Zonen-Anti-Affinity liesse dort nur noch eine
-    # einzige Replik je Volume zu.
+    # Gegenstueck ist replicaZoneSoftAntiAffinity: "false" in
+    # manifests/longhorn/values.yaml. Die beiden gehoeren zusammen: ohne
+    # Zonen-Label faellt alles in dieselbe leere Zone und Longhorn koennte nur
+    # noch eine einzige Replik je Volume unterbringen. Bei einer neuen Node also
+    # zuerst das Label setzen.
     nodeLabels:
       topology.kubernetes.io/zone: pve
     # nocloud-installer, nicht installer: die VMs booten vom

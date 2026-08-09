@@ -99,7 +99,7 @@ cd homelab-terraform/argocd-talos && terraform apply
 KUBECONFIG=talos/clusterconfig/kubeconfig kubectl apply -f bootstrap/root-app-talos.yaml
 ```
 
-Was danach per GitOps kommt, steht in `clusters/talos/kustomization.yaml`: die
+Was danach per GitOps kommt, steht in `apps/kustomization.yaml`: die
 app-of-apps des neuen Clusters. Sie zieht die Application-Manifeste aus `apps/`
 und sagt nur, welche davon hier schon laufen und was sich unterscheidet. Ein
 Dienst wandert damit durch eine Zeile mehr in der Liste, nicht durch eine Kopie.
@@ -117,7 +117,7 @@ Replikate auf zwei Nodes, Backup-Target `available: true`.
 beim ersten Sync alle 18 BackupVolumes und 141 Backups des alten eingelesen,
 lesend, es wurde nichts geloescht (in beiden Clustern gezaehlt). Das ist die
 Voraussetzung fuer den Restore und kein Unfall. Ein Job ist deshalb bewusst aus:
-`system-backup-daily`, siehe `clusters/talos/longhorn/kustomization.yaml`.
+`system-backup-daily`, siehe `manifests/longhorn/recurring-backup-jobs.yaml`.
 
 **Die Sealing-Keys sind aus dem k3s-Cluster uebertragen**, alle sieben
 (30-Tage-Rotation, sieben Monate Historie). Deshalb funktioniert jedes
@@ -196,10 +196,9 @@ danach die einzige Kopie.
 muessen zur StorageClass passen, sonst findet Longhorn keine Disk. Fertig ist
 das Restore, wenn `.status.restoreRequired` auf `false` steht.
 
-**4. PV und PVC verdrahten.** Das PV steht im Overlay unter
-`clusters/talos/<dienst>/pv.yaml`, mit `claimRef` vorwaerts auf die PVC aus
-`manifests/`. Die PVC selbst bleibt unveraendert. Der Grund steht ausfuehrlich
-im Kopf von `clusters/talos/ripe-atlas/pv.yaml`: ohne vorgebundenes PV bindet
+**4. PV und PVC verdrahten.** Das PV steht in `manifests/<dienst>/pv.yaml`, mit
+`claimRef` vorwaerts auf die PVC daneben. Die PVC selbst bleibt unveraendert. Der Grund steht ausfuehrlich
+im Kopf von `manifests/ripe-atlas/pv.yaml`: ohne vorgebundenes PV bindet
 die PVC an ein frisch provisioniertes, leeres Volume, der Pod startet, und das
 faellt erst auf, wenn die Daten fehlen.
 
@@ -245,7 +244,7 @@ Momentaufnahme, ein Re-Sync duerfte daraus nie einen alten Stand herstellen.
   Service bekommt seine IP, ArgoCD meldet Synced und Healthy, die Speaker haben
   ARP-Responder und einen sauberen memberlist-Join, aber niemand beantwortet das
   ARP. Zu sehen ist es nur an einem leeren `kubectl get servicel2status -A`.
-  Steht in `clusters/talos/kustomization.yaml`.
+  Steht in `manifests/metallb/values.yaml`.
 - **PodSecurity steht auf `baseline`.** `longhorn-system` ist in
   `talconfig.yaml` ausgenommen. Alles andere mit `hostNetwork` oder `hostPath`
   (Home Assistant, csi-driver-smb) braucht beim Migrieren ein
@@ -279,7 +278,7 @@ Momentaufnahme, ein Re-Sync duerfte daraus nie einen alten Stand herstellen.
   schneller, longhorn-manager adoptiert das vorhandene CR und ergaenzt nichts.
   Ohne `spec.disks` im Manifest stehen die Nodes auf Ready und Schedulable und
   haben null Kapazitaet, was erst am ersten Pending-Volume auffaellt. Steht in
-  `clusters/talos/longhorn/node-config.yaml`. Node-CRs deshalb auch nicht
+  `manifests/longhorn/node-config.yaml`. Node-CRs deshalb auch nicht
   loeschen: dann legt Longhorn seine eigene Disk daneben und das Duplikat ist
   nicht mehr aufloesbar.
 - **`talosctl reset` nimmt `/var/lib/longhorn` mit.** Die Replikate liegen auf
@@ -314,3 +313,93 @@ Momentaufnahme, ein Re-Sync duerfte daraus nie einen alten Stand herstellen.
   Objekte stammen aus der Zeit vor 3.0 und werden aus demselben Grund auch
   nicht geprunt. Wer dort eine Endpoint-IP im Repo aendert, aendert sie
   praktisch nicht. Von Hand nachziehen oder den Dienst migrieren.
+
+## Eine neue Node aufnehmen: raspi5 als Control-Plane
+
+Der naechste anstehende Handgriff. Er ersetzt talos-cp-2 und holt die
+etcd-Mehrheit von pve herunter, siehe die Randbedingung in der ROADMAP. Die
+Reihenfolge ist wichtig: **erst joinen, dann die alte Node entfernen**, sonst
+steht das Cluster zwischendurch auf zwei Membern.
+
+**1. Image bauen.** raspi5 braucht ein eigenes Schematic: `rpi_5`-Overlay plus
+dieselben zwei Extensions wie die anderen Nodes. Auf
+<https://factory.talos.dev> zusammenklicken, oder direkt per API:
+
+```bash
+curl -X POST --data-binary @- https://factory.talos.dev/schematics <<'EOF'
+customization:
+  systemExtensions:
+    officialExtensions:
+      - siderolabs/iscsi-tools
+      - siderolabs/util-linux-tools
+overlay:
+  name: rpi_5
+  image: siderolabs/sbc-raspberrypi
+EOF
+```
+
+Die Antwort ist die Schematic-ID. Das Disk-Image dazu:
+
+```text
+https://factory.talos.dev/image/<schematic-id>/v1.13.8/metal-arm64.raw.zst
+```
+
+Auf die NVMe schreiben (nicht auf SD, das war der ganze Grund fuer den Tausch):
+
+```bash
+zstd -d metal-arm64.raw.zst -o talos.raw
+sudo dd if=talos.raw of=/dev/<nvme> bs=4M status=progress conv=fsync
+```
+
+**2. In `talconfig.yaml` eintragen.** Als vierte Node, `controlPlane: true`,
+`ipAddress: 192.168.2.9` (die bisherige raspi5-Adresse, sie ist frei). Drei
+Dinge, die dabei anders sind als bei den pve-VMs:
+
+- `talosImageURL: factory.talos.dev/metal-installer/<schematic-id>` — `metal`,
+  nicht `nocloud`, wie bei prodesk.
+- `nodeLabels: topology.kubernetes.io/zone: blech` — **nicht vergessen**, sonst
+  legt Longhorn zwei Repliken in dieselbe Zone (siehe Fallen unten).
+- `deviceSelector` auf den echten Treiber. Beim Pi 5 ist das nicht
+  `virtio_net`; im Zweifel `talosctl -n <ip> get links` im Maintenance-Mode
+  lesen und danach eintragen.
+
+Danach `talhelper genconfig` und die Config anwenden, im Maintenance-Mode noch
+`--insecure`:
+
+```bash
+talosctl apply-config --insecure --nodes <dhcp-ip> \
+  --file clusterconfig/homelab-raspi5.yaml
+```
+
+**Kein `talosctl bootstrap`.** Das war einmalig fuer das erste etcd-Member; ein
+zweiter Aufruf zerlegt das Cluster.
+
+**3. Warten, bis er wirklich Member ist**, nicht nur `Ready`:
+
+```bash
+talosctl -n 192.168.2.9 etcd members
+kubectl get nodes
+```
+
+Vier Member sind ein bewusst kurzer Zustand: eine gerade Anzahl vertraegt nicht
+mehr Ausfaelle als drei.
+
+**4. talos-cp-2 sauber entfernen**, in dieser Reihenfolge:
+
+```bash
+kubectl drain talos-cp-2 --ignore-daemonsets --delete-emptydir-data
+talosctl -n 192.168.2.21 etcd leave
+kubectl delete node talos-cp-2
+```
+
+Longhorn braucht dabei einen eigenen Handgriff: das Node-CR laesst sich nicht
+loeschen, solange Repliken darauf liegen (der `validator.longhorn.io`-Webhook
+blockt), und `drain` haengt an den Longhorn-PDBs. Vorher in der Longhorn-UI die
+Node auf `allowScheduling: false` setzen und die Repliken abwandern lassen.
+
+**5. Erst wenn raspi5 ein paar Talos-Upgrades ueberlebt hat**, ist raspi4
+entbehrlich. Bis dahin steht er abgeschaltet, nicht abgebaut: `rpi_5` ist bei
+Sidero ein bewegliches Ziel (Issue #12748: v1.12.2 bootet mit
+Ethernet-Problem, v1.12.3 gar nicht), `rpi_generic` dagegen das einzige
+offiziell getestete Pi-Profil. Bootet raspi5 nicht, kommt raspi4 an seine
+Stelle.

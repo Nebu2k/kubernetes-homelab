@@ -139,6 +139,7 @@ homelab/
 │   │   ├── kustomization.yaml
 │   │   ├── matter-pvc.yaml
 │   │   ├── namespace.yaml
+│   │   ├── pv 2.yaml
 │   │   ├── pv.yaml
 │   │   ├── pvc.yaml
 │   │   ├── s3-archive-credentials-sealed.yaml
@@ -178,6 +179,7 @@ homelab/
 │   │   ├── home-assistant-token-sealed.yaml
 │   │   ├── home-assistant-token-unsealed.yaml.example
 │   │   ├── kustomization.yaml
+│   │   ├── namespace 2.yaml
 │   │   ├── namespace.yaml
 │   │   ├── node-exporter-external-scrapeconfig.yaml
 │   │   ├── prometheus-ingress.yaml
@@ -215,6 +217,7 @@ homelab/
 │   │   ├── namespace.yaml
 │   │   ├── networkpolicy.yaml
 │   │   ├── postgresql.yaml
+│   │   ├── pv 2.yaml
 │   │   ├── pv.yaml
 │   │   ├── pvc.yaml
 │   │   └── service.yaml
@@ -235,6 +238,7 @@ homelab/
 │   │   ├── paperless-secrets-sealed.yaml
 │   │   ├── paperless-secrets-unsealed.yaml.example
 │   │   ├── postgresql.yaml
+│   │   ├── pv 2.yaml
 │   │   ├── pv.yaml
 │   │   ├── pvc.yaml
 │   │   ├── redis.yaml
@@ -265,6 +269,7 @@ homelab/
 │   │   ├── deployment.yaml
 │   │   ├── kustomization.yaml
 │   │   ├── namespace.yaml
+│   │   ├── pv 2.yaml
 │   │   ├── pv.yaml
 │   │   └── pvc.yaml
 │   ├── teslamate/
@@ -286,6 +291,7 @@ homelab/
 │   │   ├── postgres-exporter-deployment.yaml
 │   │   ├── postgres-exporter-service.yaml
 │   │   ├── postgres-exporter-servicemonitor.yaml
+│   │   ├── pv 2.yaml
 │   │   ├── pv.yaml
 │   │   ├── s3-backup-credentials-sealed.yaml
 │   │   ├── s3-backup-credentials-unsealed.yaml.example
