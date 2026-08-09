@@ -464,6 +464,16 @@ seit dem 2026-08-09 auch in `talconfig.yaml`. Das Disk-Image dazu:
 https://factory.talos.dev/image/5a66af048bde96b95010bf8bba792973932e5bb7359e77f2ef7d8edb9aacc2a6/v1.13.8/metal-arm64.raw.zst
 ```
 
+**Die Version in dieser URL ist der Stand vom 2026-08-09 und wandert nicht
+mit.** Wer die Karte spaeter neu bespielt, ersetzt `v1.13.8` durch das, was das
+Cluster gerade faehrt (`talosctl version`). Sonst kommt die Node mit einem
+aelteren Talos zurueck als die anderen, und zwar ohne Fehlermeldung.
+
+Das Image selbst wird bewusst nirgends aufbewahrt: der reproduzierbare Teil ist
+die Schematic-ID, und die entsteht deterministisch aus dem YAML oben. Dasselbe
+YAML nochmal an die Factory geschickt ergibt wieder dieselbe ID. Eine lokale
+Kopie waere an eine Talos-Version gebunden und mit dem naechsten Upgrade falsch.
+
 Die `configTxtAppend`-Option ist beim ersten Bau noch nicht dabei gewesen; die
 Schematic ohne sie war
 `b00ac8400b2ad823d3d5e972136dd89c0d960d58e0ff2b12d5b8b87e9d53e670`. Sie schaltet
