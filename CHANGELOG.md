@@ -1,3 +1,10 @@
+# [4.94.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.93.0...v4.94.0) (2026-08-09)
+
+
+### Features
+
+* **traefik:** k3s-Traefik auf die .251, gibt die .250 frei ([7b1231d](https://github.com/Nebu2k/kubernetes-homelab/commit/7b1231da61cb0118fb18e58b83ee5d94e787f9f5))
+
 # [4.93.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.92.0...v4.93.0) (2026-08-09)
 
 
