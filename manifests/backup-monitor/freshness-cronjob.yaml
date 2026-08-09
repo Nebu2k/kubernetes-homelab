@@ -189,7 +189,11 @@ spec:
                   # 06:00 UTC, die Snapshots fallen 00:00 und 12:00 LOKALZEIT der
                   # jeweiligen Node, und die Raspis stehen auf Europe/Berlin
                   # waehrend die x86-Nodes auf UTC stehen.
-                  for NODE in k3s-cp-1 raspi4 raspi5; do
+                  # Beide Cluster schreiben in dasselbe Bucket und in dasselbe
+                  # Namensschema. Fuer k3s macht das der Server-Prozess selbst,
+                  # fuer Talos die drei CronJobs aus manifests/etcd-backup/.
+                  # Beim Abbau von k3s faellt die erste Zeile weg, sonst nichts.
+                  for NODE in k3s-cp-1 raspi4 raspi5 talos-cp-1 talos-cp-2 prodesk; do
                     pruefe "${ETCD_BUCKET}" "etcd-snapshot-${NODE}-" 26 "etcd ${NODE}"
                   done
 

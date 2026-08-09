@@ -1,0 +1,279 @@
+# Offsite-Backup des Talos-etcd, je ein CronJob pro Control-Plane.
+#
+# WARUM ES DAS UEBERHAUPT BRAUCHT: k3s laedt seine Snapshots selbst nach S3
+# (--etcd-s3-config-secret, siehe manifests/etcd-s3-config/). Talos kennt
+# nichts Vergleichbares, es schreibt einen Snapshot nur auf Anforderung ueber
+# die API heraus. Der Upload ist damit Sache des Clusters und nicht der Node.
+#
+# WARUM DREI CRONJOBS UND NICHT EINER MIT DREI SCHRITTEN: damit eine nicht
+# erreichbare Node nur ihren eigenen Lauf reisst. In einem gemeinsamen Job
+# waeren die drei Snapshots initContainers, die laufen streng nacheinander und
+# muessen alle durchkommen: eine tote Node haette dann auch die Snapshots der
+# beiden gesunden verhindert, und in S3 wuerde alles gleichzeitig alt. Genau
+# diese Unterscheidung ist der Sinn der drei Praefixe, die die Frische-Sonde in
+# manifests/backup-monitor/freshness-cronjob.yaml einzeln prueft.
+#
+# WARUM UEBERHAUPT DREI SNAPSHOTS, wo etcd repliziert und der Inhalt derselbe
+# ist: sie belegen drei unabhaengige Wege ins Bucket. Ein Snapshot liegt bei
+# rund 55 MB, bei zweimal taeglich und 30 Tagen Lifecycle sind das unter
+# 10 GB im Bucket. Der Preis dafuer ist kleiner als der Aufwand, sich im
+# Ernstfall zu fragen, ob der eine Weg noch geht.
+#
+# Der Zeitplan ist gestaffelt (00:00, 00:20, 00:40 UTC und dieselben Zeiten
+# mittags), damit nicht drei Snapshots gleichzeitig ueber dieselbe Leitung
+# gehen. timeZone ist Pflicht und nicht Kosmetik: ohne das Feld laeuft ein
+# CronJob in der Zeitzone der Node, die gerade den kube-controller-manager
+# haelt.
+#
+# Der Objektname "etcd-snapshot-<node>-<unix-ts>" ist bewusst derselbe, den k3s
+# gebaut hat. Damit muss die Frische-Sonde beim Abbau von k3s nur ihre
+# Node-Liste tauschen und nicht ihre Logik.
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: etcd-snapshot-talos-cp-1
+  namespace: kube-system
+  labels:
+    app.kubernetes.io/name: etcd-snapshot-offsite
+spec:
+  schedule: "0 0,12 * * *"
+  timeZone: "Etc/UTC"
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      # Kein Retry. Ist die Node weg, ist sie beim zweiten Versuch auch weg, und
+      # der fehlgeschlagene Job IST das Signal.
+      backoffLimit: 0
+      template:
+        metadata:
+          labels:
+            app.kubernetes.io/name: etcd-snapshot-offsite
+        spec:
+          restartPolicy: Never
+          initContainers:
+            # Das talosctl-Image ist distroless: kein /tmp, keine Shell. Der
+            # Snapshot muss deshalb in ein gemountetes Volume, und der Upload
+            # braucht ein zweites Image.
+            - name: snapshot
+              image: ghcr.io/siderolabs/talosctl:v1.13.8
+              command:
+                - /talosctl
+                - --talosconfig
+                - /talos/config
+                - --nodes
+                - 192.168.2.20
+                - etcd
+                - snapshot
+                - /snapshot/db
+              volumeMounts:
+                - name: talosconfig
+                  mountPath: /talos
+                  readOnly: true
+                - name: snapshot
+                  mountPath: /snapshot
+              resources:
+                requests:
+                  cpu: 50m
+                  memory: 64Mi
+                limits:
+                  memory: 256Mi
+          containers:
+            - name: upload
+              image: amazon/aws-cli:2.36.16
+              command:
+                - /bin/sh
+                - -c
+                - |
+                  set -eu
+                  KEY="etcd-snapshot-${NODE_NAME}-$(date +%s)"
+                  echo "lade $(stat -c %s /snapshot/db) Bytes nach s3://${ETCD_BUCKET}/${KEY}"
+                  aws s3 cp /snapshot/db "s3://${ETCD_BUCKET}/${KEY}"
+              env:
+                - name: NODE_NAME
+                  value: talos-cp-1
+              envFrom:
+                - secretRef:
+                    name: etcd-backup-s3
+              volumeMounts:
+                - name: snapshot
+                  mountPath: /snapshot
+                  readOnly: true
+              resources:
+                requests:
+                  cpu: 50m
+                  memory: 128Mi
+                limits:
+                  memory: 512Mi
+          volumes:
+            - name: talosconfig
+              secret:
+                # Legt Talos an, sobald das ServiceAccount-CR daneben existiert.
+                secretName: etcd-backup
+            - name: snapshot
+              emptyDir:
+                sizeLimit: 2Gi
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: etcd-snapshot-talos-cp-2
+  namespace: kube-system
+  labels:
+    app.kubernetes.io/name: etcd-snapshot-offsite
+spec:
+  schedule: "20 0,12 * * *"
+  timeZone: "Etc/UTC"
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      backoffLimit: 0
+      template:
+        metadata:
+          labels:
+            app.kubernetes.io/name: etcd-snapshot-offsite
+        spec:
+          restartPolicy: Never
+          initContainers:
+            - name: snapshot
+              image: ghcr.io/siderolabs/talosctl:v1.13.8
+              command:
+                - /talosctl
+                - --talosconfig
+                - /talos/config
+                - --nodes
+                - 192.168.2.21
+                - etcd
+                - snapshot
+                - /snapshot/db
+              volumeMounts:
+                - name: talosconfig
+                  mountPath: /talos
+                  readOnly: true
+                - name: snapshot
+                  mountPath: /snapshot
+              resources:
+                requests:
+                  cpu: 50m
+                  memory: 64Mi
+                limits:
+                  memory: 256Mi
+          containers:
+            - name: upload
+              image: amazon/aws-cli:2.36.16
+              command:
+                - /bin/sh
+                - -c
+                - |
+                  set -eu
+                  KEY="etcd-snapshot-${NODE_NAME}-$(date +%s)"
+                  echo "lade $(stat -c %s /snapshot/db) Bytes nach s3://${ETCD_BUCKET}/${KEY}"
+                  aws s3 cp /snapshot/db "s3://${ETCD_BUCKET}/${KEY}"
+              env:
+                - name: NODE_NAME
+                  value: talos-cp-2
+              envFrom:
+                - secretRef:
+                    name: etcd-backup-s3
+              volumeMounts:
+                - name: snapshot
+                  mountPath: /snapshot
+                  readOnly: true
+              resources:
+                requests:
+                  cpu: 50m
+                  memory: 128Mi
+                limits:
+                  memory: 512Mi
+          volumes:
+            - name: talosconfig
+              secret:
+                secretName: etcd-backup
+            - name: snapshot
+              emptyDir:
+                sizeLimit: 2Gi
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: etcd-snapshot-prodesk
+  namespace: kube-system
+  labels:
+    app.kubernetes.io/name: etcd-snapshot-offsite
+spec:
+  schedule: "40 0,12 * * *"
+  timeZone: "Etc/UTC"
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      backoffLimit: 0
+      template:
+        metadata:
+          labels:
+            app.kubernetes.io/name: etcd-snapshot-offsite
+        spec:
+          restartPolicy: Never
+          initContainers:
+            - name: snapshot
+              image: ghcr.io/siderolabs/talosctl:v1.13.8
+              command:
+                - /talosctl
+                - --talosconfig
+                - /talos/config
+                - --nodes
+                - 192.168.2.23
+                - etcd
+                - snapshot
+                - /snapshot/db
+              volumeMounts:
+                - name: talosconfig
+                  mountPath: /talos
+                  readOnly: true
+                - name: snapshot
+                  mountPath: /snapshot
+              resources:
+                requests:
+                  cpu: 50m
+                  memory: 64Mi
+                limits:
+                  memory: 256Mi
+          containers:
+            - name: upload
+              image: amazon/aws-cli:2.36.16
+              command:
+                - /bin/sh
+                - -c
+                - |
+                  set -eu
+                  KEY="etcd-snapshot-${NODE_NAME}-$(date +%s)"
+                  echo "lade $(stat -c %s /snapshot/db) Bytes nach s3://${ETCD_BUCKET}/${KEY}"
+                  aws s3 cp /snapshot/db "s3://${ETCD_BUCKET}/${KEY}"
+              env:
+                - name: NODE_NAME
+                  value: prodesk
+              envFrom:
+                - secretRef:
+                    name: etcd-backup-s3
+              volumeMounts:
+                - name: snapshot
+                  mountPath: /snapshot
+                  readOnly: true
+              resources:
+                requests:
+                  cpu: 50m
+                  memory: 128Mi
+                limits:
+                  memory: 512Mi
+          volumes:
+            - name: talosconfig
+              secret:
+                secretName: etcd-backup
+            - name: snapshot
+              emptyDir:
+                sizeLimit: 2Gi

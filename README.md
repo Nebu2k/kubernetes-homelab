@@ -21,6 +21,7 @@ Production-ready K3s cluster managed via GitOps using ArgoCD App-of-Apps pattern
 |------|-----------|
 | 0 | Coredns Config, Sealed Secrets |
 | 1 | Etcd S3 Config, Kured, Metallb, Reloader, System Upgrade Controller |
+| 2 | Etcd Backup |
 | 3 | Traefik |
 | 4 | Cert Manager, Longhorn |
 | 5 | Csi Driver Smb, Landing Page, Teslamate |
@@ -50,6 +51,7 @@ homelab/
 │   ├── metallb.yaml                   # Wave 1
 │   ├── reloader.yaml                  # Wave 1
 │   ├── system-upgrade-controller.yaml # Wave 1
+│   ├── etcd-backup.yaml               # Wave 2
 │   ├── traefik.yaml                   # Wave 3
 │   ├── cert-manager.yaml              # Wave 4
 │   ├── longhorn.yaml                  # Wave 4
@@ -94,6 +96,12 @@ homelab/
 │   │   └── kustomization.yaml
 │   ├── csi-driver-smb/
 │   │   └── values.yaml
+│   ├── etcd-backup/
+│   │   ├── cronjob.yaml
+│   │   ├── kustomization.yaml
+│   │   ├── s3-credentials-sealed.yaml
+│   │   ├── s3-credentials-unsealed.yaml.example
+│   │   └── talos-service-account.yaml
 │   ├── etcd-s3-config/
 │   │   ├── kustomization.yaml
 │   │   ├── s3-etcd-backup-credentials-sealed.yaml
@@ -599,6 +607,8 @@ cd kubernetes-homelab
    ```bash
    cp manifests/backup-monitor/s3-backup-monitor-credentials-unsealed.yaml.example \
       manifests/backup-monitor/s3-backup-monitor-credentials-unsealed.yaml
+   cp manifests/etcd-backup/s3-credentials-unsealed.yaml.example \
+      manifests/etcd-backup/s3-credentials-unsealed.yaml
    cp manifests/etcd-s3-config/s3-etcd-backup-credentials-unsealed.yaml.example \
       manifests/etcd-s3-config/s3-etcd-backup-credentials-unsealed.yaml
    cp manifests/fr24/fr24-secret-unsealed.yaml.example \
@@ -695,82 +705,87 @@ kubeseal --format=yaml --controller-namespace=kube-system \
   < manifests/cert-manager/cloudflare-api-token-unsealed.yaml \
   > manifests/cert-manager/cloudflare-api-token-sealed.yaml
 
-# 3. etcd-s3-config: s3 etcd backup credentials
+# 3. etcd-backup: s3 credentials
+kubeseal --format=yaml --controller-namespace=kube-system \
+  < manifests/etcd-backup/s3-credentials-unsealed.yaml \
+  > manifests/etcd-backup/s3-credentials-sealed.yaml
+
+# 4. etcd-s3-config: s3 etcd backup credentials
 kubeseal --format=yaml --controller-namespace=kube-system \
   < manifests/etcd-s3-config/s3-etcd-backup-credentials-unsealed.yaml \
   > manifests/etcd-s3-config/s3-etcd-backup-credentials-sealed.yaml
 
-# 4. fr24: fr24 secret
+# 5. fr24: fr24 secret
 kubeseal --format=yaml --controller-namespace=kube-system \
   < manifests/fr24/fr24-secret-unsealed.yaml \
   > manifests/fr24/fr24-secret-sealed.yaml
 
-# 5. home-assistant: s3 archive credentials
+# 6. home-assistant: s3 archive credentials
 kubeseal --format=yaml --controller-namespace=kube-system \
   < manifests/home-assistant/s3-archive-credentials-unsealed.yaml \
   > manifests/home-assistant/s3-archive-credentials-sealed.yaml
 
-# 6. kube-prometheus-stack: aws credentials
+# 7. kube-prometheus-stack: aws credentials
 kubeseal --format=yaml --controller-namespace=kube-system \
   < manifests/kube-prometheus-stack/aws-credentials-unsealed.yaml \
   > manifests/kube-prometheus-stack/aws-credentials-sealed.yaml
 
-# 7. kube-prometheus-stack: grafana admin
+# 8. kube-prometheus-stack: grafana admin
 kubeseal --format=yaml --controller-namespace=kube-system \
   < manifests/kube-prometheus-stack/grafana-admin-unsealed.yaml \
   > manifests/kube-prometheus-stack/grafana-admin-sealed.yaml
 
-# 8. kube-prometheus-stack: home assistant token
+# 9. kube-prometheus-stack: home assistant token
 kubeseal --format=yaml --controller-namespace=kube-system \
   < manifests/kube-prometheus-stack/home-assistant-token-unsealed.yaml \
   > manifests/kube-prometheus-stack/home-assistant-token-sealed.yaml
 
-# 9. longhorn: nas cifs secret
+# 10. longhorn: nas cifs secret
 kubeseal --format=yaml --controller-namespace=kube-system \
   < manifests/longhorn/nas-cifs-secret-unsealed.yaml \
   > manifests/longhorn/nas-cifs-secret-sealed.yaml
 
-# 10. mealie: mealie secrets
+# 11. mealie: mealie secrets
 kubeseal --format=yaml --controller-namespace=kube-system \
   < manifests/mealie/mealie-secrets-unsealed.yaml \
   > manifests/mealie/mealie-secrets-sealed.yaml
 
-# 11. paperless-ngx: paperless secrets
+# 12. paperless-ngx: paperless secrets
 kubeseal --format=yaml --controller-namespace=kube-system \
   < manifests/paperless-ngx/paperless-secrets-unsealed.yaml \
   > manifests/paperless-ngx/paperless-secrets-sealed.yaml
 
-# 12. paperless-ngx: s3 backup credentials
+# 13. paperless-ngx: s3 backup credentials
 kubeseal --format=yaml --controller-namespace=kube-system \
   < manifests/paperless-ngx/s3-backup-credentials-unsealed.yaml \
   > manifests/paperless-ngx/s3-backup-credentials-sealed.yaml
 
-# 13. paperless-ngx: smb credentials
+# 14. paperless-ngx: smb credentials
 kubeseal --format=yaml --controller-namespace=kube-system \
   < manifests/paperless-ngx/smb-credentials-unsealed.yaml \
   > manifests/paperless-ngx/smb-credentials-sealed.yaml
 
-# 14. proxmox-exporter: pve api credentials
+# 15. proxmox-exporter: pve api credentials
 kubeseal --format=yaml --controller-namespace=kube-system \
   < manifests/proxmox-exporter/pve-api-credentials-unsealed.yaml \
   > manifests/proxmox-exporter/pve-api-credentials-sealed.yaml
 
-# 15. readsb: readsb secret
+# 16. readsb: readsb secret
 kubeseal --format=yaml --controller-namespace=kube-system \
   < manifests/readsb/readsb-secret-unsealed.yaml \
   > manifests/readsb/readsb-secret-sealed.yaml
 
-# 16. teslamate: s3 backup credentials
+# 17. teslamate: s3 backup credentials
 kubeseal --format=yaml --controller-namespace=kube-system \
   < manifests/teslamate/s3-backup-credentials-unsealed.yaml \
   > manifests/teslamate/s3-backup-credentials-sealed.yaml
 
-# 17. teslamate: teslamate secret
+# 18. teslamate: teslamate secret
 kubeseal --format=yaml --controller-namespace=kube-system \
   < manifests/teslamate/teslamate-secret-unsealed.yaml \
   > manifests/teslamate/teslamate-secret-sealed.yaml
 
-# 18. unifi-poller: unifi config
+# 19. unifi-poller: unifi config
 kubeseal --format=yaml --controller-namespace=kube-system \
   < manifests/unifi-poller/unifi-config-unsealed.yaml \
   > manifests/unifi-poller/unifi-config-sealed.yaml

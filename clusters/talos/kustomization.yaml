@@ -66,6 +66,10 @@ resources:
   - ../../apps/paperless-ngx.yaml
   - ../../apps/home-assistant.yaml
   - ../../apps/backup-monitor.yaml
+  # Der Talos-Ersatz fuer etcd-s3-config, das eine k3s-Eigenheit ist: k3s laedt
+  # seine Snapshots selbst hoch, hier macht das ein CronJob. Nur in diesem
+  # Cluster, deshalb steht es nicht in apps/kustomization.yaml.
+  - ../../apps/etcd-backup.yaml
 
 patches:
   # MetalLB: eigener Pool, PodSecurity und die Exclude-Label-Ausnahme.

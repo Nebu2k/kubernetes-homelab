@@ -228,6 +228,39 @@ controlPlane:
           extraArgs:
             listen-metrics-urls: http://0.0.0.0:2381
 
+    # Talos-API aus dem Cluster heraus, ausschliesslich fuer etcd-Snapshots.
+    #
+    # Das ist die Vorbedingung fuer manifests/etcd-backup/: ein CronJob im
+    # Cluster laesst sich damit ein talosconfig ausstellen und ruft darueber
+    # "talosctl etcd snapshot" auf jeder Control-Plane auf. Ohne das gaebe es
+    # keinen Weg an die Talos-API, der nicht die Admin-Credentials vom Laptop
+    # in einem Secret ablegt.
+    #
+    # Talos kennt keine k3s-Entsprechung zu --etcd-s3-config: k3s laedt seine
+    # Snapshots selbst hoch, Talos schreibt sie nur auf Anforderung heraus. Der
+    # Upload ist deshalb Sache des Clusters und nicht der Node.
+    #
+    # Eng gehalten in beide Richtungen:
+    #   allowedRoles: NUR os:etcd:backup. Diese Rolle erlaubt genau den
+    #     EtcdSnapshot-Aufruf, kein Lesen der machine config, kein Reboot,
+    #     kein Zugriff auf Secrets der Node.
+    #   allowedKubernetesNamespaces: NUR kube-system. Ein ServiceAccount-CR in
+    #     einem anderen Namespace bekommt kein talosconfig, auch nicht mit
+    #     denselben Rollen.
+    #
+    # Wirkt ohne Reboot, geprueft mit "talosctl apply-config --dry-run" am
+    # 2026-08-09: die Aenderung betrifft nur trustd und den
+    # ServiceAccount-Controller.
+    - |-
+      machine:
+        features:
+          kubernetesTalosAPIAccess:
+            enabled: true
+            allowedRoles:
+              - os:etcd:backup
+            allowedKubernetesNamespaces:
+              - kube-system
+
     # Talos erzwingt PodSecurity "baseline", Longhorns CSI-Pods brauchen mehr.
     # Nur der Zusatz steht hier: talhelper merged den Patch in die
     # Talos-Defaults, ein ausgeschriebener Block traegt kube-system doppelt ein.

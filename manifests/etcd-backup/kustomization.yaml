@@ -1,0 +1,18 @@
+# Offsite-Backup des Talos-etcd.
+#
+# Nur fuer das Talos-Cluster gedacht, im k3s-Cluster macht das der
+# Server-Prozess selbst (manifests/etcd-s3-config/). Eingebunden ist es
+# entsprechend nur in clusters/talos/kustomization.yaml.
+#
+# Kein namespace.yaml: kube-system existiert immer. Frei waehlbar ist der
+# Namespace hier trotzdem nicht, machine.features.kubernetesTalosAPIAccess in
+# talos/talconfig.yaml laesst genau diesen einen zu.
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: kube-system
+
+resources:
+  - s3-credentials-sealed.yaml
+  - talos-service-account.yaml
+  - cronjob.yaml
