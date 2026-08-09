@@ -6,26 +6,23 @@ metadata:
   namespace: metallb-system
 spec:
   addresses:
-    # Zwei Bereiche und nicht einer, weil die .248 in der Mitte liegt: das ist
-    # der Talos-VIP fuer den Kubernetes-Endpoint und keine Adresse, die MetalLB
-    # vergeben darf. Wuerde sie hier stehen, bekaeme irgendwann ein Service den
-    # API-Endpoint des Clusters, und der Fehler waere schwer zu lesen.
-    - 192.168.2.240-192.168.2.247
-    # Am 2026-08-09 mit dem Abbau von k3s dazugekommen. Vorher gehoerte
-    # .250-.253 dem alten Cluster und .249 seinem kube-vip-VIP, den es nicht
-    # mehr gibt.
+    # Ein durchgehender Bereich, seit der Talos-VIP am 2026-08-09 von der .248
+    # auf die .29 gezogen ist. Vorher musste der Pool um die .248 herumgebaut
+    # werden (.240-.247 plus .249-.253), sonst haette MetalLB irgendwann den
+    # Kubernetes-Endpoint des Clusters an einen Service vergeben.
     #
     # Die .250 traegt Traefik (UniFi-Portforward auf 80/443 und der
-    # Split-Horizon-Wildcard *.elmstreet79.de) und ist in traefik/values.yaml
-    # ausdruecklich angefordert, nicht der Vergabereihenfolge ueberlassen.
+    # Split-Horizon-Wildcard *.elmstreet79.de). Sie ist in
+    # manifests/traefik/values.yaml ausdruecklich angefordert und nicht der
+    # Vergabereihenfolge ueberlassen: bei einer Adresse, an der ein
+    # Portforward haengt, muss das fest sein.
     #
-    # ACHTUNG, das ist kein reiner Adressgewinn: die UniFi-Regel fuer die beiden
-    # Gast-VLANs erlaubt .249-.254. Alles, was MetalLB aus diesem zweiten
-    # Bereich vergibt, ist damit automatisch aus den Gast-VLANs erreichbar, aus
-    # dem ersten dagegen nicht. Neue Dienste landen normalerweise vorn
-    # (MetalLB vergibt der Reihe nach), hierher kommt nur, was seine Adresse
-    # explizit anfordert. Bei genau so einem Dienst also zweimal hinsehen.
-    - 192.168.2.249-192.168.2.253
+    # ACHTUNG bei allem ab .249: die UniFi-Regel fuer die beiden Gast-VLANs
+    # erlaubt .249-.254. Was MetalLB von dort vergibt, ist aus den Gast-VLANs
+    # erreichbar, aus dem vorderen Teil dagegen nicht. MetalLB vergibt der
+    # Reihe nach, neue Dienste landen also vorn; hierher kommt nur, was seine
+    # Adresse explizit anfordert. Bei genau so einem Dienst zweimal hinsehen.
+    - 192.168.2.240-192.168.2.253
 ---
 apiVersion: metallb.io/v1beta1
 kind: L2Advertisement

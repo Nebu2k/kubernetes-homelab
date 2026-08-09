@@ -30,7 +30,7 @@ jedes Upgrade am verlorenen Quorum.
 | `talos-cp-1` | 192.168.2.20  | 110   | Control-Plane, schedulet Workloads    |
 | `talos-cp-2` | 192.168.2.21  | 111   | Control-Plane, schedulet Workloads    |
 | `talos-cp-3` | 192.168.2.22  | 112   | Control-Plane, schedulet Workloads    |
-| VIP          | 192.168.2.248 |       | Kubernetes-Endpoint, von Talos selbst |
+| VIP          | 192.168.2.29  |       | Kubernetes-Endpoint, von Talos selbst |
 
 Die VMs sind temporaer. Spaeter ersetzen prodesk und raspi5 zwei davon, eine
 bleibt Control-Plane, eine wird Worker, eine wird geloescht.
@@ -338,10 +338,13 @@ overlay:
 EOF
 ```
 
-Die Antwort ist die Schematic-ID. Das Disk-Image dazu:
+Die Antwort ist die Schematic-ID. Fuer raspi5 ist sie am 2026-08-09 erzeugt
+worden und lautet
+`b00ac8400b2ad823d3d5e972136dd89c0d960d58e0ff2b12d5b8b87e9d53e670`; sie gehoert
+beim Eintragen der Node auch in `talconfig.yaml`. Das Disk-Image dazu:
 
 ```text
-https://factory.talos.dev/image/<schematic-id>/v1.13.8/metal-arm64.raw.zst
+https://factory.talos.dev/image/b00ac8400b2ad823d3d5e972136dd89c0d960d58e0ff2b12d5b8b87e9d53e670/v1.13.8/metal-arm64.raw.zst
 ```
 
 Auf die NVMe schreiben (nicht auf SD, das war der ganze Grund fuer den Tausch):

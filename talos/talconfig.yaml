@@ -16,10 +16,20 @@ talosVersion: v1.13.8
 # renovate: datasource=github-releases depName=kubernetes/kubernetes
 kubernetesVersion: v1.36.3
 
-# VIP des neuen Clusters. Die .249 gehoert dem k3s-Cluster und kann in der
-# Parallelphase nicht doppelt belegt werden. Talos bringt den VIP eingebaut mit,
-# es braucht kein kube-vip.
-endpoint: https://192.168.2.248:6443
+# VIP des Clusters. Talos bringt ihn eingebaut mit, es braucht kein kube-vip.
+#
+# Am 2026-08-09 von der .248 auf die .29 gezogen. Die .248 lag mitten im
+# MetalLB-Bereich und riss dort ein Loch: der Pool musste .240-.247 plus
+# .249-.253 sein, damit MetalLB die API des Clusters nicht an einen Service
+# vergibt. Auf der .29 ist der Pool durchgehend .240-.253.
+#
+# Warum .29 und nicht .251, wie zuerst ueberlegt: der VIP ist kein Service,
+# sondern gehoert zu den Nodes, und im Adressplan ist .20-.29 der Node-Block
+# (.29 als letzte darin ist die uebliche Stelle fuer einen VIP). Vor allem aber
+# erlaubt die UniFi-Regel den Gast-VLANs den Zugriff auf .249-.254: die
+# Kubernetes-API dorthin zu legen haette sie aus den Gast-VLANs erreichbar
+# gemacht. Und die .251 ist fuer die Blocky-Instanz vorgemerkt.
+endpoint: https://192.168.2.29:6443
 
 # Bewusst dieselben CIDRs wie im k3s-Cluster statt der Talos-Defaults
 # (10.244.0.0/16 / 10.96.0.0/12). Beide Cluster sind getrennte L3-Domaenen, die
@@ -39,12 +49,18 @@ allowSchedulingOnControlPlanes: true
 # Der VIP und alle Node-IPs muessen im API-Server-Cert stehen, sonst schlaegt
 # jeder Zugriff ueber eine andere Adresse als den Endpoint fehl.
 additionalApiServerCertSans:
+  - 192.168.2.29
+  # Die alte VIP-Adresse. Bleibt vorerst im Cert, damit ein kubeconfig oder
+  # talosconfig, das noch darauf zeigt, nicht mit einem Zertifikatsfehler
+  # abbricht, sondern schlicht nichts findet. Kann raus, sobald nichts mehr
+  # darauf zeigt.
   - 192.168.2.248
   - 192.168.2.20
   - 192.168.2.21
   - 192.168.2.23
   - 127.0.0.1
 additionalMachineCertSans:
+  - 192.168.2.29
   - 192.168.2.248
   - 192.168.2.20
   - 192.168.2.21
@@ -91,7 +107,7 @@ nodes:
           - network: 0.0.0.0/0
             gateway: 192.168.2.1
         vip:
-          ip: 192.168.2.248
+          ip: 192.168.2.29
 
   - hostname: talos-cp-2
     ipAddress: 192.168.2.21
@@ -111,7 +127,7 @@ nodes:
           - network: 0.0.0.0/0
             gateway: 192.168.2.1
         vip:
-          ip: 192.168.2.248
+          ip: 192.168.2.29
 
   # talos-cp-3 (.22, vmid 112) stand hier bis zum 2026-08-09. Mit prodesk waren
   # es vier etcd-Member, und eine gerade Anzahl vertraegt nicht mehr Ausfaelle
@@ -162,7 +178,7 @@ nodes:
           - network: 0.0.0.0/0
             gateway: 192.168.2.1
         vip:
-          ip: 192.168.2.248
+          ip: 192.168.2.29
 
 patches:
   # Rund 20 Manifeste selektieren auf node-role.kubernetes.io/worker, unter
