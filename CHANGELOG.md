@@ -1,3 +1,17 @@
+# [5.0.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.107.0...v5.0.0) (2026-08-09)
+
+
+* docs!: READMEs und Code-Kommentare auf den Ist-Zustand reduzieren ([c7b2655](https://github.com/Nebu2k/kubernetes-homelab/commit/c7b265583c4c6d30a6b5289d09f4c9e3ab95e9a5))
+
+
+### BREAKING CHANGES
+
+* Die Dokumentation ist ein neuer Stand und beschreibt
+ausschliesslich das Talos-Cluster. Jede Anleitung, die sich auf das
+abgeloeste k3s-Cluster bezog, ist entfallen statt umgeschrieben.
+
+Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>
+
 # [4.107.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.106.0...v4.107.0) (2026-08-09)
 
 
