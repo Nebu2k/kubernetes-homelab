@@ -1,3 +1,10 @@
+## [4.104.3](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.104.2...v4.104.3) (2026-08-09)
+
+
+### Bug Fixes
+
+* **argocd:** app-of-apps steht nicht mehr dauerhaft auf OutOfSync ([9f255fe](https://github.com/Nebu2k/kubernetes-homelab/commit/9f255fe278b984a59fc2c6625df3d53810a19ef7))
+
 ## [4.104.2](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.104.1...v4.104.2) (2026-08-09)
 
 
