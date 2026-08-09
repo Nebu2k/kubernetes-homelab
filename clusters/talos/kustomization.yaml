@@ -38,6 +38,10 @@ resources:
   - ../../apps/gatus.yaml
   - ../../apps/homepage.yaml
   - ../../apps/external-services.yaml
+  # Zweite Welle (2026-08-09). kube-prometheus-stack zuerst, weil es die
+  # monitoring.coreos.com-CRDs mitbringt: erst danach duerfen die uebrigen Apps
+  # ihre ServiceMonitor anlegen.
+  - ../../apps/kube-prometheus-stack.yaml
 
 patches:
   # MetalLB: eigener Pool, PodSecurity und die Exclude-Label-Ausnahme.
@@ -87,10 +91,6 @@ patches:
           service:
             annotations:
               metallb.io/loadBalancerIPs: "192.168.2.240"
-          metrics:
-            prometheus:
-              serviceMonitor:
-                enabled: false
 
   # Longhorn: eigener Manifest-Pfad, weil die Node-CRs im k3s-Cluster auf
   # k3s-worker-1, raspi5 und prodesk lauten und der ServiceMonitor hier noch
@@ -113,49 +113,31 @@ patches:
         path: /spec/sources/2/path
         value: clusters/talos/longhorn
 
-  # Gatus: eigener Manifest-Pfad, weil sein ServiceMonitor hier noch nicht gehen
-  # kann. Was genau abweicht, steht in clusters/talos/gatus/. Anders als bei
-  # longhorn und metallb ist die Application einquellig, der Pfad liegt also
-  # unter /spec/source und nicht unter /spec/sources/N.
+  # kube-prometheus-stack: eigener Manifest-Pfad. Abweichend sind die
+  # etcd-Adressen und die beiden home-assistant-Dateien, Einzelheiten in
+  # clusters/talos/kube-prometheus-stack/. Die Helm-Values bleiben geteilt.
+  #
+  # externalLabels ist der zweite Unterschied und gehoert in die Values, nicht
+  # ins Overlay: den Prometheus-CR erzeugt das Chart. Beide Cluster alarmieren
+  # waehrend der Migration in dieselbe SNS-Topic, und ohne unterscheidendes
+  # Label steht in der Mail nur der Alertname. Das group_by in values.yaml
+  # enthaelt 'cluster' laengst, gesetzt war es nur nie.
   - target:
       kind: Application
-      name: gatus
+      name: kube-prometheus-stack
     patch: |-
       - op: replace
-        path: /spec/source/path
-        value: clusters/talos/gatus
-
-  # --- Bis kube-prometheus-stack migriert ist -------------------------------
-  #
-  # Drei Plattform-Apps legen einen ServiceMonitor an. Die CRD dafuer
-  # (monitoring.coreos.com/v1) bringt kube-prometheus-stack mit, und das laeuft
-  # hier noch nicht. ArgoCD scheitert dabei nicht am ServiceMonitor allein: es
-  # bricht die ganze Sync-Operation ab ("failed to discover server resources"),
-  # die App bleibt komplett Missing.
-  #
-  # Bewusst abschalten statt prometheus-operator-crds vorzuziehen: dann gaebe es
-  # zwei Besitzer derselben CRDs, und beim spaeteren Entfernen der CRD-App
-  # wuerde ArgoCDs prune jeden ServiceMonitor im Cluster mitnehmen.
-  #
-  # DIESE DREI PATCHES ENTFERNEN, sobald kube-prometheus-stack in der
-  # resources-Liste oben steht. validate.sh baut das Overlay mit, ein
-  # vergessener Patch faellt beim naechsten Lauf nicht auf: er ist syntaktisch
-  # in Ordnung. Der Hinweis hier ist die einzige Bremse.
-  - target:
-      kind: Application
-      name: sealed-secrets
-    patch: |-
-      - op: replace
-        path: /spec/source/helm/valuesObject/metrics/serviceMonitor/enabled
-        value: false
-
-  - target:
-      kind: Application
-      name: cert-manager
-    patch: |-
+        path: /spec/sources/2/path
+        value: clusters/talos/kube-prometheus-stack
       - op: add
         path: /spec/sources/0/helm/valuesObject
         value:
           prometheus:
-            servicemonitor:
-              enabled: false
+            prometheusSpec:
+              externalLabels:
+                cluster: talos
+
+  # Die vier ServiceMonitor-Ausnahmen (sealed-secrets, cert-manager, traefik,
+  # gatus) sind am 2026-08-09 entfallen, weil kube-prometheus-stack seine CRDs
+  # jetzt hier mitbringt. Sie standen hier, weil ArgoCD an einer fehlenden CRD
+  # nicht nur den einen Task, sondern die ganze Sync-Operation abbricht.

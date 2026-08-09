@@ -1,0 +1,42 @@
+# etcd-Metriken der drei Talos-Control-Planes.
+#
+# Gleiche Bauart wie manifests/kube-prometheus-stack/etcd-scrapeconfig.yaml, nur
+# andere Adressen: statische Targets, weil etcd auch hier kein Pod mit Service
+# ist, und weil ArgoCD Endpoints-Objekte global ausschliesst.
+#
+# Voraussetzung ist der etcd-Patch in talos/talconfig.yaml
+# (listen-metrics-urls: http://0.0.0.0:2381). Talos bindet die Metriken sonst
+# auf 127.0.0.1, und ein Prometheus im Pod-Netz sieht davon nichts. Achtung: der
+# Parameter greift erst nach einem Node-Reboot, "talosctl service etcd restart"
+# gibt es nicht ("doesn't support restart operation via API").
+#
+# Das Job-Label muss `.*etcd.*` erfuellen, sonst greifen weder die etcd-Regeln
+# aus defaultRules noch das etcd-Dashboard noch die Gruppe etcd-homelab aus
+# prometheus-rules.yaml.
+apiVersion: monitoring.coreos.com/v1alpha1
+kind: ScrapeConfig
+metadata:
+  name: etcd
+  namespace: monitoring
+  labels:
+    release: kube-prometheus-stack
+spec:
+  scheme: HTTP
+  metricsPath: /metrics
+  staticConfigs:
+    - targets:
+        - 192.168.2.20:2381
+      labels:
+        node: talos-cp-1
+    - targets:
+        - 192.168.2.21:2381
+      labels:
+        node: talos-cp-2
+    - targets:
+        - 192.168.2.23:2381
+      labels:
+        node: prodesk
+  relabelings:
+    - targetLabel: job
+      replacement: etcd
+      action: replace

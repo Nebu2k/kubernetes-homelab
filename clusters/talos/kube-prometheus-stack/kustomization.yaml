@@ -1,0 +1,97 @@
+# kube-prometheus-stack im Talos-Cluster.
+#
+# Gleiches Muster wie clusters/talos/longhorn und clusters/talos/gatus: die
+# Application aus apps/ bleibt die gemeinsame Basis, nur der git-Pfad ihrer
+# dritten Source zeigt hierher. Die Helm-Values sind geteilt, hier stehen nur
+# die Manifeste, die sich unterscheiden.
+#
+# Das ist der einzige Dienst, der waehrend der Migration bewusst in BEIDEN
+# Clustern laeuft: er ueberwacht jeweils sein eigenes. Er bleibt deshalb auch in
+# apps/kustomization.yaml stehen, bis das k3s-Cluster abgebaut wird.
+# Auseinanderhalten lassen sich die Alarme am externalLabel cluster=talos, das
+# in clusters/talos/kustomization.yaml gesetzt wird.
+#
+# Ohne Restore aufgesetzt (2026-08-09): die Metrik-Historie ist auf 30d begrenzt
+# und laut values.yaml bewusst regenerierbar, die Dashboards liegen als Code in
+# manifests/kube-prometheus-stack/dashboards/, und das Grafana-Volume traegt nur
+# noch Benutzer und Einstellungen. Ein Volume-Restore waere hier Aufwand ohne
+# Gegenwert, anders als bei paperless oder home-assistant.
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: monitoring
+
+resources:
+  - ../../../manifests/kube-prometheus-stack/grafana-ingress.yaml
+  - ../../../manifests/kube-prometheus-stack/prometheus-ingress.yaml
+  - ../../../manifests/kube-prometheus-stack/alertmanager-ingress.yaml
+  - ../../../manifests/kube-prometheus-stack/node-exporter-external-scrapeconfig.yaml
+  - ../../../manifests/kube-prometheus-stack/aws-credentials-sealed.yaml
+  - ../../../manifests/kube-prometheus-stack/grafana-admin-sealed.yaml
+  # Eigene Fassung mit den Talos-Adressen, siehe Kopf der Datei.
+  - etcd-scrapeconfig.yaml
+
+# Bewusst NICHT uebernommen:
+#
+#   home-assistant-scrapeconfig.yaml und home-assistant-token-sealed.yaml
+#     Das Target ist home-assistant.home-assistant.svc.cluster.local, also ein
+#     Service DIESES Clusters. Home Assistant laeuft noch im k3s-Cluster, der
+#     Scrape liefe ins Leere und TargetDown feuerte dauerhaft. Beide Dateien
+#     zurueckholen, sobald home-assistant migriert ist, dann stimmt der Name
+#     wieder ohne Aenderung.
+#
+#   prometheus-rules.yaml
+#     Die homelab-eigenen Regeln bleiben vorerst im k3s-Cluster, weil sie den
+#     Diensten folgen muessen und nicht dem Monitoring: mehrere Gruppen
+#     (home-assistant-Backup, teslamate, unifi-poller, offsite-backup-jobs)
+#     enthalten absent()-Zweige, die hier ab der ersten Minute dauerhaft feuern
+#     wuerden, obwohl nichts kaputt ist. Die defaultRules des Charts laufen
+#     dagegen sehr wohl, sie beschreiben das Cluster selbst.
+#
+#     ZUM SCHLUSS ZURUECKHOLEN, wenn die letzte Anwendung migriert ist. Das ist
+#     zugleich der Moment, in dem im k3s-Cluster nichts mehr zu ueberwachen ist.
+
+# Die Dashboards liegen neben den Manifesten und werden hier genauso erzeugt wie
+# dort. Bewusst kopiert statt referenziert: ein configMapGenerator laesst sich
+# nicht aus einer fremden kustomization erben, und die JSON-Dateien selbst
+# bleiben die eine Quelle.
+#
+# disableNameSuffixHash, weil der grafana-sc-dashboard-Sidecar sonst bei jeder
+# Aenderung ein zweites Dashboard unter neuem Namen importiert, statt zu
+# ersetzen.
+configMapGenerator:
+  - name: grafana-dashboard-node-overview
+    files:
+      - node-overview.json=../../../manifests/kube-prometheus-stack/dashboards/node-overview.json
+    options:
+      disableNameSuffixHash: true
+      labels:
+        grafana_dashboard: "1"
+  - name: grafana-dashboard-traefik-overview
+    files:
+      - traefik-overview.json=../../../manifests/kube-prometheus-stack/dashboards/traefik-overview.json
+    options:
+      disableNameSuffixHash: true
+      labels:
+        grafana_dashboard: "1"
+  - name: grafana-dashboard-backup-overview
+    files:
+      - backup-overview.json=../../../manifests/kube-prometheus-stack/dashboards/backup-overview.json
+    options:
+      disableNameSuffixHash: true
+      labels:
+        grafana_dashboard: "1"
+  - name: grafana-dashboard-proxmox-overview
+    files:
+      - proxmox-overview.json=../../../manifests/kube-prometheus-stack/dashboards/proxmox-overview.json
+    options:
+      disableNameSuffixHash: true
+      labels:
+        grafana_dashboard: "1"
+  - name: grafana-dashboard-verfuegbarkeit
+    files:
+      - verfuegbarkeit.json=../../../manifests/kube-prometheus-stack/dashboards/verfuegbarkeit.json
+    options:
+      disableNameSuffixHash: true
+      labels:
+        grafana_dashboard: "1"

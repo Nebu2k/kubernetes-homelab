@@ -185,6 +185,27 @@ patches:
 
 controlPlane:
   patches:
+    # etcd-Metriken im LAN erreichbar machen. Talos bindet sie per Default auf
+    # 127.0.0.1:2381, und Prometheus laeuft in einem Pod: ohne das hier sieht es
+    # kein einziges etcd-Target.
+    #
+    # Das ist keine Kuer. Die Regelgruppe etcd-homelab in
+    # manifests/kube-prometheus-stack/prometheus-rules.yaml enthaelt
+    # EtcdMetricsMissing mit einem absent()-Zweig, die feuert ohne Targets
+    # sofort und dauerhaft. Entweder die Metriken kommen, oder die Gruppe muesste
+    # raus, und eine abgeschaltete etcd-Ueberwachung ist im Homelab die
+    # schlechtere Haelfte des Tauschs.
+    #
+    # Port 2381 ist Klartext ohne Client-Zert. Genau wie im k3s-Cluster
+    # (--etcd-expose-metrics=true) und aus demselben Grund vertretbar: nur im
+    # LAN erreichbar, und es liegen keine Schluessel darin. Der Client-Port 2379
+    # bleibt unangetastet.
+    - |-
+      cluster:
+        etcd:
+          extraArgs:
+            listen-metrics-urls: http://0.0.0.0:2381
+
     # Talos erzwingt PodSecurity "baseline", Longhorns CSI-Pods brauchen mehr.
     # Nur der Zusatz steht hier: talhelper merged den Patch in die
     # Talos-Defaults, ein ausgeschriebener Block traegt kube-system doppelt ein.
