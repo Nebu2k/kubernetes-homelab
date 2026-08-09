@@ -73,12 +73,18 @@ spec:
           resources:
             requests:
               cpu: 50m
-              memory: 320Mi
+              # Gemessen am 2026-08-09 mit geladenen Listen: 50 Mi Spitze, die
+              # 222k Denylist-Eintraege kosten also fast nichts. Der Request
+              # liegt bewusst darueber, nicht darauf: unter Speicherdruck
+              # raeumt kubelet nach Verbrauch OBERHALB des Requests aus, und
+              # der Haus-Resolver soll nicht der erste sein, der geht.
+              #
+              # Noch ohne echte Last, im DHCP steht die Adresse nicht. Wenn sie
+              # dort steht, hier nochmal messen.
+              memory: 128Mi
             limits:
               # Bewusst kein CPU-Limit, siehe references/betrieb.md.
-              # Der Speicher haengt an der Groesse der Blocklisten: HaGeZi Pro
-              # sind rund 215k Eintraege.
-              memory: 768Mi
+              memory: 512Mi
           # "blocky healthcheck" fragt per TCP 127.0.0.1:53 nach
           # healthcheck.blocky. Das prueft den DNS-Listener, nicht nur den
           # Prozess, und ist damit das, was der Service wissen muss.
@@ -133,9 +139,13 @@ spec:
           resources:
             requests:
               cpu: 25m
-              memory: 128Mi
+              # 22 Mi gemessen am 2026-08-09, aber der Cache war leer. Die
+              # Konfiguration erlaubt ihm zusammen rund 106 Mi (msg 32m,
+              # rrset 64m, key 8m, neg 2m), dahin waechst er unter Last. Der
+              # Request bildet dieses Ziel ab und nicht den Startwert.
+              memory: 96Mi
             limits:
-              memory: 384Mi
+              memory: 256Mi
           # Kein tcpSocket-Probe: Unbound lauscht auf 127.0.0.1, kubelet waehlt
           # aber die Pod-IP an. Das mitgelieferte Skript sieht im Container
           # selbst nach und prueft dabei /proc/net, loest also nichts auf.
