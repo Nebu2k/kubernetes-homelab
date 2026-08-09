@@ -1,3 +1,10 @@
+# [4.83.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.82.0...v4.83.0) (2026-08-09)
+
+
+### Features
+
+* **talos:** Longhorn-Zonen, damit Repliken nicht auf derselben NVMe landen ([93b4794](https://github.com/Nebu2k/kubernetes-homelab/commit/93b4794c12455703382c47d1ad300a9b43872755))
+
 # [4.82.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.81.0...v4.82.0) (2026-08-09)
 
 
