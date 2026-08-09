@@ -1,10 +1,17 @@
 # yaml-language-server: $schema=https://raw.githubusercontent.com/0xERR0R/blocky/main/docs/config.schema.json
 #
-# EINE Wahrheit fuer BEIDE Blocky-Instanzen. Das Cluster zieht diese Datei per
-# configMapGenerator, der LXC-Container auf pve bekommt exakt dieselbe Datei per
-# Terraform (homelab-terraform/proxmox/lxc-blocky.tf). Aenderungen hier brauchen
-# deshalb zusaetzlich ein "terraform apply" im proxmox-Stack, sonst laufen die
-# beiden Instanzen auseinander.
+# EINE Wahrheit fuer BEIDE Blocky-Instanzen, und ein Commit genuegt.
+#
+# Das Cluster zieht diese Datei per configMapGenerator, ArgoCD rollt sie aus.
+# Der LXC-Container auf pve holt sich exakt dieselbe Datei alle 15 Minuten
+# selbst von raw.githubusercontent.com (homelab-terraform, blocky/
+# config-sync.sh.tftpl) und prueft sie mit "blocky validate", bevor er
+# neustartet. Ein "terraform apply" ist dafuer NICHT noetig, Terraform besitzt
+# nur den Container.
+#
+# Der LXC laeuft dem Cluster bis zu eine Viertelstunde hinterher. Das ist
+# Absicht: geht eine Aenderung schief, faellt sie im Cluster auf, waehrend der
+# zweite Resolver noch den alten Stand faehrt.
 #
 # Die Datei enthaelt bewusst nichts Instanz-Spezifisches: kein Bind-Interface,
 # keine eigene IP, kein Hostname. Was beide Instanzen unterscheidet, steht in

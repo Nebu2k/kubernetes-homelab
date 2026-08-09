@@ -301,6 +301,75 @@ data:
           - "[DNS_RCODE] == NOERROR"
           - "[BODY] == 192.168.2.250"
 
+      # Die beiden Blocky-Instanzen, die AdGuard ersetzen sollen. Sie stehen
+      # noch in keinem DHCP-Feld; die Checks sind genau deshalb da, damit der
+      # Parallelbetrieb nicht unbeobachtet laeuft.
+      - name: Blocky (Cluster)
+        group: DNS
+        url: "192.168.2.253"
+        interval: 60s
+        dns:
+          query-name: "argocd.elmstreet79.de"
+          query-type: "A"
+        conditions:
+          - "[DNS_RCODE] == NOERROR"
+          - "[BODY] == 192.168.2.250"
+
+      - name: Blocky (LXC pve)
+        group: DNS
+        url: "192.168.2.254"
+        interval: 60s
+        dns:
+          query-name: "argocd.elmstreet79.de"
+          query-type: "A"
+        conditions:
+          - "[DNS_RCODE] == NOERROR"
+          - "[BODY] == 192.168.2.250"
+
+      # Wie beim AdGuard ueber den Relay, weil das Pod-Netz v4-only ist. Nach
+      # dem Abbau von AdGuard haengt das v6-DNS des Hauses allein an dieser
+      # Adresse: die Cluster-Instanz kann keine v6-Adresse anbieten, solange
+      # das Cluster single-stack ist. Faellt die ULA weg, bleibt alles andere
+      # gruen und nur v6-Clients sind tot. Dieser Check ist die einzige Stelle,
+      # die das sieht.
+      - name: Blocky LXC (IPv6)
+        group: DNS
+        url: "dns-v6-relay.gatus.svc.cluster.local:5355"
+        interval: 60s
+        dns:
+          query-name: "argocd.elmstreet79.de"
+          query-type: "A"
+        conditions:
+          - "[DNS_RCODE] == NOERROR"
+          - "[BODY] == 192.168.2.250"
+
+      # Prueft nicht Erreichbarkeit, sondern ob die Blocklisten wirklich
+      # geladen sind. Blocky startet mit "loading.strategy: fast" bewusst auch
+      # dann, wenn kein Download klappt: es antwortet dann vollstaendig, aber
+      # ungefiltert. Ohne diesen Check waere das unsichtbar, alle anderen
+      # DNS-Endpoints blieben gruen.
+      - name: Blocky Filter (Cluster)
+        group: DNS
+        url: "192.168.2.253"
+        interval: 5m
+        dns:
+          query-name: "doubleclick.net"
+          query-type: "A"
+        conditions:
+          - "[DNS_RCODE] == NOERROR"
+          - "[BODY] == 0.0.0.0"
+
+      - name: Blocky Filter (LXC pve)
+        group: DNS
+        url: "192.168.2.254"
+        interval: 5m
+        dns:
+          query-name: "doubleclick.net"
+          query-type: "A"
+        conditions:
+          - "[DNS_RCODE] == NOERROR"
+          - "[BODY] == 0.0.0.0"
+
       # Gegenprobe von aussen: loest der oeffentliche Name noch auf (CNAME auf
       # nebu2k.ipv64.net)? Die IP selbst ist dynamisch, also nur der RCODE.
       - name: Cloudflare (oeffentlicher Record)

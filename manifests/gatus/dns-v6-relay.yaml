@@ -46,6 +46,21 @@ data:
             max_fails 0
         }
     }
+
+    # Zweiter Port fuer die Blocky-LXC. Ein eigener Port statt eines zweiten
+    # Upstreams im selben Block: forward wuerde sonst zwischen beiden
+    # abwechseln und der Check saehe nie, welcher der beiden Resolver
+    # geantwortet hat. Ein toter Upstream bliebe damit gruen.
+    # Kein eigenes health/ready: die Plugins duerfen je Server-Block nur
+    # einmal vorkommen und pruefen ohnehin den Prozess, nicht den Block. Die
+    # Probes des Pods haengen weiter an 8154/8155 oben.
+    .:5355 {
+        errors
+
+        forward . [fd2e:9a71:c3b5::254]:53 {
+            max_fails 0
+        }
+    }
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -91,6 +106,12 @@ spec:
               protocol: UDP
             - name: dns-tcp
               containerPort: 5354
+              protocol: TCP
+            - name: blocky-udp
+              containerPort: 5355
+              protocol: UDP
+            - name: blocky-tcp
+              containerPort: 5355
               protocol: TCP
 
           volumeMounts:
@@ -158,4 +179,12 @@ spec:
     - name: dns-tcp
       port: 5354
       targetPort: 5354
+      protocol: TCP
+    - name: blocky-udp
+      port: 5355
+      targetPort: 5355
+      protocol: UDP
+    - name: blocky-tcp
+      port: 5355
+      targetPort: 5355
       protocol: TCP

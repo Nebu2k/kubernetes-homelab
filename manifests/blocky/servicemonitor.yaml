@@ -15,3 +15,11 @@ spec:
     - port: http
       interval: 30s
       path: /metrics
+      # Setzt dasselbe Label, das der ScrapeConfig der LXC-Instanz vergibt
+      # (manifests/kube-prometheus-stack/blocky-lxc-scrapeconfig.yaml). Erst
+      # damit kann das DNS-Board beide Instanzen nebeneinander zeigen, statt
+      # sie an Pod-IP und Host-Adresse auseinanderzuhalten.
+      relabelings:
+        - targetLabel: blocky_instance
+          replacement: cluster
+          action: replace

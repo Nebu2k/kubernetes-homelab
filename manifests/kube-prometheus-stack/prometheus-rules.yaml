@@ -1013,3 +1013,93 @@ spec:
             description: "Ab 80 Grad drosselt der Pi 5 seinen Takt. Entweder reicht die Kennlinie in manifests/rpi5-fan/fan.py nicht, oder der Luefter dreht trotz Ansteuerung nicht."
 
 
+
+    # Blocky. Die Verfuegbarkeit misst Gatus von aussen (Gruppe DNS, inklusive
+    # eines Checks darauf, dass wirklich gefiltert wird), das schlaegt hier
+    # ueber GatusEndpointDown auf. Hier stehen nur die Dinge, die Gatus NICHT
+    # sehen kann, weil sie im Resolver selbst liegen.
+    - name: blocky
+      interval: 60s
+      rules:
+        # Der Scrape-Ausfall ist nicht dasselbe wie ein toter Resolver: Blocky
+        # kann DNS beantworten und trotzdem seinen Metrik-Port verloren haben.
+        # Umgekehrt deckt es den Fall ab, dass die LXC ganz weg ist, bevor ein
+        # Client den Ausfall merkt.
+        - alert: BlockyTargetDown
+          expr: up{job="blocky-metrics"} == 0
+          for: 10m
+          labels:
+            severity: warning
+          annotations:
+            summary: "Blocky {{ $labels.instance }} liefert keine Metriken mehr"
+            description: "Das Ziel {{ $labels.instance }} antwortet seit >10m nicht auf /metrics. Ob DNS selbst noch geht, steht auf https://status.elmstreet79.de in der Gruppe DNS. Cluster-Instanz: kubectl -n blocky get pods. LXC: pct status 402 auf pve."
+
+        # Blocky startet mit loading.strategy: fast bewusst auch dann, wenn
+        # kein Download klappt, und antwortet dann vollstaendig, aber
+        # ungefiltert. Ein leerer Cache ist deshalb still: nichts ist rot,
+        # nichts ist langsam, es wird nur nicht mehr geblockt.
+        - alert: BlockyDenylistEmpty
+          expr: blocky_denylist_cache_entries < 1000
+          for: 15m
+          labels:
+            severity: warning
+          annotations:
+            summary: "Blockys Denylist {{ $labels.group }} hat nur {{ $value }} Eintraege"
+            description: "Erwartet werden rund 222k (AdAway + HaGeZi Pro). Bei deutlich weniger ist ein Download gescheitert und {{ $labels.instance }} antwortet ungefiltert weiter. Logs ansehen: kubectl -n blocky logs -l app.kubernetes.io/name=blocky -c blocky --tail=-1"
+
+        # Die Listen werden alle 24h neu geladen (loading.refreshPeriod). Bleibt
+        # das aus, altern sie lautlos: geblockt wird weiter, nur eben der Stand
+        # von vorgestern. 30h laesst einen ausgefallenen Lauf durchgehen.
+        - alert: BlockyListsStale
+          expr: time() - blocky_last_list_group_refresh_timestamp_seconds > 108000
+          for: 1h
+          labels:
+            severity: warning
+          annotations:
+            summary: "Blocky auf {{ $labels.instance }} hat seine Listen seit {{ $value | humanizeDuration }} nicht erneuert"
+            description: "Erwartet wird alle 24h. Meist erreicht der Resolver die Download-Quellen nicht mehr; blocky_failed_downloads_total steigt dann mit. Das Blocking selbst laeuft mit dem alten Stand weiter."
+
+        # Blocking laesst sich zur Laufzeit ueber Blockys REST-API abschalten,
+        # unauthentifiziert. Auf der LXC ist dieser Port aus den Gast-VLANs
+        # erreichbar, solange die UniFi-Regel ein Adressbereich statt einer
+        # Portliste ist (siehe ROADMAP). Bis dahin ist diese Regel die einzige
+        # Stelle, die ein Abschalten ueberhaupt bemerkt.
+        - alert: BlockyBlockingDisabled
+          expr: blocky_blocking_enabled == 0
+          for: 15m
+          labels:
+            severity: warning
+          annotations:
+            summary: "Blocky auf {{ $labels.instance }} filtert nicht mehr"
+            description: "Das Blocking ist zur Laufzeit abgeschaltet worden und geht durch einen Neustart von selbst wieder an, weil es nirgends in der Konfiguration steht. Wenn das niemand war, gehoert der Port 4000 dieser Instanz zugesperrt."
+
+        # Der Upstream ist ausschliesslich der lokale Unbound. Faellt der aus,
+        # antwortet Blocky weiter, aber nur noch aus dem Cache und mit
+        # SERVFAIL fuer alles andere. Der Anteil an Fehlerantworten ist das
+        # frueheste Signal dafuer.
+        - alert: BlockyHighServfailRate
+          expr: |
+            sum by (instance) (rate(blocky_response_total{response_code="SERVFAIL"}[10m]))
+              / clamp_min(sum by (instance) (rate(blocky_response_total[10m])), 0.001) > 0.1
+          for: 15m
+          labels:
+            severity: warning
+          annotations:
+            summary: "Blocky auf {{ $labels.instance }} beantwortet {{ $value | humanizePercentage }} aller Anfragen mit SERVFAIL"
+            description: "Fast immer der lokale Unbound: entweder tot, oder er kommt nicht mehr an die Root-Server. Cluster-Instanz: kubectl -n blocky logs -l app.kubernetes.io/name=blocky -c unbound --tail=-1. LXC: pct exec 402 -- rc-service unbound status"
+
+        # Die LXC holt sich config.yml alle 15 Minuten selbst aus dem Repo,
+        # damit beide Instanzen ohne "terraform apply" denselben Stand fahren.
+        # Scheitert das dauerhaft, faellt nichts aus: Blocky laeuft mit dem
+        # alten Stand weiter, und genau deshalb merkt es sonst niemand.
+        #
+        # Die Metrik kommt ueber den Textfile-Collector des node_exporter im
+        # Container, nicht von Blocky selbst.
+        - alert: BlockyConfigSyncFailing
+          expr: blocky_config_sync_success == 0
+          for: 1h
+          labels:
+            severity: warning
+          annotations:
+            summary: "Blocky-LXC holt die Konfiguration nicht mehr aus dem Repo"
+            description: "Der Sync scheitert seit >1h. Die LXC laeuft mit einem aelteren Stand als die Cluster-Instanz. Von Hand anstossen und die Ausgabe lesen: pct exec 402 -- /etc/periodic/15min/blocky-config-sync"

@@ -16,6 +16,7 @@ resources:
   - etcd-scrapeconfig.yaml
   - node-exporter-external-scrapeconfig.yaml
   - home-assistant-scrapeconfig.yaml
+  - blocky-lxc-scrapeconfig.yaml
   - aws-credentials-sealed.yaml
   - grafana-admin-sealed.yaml
   - home-assistant-token-sealed.yaml
@@ -61,6 +62,13 @@ configMapGenerator:
   - name: grafana-dashboard-verfuegbarkeit
     files:
       - verfuegbarkeit.json=dashboards/verfuegbarkeit.json
+    options:
+      disableNameSuffixHash: true
+      labels:
+        grafana_dashboard: "1"
+  - name: grafana-dashboard-dns-overview
+    files:
+      - dns-overview.json=dashboards/dns-overview.json
     options:
       disableNameSuffixHash: true
       labels:

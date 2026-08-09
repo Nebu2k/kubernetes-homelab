@@ -37,6 +37,14 @@ spec:
     # liefert nvme.prom.
     - targets:
         - 192.168.2.8:9100
+    # Die Blocky-LXC auf pve. Der node_exporter steht dort nicht wegen der
+    # Host-Metriken, sondern wegen seines Textfile-Collectors: der Sync-Job,
+    # der config.yml aus dem Repo holt, legt sein Ergebnis als
+    # blocky_config_sync_success ab. Ohne diesen Weg waere ein dauerhaft
+    # scheiterndes Sync unsichtbar, Blocky liefe einfach mit altem Stand
+    # weiter. Die Host-Metriken sind Mitnahme.
+    - targets:
+        - 192.168.2.254:9100
     # macmini. node_exporter per brew als LaunchAgent
     # (homebrew.mxcl.node_exporter), gleiches Muster wie die uebrigen
     # macmini-Dienste, kein sudo noetig. darwin hat deutlich weniger Collectors

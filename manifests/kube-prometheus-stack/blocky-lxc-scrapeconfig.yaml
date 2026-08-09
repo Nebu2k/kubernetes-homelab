@@ -1,0 +1,42 @@
+# Die zweite Blocky-Instanz, der LXC auf pve. Die Cluster-Instanz bringt ihren
+# eigenen ServiceMonitor mit (manifests/blocky/servicemonitor.yaml), dieser
+# Container liegt ausserhalb des Clusters und muss statisch gescrapt werden.
+#
+# Statische Targets statt Service+Endpoints aus demselben Grund wie beim
+# node-exporter nebenan: ArgoCD hat Endpoints und EndpointSlice global in
+# resource.exclusions, ein Endpoints-Objekt aus dem Repo kaeme lautlos nie im
+# Cluster an.
+#
+# job und blocky_instance werden hier gesetzt, damit beide Instanzen im selben
+# Job liegen und das DNS-Board sie mit "sum by (blocky_instance)" nebeneinander
+# zeigen kann. Ohne das hiesse der Job
+# "scrapeConfig/monitoring/blocky-lxc" und stuende in jeder Query einzeln.
+#
+# ACHTUNG, Port 4000 ist mehr als Metriken: dort haengt auch Blockys REST-API,
+# unauthentifiziert. Wer ihn erreicht, kann das Blocking abschalten.
+#
+# Auf der Cluster-Instanz ist das eingegrenzt, der Port liegt nur am
+# ClusterIP-Service. Auf diesem LXC nicht: die .254 faellt unter die
+# UniFi-Regel fuer die Gast-VLANs, und die erlaubt heute den Adressbereich
+# .249-.254 als Range statt einzelner Ports. Bis diese Regel portbasiert ist
+# (steht in der ROADMAP), ist die API von dort erreichbar.
+apiVersion: monitoring.coreos.com/v1alpha1
+kind: ScrapeConfig
+metadata:
+  name: blocky-lxc
+  namespace: monitoring
+  labels:
+    release: kube-prometheus-stack
+spec:
+  scheme: HTTP
+  metricsPath: /metrics
+  staticConfigs:
+    - targets:
+        - 192.168.2.254:4000
+  relabelings:
+    - targetLabel: job
+      replacement: blocky-metrics
+      action: replace
+    - targetLabel: blocky_instance
+      replacement: lxc-pve
+      action: replace

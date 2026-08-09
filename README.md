@@ -180,6 +180,7 @@ homelab/
 │   │   ├── alertmanager-ingress.yaml
 │   │   ├── aws-credentials-sealed.yaml
 │   │   ├── aws-credentials-unsealed.yaml.example
+│   │   ├── blocky-lxc-scrapeconfig.yaml
 │   │   ├── etcd-scrapeconfig.yaml
 │   │   ├── grafana-admin-sealed.yaml
 │   │   ├── grafana-admin-unsealed.yaml.example
