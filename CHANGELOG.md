@@ -1,3 +1,10 @@
+# [4.91.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.90.0...v4.91.0) (2026-08-09)
+
+
+### Features
+
+* **talos:** home-assistant aus dem k3s-Cluster prunen ([47505b1](https://github.com/Nebu2k/kubernetes-homelab/commit/47505b1ff8e7ae9cbcfeae74e9d162b98eb7c13b))
+
 # [4.90.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.89.0...v4.90.0) (2026-08-09)
 
 
