@@ -1,3 +1,10 @@
+# [4.99.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.98.0...v4.99.0) (2026-08-09)
+
+
+### Features
+
+* **talos:** kube-router als NetworkPolicy-Controller ([eb8c922](https://github.com/Nebu2k/kubernetes-homelab/commit/eb8c9222e13d322734db8ee94d6d64d13a9d4c42))
+
 # [4.98.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.97.0...v4.98.0) (2026-08-09)
 
 
