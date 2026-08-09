@@ -1,0 +1,33 @@
+# Gatus im Talos-Cluster.
+#
+# Gleiches Muster wie clusters/talos/longhorn: die Application aus apps/ bleibt
+# die gemeinsame Basis, nur der git-Pfad ihrer Source zeigt hierher. Die
+# Dateien aus manifests/gatus/ werden referenziert, nicht kopiert. Das
+# funktioniert, weil ArgoCD mit --load-restrictor LoadRestrictionsNone baut.
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: gatus
+
+resources:
+  - ../../../manifests/gatus/namespace.yaml
+  - ../../../manifests/gatus/pvc.yaml
+  - ../../../manifests/gatus/configmap.yaml
+  - ../../../manifests/gatus/dns-v6-relay.yaml
+  - ../../../manifests/gatus/deployment.yaml
+  - ../../../manifests/gatus/service.yaml
+  - ../../../manifests/gatus/ingress.yaml
+
+# Bewusst NICHT uebernommen:
+#
+#   servicemonitor.yaml
+#     Braucht monitoring.coreos.com/v1, das bringt kube-prometheus-stack mit und
+#     das laeuft hier noch nicht. Eine fehlende CRD laesst ArgoCD nicht nur den
+#     einen Task, sondern die ganze Sync-Operation abbrechen.
+#
+#     Solange er fehlt, scrapt niemand gatus_results_endpoint_success: die
+#     Alert-Gruppe "gatus" aus manifests/kube-prometheus-stack/prometheus-rules.yaml
+#     ist damit still, bis kube-prometheus-stack in der zweiten Welle
+#     nachkommt. Bewusst hingenommen (2026-08-09), die Status-Seite selbst
+#     bleibt ja sichtbar. Zurueckholen zusammen mit den ServiceMonitor-Patches
+#     in ../kustomization.yaml.

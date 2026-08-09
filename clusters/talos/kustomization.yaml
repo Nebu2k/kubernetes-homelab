@@ -25,6 +25,19 @@ resources:
   # herausgenommen.
   - ../../apps/readsb.yaml
   - ../../apps/fr24.yaml
+  # Rest der ersten Welle (2026-08-09): die zustandslosen Dienste. reloader
+  # gehoert dazu, weil alle vier ihre Pods per reloader.stakater.com/auto
+  # neustarten lassen; ohne ihn wuerde eine ConfigMap-Aenderung still nicht
+  # greifen. Im alten Cluster bleibt reloader stehen, die dortigen Dienste
+  # brauchen ihn weiter.
+  #
+  # kured und system-upgrade-controller kommen dagegen nie mit: beide setzen
+  # ein OS mit Paketmanager voraus, Talos-Upgrades laufen ueber talosctl.
+  - ../../apps/reloader.yaml
+  - ../../apps/landing-page.yaml
+  - ../../apps/gatus.yaml
+  - ../../apps/homepage.yaml
+  - ../../apps/external-services.yaml
 
 patches:
   # MetalLB: eigener Pool, PodSecurity und die Exclude-Label-Ausnahme.
@@ -99,6 +112,18 @@ patches:
       - op: replace
         path: /spec/sources/2/path
         value: clusters/talos/longhorn
+
+  # Gatus: eigener Manifest-Pfad, weil sein ServiceMonitor hier noch nicht gehen
+  # kann. Was genau abweicht, steht in clusters/talos/gatus/. Anders als bei
+  # longhorn und metallb ist die Application einquellig, der Pfad liegt also
+  # unter /spec/source und nicht unter /spec/sources/N.
+  - target:
+      kind: Application
+      name: gatus
+    patch: |-
+      - op: replace
+        path: /spec/source/path
+        value: clusters/talos/gatus
 
   # --- Bis kube-prometheus-stack migriert ist -------------------------------
   #

@@ -2,3 +2,15 @@ apiVersion: v1
 kind: Namespace
 metadata:
   name: gatus
+  labels:
+    # dns-v6-relay laeuft mit hostNetwork (siehe dns-v6-relay.yaml: nur das
+    # Host-Netz hat echtes IPv6). Talos erzwingt clusterweit PodSecurity
+    # "baseline", und baseline verbietet hostNetwork: ohne dieses Label wird
+    # der Pod abgelehnt, waehrend gatus selbst normal startet. Der Ausfall
+    # waere also genau der stille, gegen den der Relay gebaut wurde.
+    #
+    # Wie bei manifests/readsb/namespace.yaml bewusst am Namespace und nicht
+    # als Ausnahme im Cluster-Overlay: die Bedingung haengt am Pod, nicht am
+    # Cluster. Unter k3s ist das Label wirkungslos, dort ist keine
+    # PodSecurity-Erzwingung konfiguriert.
+    pod-security.kubernetes.io/enforce: privileged

@@ -15,18 +15,31 @@ resources:
   - kube-prometheus-stack.yaml
   - proxmox-exporter.yaml
   - unifi-poller.yaml
-  - gatus.yaml
-  - homepage.yaml
   - argocd-config.yaml
-  - external-services.yaml
   - home-assistant.yaml
   - teslamate.yaml
-  - landing-page.yaml
   # fr24 ist am 2026-08-08 ins Talos-Cluster gezogen, zusammen mit dem SDR.
   # Steht dort in clusters/talos/kustomization.yaml. Hier herausgenommen, damit
   # ArgoCD es im alten Cluster abraeumt: die Datenquelle (dump1090 auf raspi5)
   # gibt es nicht mehr.
   #   - fr24.yaml
+  #
+  # Erste Welle der Workload-Migration, am 2026-08-09 ins Talos-Cluster
+  # gezogen. Alle vier sind zustandslos genug fuer einen harten Schwenk:
+  #   - gatus.yaml
+  #   - homepage.yaml
+  #   - external-services.yaml
+  #   - landing-page.yaml
+  #
+  # Was das Herausnehmen hier ausloest: ArgoCD prunt sie samt Namespace. Bei
+  # gatus faellt damit auch das Longhorn-Volume gatus-data, die Uptime-Historie
+  # ist weg (bewusst so entschieden, statt sie aus dem NAS zu restaurieren).
+  #
+  # Der Wildcard *.elmstreet79.de zeigt bis zum Schluss auf die .250, also auf
+  # dieses Cluster. Die vier Dienste sind ab jetzt nur ueber
+  # https://192.168.2.240 mit passendem Host-Header erreichbar, unter ihrem
+  # Namen laufen sie ins Leere. Genau der Ausfall, der in der ROADMAP als
+  # billiger als per-Dienst-Rewrites in zwei AdGuard-Instanzen entschieden ist.
   - paperless-ngx.yaml
   - mealie.yaml
   - ripe-atlas.yaml
