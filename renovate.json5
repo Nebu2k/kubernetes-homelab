@@ -119,6 +119,25 @@
         '# renovate: datasource=(?<datasource>\\S+)\\s+\\S+:\\s*(?<depName>[^:\\s]+):(?<currentValue>\\S+)',
       ],
     },
+    // Talos- und Kubernetes-Version des neuen Clusters. Beide stehen in
+    // talos/talconfig.yaml, das kein Manager kennt: es ist weder ein Manifest
+    // noch ein Helm-Chart, sondern die Quelle, aus der talhelper die machine
+    // configs erzeugt.
+    //
+    // Wie beim ArgoCD-Anker ist das eine Erinnerung und kein Rollout. Der Merge
+    // aendert nichts am Cluster, das Upgrade bleibt "talhelper genconfig" plus
+    // "talosctl upgrade" Node fuer Node.
+    //
+    // kubernetesVersion faellt hier mit rein und traegt dieselbe Skip-Level-
+    // Regel wie k3s: immer nur EIN Minor am Stueck. Die Sperre dafuer steht
+    // unten bei den packageRules.
+    {
+      customType: 'regex',
+      managerFilePatterns: ['talos/talconfig.yaml'],
+      matchStrings: [
+        '# renovate: datasource=(?<datasource>\\S+) depName=(?<depName>\\S+)\\s+\\S+:\\s*(?<currentValue>\\S+)',
+      ],
+    },
     // ArgoCD selbst wird von Hand per Helm installiert und verwaltet sich
     // bewusst nicht selbst, seine Version steht deshalb in keinem Manifest.
     // bootstrap/argocd-version.yaml haelt sie als reinen Anker, damit ein
@@ -210,6 +229,34 @@
     // v2.39.0 gegen v3.3.4: eine Metrik weg, die niemand referenziert, alle
     // Label-Aenderungen rein additiv). unpoller faellt damit unter die
     // allgemeinen Regeln: Patches automergen, Majors werden ein PR.
+
+    // Talos: dieselbe Bauart wie der ArgoCD-Anker. Der Merge rollt nichts aus,
+    // also "chore" ohne Release und ohne CHANGELOG-Eintrag, der ein Upgrade
+    // behauptet, das noch nicht gelaufen ist.
+    //
+    // ghcr.io/siderolabs/talosctl gehoert MIT in diese Gruppe. Das Image faehrt
+    // die etcd-Snapshots in manifests/etcd-backup/ und muss zur Talos-Version
+    // der Nodes passen; zwei getrennte PRs wuerden die beiden auseinanderlaufen
+    // lassen, ohne dass es auffaellt.
+    {
+      matchPackageNames: [
+        'siderolabs/talos',
+        'ghcr.io/siderolabs/talosctl',
+      ],
+      groupName: 'talos',
+      semanticCommitType: 'chore',
+      semanticCommitScope: 'talos',
+    },
+
+    // Die Kubernetes-Version aus talconfig.yaml: nur Patches automatisch
+    // anbieten. Grund ist die Skip-Level-Regel, dieselbe wie bei k3s weiter
+    // unten: es darf immer nur EIN Minor am Stueck gesprungen werden, und
+    // Renovate kennt diese Regel nicht.
+    {
+      matchPackageNames: ['kubernetes/kubernetes'],
+      matchUpdateTypes: ['minor', 'major'],
+      enabled: false,
+    },
 
     // k3s selbst (Zielversion der Plans) und das kubectl-Image, das die
     // Drain-Schritte faehrt: nur Patches automatisch.

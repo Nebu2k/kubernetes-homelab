@@ -11,7 +11,9 @@
 
 clusterName: homelab
 
+# renovate: datasource=github-releases depName=siderolabs/talos
 talosVersion: v1.13.8
+# renovate: datasource=github-releases depName=kubernetes/kubernetes
 kubernetesVersion: v1.36.3
 
 # VIP des neuen Clusters. Die .249 gehoert dem k3s-Cluster und kann in der
