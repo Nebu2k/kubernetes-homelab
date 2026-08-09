@@ -69,11 +69,11 @@
 # kubelet mit.
 #
 # Der Betrag ist bewusst absolut und nicht anteilig, obwohl die Partitionen
-# sehr unterschiedlich gross sind (VMs 124 GiB, prodesk 236 GiB, raspi5 1 TB):
+# sehr unterschiedlich gross sind (VMs 395 GiB, prodesk 236 GiB, raspi5 931 GiB):
 # Images und Logs brauchen, was sie brauchen, das skaliert nicht mit der
 # Plattengroesse. Longhorns Default waeren 30 Prozent gewesen, auf raspi5 also
-# 279 GiB verschenkt. Nutzbar sind damit rund 93 GiB je VM, rund 206 GiB auf
-# prodesk und rund 900 GiB auf raspi5.
+# 279 GiB verschenkt. Nutzbar sind damit rund 371 GiB je VM, rund 198 GiB auf
+# prodesk und rund 909 GiB auf raspi5.
 #
 # Alle Nodes tragen Storage. Sie sind alle Control-Plane und tragen alle
 # Workloads, eine Unterscheidung gaebe es nicht abzubilden.

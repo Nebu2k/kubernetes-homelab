@@ -5,24 +5,32 @@
 # nichts Vergleichbares, es schreibt einen Snapshot nur auf Anforderung ueber
 # die API heraus. Der Upload ist damit Sache des Clusters und nicht der Node.
 #
-# WARUM DREI CRONJOBS UND NICHT EINER MIT DREI SCHRITTEN: damit eine nicht
-# erreichbare Node nur ihren eigenen Lauf reisst. In einem gemeinsamen Job
-# waeren die drei Snapshots initContainers, die laufen streng nacheinander und
+# WARUM EIN CRONJOB JE NODE UND NICHT EINER MIT MEHREREN SCHRITTEN: damit eine
+# nicht erreichbare Node nur ihren eigenen Lauf reisst. In einem gemeinsamen Job
+# waeren die Snapshots initContainers, die laufen streng nacheinander und
 # muessen alle durchkommen: eine tote Node haette dann auch die Snapshots der
-# beiden gesunden verhindert, und in S3 wuerde alles gleichzeitig alt. Genau
-# diese Unterscheidung ist der Sinn der drei Praefixe, die die Frische-Sonde in
+# gesunden verhindert, und in S3 wuerde alles gleichzeitig alt. Genau diese
+# Unterscheidung ist der Sinn der Praefixe, die die Frische-Sonde in
 # manifests/backup-monitor/freshness-cronjob.yaml einzeln prueft.
 #
-# WARUM UEBERHAUPT DREI SNAPSHOTS, wo etcd repliziert und der Inhalt derselbe
-# ist: sie belegen drei unabhaengige Wege ins Bucket. Ein Snapshot liegt bei
+# WARUM UEBERHAUPT MEHRERE SNAPSHOTS, wo etcd repliziert und der Inhalt derselbe
+# ist: sie belegen mehrere unabhaengige Wege ins Bucket. Ein Snapshot liegt bei
 # rund 55 MB, bei zweimal taeglich und 30 Tagen Lifecycle sind das unter
 # 10 GB im Bucket. Der Preis dafuer ist kleiner als der Aufwand, sich im
 # Ernstfall zu fragen, ob der eine Weg noch geht.
 #
-# Der Zeitplan ist gestaffelt (00:00, 00:20, 00:40 UTC und dieselben Zeiten
-# mittags), damit nicht drei Snapshots gleichzeitig ueber dieselbe Leitung
-# gehen. timeZone ist Pflicht und nicht Kosmetik: ohne das Feld laeuft ein
-# CronJob in der Zeitzone der Node, die gerade den kube-controller-manager
+# DIE LISTE MUSS DER LISTE DER ETCD-MEMBER FOLGEN. Kommt eine Control-Plane
+# dazu, gehoert sie hier UND in die Node-Schleife der Frische-Sonde; faellt eine
+# weg, muss sie aus beiden raus. Sonst faellt es entweder gar nicht auf, dass
+# eine Node nicht sichert (fehlt sie hier), oder die Sonde meldet dauerhaft
+# "kein einziges Objekt" fuer eine Node, die es nicht mehr gibt (fehlt sie dort).
+# Am 2026-08-09 aufgelaufen: raspi5 war seit dem Join etcd-Member, hatte aber
+# weder CronJob noch Sonde und war damit als einzige Node offsite ungesichert.
+#
+# Der Zeitplan ist gestaffelt (00:00, 00:20, 00:40, 00:50 UTC und dieselben
+# Zeiten mittags), damit nicht mehrere Snapshots gleichzeitig ueber dieselbe
+# Leitung gehen. timeZone ist Pflicht und nicht Kosmetik: ohne das Feld laeuft
+# ein CronJob in der Zeitzone der Node, die gerade den kube-controller-manager
 # haelt.
 #
 # Der Objektname "etcd-snapshot-<node>-<unix-ts>" ist bewusst derselbe, den k3s
@@ -263,6 +271,96 @@ spec:
               env:
                 - name: NODE_NAME
                   value: prodesk
+              envFrom:
+                - secretRef:
+                    name: etcd-backup-s3
+              volumeMounts:
+                - name: snapshot
+                  mountPath: /snapshot
+                  readOnly: true
+              resources:
+                requests:
+                  cpu: 50m
+                  memory: 128Mi
+                limits:
+                  memory: 512Mi
+          volumes:
+            - name: talosconfig
+              secret:
+                secretName: etcd-backup
+            - name: snapshot
+              emptyDir:
+                sizeLimit: 2Gi
+---
+# raspi5, seit dem 2026-08-09 vierte Control-Plane. Die 00:50 ist der vierte
+# freie Staffel-Slot; wenn talos-cp-2 abgebaut ist, wird die 00:20 frei und
+# diese Node kann dorthin ruecken. Muss sie aber nicht, der Upload dauert
+# Sekunden.
+#
+# Der Snapshot laeuft ueber die Talos-API und nicht auf der Node, der Pod kann
+# also irgendwo im Cluster liegen. arm64 spielt hier keine Rolle.
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: etcd-snapshot-raspi5
+  namespace: kube-system
+  labels:
+    app.kubernetes.io/name: etcd-snapshot-offsite
+spec:
+  schedule: "50 0,12 * * *"
+  timeZone: "Etc/UTC"
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      backoffLimit: 0
+      template:
+        metadata:
+          labels:
+            app.kubernetes.io/name: etcd-snapshot-offsite
+        spec:
+          restartPolicy: Never
+          initContainers:
+            - name: snapshot
+              image: ghcr.io/siderolabs/talosctl:v1.13.8
+              command:
+                - /talosctl
+                - --talosconfig
+                - /talos/config
+                - --nodes
+                - 192.168.2.22
+                - etcd
+                - snapshot
+                - /snapshot/db
+              volumeMounts:
+                - name: talosconfig
+                  mountPath: /talos
+                  readOnly: true
+                - name: snapshot
+                  mountPath: /snapshot
+              resources:
+                requests:
+                  cpu: 50m
+                  memory: 64Mi
+                limits:
+                  memory: 256Mi
+          containers:
+            - name: upload
+              image: amazon/aws-cli:2.36.17
+              command:
+                - /bin/sh
+                - -c
+                - |
+                  set -eu
+                  KEY="etcd-snapshot-${NODE_NAME}-$(date +%s)"
+                  echo "lade $(stat -c %s /snapshot/db) Bytes nach s3://${ETCD_BUCKET}/${KEY}"
+                  # --only-show-errors, sonst schreibt die aws-cli fuer jedes
+                  # MiB eine Fortschrittszeile und das Job-Log ist unlesbar.
+                  aws s3 cp --only-show-errors /snapshot/db "s3://${ETCD_BUCKET}/${KEY}"
+              env:
+                - name: NODE_NAME
+                  value: raspi5
               envFrom:
                 - secretRef:
                     name: etcd-backup-s3
