@@ -1,3 +1,10 @@
+# [4.89.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.88.0...v4.89.0) (2026-08-09)
+
+
+### Features
+
+* **talos:** teslamate ins neue Cluster, vier Volumes restauriert ([f9e0054](https://github.com/Nebu2k/kubernetes-homelab/commit/f9e005469c125e35f9c4c54e8c024a5ad04a6bce))
+
 # [4.88.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.87.0...v4.88.0) (2026-08-09)
 
 
