@@ -1,3 +1,10 @@
+# [5.1.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v5.0.0...v5.1.0) (2026-08-09)
+
+
+### Features
+
+* **alerts:** Volume mit backup-Label und ohne Backup meldet sich ([0df566d](https://github.com/Nebu2k/kubernetes-homelab/commit/0df566dcf55b893ba520a6e540fcd51f34bb2724))
+
 # [5.0.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.107.0...v5.0.0) (2026-08-09)
 
 
