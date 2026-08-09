@@ -1,3 +1,10 @@
+# [4.107.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.106.0...v4.107.0) (2026-08-09)
+
+
+### Features
+
+* **rpi5:** ethtool-Gegenmassnahmen gegen die etcd-Aussetzer ([d0cfc8d](https://github.com/Nebu2k/kubernetes-homelab/commit/d0cfc8dabfbd28a1614d1f6ed41e8f3df4ee8563)), closes [siderolabs/sbc-raspberrypi#91](https://github.com/siderolabs/sbc-raspberrypi/issues/91)
+
 # [4.106.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.105.0...v4.106.0) (2026-08-09)
 
 
