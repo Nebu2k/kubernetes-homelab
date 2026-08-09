@@ -52,7 +52,6 @@ spec:
             cpu: "100m"
           limits:
             memory: "512Mi"
-            cpu: "500m"
         readinessProbe:
           exec:
             command: ["/bin/sh", "-c", "pg_isready -U \"$POSTGRES_USER\" -d \"$POSTGRES_DB\" -h 127.0.0.1"]

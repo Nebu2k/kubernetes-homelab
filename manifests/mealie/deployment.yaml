@@ -79,7 +79,6 @@ spec:
             cpu: 100m
             memory: 512Mi
           limits:
-            cpu: 1000m
             memory: 1Gi
         # /api/app/about ist unauthentifiziert und dasselbe Ziel, das die
         # eingebaute healthcheck.sh des Images abfragt. / liefert die SPA und

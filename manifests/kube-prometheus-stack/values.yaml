@@ -90,7 +90,6 @@ prometheus:
         cpu: 200m
         memory: 1280Mi
       limits:
-        cpu: 1000m
         memory: 2Gi
     
     # Run on worker nodes only.
@@ -195,7 +194,6 @@ grafana:
       cpu: 100m
       memory: 320Mi
     limits:
-      cpu: 500m
       memory: 512Mi
   
   # Pre-installed dashboards
@@ -382,7 +380,6 @@ alertmanager:
         cpu: 50m
         memory: 128Mi
       limits:
-        cpu: 200m
         memory: 256Mi
     
     # Run on worker nodes only
@@ -414,7 +411,6 @@ prometheusOperator:
       cpu: 100m
       memory: 128Mi
     limits:
-      cpu: 500m
       memory: 512Mi
   
   # Run on worker nodes only

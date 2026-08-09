@@ -56,7 +56,6 @@ spec:
             cpu: "100m"
           limits:
             memory: "512Mi"
-            cpu: "200m"
         readinessProbe:
           httpGet:
             path: /api/health
