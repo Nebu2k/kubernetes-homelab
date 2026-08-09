@@ -1,3 +1,10 @@
+# [4.84.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.83.0...v4.84.0) (2026-08-09)
+
+
+### Features
+
+* **talos:** csi-driver-smb ins neue Cluster ([8e34e1b](https://github.com/Nebu2k/kubernetes-homelab/commit/8e34e1beabc1cf633e55e08e732ac7f10d2c6c49))
+
 # [4.83.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.82.0...v4.83.0) (2026-08-09)
 
 
