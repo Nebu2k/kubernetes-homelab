@@ -207,6 +207,40 @@ Momentaufnahme, ein Re-Sync duerfte daraus nie einen alten Stand herstellen.
 
 ## Fallen
 
+- **`cluster.endpoint` zu aendern macht JEDES ausgestellte ServiceAccount-Token
+  ungueltig.** Talos leitet `--service-account-issuer` des apiservers aus dem
+  Endpoint ab. Steht dort danach eine andere Adresse, traegt jedes vorher
+  ausgestellte Token den alten Issuer und wird abgelehnt: `failed to list ...
+  Unauthorized`, quer durch das Cluster, von kube-proxy und CoreDNS bis zu
+  ArgoCD. Frisch ausgestellte Token gehen sofort, `kubectl` mit dem
+  Admin-Zertifikat merkt gar nichts, und genau das macht die Diagnose
+  unangenehm: das Cluster sieht von aussen gesund aus, waehrend die Controller
+  blind sind.
+
+  Passiert am 2026-08-09 beim Umzug des VIP von der .248 auf die .29. Kein
+  Reboot, keine Fehlermeldung beim Apply, der Bruch faellt erst Minuten spaeter
+  auf. **Wer den Endpoint anfasst, plant den Rollout gleich mit ein:**
+
+  ```bash
+  # Netzwerkschicht zuerst, DaemonSets rollen ohnehin Node fuer Node
+  kubectl -n kube-system rollout restart ds/kube-proxy ds/kube-flannel ds/kube-router
+  kubectl -n kube-system rollout restart deploy/coredns
+  # danach alles Uebrige
+  for ns in $(kubectl get ns -o name | cut -d/ -f2); do
+    for r in $(kubectl -n $ns get deploy,ds,sts -o name); do
+      kubectl -n $ns rollout restart $r
+    done
+  done
+  ```
+
+  Ohne den Rollout heilt es sich zwar von selbst, aber erst wenn das kubelet
+  die projizierten Token turnusmaessig erneuert (rund eine Stunde), und nur bei
+  Clients, die die Token-Datei neu lesen.
+
+  **Die Abwaegung war es rueckblickend kaum wert:** der Anlass war ein Loch im
+  MetalLB-Bereich, also zwei Eintraege in einer YAML statt einem. Wer den
+  Endpoint aus einem so kleinen Grund anfassen will, sollte es lassen.
+
 - **Immer nur ein Restore auf einmal.** Zwei gleichzeitig laufende Restores
   mounten das CIFS-Share aus zwei Replica-Prozessen zugleich, einer von beiden
   scheitert mit `cannot mount CIFS share ...: mount failed: exit status 32` und
