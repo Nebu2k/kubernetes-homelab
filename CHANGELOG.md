@@ -1,3 +1,10 @@
+# [4.88.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.87.0...v4.88.0) (2026-08-09)
+
+
+### Features
+
+* **talos:** mealie ins neue Cluster, zwei Volumes restauriert ([4886498](https://github.com/Nebu2k/kubernetes-homelab/commit/4886498b34fe8fa8df13acd07d02c00a527f2e8c))
+
 # [4.87.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.86.0...v4.87.0) (2026-08-09)
 
 
