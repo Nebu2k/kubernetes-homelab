@@ -1,3 +1,10 @@
+# [4.93.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.92.0...v4.93.0) (2026-08-09)
+
+
+### Features
+
+* **talos:** Alert-Regeln, Home-Assistant-Scrape und backup-monitor nachziehen ([960f9bd](https://github.com/Nebu2k/kubernetes-homelab/commit/960f9bd7f504905753b962fc7a285af884e1f618))
+
 # [4.92.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.91.0...v4.92.0) (2026-08-09)
 
 
