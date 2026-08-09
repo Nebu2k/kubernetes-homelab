@@ -1,3 +1,10 @@
+## [4.104.4](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.104.3...v4.104.4) (2026-08-09)
+
+
+### Bug Fixes
+
+* **talos:** certSANs der Nodes decken sich wieder mit talconfig.yaml ([8c23d74](https://github.com/Nebu2k/kubernetes-homelab/commit/8c23d7408286ecb6899bdd58bf1b84a015516c61))
+
 ## [4.104.3](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.104.2...v4.104.3) (2026-08-09)
 
 
