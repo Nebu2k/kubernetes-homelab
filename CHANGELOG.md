@@ -1,3 +1,10 @@
+## [4.96.2](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.96.1...v4.96.2) (2026-08-09)
+
+
+### Bug Fixes
+
+* **etcd-backup:** aws-cli ohne Fortschrittsanzeige ([ccd0f78](https://github.com/Nebu2k/kubernetes-homelab/commit/ccd0f785fce7c52c1445447e39e4d88025a7dcc0))
+
 ## [4.96.1](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.96.0...v4.96.1) (2026-08-09)
 
 
