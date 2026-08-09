@@ -59,5 +59,10 @@ resources:
   #   - teslamate.yaml
   #   - paperless-ngx.yaml
   #   - home-assistant.yaml
-  - backup-monitor.yaml
+  #
+  # backup-monitor ist zuletzt gefolgt (2026-08-09). Es haengt an keinem
+  # Cluster: der CronJob fragt die S3-Buckets ab, auch den mit den
+  # etcd-Snapshots der drei k3s-Server-Nodes. Von drueben aus geprueft ist
+  # dieselbe Aussage, und die Alert-Regel dazu steht jetzt auch dort:
+  #   - backup-monitor.yaml
 

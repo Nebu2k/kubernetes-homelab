@@ -32,26 +32,21 @@ resources:
   - ../../../manifests/kube-prometheus-stack/grafana-admin-sealed.yaml
   # Eigene Fassung mit den Talos-Adressen, siehe Kopf der Datei.
   - etcd-scrapeconfig.yaml
+  # Am 2026-08-09 nachgezogen, nachdem die zweite Welle durch war. Ab hier
+  # liegen die homelab-eigenen Regeln und der Home-Assistant-Scrape nur noch
+  # hier, in manifests/kube-prometheus-stack/kustomization.yaml sind sie
+  # auskommentiert.
+  - ../../../manifests/kube-prometheus-stack/prometheus-rules.yaml
+  - ../../../manifests/kube-prometheus-stack/home-assistant-scrapeconfig.yaml
+  - ../../../manifests/kube-prometheus-stack/home-assistant-token-sealed.yaml
 
-# Bewusst NICHT uebernommen:
-#
-#   home-assistant-scrapeconfig.yaml und home-assistant-token-sealed.yaml
-#     Das Target ist home-assistant.home-assistant.svc.cluster.local, also ein
-#     Service DIESES Clusters. Home Assistant laeuft noch im k3s-Cluster, der
-#     Scrape liefe ins Leere und TargetDown feuerte dauerhaft. Beide Dateien
-#     zurueckholen, sobald home-assistant migriert ist, dann stimmt der Name
-#     wieder ohne Aenderung.
-#
-#   prometheus-rules.yaml
-#     Die homelab-eigenen Regeln bleiben vorerst im k3s-Cluster, weil sie den
-#     Diensten folgen muessen und nicht dem Monitoring: mehrere Gruppen
-#     (home-assistant-Backup, teslamate, unifi-poller, offsite-backup-jobs)
-#     enthalten absent()-Zweige, die hier ab der ersten Minute dauerhaft feuern
-#     wuerden, obwohl nichts kaputt ist. Die defaultRules des Charts laufen
-#     dagegen sehr wohl, sie beschreiben das Cluster selbst.
-#
-#     ZUM SCHLUSS ZURUECKHOLEN, wenn die letzte Anwendung migriert ist. Das ist
-#     zugleich der Moment, in dem im k3s-Cluster nichts mehr zu ueberwachen ist.
+# Was beim Zurueckholen der Regeln zu beachten war: die absent()-Zweige der
+# Gruppe offsite-backup-jobs greifen erst, wenn der jeweilige CronJob in DIESEM
+# Cluster einmal durchgelaufen ist. kube_job_status_completion_time entsteht
+# nicht durch das Anlegen des CronJob. Statt bis zum naechsten Nachtlauf zu
+# warten, sind die vier Jobs am 2026-08-09 einmal von Hand angestossen worden
+# (kubectl create job --from=cronjob/...). Das raeumt die Alarme sofort ab und
+# belegt zugleich, dass der Backup-Pfad aus dem neuen Cluster funktioniert.
 
 # Die Dashboards liegen neben den Manifesten und werden hier genauso erzeugt wie
 # dort. Bewusst kopiert statt referenziert: ein configMapGenerator laesst sich

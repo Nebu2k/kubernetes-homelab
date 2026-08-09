@@ -164,8 +164,65 @@ direkt an einer generierten Datei: die wird beim naechsten Lauf ueberschrieben.
 talosctl apply-config --nodes 192.168.2.20 --file clusterconfig/homelab-talos-cp-1.yaml
 ```
 
+## Ein Longhorn-Volume aus dem NAS-Backup herholen
+
+So sind am 2026-08-09 die 13 Volumes der zweiten Welle umgezogen. Beide Cluster
+zeigen auf dasselbe CIFS-Share, der Umzug laeuft also ueber ein Backup und nicht
+ueber eine Kopie.
+
+**1. Frisches Backup im Quellcluster erzwingen.** Nicht auf den naechsten Lauf
+von `backup-daily` warten: was zwischen letztem Backup und Prune geschrieben
+wurde, ist sonst weg. Ein Snapshot-CR, danach ein Backup-CR darauf.
+
+```bash
+kubectl apply -f - <<EOF
+apiVersion: longhorn.io/v1beta2
+kind: Snapshot
+metadata: {name: migration-x, namespace: longhorn-system}
+spec: {volume: pvc-<uuid>, createSnapshot: true}
+EOF
+# danach, mit snapshotName: migration-x, ein Backup gleichen Namens
+```
+
+Warten, bis `.status.state` des Backups `Completed` ist, und **erst dann** die
+App im Quellcluster prunen. Der Prune loescht PVC und Volume, das Backup ist
+danach die einzige Kopie.
+
+**2. Im Zielcluster den Backup-Target-Sync anstossen** (`syncRequestedAt` am
+`backuptarget/default` setzen), sonst kennt es das frische Backup noch nicht.
+
+**3. Volume restaurieren**, ein Volume-CR mit `fromBackup` auf die
+`status.url` des Backups. `nodeSelector: [storage]` und `numberOfReplicas: 2`
+muessen zur StorageClass passen, sonst findet Longhorn keine Disk. Fertig ist
+das Restore, wenn `.status.restoreRequired` auf `false` steht.
+
+**4. PV und PVC verdrahten.** Das PV steht im Overlay unter
+`clusters/talos/<dienst>/pv.yaml`, mit `claimRef` vorwaerts auf die PVC aus
+`manifests/`. Die PVC selbst bleibt unveraendert. Der Grund steht ausfuehrlich
+im Kopf von `clusters/talos/ripe-atlas/pv.yaml`: ohne vorgebundenes PV bindet
+die PVC an ein frisch provisioniertes, leeres Volume, der Pod startet, und das
+faellt erst auf, wenn die Daten fehlen.
+
+Das Restore selbst gehoert bewusst **nicht** ins git: die Backup-URL ist eine
+Momentaufnahme, ein Re-Sync duerfte daraus nie einen alten Stand herstellen.
+
 ## Fallen
 
+- **Immer nur ein Restore auf einmal.** Zwei gleichzeitig laufende Restores
+  mounten das CIFS-Share aus zwei Replica-Prozessen zugleich, einer von beiden
+  scheitert mit `cannot mount CIFS share ...: mount failed: exit status 32` und
+  das Volume bleibt `faulted`. Am 2026-08-09 gleich beim ersten Paar passiert
+  (ripe-atlas), einzeln nachgezogen lief dasselbe Volume fehlerfrei. Ein
+  faulted Volume ist nicht reparierbar, es muss geloescht und neu restauriert
+  werden. **Backups** duerfen dagegen parallel laufen, dort ist es nie
+  aufgetreten.
+- **NetworkPolicies sind hier wirkungslos.** Talos deployt vanilla Flannel, und
+  Flannel bringt keinen NetworkPolicy-Controller mit. k3s hatte einen
+  eingebauten. Die `default-deny-ingress` von mealie, paperless-ngx und
+  teslamate sind mitgewandert, werden aber von niemandem durchgesetzt: das API
+  nimmt sie an, `kubectl get netpol` zeigt sie, und sie tun nichts. Kein
+  Blocker, aber eine stille Verschlechterung gegenueber k3s. Steht als offener
+  Punkt in der ROADMAP.
 - **`node-role.kubernetes.io/worker` steht in der machine config** und muss da
   bleiben. Rund 20 Manifeste selektieren darauf, unter anderem die nodeSelector
   von MetalLB und cert-manager. Fehlt es, bleibt die halbe Plattform Pending,
@@ -185,6 +242,19 @@ talosctl apply-config --nodes 192.168.2.20 --file clusterconfig/homelab-talos-cp
   (Home Assistant, csi-driver-smb) braucht beim Migrieren ein
   `pod-security.kubernetes.io/enforce: privileged` am Namespace. Das gehoert in
   die Manifeste, nicht hierher: eine Aenderung hier rebootet die Control-Plane.
+
+  **Nicht nur hostNetwork und hostPath stossen an baseline.** ripe-atlas hat
+  weder das eine noch das andere und braucht die Ausnahme trotzdem: es setzt
+  `NET_RAW` fuer ICMP und Traceroute, und `NET_RAW` steht nicht auf der Liste
+  erlaubter `capabilities.add` (CHOWN, DAC_OVERRIDE, FOWNER, KILL, SETGID,
+  SETUID und ein paar mehr sind erlaubt). Vor dem Migrieren also den ganzen
+  `securityContext` lesen, nicht nur die Pod-Ebene.
+
+  **Wo die Ausnahme hingehoert, haengt daran, wer den Namespace anlegt.**
+  `managedNamespaceMetadata` an der Application wirkt nur bei
+  `CreateNamespace=true` und nur beim Anlegen. Bringt die App ihr eigenes
+  `namespace.yaml` mit (ripe-atlas, home-assistant), muss das Label per Patch
+  an dieses Manifest.
 - **talos-cp-1 traegt den RTL-SDR und ist deshalb ein Pet.** Der Stick haengt an
   pve und wird per qemu-USB durchgereicht (`usb_devices` in
   `homelab-terraform/proxmox/vm-talos.tf`), der readsb-Pod ist per nodeSelector

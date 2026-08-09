@@ -7,13 +7,27 @@ resources:
   - grafana-ingress.yaml
   - prometheus-ingress.yaml
   - alertmanager-ingress.yaml
-  - prometheus-rules.yaml
   - etcd-scrapeconfig.yaml
   - node-exporter-external-scrapeconfig.yaml
-  - home-assistant-scrapeconfig.yaml
   - aws-credentials-sealed.yaml
   - grafana-admin-sealed.yaml
-  - home-assistant-token-sealed.yaml
+
+# Am 2026-08-09 aus DIESER Liste heraus und nur noch im Talos-Overlay
+# (clusters/talos/kube-prometheus-stack/kustomization.yaml):
+#
+#   prometheus-rules.yaml
+#     Die homelab-eigenen Regeln folgen den Diensten, nicht dem Monitoring.
+#     Seit der zweiten Welle laeuft im k3s-Cluster keine Anwendung mehr, hier
+#     wuerden fast alle Gruppen dauerhaft absent() melden. Das k3s-Prometheus
+#     behaelt die defaultRules des Charts, die beschreiben das Cluster selbst.
+#
+#   home-assistant-scrapeconfig.yaml, home-assistant-token-sealed.yaml
+#     Das Target ist ein Service im eigenen Cluster, und Home Assistant laeuft
+#     seit dem 2026-08-09 drueben.
+#
+# Die Dateien selbst bleiben hier liegen: sie sind die gemeinsame Quelle, das
+# Overlay referenziert sie. Beim Abbau von k3s faellt diese Datei weg, nicht
+# ihr Inhalt.
 
 # Eigene Grafana-Dashboards. Der grafana-sc-dashboard-Sidecar sammelt alle
 # ConfigMaps mit dem Label grafana_dashboard=1 ueber alle Namespaces ein
