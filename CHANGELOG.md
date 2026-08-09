@@ -1,3 +1,10 @@
+## [4.104.1](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.104.0...v4.104.1) (2026-08-09)
+
+
+### Bug Fixes
+
+* **rpi5-fan:** Stillstand der Regelschleife sichtbar machen ([7ea59c8](https://github.com/Nebu2k/kubernetes-homelab/commit/7ea59c87ba41e63e8d5e9560a83b7b7838e78f99))
+
 # [4.104.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v4.103.0...v4.104.0) (2026-08-09)
 
 
