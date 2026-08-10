@@ -32,7 +32,6 @@ spec:
             - |
               set -eux
               
-              # Detect architecture and download correct kubectl
               ARCH=$(uname -m)
               case "$ARCH" in
                 x86_64)  KUBECTL_ARCH="amd64" ;;
@@ -50,7 +49,6 @@ spec:
               echo "=== Triggering Paperless-ngx Document Export ==="
               EXPORT_DIR="/usr/src/paperless/export/current"
 
-              # Trigger export in Paperless pod (S3 sidecar will handle upload)
               echo "Running document export in Paperless pod..."
               if kubectl exec -n paperless-ngx deployment/paperless-ngx -c paperless-ngx -- \
                 bash -c "rm -rf ${EXPORT_DIR} && mkdir -p ${EXPORT_DIR} && python /usr/src/paperless/src/manage.py document_exporter ${EXPORT_DIR}"; then

@@ -1,12 +1,9 @@
 name: Docs
 
 # Haelt README.md aktuell. Die Datei wird aus apps/ und manifests/ generiert
-# (docs-generator/generate_readme.py) und war bisher nur ueber den lokalen
-# pre-commit-Hook abgesichert. Der laeuft aber nur bei lokalen Commits, und
-# Renovate merged auf GitHub. Nach dem ersten Renovate-Zyklus (25 PRs) waren
-# dadurch acht Versionen in der Tabelle veraltet, aufgefallen erst beim
-# naechsten lokalen Commit. Mit Automerge (Phase 3) waere das der Dauerzustand,
-# weil dann gar keine lokalen Commits mehr noetig sind.
+# (docs-generator/generate_readme.py). Der lokale pre-commit-Hook allein reicht
+# dafuer nicht: Renovate merged auf GitHub, und mit Automerge gibt es gar keine
+# lokalen Commits mehr, die den Hook ausloesen wuerden.
 #
 # Trigger ist bewusst workflow_run und nicht push:main. Semantic Release pusht
 # bei jedem Release per @semantic-release/git selbst einen Commit nach main.

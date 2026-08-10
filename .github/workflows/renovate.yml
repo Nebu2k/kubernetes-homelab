@@ -5,13 +5,10 @@ on:
     # Taeglich 04:00 UTC. Einzige Zeitsteuerung, die Renovate-Config selbst hat
     # bewusst kein "schedule:".
     #
-    # Frueher woechentlich (montags). Umgestellt mit Phase 3 (Automerge), weil
-    # Renovate selbst merged statt GitHubs Auto-Merge zu nutzen (Begruendung in
-    # renovate.json5 bei platformAutomerge). Gemerged wird dadurch nur waehrend
-    # eines Laufs: Lauf N oeffnet den PR, die CI wird kurz danach gruen, Lauf
-    # N+1 merged. Bei woechentlichem Cron waere das eine Woche Latenz pro
-    # Image-Patch. minimumReleaseAge (3 Tage) bleibt der eigentliche Puffer
-    # gegen frische kaputte Releases, nicht der Cron.
+    # Taeglich und nicht woechentlich, weil Renovate selbst merged statt
+    # GitHubs Auto-Merge zu nutzen (Begruendung in renovate.json5 bei
+    # platformAutomerge): gemerged wird nur waehrend eines Laufs. Der Puffer
+    # gegen frische kaputte Releases ist minimumReleaseAge, nicht der Cron.
     #
     # Zwei Laeufe pro Tag, und das ist kein Komfort, sondern die Bedingung dafuer
     # dass Automerge ueberhaupt greift. Ein Lauf, der den Branch anfasst (neue
@@ -22,9 +19,8 @@ on:
     # Bei einer Dependency mit taeglichem Release trifft das jeden Lauf.
     # amazon/aws-cli taggt werktags gegen 19:15 UTC, mit minimumReleaseAge von
     # 3 Tagen wird also jeden Abend eine neue Version reif. Der 04:00-Lauf hebt
-    # den Branch darauf an, statt den vom Vortag zu mergen. PR #52 lag so seit
-    # dem 04.08. Der zweite Lauf findet den Branch gruen und unveraendert vor
-    # und merged ihn.
+    # den Branch darauf an, statt den vom Vortag zu mergen. Der zweite Lauf
+    # findet ihn gruen und unveraendert vor und merged ihn.
     - cron: '0 4 * * *'
     - cron: '30 4 * * *'
   workflow_dispatch:

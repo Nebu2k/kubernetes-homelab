@@ -5,8 +5,6 @@ metadata:
   namespace: gatus
 data:
   config.yaml: |
-    # Gatus: Status-Seite fuer das Homelab.
-    #
     # Abgrenzung zum Prometheus-Stack: Prometheus misst von INNEN (Metriken der
     # Dienste selbst), Gatus misst von AUSSEN (kommt eine Antwort, und ist sie
     # richtig). Alerting laeuft trotzdem ueber genau einen Weg: Gatus schreibt
@@ -44,9 +42,6 @@ data:
           link: "https://grafana.elmstreet79.de"
 
     endpoints:
-      # ==================================================================
-      # Cluster-Dienste (ueber Traefik, also inkl. DNS + LB + TLS + App)
-      # ==================================================================
       - name: Homepage
         group: Cluster
         url: "https://home.elmstreet79.de"
@@ -152,15 +147,12 @@ data:
         interval: 60s
         conditions:
           - "[STATUS] == 200"
-
-      # ==================================================================
       # Infrastruktur ausserhalb des Clusters.
       #
       # Bewusst direkt auf die IP, NICHT ueber <host>.elmstreet79.de: faellt
       # Traefik aus, sind oben alle Cluster-Checks rot und hier alles gruen.
       # Genau diese Aufteilung sagt beim Blick aufs Dashboard sofort, ob der
       # Reverse-Proxy oder das Blech dahinter kaputt ist.
-      # ==================================================================
       - name: Proxmox
         group: Infrastruktur
         url: "https://192.168.2.8:8006/"
@@ -242,14 +234,11 @@ data:
         interval: 2m
         conditions:
           - "[STATUS] == 200"
-
-      # ==================================================================
       # DNS. Prueft nicht nur "Resolver lebt", sondern dass der
       # Split-Horizon-Rewrite *.elmstreet79.de -> 192.168.2.250 wirklich
       # antwortet. Der muss an drei Stellen gleich sein (beide AdGuards +
       # CoreDNS), und ein stiller Ausfall einer davon trifft nur einen Teil
       # der Clients.
-      # ==================================================================
       - name: AdGuard (LXC pve)
         group: DNS
         url: "192.168.2.16"
@@ -381,10 +370,6 @@ data:
           query-type: "A"
         conditions:
           - "[DNS_RCODE] == NOERROR"
-
-      # ==================================================================
-      # Internet: Uplink und die oeffentlichen Sites
-      # ==================================================================
       - name: Uplink (1.1.1.1)
         group: Internet
         url: "tcp://1.1.1.1:443"
@@ -423,8 +408,6 @@ data:
         conditions:
           - "[STATUS] == 200"
           - "[CERTIFICATE_EXPIRATION] > 240h"
-
-      # ==================================================================
       # Domain-Laufzeiten (RDAP/WHOIS). Bewusst eigene Gruppe: eine zickige
       # WHOIS-Antwort soll die Site oben nicht rot faerben. Gatus laesst hier
       # ohnehin kein Intervall unter 5m zu, taeglich reicht voellig.
@@ -433,7 +416,6 @@ data:
       # antwortet fuer elmstreet79.de und haushelden-service.de mit
       # "domain extension de does not have an expiration date". Das ist
       # dauerhaft so und waere ein Endpoint, der nie gruen werden kann.
-      # ==================================================================
       - name: peters.club
         group: Domains
         url: "https://peters.club"

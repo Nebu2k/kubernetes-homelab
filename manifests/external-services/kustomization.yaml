@@ -2,7 +2,6 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 namespace: external-services
 resources:
-  # Service files (extracted from ingress/deployment files)
   - adguard-macmini-service.yaml
   - adguard-pve-service.yaml
   - adguardhome-sync-service.yaml
@@ -14,9 +13,7 @@ resources:
   - unifi-service.yaml
   - unifi-nas-service.yaml
   - vscode-service.yaml
-  # IngressRoutes für die externen Hosts (Traefik direkt)
   - external-ingressroutes.yaml
-  # Other resources
   - adguardhome-sync-config.yaml
   - adguardhome-sync-credentials-sealed.yaml
   - adguardhome-sync-deployment.yaml

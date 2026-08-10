@@ -87,11 +87,9 @@ spec:
         - name: PAPERLESS_USE_X_FORWARD_PORT
           value: "true"
         
-        # Redis
         - name: PAPERLESS_REDIS
           value: "redis://redis:6379"
         
-        # PostgreSQL
         # Muss explizit stehen. Paperless leitet die Engine als Fallback zwar
         # noch aus der Anwesenheit von PAPERLESS_DBHOST ab, verlaesst sich
         # darauf aber ausdruecklich nicht.
@@ -117,7 +115,6 @@ spec:
               name: postgresql-secrets
               key: POSTGRES_PASSWORD
         
-        # Admin credentials
         - name: PAPERLESS_ADMIN_USER
           valueFrom:
             secretKeyRef:
@@ -134,7 +131,6 @@ spec:
               name: paperless-secrets
               key: PAPERLESS_SECRET_KEY
         
-        # Features
         # Consume liegt auf CIFS, wo inotify nicht funktioniert. Deshalb
         # Polling statt nativer Events. Hiess bis v2 PAPERLESS_CONSUMER_POLLING.
         - name: PAPERLESS_CONSUMER_POLLING_INTERVAL
@@ -195,7 +191,6 @@ spec:
           periodSeconds: 10
           timeoutSeconds: 5
       
-      # S3 Backup Sidecar - monitors /export and syncs to S3
       - name: s3-backup-sync
         image: amazon/aws-cli:2.36.18
         command:
@@ -208,7 +203,6 @@ spec:
           echo "S3 Versioning enabled - only changed files will create new versions"
           
           while true; do
-            # Check if current export exists
             if [ -d "/export/current" ] && [ -n "$(ls -A /export/current 2>/dev/null)" ]; then
               echo "$(date): Found backup in /export/current, syncing to S3..."
               
@@ -224,7 +218,7 @@ spec:
               fi
             fi
             
-            # Check every hour (backup runs once daily at 02:00)
+            # Der Export laeuft einmal taeglich um 02:00, stuendlich reicht.
             sleep 3600
           done
         env:

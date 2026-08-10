@@ -5,7 +5,6 @@ metadata:
   namespace: home-assistant
 data:
   configuration.yaml: |
-    # HTTP config - trust pod network for reverse proxy (v4-only)
     http:
       use_x_forwarded_for: true
       trusted_proxies:
@@ -16,7 +15,6 @@ data:
       ip_ban_enabled: true
       login_attempts_threshold: 5
     
-    # Enable discovery for automatic device detection
     default_config:
 
     # Metriken nach Prometheus (/api/prometheus, Bearer-Token).
@@ -62,11 +60,8 @@ data:
         turn_off:
           action: shell_command.nebu2k_pc_shutdown
 
-    # Enable automations UI
     automation: !include automations.yaml
     
-    # Enable scripts UI
     script: !include scripts.yaml
     
-    # Enable scenes UI
     scene: !include scenes.yaml

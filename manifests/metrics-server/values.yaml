@@ -1,11 +1,7 @@
-# metrics-server.
-#
 # Vanilla Kubernetes bringt keinen metrics-server mit, und das faellt leise
 # aus: `kubectl top` sagt "Metrics API not available", die Kubernetes-Widgets
 # der Homepage melden "API error", und jede HorizontalPodAutoscaler-Idee liefe
 # ins Leere.
-#
-# Eingebunden ueber apps/metrics-server.yaml.
 
 # Das kubelet stellt seine Metriken ueber ein selbstsigniertes Zertifikat
 # bereit, das auf die Node-IP und nicht auf eine im Cluster aufloesbare CA

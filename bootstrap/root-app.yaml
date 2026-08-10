@@ -31,9 +31,6 @@ spec:
   # und Healthy, ihre spec deckt sich mit git, der Diff besteht ausschliesslich
   # aus diesen zwei Feldern.
   #
-  # Der Preis des Nichtstuns war Gewoehnung: eine App, die immer gelb steht,
-  # verdeckt beim Drueberschauen eine, die es zu Recht ist.
-  #
   # Bewusst auf longhorn eingegrenzt und nicht auf alle Applications. Bekaeme
   # eine zweite App einen PreDelete-Hook, soll sie wieder auffallen, statt dass
   # eine pauschale Regel auch ein echtes Entfernen von resources-finalizer
