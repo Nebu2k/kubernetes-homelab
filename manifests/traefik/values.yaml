@@ -47,7 +47,6 @@ podDisruptionBudget:
   enabled: true
   minAvailable: 1
 
-# CRD providers for Middleware and ServersTransport
 providers:
   kubernetesCRD:
     enabled: true
@@ -55,7 +54,6 @@ providers:
   kubernetesIngress:
     enabled: true
 
-# MetalLB LoadBalancer IP.
 # MUSS als Annotation gesetzt werden. Das Traefik-Chart kennt keinen
 # service.loadBalancerIP-Wert, Helm hat den Key bisher stillschweigend
 # ignoriert (im gerenderten Service stuende dann nie eine IP).
@@ -84,7 +82,6 @@ service:
     # damit das nicht auf einen einzelnen Node zusammenfaellt.
     externalTrafficPolicy: Local
 
-# Prometheus metrics
 metrics:
   prometheus:
     enabled: true
@@ -109,14 +106,12 @@ accessLog:
 # Falls doch mal noetig (Kandidaten: HA-Websockets, Plex), waere der native Key
 # in v41 ports.websecure.transport.respondingTimeouts.readTimeout.
 
-# Dashboard
 ingressRoute:
   dashboard:
     enabled: true
     matchRule: Host(`traefik.elmstreet79.de`)
     entryPoints: ["websecure"]
 
-# Ports
 ports:
   web:
     port: 80

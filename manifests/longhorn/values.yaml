@@ -1,4 +1,3 @@
-# Longhorn distributed storage values
 persistence:
   defaultClass: true
   defaultClassReplicaCount: 2
@@ -18,7 +17,6 @@ persistence:
 defaultBackupStore:
     backupTarget: "cifs://192.168.2.6/longhorn_backup"
     backupTargetCredentialSecret: longhorn-nas-cifs-secret
-# Default settings
 defaultSettings:
   # Jede Node traegt ein Zonen-Label, gesetzt in talos/talconfig.yaml: "pve"
   # talos-cp-1, "blech" prodesk, "raspi5" der Pi. "false" zwingt Longhorn, die
@@ -35,14 +33,11 @@ defaultSettings:
   # legen.
   replicaZoneSoftAntiAffinity: "false"
   defaultReplicaCount: "2"
-  # RWX (ReadWriteMany) Support via NFS
   rwxVolumeFastFailover: "true"
-  # Automatic replica rebalancing across nodes
   replicaAutoBalance: "best-effort"
-  # Limit concurrent replica rebuilds per node to prevent overload (especially on Raspberry Pis)
+  # Gedrosselt, damit ein Rebuild oder ein Nachtbackup raspi5 nicht umlegt.
   concurrentReplicaRebuildPerNodeLimit: "2"
-  # Reduce backup concurrency to prevent overwhelming ARM nodes during nightly backups
-  backupConcurrentLimit: "1"  # Default is 2, reduce to 1 to prevent raspi5 overload
+  backupConcurrentLimit: "1"
   # Volume-Engines automatisch mit der Manager-Version mitziehen. Auf 0 bleiben
   # die Engines auf ihrer alten Version stehen, waehrend der Manager weiterlaeuft;
   # Longhorn erlaubt aber nur einen Minor-Schritt am Stueck (1.10 -> 1.11 ->
@@ -50,7 +45,7 @@ defaultSettings:
   # 1 statt hoeher, gleiche Ruecksicht auf die ARM-Node wie oben.
   # Live-Upgrade greift nur bei gesunden Volumes ohne iSCSI-Frontend.
   concurrentAutomaticEngineUpgradePerNodeLimit: "1"
-  concurrentVolumeBackupRestorePerNodeLimit: "2"  # Default is 5, reduce to 2
+  concurrentVolumeBackupRestorePerNodeLimit: "2"
   # Do not block on replica availability when a node is drained.
   # "allow-if-replica-is-stopped" only handles replicas, not engines of attached
   # volumes. "always-allow" force-detaches volumes instead of holding the drain.

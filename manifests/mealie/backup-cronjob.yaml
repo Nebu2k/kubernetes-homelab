@@ -72,9 +72,9 @@ spec:
                   # Warten, bis der eigene Pod die NetworkPolicy passieren darf.
                   # Der Namespace hat ein default-deny auf Ingress, und
                   # kube-router traegt einen frisch gestarteten Pod erst mit
-                  # einigen Sekunden Verzug in seine ipsets ein. Gemessen am
-                  # 2026-08-10: der erste Versuch scheitert, der zweite 15 s
-                  # spaeter liefert 200. Ohne diese Schleife waere jeder Lauf ein
+                  # einigen Sekunden Verzug in seine ipsets ein: der erste
+                  # Versuch scheitert, der zweite rund 15 s spaeter liefert 200.
+                  # Ohne diese Schleife waere jeder Lauf ein
                   # Muenzwurf, und zwar einer, der wie ein Mealie-Ausfall
                   # aussieht.
                   echo "Warte auf Erreichbarkeit von mealie..."

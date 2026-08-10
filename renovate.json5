@@ -58,8 +58,6 @@
   // die brauchen ~40s, der Renovate-Lauf ist nach ~80s vorbei. Da Renovate
   // selbst merged (nur waehrend eines Laufs), sieht es den gruenen Stand nie:
   // Lauf N rebased, die CI wird nach Lauf-Ende gruen, Lauf N+1 rebased erneut.
-  // PR #52 (amazon/aws-cli, Patch, Automerge an, alles gruen) lag so zwei Tage.
-  //
   // Mit "conflicted" wird nur noch bei echtem Merge-Konflikt rebased. Der
   // Branch bleibt gruen stehen und der naechste Lauf merged ihn, so wie es der
   // Kommentar zum Cron in renovate.yml beschreibt. Preis: gemerged wird ein
@@ -77,7 +75,6 @@
   // offensichtlich kaputte Releases ab, bevor sie im Cluster landen.
   minimumReleaseAge: '3 days',
 
-  // --- Manager ---
   // Beide brauchen explizite Pfade, keiner von beiden greift per Default.
   // (Der github-actions-Manager dagegen findet .github/workflows/ von selbst.)
 
@@ -154,7 +151,7 @@
     },
 
     // fr24 taggt mit einem monoton hochzaehlenden Build-Counter
-    // (latest-build-858 zum Zeitpunkt der Einrichtung). Kein Semver, aber
+    // Kein Semver, aber
     // eindeutig vergleichbar, sobald man Renovate sagt wo die Zahl steht.
     // Nebeneffekt des Ankers: die parallelen Upstream-Schemata (1.0.30-1,
     // latest_arm64, *_nohealthcheck) matchen nicht und fallen raus, wir bleiben

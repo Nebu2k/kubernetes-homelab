@@ -73,14 +73,10 @@ spec:
           resources:
             requests:
               cpu: 50m
-              # Gemessen am 2026-08-09 mit geladenen Listen: 50 Mi Spitze, die
-              # 222k Denylist-Eintraege kosten also fast nichts. Der Request
-              # liegt bewusst darueber, nicht darauf: unter Speicherdruck
-              # raeumt kubelet nach Verbrauch OBERHALB des Requests aus, und
-              # der Haus-Resolver soll nicht der erste sein, der geht.
-              #
-              # Noch ohne echte Last, im DHCP steht die Adresse nicht. Wenn sie
-              # dort steht, hier nochmal messen.
+              # Der Request liegt bewusst ueber der gemessenen Spitze (50 Mi
+              # mit geladenen Listen): unter Speicherdruck raeumt kubelet nach
+              # Verbrauch OBERHALB des Requests aus, und der Haus-Resolver soll
+              # nicht der erste sein, der geht.
               memory: 128Mi
             limits:
               # Bewusst kein CPU-Limit, siehe references/betrieb.md.
@@ -139,10 +135,9 @@ spec:
           resources:
             requests:
               cpu: 25m
-              # 22 Mi gemessen am 2026-08-09, aber der Cache war leer. Die
-              # Konfiguration erlaubt ihm zusammen rund 106 Mi (msg 32m,
-              # rrset 64m, key 8m, neg 2m), dahin waechst er unter Last. Der
-              # Request bildet dieses Ziel ab und nicht den Startwert.
+              # Der Request bildet den Cache unter Last ab, nicht den
+              # Startwert: die Konfiguration erlaubt rund 106 Mi (msg 32m,
+              # rrset 64m, key 8m, neg 2m).
               memory: 96Mi
             limits:
               memory: 256Mi

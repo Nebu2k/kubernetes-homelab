@@ -20,8 +20,6 @@
 # Ebenfalls abweichend: der Upstream holt sich seine Zugangsdaten aus
 # /var/lib/kube-router/kubeconfig auf der Node, ein kubeadm-Detail. Talos legt
 # dort nichts ab. Stattdessen der ServiceAccount und die In-Cluster-Config.
-#
-# Eingebunden ueber apps/kube-router.yaml.
 apiVersion: apps/v1
 kind: DaemonSet
 metadata:

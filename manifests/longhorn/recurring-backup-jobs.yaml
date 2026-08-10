@@ -1,19 +1,6 @@
-# Longhorn Recurring Jobs - Backups & Snapshots
-# WICHTIG: concurrency auf 1 reduziert um etcd-Überlastung zu vermeiden
-# Schedule gespreizt um nicht mehrere Jobs gleichzeitig laufen zu lassen
-#
-# Retention Strategy (GFS - Grandfather-Father-Son):
-# - keep_last    = 3  (letzte 3 Backups)
-# - keep_daily   = 7  (7 tägliche)
-# - keep_weekly  = 4  (4 wöchentliche)
-# - keep_monthly = 6  (6 monatliche)
-# - keep_yearly  = 1  (1 jährliches)
-#
-# Snapshots: Lokal im Cluster (schnelles Recovery)
-# Backups: CIFS-Share am NAS (Disaster Recovery)
+# Die Zeiten sind gespreizt und concurrency steht ueberall auf 1: mehrere
+# gleichzeitige Laeufe belasten etcd spuerbar.
 ---
-# === SNAPSHOTS (Lokal) ===
-# Täglicher Snapshot um 1:00 Uhr (behält 7 Tage)
 apiVersion: longhorn.io/v1beta2
 kind: RecurringJob
 metadata:
@@ -28,7 +15,6 @@ spec:
     - snapshot
   labels: {}
 ---
-# Snapshot Cleanup (täglich 8:00 Uhr)
 apiVersion: longhorn.io/v1beta2
 kind: RecurringJob
 metadata:
@@ -43,9 +29,7 @@ spec:
     - snapshot
   labels: {}
 ---
-# === MAINTENANCE TASKS ===
-# Filesystem Trim (wöchentlich Sonntags 7:00 Uhr)
-# Gibt freien Speicher an SSD/NVMe zurück, verbessert Performance
+# Gibt freien Speicher an die NVMe zurueck.
 apiVersion: longhorn.io/v1beta2
 kind: RecurringJob
 metadata:
@@ -60,8 +44,6 @@ spec:
     - maintenance
   labels: {}
 ---
-# === BACKUPS (CIFS-Share am NAS) ===
-# Tägliches Backup um 2:00 Uhr (behält 7 Tage)
 apiVersion: longhorn.io/v1beta2
 kind: RecurringJob
 metadata:
@@ -76,7 +58,6 @@ spec:
     - backup
   labels: {}
 ---
-# Wöchentliches Backup (Sonntags um 3:00 Uhr, behält 4 Wochen)
 apiVersion: longhorn.io/v1beta2
 kind: RecurringJob
 metadata:
@@ -91,7 +72,6 @@ spec:
     - backup
   labels: {}
 ---
-# Monatliches Backup (1. des Monats um 4:00 Uhr, behält 6 Monate)
 apiVersion: longhorn.io/v1beta2
 kind: RecurringJob
 metadata:
@@ -106,7 +86,6 @@ spec:
     - backup
   labels: {}
 ---
-# Jährliches Backup (1. Januar um 5:00 Uhr, behält 1 Jahr)
 apiVersion: longhorn.io/v1beta2
 kind: RecurringJob
 metadata:
@@ -121,16 +100,9 @@ spec:
     - backup
   labels: {}
 ---
-# === SYSTEM BACKUPS (Longhorn System) ===
-# Sichert Longhorn-Systemkonfiguration selbst
-# Tägliches System-Backup um 6:00 Uhr (behält 7 Tage)
-#
-# WICHTIG: volume-backup-policy=disabled
-# Ohne diesen Parameter erzeugt jeder System-Backup-Lauf zusätzlich pro Volume
-# einen Snapshot + Volume-Backup, die NICHT vom retain aufgeräumt werden
-# (siehe Prometheus-Volume: 47 Snapshots, 390 GB actualSize bei 40 GB nominal).
-# Volume-Daten werden bereits über backup-daily/weekly/monthly gesichert,
-# das System-Backup muss nur die Longhorn-Konfiguration mitnehmen.
+# Sichert nur die Longhorn-Konfiguration. volume-backup-policy=disabled ist
+# Pflicht: sonst erzeugt jeder Lauf pro Volume zusaetzlich Snapshot und
+# Volume-Backup, und die raeumt kein retain je auf.
 apiVersion: longhorn.io/v1beta2
 kind: RecurringJob
 metadata:

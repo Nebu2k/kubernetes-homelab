@@ -9,8 +9,6 @@ metadata:
     release: kube-prometheus-stack
 spec:
   groups:
-    # Node filesystem alerts
-    #
     # Zwei Filter, die dazugehoeren, weil pve und macmini per ScrapeConfig
     # unter job=node-exporter mit drinhaengen:
     #
@@ -70,7 +68,6 @@ spec:
             summary: "Node filesystem inodes are running low"
             description: "Filesystem {{ $labels.mountpoint }} on {{ $labels.instance }} has only {{ $value | humanizePercentage }} inodes available."
 
-    # Longhorn volume alerts
     - name: longhorn-storage
       interval: 30s
       rules:
@@ -270,8 +267,8 @@ spec:
         # auch das Prometheus-Volume automatisch raus, das bewusst nicht mehr
         # gesichert wird. Preis: ein Volume, das faelschlich NIE gesichert wird,
         # faellt durch dieses Netz. Das ist ein Konfigurationsfehler und wird
-        # ueber die Gruppenlabels geprueft, und seit dem 2026-08-09 faengt
-        # LonghornBackupNeverRan darunter genau diesen Fall ab.
+        # ueber die Gruppenlabels geprueft, LonghornBackupNeverRan faengt
+        # genau diesen Fall ab.
         #
         # 36h statt 24h, damit ein einzelner ausgefallener Lauf (backup-daily
         # laeuft 02:00) nicht sofort meldet, zwei aufeinanderfolgende aber schon.
@@ -296,10 +293,6 @@ spec:
         # Volume-Objekt, und kein Longhorn-Exporter gibt das heraus. Die
         # Metrik hier kommt deshalb aus dem customResourceState-Block der
         # kube-state-metrics (values.yaml).
-        #
-        # Anlass: beim Talos-Umzug am 2026-08-09 standen alle 15 restaurierten
-        # Volumes einen Tag lang unbesichert da, mit korrekten Gruppenlabels,
-        # und nichts hat sich gemeldet. Gefunden von Hand.
         #
         # Die Altersschranke steckt bewusst im offset und NICHT in einem langen
         # "for": ein frisch angelegtes Volume hat legitim noch kein Backup, es
@@ -478,7 +471,6 @@ spec:
             summary: "An offsite backup bucket has stopped receiving objects"
             description: "The daily offsite-backup-freshness check failed, or has not succeeded for over 48h. At least one of the six checks (teslamate, home assistant, paperless heartbeat, and one per etcd server node) has received nothing new for longer than its threshold, which the per-job alerts above cannot see. Run `kubectl -n monitoring logs job/<last offsite-backup-freshness job>` for the individual ages."
 
-    # Pod and container alerts
     - name: pod-health
       interval: 30s
       rules:
@@ -511,7 +503,6 @@ spec:
             summary: "Pod is not ready"
             description: "Pod {{ $labels.namespace }}/{{ $labels.pod }} has been in {{ $labels.phase }} state for more than 10 minutes."
 
-    # Node alerts
     - name: node-health
       interval: 30s
       rules:
@@ -593,7 +584,6 @@ spec:
             summary: "Node memory usage is high (macOS)"
             description: "Node {{ $labels.instance }} memory usage is {{ $value | humanizePercentage }} (threshold: 85%)."
 
-    # TeslaMate data freshness alerts
     - name: teslamate
       interval: 60s
       rules:
@@ -620,10 +610,9 @@ spec:
             summary: "TeslaMate Freshness-Exporter liefert keine Metrik"
             description: "teslamate_last_data_age_seconds fehlt seit >30m. Der No-Data-Alert ist damit blind. Deployment teslamate/teslamate-postgres-exporter prüfen."
 
-    # UniFi-Poller. Bis zum Sprung auf v3 gab es hier gar nichts: ein stiller
-    # unpoller hat die UniFi-Dashboards einfach leer laufen lassen, ohne dass
-    # es jemandem aufgefallen waere. v3 liefert zwei Selbstauskunfts-Metriken,
-    # auf denen sich das sauber aufsetzen laesst.
+    # UniFi-Poller. Ein stiller unpoller laesst die UniFi-Dashboards leer
+    # laufen, ohne dass es auffaellt. Die beiden Selbstauskunfts-Metriken ab v3
+    # machen das sichtbar.
     - name: unifi-poller
       interval: 30s
       rules:
@@ -708,8 +697,6 @@ spec:
             summary: "SealedSecrets-Controller liefert keine Metriken mehr"
             description: "sealed_secrets_controller_build_info fehlt seit >15m. SealedSecretUnsealFailed ist damit blind. Deployment kube-system/sealed-secrets-controller und den ServiceMonitor sealed-secrets-controller pruefen."
 
-    # === Gatus (Blackbox-Sicht auf die Dienste) ===
-    #
     # Gatus misst von aussen, was Prometheus von innen misst: kommt eine
     # Antwort, kommt sie schnell genug, und stimmt sie inhaltlich. Gatus hat
     # eigene Alert-Provider, die sind bewusst NICHT konfiguriert. Alarmiert
@@ -774,8 +761,6 @@ spec:
             summary: "Gatus liefert keine Metriken mehr"
             description: "gatus_results_endpoint_success fehlt seit >15m, alle Gatus-Alerts sind damit blind. Deployment gatus/gatus und den ServiceMonitor gatus pruefen."
 
-    # === cert-manager ===
-    #
     # Der Chart-Default von cert-manager setzt nur prometheus.io-Annotationen,
     # und die wertet dieser Stack nicht aus: der ServiceMonitor steht deshalb in
     # manifests/cert-manager/values.yaml. Das Wildcard-Cert *.elmstreet79.de

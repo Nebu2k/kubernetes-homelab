@@ -1,5 +1,3 @@
-# SMB CSI Driver
-#
 # Mountet CIFS-Shares als Volume. Der Mount passiert im Node-Plugin (das ist
 # privilegiert, aber eine abgegrenzte Infrastrukturkomponente) und nicht im
 # Anwendungs-Pod, wo er ein privileged: true erzwingen wuerde.

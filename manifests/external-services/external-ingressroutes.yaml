@@ -10,7 +10,6 @@ metadata:
 spec:
   insecureSkipVerify: true
 ---
-# HTTPS backends (self-signed → insecure-transport)
 apiVersion: traefik.io/v1alpha1
 kind: IngressRoute
 metadata:
@@ -79,7 +78,6 @@ spec:
           serversTransport: insecure-transport
   tls: {}
 ---
-# HTTP backends
 apiVersion: traefik.io/v1alpha1
 kind: IngressRoute
 metadata:

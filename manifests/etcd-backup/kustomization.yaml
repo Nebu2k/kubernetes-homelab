@@ -1,7 +1,5 @@
 # Offsite-Backup des Talos-etcd.
 #
-# Eingebunden ueber apps/etcd-backup.yaml.
-#
 # Kein namespace.yaml: kube-system existiert immer. Frei waehlbar ist der
 # Namespace hier trotzdem nicht, machine.features.kubernetesTalosAPIAccess in
 # talos/talconfig.yaml laesst genau diesen einen zu.
