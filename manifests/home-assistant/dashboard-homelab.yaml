@@ -11,14 +11,21 @@
 #                    picture, not a link. It points at a subview further
 #                    down, so the path has to match lovelace.dashboards in
 #                    configuration.yaml.
-#   area-controls    limited to lights on purpose. Without the controls key
-#                    the feature offers up to four domains, and the switch
-#                    domain here means proxmox_server, serverschrank,
-#                    waschmaschine_power, kochfeld_power and a row of child
-#                    locks. Lights are the one thing that costs nothing when
-#                    tapped by accident; everything else stays one level
-#                    deeper in the area subview. In areas without lights the
-#                    feature renders nothing, so it can sit on every card.
+#   area-controls    limited to lights and shutters on purpose. Without the
+#                    controls key the feature offers up to four domains, and
+#                    the switch domain here means proxmox_server,
+#                    serverschrank, waschmaschine_power, kochfeld_power and a
+#                    row of child locks. Those cost something when tapped by
+#                    accident and stay one level deeper in the area subview.
+#                    cover-shutter rather than plain cover: it matches the
+#                    five shutters and the awning, never the Tesla's frunk,
+#                    trunk, sunroof or windows, which are door and window.
+#                    Where an area has neither, the feature renders nothing,
+#                    so it can sit on every card.
+#
+# The feature has no climate control, that domain does not exist in
+# area-controls at all. The four AC units therefore sit in their own
+# section as tiles further down.
 views:
   - title: Zuhause
     path: zuhause
@@ -41,6 +48,7 @@ views:
               - type: area-controls
                 controls:
                   - light
+                  - cover-shutter
           - type: area
             area: arbeitszimmer
             display_type: compact
@@ -50,6 +58,7 @@ views:
               - type: area-controls
                 controls:
                   - light
+                  - cover-shutter
           - type: area
             area: kinderzimmer
             display_type: compact
@@ -59,6 +68,7 @@ views:
               - type: area-controls
                 controls:
                   - light
+                  - cover-shutter
           - type: area
             area: wannenbad
             display_type: compact
@@ -68,6 +78,7 @@ views:
               - type: area-controls
                 controls:
                   - light
+                  - cover-shutter
           - type: area
             area: hauswirtschaftsraum
             display_type: compact
@@ -77,6 +88,7 @@ views:
               - type: area-controls
                 controls:
                   - light
+                  - cover-shutter
           - type: area
             area: flur_ostflugel
             display_type: compact
@@ -86,6 +98,7 @@ views:
               - type: area-controls
                 controls:
                   - light
+                  - cover-shutter
           - type: area
             area: balkon_ostflugel
             display_type: compact
@@ -95,6 +108,7 @@ views:
               - type: area-controls
                 controls:
                   - light
+                  - cover-shutter
 
       - type: grid
         cards:
@@ -111,6 +125,7 @@ views:
               - type: area-controls
                 controls:
                   - light
+                  - cover-shutter
           - type: area
             area: esszimmer
             display_type: compact
@@ -120,6 +135,7 @@ views:
               - type: area-controls
                 controls:
                   - light
+                  - cover-shutter
           - type: area
             area: kuche
             display_type: compact
@@ -129,6 +145,7 @@ views:
               - type: area-controls
                 controls:
                   - light
+                  - cover-shutter
           - type: area
             area: gastezimmer
             display_type: compact
@@ -138,6 +155,7 @@ views:
               - type: area-controls
                 controls:
                   - light
+                  - cover-shutter
           - type: area
             area: duschbad
             display_type: compact
@@ -147,6 +165,7 @@ views:
               - type: area-controls
                 controls:
                   - light
+                  - cover-shutter
           - type: area
             area: flur_westflugel
             display_type: compact
@@ -156,6 +175,7 @@ views:
               - type: area-controls
                 controls:
                   - light
+                  - cover-shutter
           - type: area
             area: balkon_westflugel
             display_type: compact
@@ -165,6 +185,7 @@ views:
               - type: area-controls
                 controls:
                   - light
+                  - cover-shutter
           - type: area
             area: wurmkiste
             display_type: compact
@@ -174,6 +195,7 @@ views:
               - type: area-controls
                 controls:
                   - light
+                  - cover-shutter
 
       - type: grid
         cards:
@@ -190,6 +212,7 @@ views:
               - type: area-controls
                 controls:
                   - light
+                  - cover-shutter
           - type: area
             area: garten
             display_type: compact
@@ -199,6 +222,7 @@ views:
               - type: area-controls
                 controls:
                   - light
+                  - cover-shutter
           - type: area
             area: hauswand
             display_type: compact
@@ -208,6 +232,7 @@ views:
               - type: area-controls
                 controls:
                   - light
+                  - cover-shutter
           # No controls at all: this area is the Tesla. Its switchable
           # entities are charging, defrost, sentry mode and the covers of
           # frunk, trunk and windows. None of that belongs one stray tap
@@ -225,6 +250,42 @@ views:
               - type: area-controls
                 controls:
                   - light
+                  - cover-shutter
+
+      # The four Fujitsu units, deliberately not the eight tado radiator
+      # thermostats, which also live in the climate domain and would double
+      # every room. Two of them come from fglair_heatpump_controller and are
+      # named, the two on fujitsu_airstage carry their MAC as the entity id:
+      # f068e3639311 is the Arbeitszimmer, f068e363ce9f the Kinderzimmer.
+      #
+      # icon_tap_action is pinned to more-info because the tile would
+      # otherwise toggle the unit straight from the icon.
+      - type: grid
+        cards:
+          - type: heading
+            heading: Klimaanlagen
+            heading_style: title
+            icon: mdi:air-conditioner
+          - type: tile
+            entity: climate.ac_wohnzimmer
+            name: Wohnzimmer
+            icon_tap_action:
+              action: more-info
+          - type: tile
+            entity: climate.ac_schlafzimmer
+            name: Schlafzimmer
+            icon_tap_action:
+              action: more-info
+          - type: tile
+            entity: climate.f068e3639311
+            name: Arbeitszimmer
+            icon_tap_action:
+              action: more-info
+          - type: tile
+            entity: climate.f068e363ce9f
+            name: Kinderzimmer
+            icon_tap_action:
+              action: more-info
 
   - title: Energie
     path: energie
