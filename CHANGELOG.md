@@ -1,3 +1,10 @@
+# [5.5.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v5.4.0...v5.5.0) (2026-08-10)
+
+
+### Features
+
+* **mealie:** Offsite-Backup der Rezepte nach S3 ([68dfe11](https://github.com/Nebu2k/kubernetes-homelab/commit/68dfe1132c57f0cd581f6486b139a770693bdab2))
+
 # [5.4.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v5.3.2...v5.4.0) (2026-08-10)
 
 
