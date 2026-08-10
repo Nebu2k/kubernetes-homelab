@@ -329,9 +329,11 @@ alertmanager:
       - name: 'null'  # No notifications (for Watchdog)
       - name: 'sns-receiver'
         sns_configs:
-          - topic_arn: 'arn:aws:sns:eu-central-1:077448369105:homelab'  # TODO: Replace with your SNS Topic ARN
+          # Topic, Mail-Subscription und der publizierende IAM-User stehen in
+          # homelab-terraform/aws/sns-alerts.tf.
+          - topic_arn: 'arn:aws:sns:eu-central-1:077448369105:homelab'
             sigv4:
-              region: 'eu-central-1'  # TODO: Replace with your AWS region
+              region: 'eu-central-1'
             subject: 'Homelab Alert: {{ .GroupLabels.alertname }}'
             message: |
               {{ range .Alerts }}
