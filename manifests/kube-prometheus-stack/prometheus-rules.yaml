@@ -239,10 +239,14 @@ spec:
         # catches every cause: share full, auth broken, NAS off, RecurringJob
         # failed, target unreachable.
         #
-        # The "> 0" is load-bearing: volumes that were never backed up report
-        # last_backup_at = 0 and would fire forever, which also excludes the
-        # deliberately unbacked Prometheus volume. LonghornBackupNeverRan
-        # covers the case that slips through.
+        # The "> 0" keeps volumes that were never backed up out, they report
+        # last_backup_at = 0 and would fire forever. LonghornBackupNeverRan
+        # covers those.
+        #
+        # The group-label join is the second half of that: last_backup_at keeps
+        # the old timestamp when a volume leaves the backup group, so the "> 0"
+        # alone lets it age into this alert forever. Only volumes that are
+        # supposed to be backed up count.
         #
         # 36h, not 24h: one missed run (backup-daily at 02:00) stays quiet,
         # two consecutive ones do not.
@@ -253,6 +257,8 @@ spec:
               and
               (time() - longhorn_volume_last_backup_at) > 129600
             )
+            and on (volume)
+            homelab_longhorn_volume_recurring_job_group_info{backup_group="enabled"}
           for: 30m
           labels:
             severity: warning
@@ -284,6 +290,21 @@ spec:
           annotations:
             summary: "Longhorn volume {{ $labels.volume }} soll gesichert werden, hat aber noch nie ein Backup gehabt"
             description: "Das Volume traegt recurring-job-group.longhorn.io/backup=enabled und meldet trotzdem last_backup_at = 0, seit ueber 26h. Typischer Fall: per fromBackup restauriert und der erste 02:00-Lauf steht noch aus, oder ein RecurringJob greift nicht. Backup von Hand erzwingen: Snapshot-CR plus Backup-CR mit RecurringJob: backup-daily in spec.labels, Rezept in betrieb.md."
+
+        # Net below both rules above, which go quiet instead of firing when the
+        # group metric disappears. TargetDown does not cover this: it needs an
+        # existing up series, so a kube-state-metrics target that vanishes
+        # entirely takes the alert with it. It also catches ksm running fine
+        # while its customResourceState block or the longhorn RBAC rule broke,
+        # which nothing else would show.
+        - alert: LonghornBackupGroupMetricMissing
+          expr: absent(homelab_longhorn_volume_recurring_job_group_info)
+          for: 30m
+          labels:
+            severity: warning
+          annotations:
+            summary: "Die Longhorn-Gruppenlabel-Metrik fehlt, zwei Backup-Alerts sind blind"
+            description: "homelab_longhorn_volume_recurring_job_group_info liefert nichts. Solange das so ist, koennen LonghornBackupStale und LonghornBackupNeverRan nicht mehr feuern. Kommt aus kube-state-metrics: Pod da? Und liefert der customResourceState-Block noch? kubectl -n monitoring get pods -l app.kubernetes.io/name=kube-state-metrics und kubectl -n monitoring logs deploy/kube-prometheus-stack-kube-state-metrics | grep -i 'custom resource'"
 
         # Fires earlier than the alert above and names the concrete backup.
         # longhorn_backup_state: 0=New 1=Pending 2=InProgress 3=Completed

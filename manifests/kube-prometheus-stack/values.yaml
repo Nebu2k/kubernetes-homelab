@@ -323,11 +323,10 @@ kube-state-metrics:
         resources: ["volumes"]
         verbs: ["list", "watch"]
 
-  # Exposes a Longhorn volume's group label as a metric. A volume that has
-  # never been backed up reports last_backup_at = 0 and thus escapes
-  # LonghornBackupStale; whether it SHOULD be backed up lives only in the
-  # recurring-job-group.longhorn.io/backup label, which no Longhorn exporter
-  # publishes. LonghornBackupNeverRan builds on this metric.
+  # Exposes a Longhorn volume's group label as a metric. Whether a volume
+  # SHOULD be backed up lives only in the recurring-job-group.longhorn.io/backup
+  # label, which no Longhorn exporter publishes. Both LonghornBackupNeverRan
+  # and LonghornBackupStale build on this metric.
   customResourceState:
     enabled: true
     config:
