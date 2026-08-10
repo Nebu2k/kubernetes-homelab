@@ -1,3 +1,10 @@
+## [5.7.1](https://github.com/Nebu2k/kubernetes-homelab/compare/v5.7.0...v5.7.1) (2026-08-10)
+
+
+### Bug Fixes
+
+* **talos:** CoreDNS forwardet direkt an die Resolver statt an hostDNS ([dcf3fc9](https://github.com/Nebu2k/kubernetes-homelab/commit/dcf3fc9b6e4354cee4583607da1e40c22c986295))
+
 # [5.7.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v5.6.0...v5.7.0) (2026-08-10)
 
 
