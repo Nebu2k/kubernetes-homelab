@@ -253,11 +253,178 @@
       }
     },
     {
+      "id": 14,
+      "type": "stat",
+      "title": "Security-Updates",
+      "description": "Offene Pakete aus einer Security-Origin. AptSecurityUpdatesPending meldet sich, wenn der Wert 72h am Stueck ueber 0 steht. Der Wert ist nach arch aufgeteilt, deshalb die Summe. Nur pve hat einen apt-Textfile-Collector, der macmini und die Talos-Nodes tauchen hier nicht auf.",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 4, "w": 4, "x": 0, "y": 4 },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "sum(apt_upgrades_pending{origin=~\".*security.*\"})",
+          "instant": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "decimals": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 1 }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "colorMode": "value",
+        "graphMode": "none",
+        "textMode": "auto"
+      }
+    },
+    {
+      "id": 15,
+      "type": "stat",
+      "title": "Updates gesamt",
+      "description": "Alle Origins zusammen, inklusive Proxmox. Auf einem pve-Host praktisch immer groesser 0 und deshalb ohne Schwelle und ohne Alert. Steht hier als Kontext zur Zahl links.",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 4, "w": 4, "x": 4, "y": 4 },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "sum(apt_upgrades_pending)",
+          "instant": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": { "unit": "short", "decimals": 0, "color": { "mode": "fixed", "fixedColor": "text" } },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "colorMode": "none",
+        "graphMode": "none",
+        "textMode": "auto"
+      }
+    },
+    {
+      "id": 16,
+      "type": "stat",
+      "title": "Reboot nötig",
+      "description": "Kommt aus /var/run/reboot-required, meist nach einem Kernel-Update. Springt erst nach dem Upgrade auf 1 und faellt nur durch den Reboot selbst zurueck. Auf pve liegen talos-cp-1 und der AdGuard-LXC, der Reboot kostet also ein etcd-Member von dreien.",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 4, "w": 4, "x": 8, "y": 4 },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "max(node_reboot_required)",
+          "instant": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "decimals": 0,
+          "mappings": [
+            { "type": "value", "options": { "0": { "text": "nein", "color": "green", "index": 0 } } },
+            { "type": "value", "options": { "1": { "text": "JA", "color": "red", "index": 1 } } }
+          ]
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "colorMode": "background",
+        "graphMode": "none",
+        "textMode": "auto"
+      }
+    },
+    {
+      "id": 17,
+      "type": "stat",
+      "title": "apt.prom Alter",
+      "description": "Alter des Textfiles, aus dem die drei Panels links kommen. Rot ab 48h, das ist die Schwelle von AptMetricsStale. Solange es rot ist, sind die Zahlen links Altbestand und die beiden Update-Alerts blind.",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 4, "w": 4, "x": 12, "y": 4 },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "time() - max(node_textfile_mtime_seconds{file=~\".+/apt.prom\"})",
+          "instant": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "decimals": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 86400 },
+              { "color": "red", "value": 172800 }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "colorMode": "value",
+        "graphMode": "none",
+        "textMode": "auto"
+      }
+    },
+    {
+      "id": 18,
+      "type": "timeseries",
+      "title": "Verlauf offene Updates",
+      "description": "Zeigt, ob der Rueckstand waechst oder gerade gepatcht wurde. Der Absturz nach unten ist ein apt upgrade, ein flacher Anstieg sind neu veroeffentlichte Pakete.",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 4, "w": 8, "x": 16, "y": 4 },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "sum(apt_upgrades_pending{origin=~\".*security.*\"})",
+          "legendFormat": "security"
+        },
+        {
+          "refId": "B",
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "sum(apt_upgrades_pending)",
+          "legendFormat": "gesamt"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "decimals": 0,
+          "min": 0,
+          "custom": { "drawStyle": "line", "lineWidth": 1, "fillOpacity": 5, "showPoints": "never" }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": { "displayMode": "list", "placement": "bottom", "showLegend": true },
+        "tooltip": { "mode": "multi", "sort": "desc" }
+      }
+    },
+    {
       "id": 8,
       "type": "timeseries",
       "title": "CPU-Auslastung pve",
       "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "gridPos": { "h": 8, "w": 8, "x": 0, "y": 4 },
+      "gridPos": { "h": 8, "w": 8, "x": 0, "y": 8 },
       "targets": [
         {
           "refId": "A",
@@ -286,7 +453,7 @@
       "title": "Speicher pve",
       "description": "Belegt und gesamt als absolute Werte, damit sichtbar bleibt, wie viel Luft fuer weitere VMs da ist.",
       "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "gridPos": { "h": 8, "w": 8, "x": 8, "y": 4 },
+      "gridPos": { "h": 8, "w": 8, "x": 8, "y": 8 },
       "targets": [
         {
           "refId": "A",
@@ -334,7 +501,7 @@
       "title": "Storage-Füllstand",
       "description": "nvme-2tb ist die 2TB-NVMe auf /mnt/nvme-2tb, dort liegen die Disks von k3s-worker-1 und vm-arch (frueher longhorn-storage). nas-nfs ist der NFS-Mount vom UniFi-NAS, local-lvm traegt die restlichen VM-Disks.",
       "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "gridPos": { "h": 8, "w": 8, "x": 16, "y": 4 },
+      "gridPos": { "h": 8, "w": 8, "x": 16, "y": 8 },
       "targets": [
         {
           "refId": "A",
@@ -374,7 +541,7 @@
       "title": "Gäste",
       "description": "VMs und LXCs in einer Tabelle. Das Typ-Label entsteht per label_replace, weil der Exporter VMs und Container in getrennten Metrikfamilien fuehrt. Belegter Gast-Speicherplatz fehlt absichtlich: pve_vm_disk_used_bytes ist ohne QEMU-Guest-Agent immer 0, deshalb steht hier nur die zugewiesene Disk-Groesse.",
       "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "gridPos": { "h": 10, "w": 24, "x": 0, "y": 12 },
+      "gridPos": { "h": 10, "w": 24, "x": 0, "y": 16 },
       "targets": [
         {
           "refId": "A",
@@ -523,7 +690,7 @@
       "type": "timeseries",
       "title": "Netzwerk pro Gast (rx + tx)",
       "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 22 },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 26 },
       "targets": [
         {
           "refId": "A",
@@ -551,7 +718,7 @@
       "title": "Disk-IO pro Gast (lesen + schreiben)",
       "description": "Aus Sicht des Hypervisors, also was auf local-lvm landet. Das ist die Zahl, die bei qcow2-Bloat und beim Longhorn-Replica-Verkehr zaehlt.",
       "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 22 },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 26 },
       "targets": [
         {
           "refId": "A",
