@@ -232,31 +232,12 @@ data:
         conditions:
           - "[STATUS] == 200"
       # DNS. Checks not just that a resolver is alive but that the
-      # split-horizon rewrite actually answers. It has to be identical in
-      # three places, and a silent failure of one of them hits only a subset
-      # of the clients.
-      - name: AdGuard (LXC pve)
-        group: DNS
-        url: "192.168.2.16"
-        interval: 60s
-        dns:
-          query-name: "argocd.elmstreet79.de"
-          query-type: "A"
-        conditions:
-          - "[DNS_RCODE] == NOERROR"
-          - "[BODY] == 192.168.2.250"
-
-      - name: AdGuard (macmini)
-        group: DNS
-        url: "192.168.2.4"
-        interval: 60s
-        dns:
-          query-name: "argocd.elmstreet79.de"
-          query-type: "A"
-        conditions:
-          - "[DNS_RCODE] == NOERROR"
-          - "[BODY] == 192.168.2.250"
-
+      # split-horizon rewrite actually answers, whose silent failure hits only
+      # a subset of the clients.
+      #
+      # AdGuard is not checked, although it still answers for devices that
+      # have not renewed their lease: its query log is what counts them, and a
+      # check every 60s would keep that log from ever going quiet.
       - name: CoreDNS (Cluster)
         group: DNS
         url: "10.43.0.10"
@@ -268,25 +249,6 @@ data:
           - "[DNS_RCODE] == NOERROR"
           - "[BODY] == 192.168.2.250"
 
-      # The same question to the LXC, but over its ULA instead of v4, via the
-      # DNS relay (dns-v6-relay.yaml) because the pod network is v4-only. If
-      # the LXC loses its static ULA this is the only check that sees it: v4
-      # keeps answering unchanged. The macmini has no counterpart, it has no
-      # v6 address.
-      - name: AdGuard LXC (IPv6)
-        group: DNS
-        url: "dns-v6-relay.gatus.svc.cluster.local:5354"
-        interval: 60s
-        dns:
-          query-name: "argocd.elmstreet79.de"
-          query-type: "A"
-        conditions:
-          - "[DNS_RCODE] == NOERROR"
-          - "[BODY] == 192.168.2.250"
-
-      # The two Blocky instances replacing AdGuard. They are not in any DHCP
-      # setting yet, and these checks exist so the parallel operation does not
-      # run unobserved.
       - name: Blocky (Cluster)
         group: DNS
         url: "192.168.2.253"
@@ -309,11 +271,11 @@ data:
           - "[DNS_RCODE] == NOERROR"
           - "[BODY] == 192.168.2.250"
 
-      # Through the relay as with AdGuard, because the pod network is v4-only.
-      # Once AdGuard is gone the house's v6 DNS hangs off this address alone:
-      # the cluster instance cannot offer a v6 address while the cluster is
-      # single-stack. If the ULA disappears everything else stays green and
-      # only v6 clients are dead, and this check is the only one that sees it.
+      # Through the relay (dns-v6-relay.yaml), because the pod network is
+      # v4-only. The house's v6 DNS hangs off this one address: the cluster
+      # instance cannot offer a v6 address while the cluster is single-stack.
+      # If the ULA disappears everything else stays green and only v6 clients
+      # are dead, and this check is the only one that sees it.
       - name: Blocky LXC (IPv6)
         group: DNS
         url: "dns-v6-relay.gatus.svc.cluster.local:5355"

@@ -6,13 +6,13 @@
 # sit in the manual ULA fd2e:9a71:c3b5::/64 via SLAAC.
 #
 # This pod therefore runs with hostNetwork and forwards a v4 query on port
-# 5354 unchanged to the v6 upstream. Gatus queries the relay through an
+# 5355 unchanged to the v6 upstream. Gatus queries the relay through an
 # ordinary ClusterIP service and the v6 hop happens for real on the LAN. That
 # catches what would otherwise fail silently: if the LXC loses its static ULA
 # (e.g. MLD snooping without a querier on vmbr0) all v4 checks stay green and
 # only clients with a v6 resolver are dead.
 #
-# Only the LXC on pve has a v6 address, hence exactly ONE upstream per port.
+# The Blocky LXC is the only v6 resolver in the house, hence a single upstream.
 #
 # If the relay itself fails the Gatus endpoint goes red without DNS being
 # broken. A concurrent KubeDeploymentReplicasMismatch tells the two apart.
@@ -25,7 +25,7 @@ metadata:
     app.kubernetes.io/name: dns-v6-relay
 data:
   Corefile: |
-    .:5354 {
+    .:5355 {
         errors
         health :8154
         ready :8155
@@ -36,19 +36,6 @@ data:
         # max_fails 0 disables upstream ejection. Otherwise forward remembers
         # "host down" after a few timeouts and answers SERVFAIL without
         # retrying, keeping the check red long after the resolver returned.
-        forward . [fd2e:9a71:c3b5::16]:53 {
-            max_fails 0
-        }
-    }
-
-    # Second port for the Blocky LXC. A separate port rather than a second
-    # upstream in the same block: forward would alternate between them and the
-    # check would never know which resolver answered, so a dead one would stay
-    # green. No own health/ready, those plugins may appear once per server
-    # block and test the process anyway.
-    .:5355 {
-        errors
-
         forward . [fd2e:9a71:c3b5::254]:53 {
             max_fails 0
         }
@@ -64,7 +51,7 @@ metadata:
 spec:
   replicas: 1
   # Recreate rather than RollingUpdate: with hostNetwork two pods would
-  # briefly contend for host port 5354.
+  # briefly contend for host port 5355.
   strategy:
     type: Recreate
   selector:
@@ -94,15 +81,9 @@ spec:
           args: ["-conf", "/etc/coredns/Corefile"]
           ports:
             - name: dns-udp
-              containerPort: 5354
-              protocol: UDP
-            - name: dns-tcp
-              containerPort: 5354
-              protocol: TCP
-            - name: blocky-udp
               containerPort: 5355
               protocol: UDP
-            - name: blocky-tcp
+            - name: dns-tcp
               containerPort: 5355
               protocol: TCP
 
@@ -134,7 +115,7 @@ spec:
             readOnlyRootFilesystem: true
             capabilities:
               drop: ["ALL"]
-              # Not needed on port 5354, but the coredns binary carries it as
+              # Not needed on port 5355, but the coredns binary carries it as
               # a file capability: outside the bounding set the kernel already
               # refuses the exec with "operation not permitted".
               add: ["NET_BIND_SERVICE"]
@@ -164,18 +145,10 @@ spec:
     app.kubernetes.io/name: dns-v6-relay
   ports:
     - name: dns-udp
-      port: 5354
-      targetPort: 5354
-      protocol: UDP
-    - name: dns-tcp
-      port: 5354
-      targetPort: 5354
-      protocol: TCP
-    - name: blocky-udp
       port: 5355
       targetPort: 5355
       protocol: UDP
-    - name: blocky-tcp
+    - name: dns-tcp
       port: 5355
       targetPort: 5355
       protocol: TCP
