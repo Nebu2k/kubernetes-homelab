@@ -13,3 +13,6 @@ resources:
   - ingress.yaml
   - mealie-secrets-sealed.yaml
   - networkpolicy.yaml
+  - backup-cronjob.yaml
+  - s3-mealie-backup-credentials-sealed.yaml
+  - mealie-backup-token-sealed.yaml

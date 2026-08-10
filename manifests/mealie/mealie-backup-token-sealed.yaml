@@ -1,0 +1,14 @@
+---
+apiVersion: bitnami.com/v1alpha1
+kind: SealedSecret
+metadata:
+  name: mealie-backup-token
+  namespace: mealie
+spec:
+  encryptedData:
+    MEALIE_API_TOKEN: AgAAP4prPj+2vDUmvQpL4D8y2+SsRjDuOA6uP1U6vAuWl0imy3nV0H4rGjX5vhf+Sqgdq85AuVw8JLHI0xNc1uOnwxQJgX8pXi1sob82GhpYBbLx5oyXujSChYMenp38spoLDXh1X1GnpAywOnx3F4VnbgqTnnR5ETVG+Pdsw/nOEgC4d+dUZdFULcsohFJvondSfRGz/khxaEBRuNZKzOejqNaei/ue1IrX1rA8oy6IoA2T3Um9/hNtcQQ9hfB8vzv7+TtagclEowgyqeX5HjB3YdHEm3Yr6erkxgqypLuM0CqkeIJMkwrWRQL47m9ZVD4C0YfVpLedZY4X6JsM47KRp6Vdoy0MsPZ98UV3h8E0cwNvpoZ1/2hBDclt5vr9sKlPQoUKgUBFeEcX1oql/9Yn6NxakN5+p8JJKiYM38AK37wIDt9hGLwjjtcXyamHxyLjJ7zDV+WC8krEzJCWX8qeQscOEmrxsvxJt/w5UKJ5FIlHTOrc8w24tyVtCV45p7GNXI1dpsgT5lPVLYWavYJ7/5zM0wnT1S85NT99+HI2A1Alr6LFjeEs7bfwcS3zCA8SnuAvrdQ3WaMiw+mD3XpvNnrxvpBmyFR/lyBtXNY4FInPe2ueaacHfagH5fwf38vb+DcyRYNlQLH+WSPETSbYYes4m+ebAN9QAbf/9f7f24x6tU+Ks3XszpcHO50Ckgcqixqrne3vxauI1po9jaSSRZFogvO8Zw4U6/mAILBJtx5uyiHJllrwUwrhRjVs8nE7A2GTWRqtM7hKMARFQ9OUqQIS0BP7XbmBVTS95YB/Y+bCG6YRDCtNKoheyWUDNS15K/nGGgbWM/IN3kaP41Fv7/4RR8Q9eAzHDrbDIKKQT+TWW/1NjHx71z8HxC3YXUGUukbmBYdgVM6p0tQUtdIz7IipV7cVUndcuf0RLRONfZj8dXhyMEfAaJp0sOk7BHh/PmAPC1ZC71nicbhHsBztfX45B0sXNYnMGYMggzjocnY1i2UJeucreEH1NqhOlLQxs/k64Q==
+  template:
+    metadata:
+      name: mealie-backup-token
+      namespace: mealie
+    type: Opaque

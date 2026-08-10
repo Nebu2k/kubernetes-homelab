@@ -139,6 +139,11 @@ spec:
                   # HA laedt jeden Tar selbst hoch, hier zaehlt der ganze Bucket.
                   pruefe "${HOME_ASSISTANT_BUCKET}" "" 36 "home assistant"
 
+                  # Mealie wie teslamate: Erzeugen und Hochladen sind derselbe
+                  # Job, geprueft wird trotzdem der Bucket, weil er die einzige
+                  # Stelle ist, an der das Ankommen sichtbar wird.
+                  pruefe "${MEALIE_BUCKET}" "daily/" 36 "mealie (daily)"
+
                   # WICHTIG: hier wird gezielt die Heartbeat-Datei geprueft, nicht
                   # das juengste Objekt im Bucket. Der Sidecar synct ohne
                   # --delete und laedt nur hoch, was sich geaendert hat, und
@@ -236,6 +241,11 @@ spec:
                     secretKeyRef:
                       name: s3-backup-monitor-credentials
                       key: ETCD_BUCKET
+                - name: MEALIE_BUCKET
+                  valueFrom:
+                    secretKeyRef:
+                      name: s3-backup-monitor-credentials
+                      key: MEALIE_BUCKET
               resources:
                 requests:
                   cpu: 50m

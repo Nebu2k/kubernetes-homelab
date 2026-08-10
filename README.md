@@ -218,9 +218,12 @@ homelab/
 │   │   ├── servicemonitor.yaml
 │   │   └── values.yaml
 │   ├── mealie/
+│   │   ├── backup-cronjob.yaml
 │   │   ├── deployment.yaml
 │   │   ├── ingress.yaml
 │   │   ├── kustomization.yaml
+│   │   ├── mealie-backup-token-sealed.yaml
+│   │   ├── mealie-backup-token-unsealed.yaml.example
 │   │   ├── mealie-secrets-sealed.yaml
 │   │   ├── mealie-secrets-unsealed.yaml.example
 │   │   ├── namespace.yaml
@@ -228,6 +231,8 @@ homelab/
 │   │   ├── postgresql.yaml
 │   │   ├── pv.yaml
 │   │   ├── pvc.yaml
+│   │   ├── s3-mealie-backup-credentials-sealed.yaml
+│   │   ├── s3-mealie-backup-credentials-unsealed.yaml.example
 │   │   └── service.yaml
 │   ├── metallb/
 │   │   ├── kustomization.yaml
@@ -436,8 +441,12 @@ cd kubernetes-homelab
       manifests/kube-prometheus-stack/home-assistant-token-unsealed.yaml
    cp manifests/longhorn/nas-cifs-secret-unsealed.yaml.example \
       manifests/longhorn/nas-cifs-secret-unsealed.yaml
+   cp manifests/mealie/mealie-backup-token-unsealed.yaml.example \
+      manifests/mealie/mealie-backup-token-unsealed.yaml
    cp manifests/mealie/mealie-secrets-unsealed.yaml.example \
       manifests/mealie/mealie-secrets-unsealed.yaml
+   cp manifests/mealie/s3-mealie-backup-credentials-unsealed.yaml.example \
+      manifests/mealie/s3-mealie-backup-credentials-unsealed.yaml
    cp manifests/paperless-ngx/paperless-secrets-unsealed.yaml.example \
       manifests/paperless-ngx/paperless-secrets-unsealed.yaml
    cp manifests/paperless-ngx/s3-backup-credentials-unsealed.yaml.example \
@@ -553,47 +562,57 @@ kubeseal --format=yaml --controller-namespace=kube-system \
   < manifests/longhorn/nas-cifs-secret-unsealed.yaml \
   > manifests/longhorn/nas-cifs-secret-sealed.yaml
 
-# 10. mealie: mealie secrets
+# 10. mealie: mealie backup token
+kubeseal --format=yaml --controller-namespace=kube-system \
+  < manifests/mealie/mealie-backup-token-unsealed.yaml \
+  > manifests/mealie/mealie-backup-token-sealed.yaml
+
+# 11. mealie: mealie secrets
 kubeseal --format=yaml --controller-namespace=kube-system \
   < manifests/mealie/mealie-secrets-unsealed.yaml \
   > manifests/mealie/mealie-secrets-sealed.yaml
 
-# 11. paperless-ngx: paperless secrets
+# 12. mealie: s3 mealie backup credentials
+kubeseal --format=yaml --controller-namespace=kube-system \
+  < manifests/mealie/s3-mealie-backup-credentials-unsealed.yaml \
+  > manifests/mealie/s3-mealie-backup-credentials-sealed.yaml
+
+# 13. paperless-ngx: paperless secrets
 kubeseal --format=yaml --controller-namespace=kube-system \
   < manifests/paperless-ngx/paperless-secrets-unsealed.yaml \
   > manifests/paperless-ngx/paperless-secrets-sealed.yaml
 
-# 12. paperless-ngx: s3 backup credentials
+# 14. paperless-ngx: s3 backup credentials
 kubeseal --format=yaml --controller-namespace=kube-system \
   < manifests/paperless-ngx/s3-backup-credentials-unsealed.yaml \
   > manifests/paperless-ngx/s3-backup-credentials-sealed.yaml
 
-# 13. paperless-ngx: smb credentials
+# 15. paperless-ngx: smb credentials
 kubeseal --format=yaml --controller-namespace=kube-system \
   < manifests/paperless-ngx/smb-credentials-unsealed.yaml \
   > manifests/paperless-ngx/smb-credentials-sealed.yaml
 
-# 14. proxmox-exporter: pve api credentials
+# 16. proxmox-exporter: pve api credentials
 kubeseal --format=yaml --controller-namespace=kube-system \
   < manifests/proxmox-exporter/pve-api-credentials-unsealed.yaml \
   > manifests/proxmox-exporter/pve-api-credentials-sealed.yaml
 
-# 15. readsb: readsb secret
+# 17. readsb: readsb secret
 kubeseal --format=yaml --controller-namespace=kube-system \
   < manifests/readsb/readsb-secret-unsealed.yaml \
   > manifests/readsb/readsb-secret-sealed.yaml
 
-# 16. teslamate: s3 backup credentials
+# 18. teslamate: s3 backup credentials
 kubeseal --format=yaml --controller-namespace=kube-system \
   < manifests/teslamate/s3-backup-credentials-unsealed.yaml \
   > manifests/teslamate/s3-backup-credentials-sealed.yaml
 
-# 17. teslamate: teslamate secret
+# 19. teslamate: teslamate secret
 kubeseal --format=yaml --controller-namespace=kube-system \
   < manifests/teslamate/teslamate-secret-unsealed.yaml \
   > manifests/teslamate/teslamate-secret-sealed.yaml
 
-# 18. unifi-poller: unifi config
+# 20. unifi-poller: unifi config
 kubeseal --format=yaml --controller-namespace=kube-system \
   < manifests/unifi-poller/unifi-config-unsealed.yaml \
   > manifests/unifi-poller/unifi-config-sealed.yaml
