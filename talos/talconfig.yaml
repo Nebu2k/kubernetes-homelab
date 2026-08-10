@@ -247,15 +247,36 @@ patches:
       nodeLabels:
         node-role.kubernetes.io/worker: worker
 
-  # Die beiden AdGuard-Instanzen: LXC auf pve und macmini. Feste v4-Adressen und
-  # ausdruecklich keine per Router-Advertisement gelernten v6-Resolver, die
-  # sonst je nach Prefix-Wechsel unbemerkt vorne einsortiert werden.
+  # Die beiden Blocky-Instanzen. Feste v4-Adressen und ausdruecklich keine per
+  # Router-Advertisement gelernten v6-Resolver, die sonst je nach
+  # Prefix-Wechsel unbemerkt vorne einsortiert werden.
+  #
+  # Diese Liste versorgt ZWEI Verbraucher, und beide haben eigene Bedingungen:
+  #
+  # 1. Die Node selbst, unter anderem fuer Image-Pulls. Deshalb steht die LXC
+  #    (.254) VORNE: sie laeuft ausserhalb des Clusters. Stuende hier nur die
+  #    Cluster-Instanz, braeuchte eine kalte Node DNS, um den Pod zu starten,
+  #    der das DNS liefert.
+  # 2. CoreDNS, das mit "forward . /etc/resolv.conf" genau diese Liste erbt.
+  #    CoreDNS waehlt seine Upstreams ZUFAELLIG, nicht der Reihe nach. Deshalb
+  #    muessen ALLE Eintraege denselben Split-Horizon kennen
+  #    (*.elmstreet79.de -> 192.168.2.250), sonst loest ein Teil der
+  #    Pod-Anfragen oeffentlich auf und laeuft ueber Hairpin-NAT.
+  #
+  # Aus 2. folgt, dass das UniFi-Gateway (192.168.2.1) hier NICHT stehen darf:
+  # es liefert fuer elmstreet79.de den oeffentlichen CNAME. Aus demselben Grund
+  # ist auch kein oeffentlicher Resolver als dritter Notnagel moeglich.
+  #
+  # Der verbleibende Fall ist "pve aus UND Cluster kalt UND Image-Cache leer".
+  # Dann kommt keine Node an DNS. Ausweg von Hand:
+  # talosctl patch mc -n <ip> -p '[{"op":"replace",
+  #   "path":"/machine/network/nameservers","value":["9.9.9.9"]}]'
   - |-
     machine:
       network:
         nameservers:
-          - 192.168.2.16
-          - 192.168.2.4
+          - 192.168.2.254
+          - 192.168.2.253
 
   # Longhorn braucht /var/lib/longhorn im kubelet-Mount-Namespace, sonst sieht
   # der Manager die Replikate nicht. Die dafuer noetigen System Extensions
