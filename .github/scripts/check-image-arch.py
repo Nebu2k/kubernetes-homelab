@@ -68,7 +68,7 @@ def get_token(registry, repo):
                f"&scope=repository:{repo}:pull")
     elif registry == "ghcr.io":
         url = f"https://ghcr.io/token?scope=repository:{repo}:pull&service=ghcr.io"
-    elif registry.endswith("quay.io"):
+    elif registry == "quay.io" or registry.endswith(".quay.io"):
         return None                        # quay lets anonymous requests straight through
     else:
         url = f"https://{registry}/token?scope=repository:{repo}:pull&service={registry}"
