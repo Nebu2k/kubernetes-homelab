@@ -11,9 +11,14 @@
 #                    picture, not a link. It points at a subview further
 #                    down, so the path has to match lovelace.dashboards in
 #                    configuration.yaml.
-#   area-controls    the lights and switches of the area, right on the card.
-#                    The feature hides itself in areas that have nothing to
-#                    switch, so it can sit on every card.
+#   area-controls    limited to lights on purpose. Without the controls key
+#                    the feature offers up to four domains, and the switch
+#                    domain here means proxmox_server, serverschrank,
+#                    waschmaschine_power, kochfeld_power and a row of child
+#                    locks. Lights are the one thing that costs nothing when
+#                    tapped by accident; everything else stays one level
+#                    deeper in the area subview. In areas without lights the
+#                    feature renders nothing, so it can sit on every card.
 views:
   - title: Zuhause
     path: zuhause
@@ -34,6 +39,8 @@ views:
             features_position: inline
             features:
               - type: area-controls
+                controls:
+                  - light
           - type: area
             area: arbeitszimmer
             display_type: compact
@@ -41,6 +48,8 @@ views:
             features_position: inline
             features:
               - type: area-controls
+                controls:
+                  - light
           - type: area
             area: kinderzimmer
             display_type: compact
@@ -48,6 +57,8 @@ views:
             features_position: inline
             features:
               - type: area-controls
+                controls:
+                  - light
           - type: area
             area: wannenbad
             display_type: compact
@@ -55,6 +66,8 @@ views:
             features_position: inline
             features:
               - type: area-controls
+                controls:
+                  - light
           - type: area
             area: hauswirtschaftsraum
             display_type: compact
@@ -62,6 +75,8 @@ views:
             features_position: inline
             features:
               - type: area-controls
+                controls:
+                  - light
           - type: area
             area: flur_ostflugel
             display_type: compact
@@ -69,6 +84,8 @@ views:
             features_position: inline
             features:
               - type: area-controls
+                controls:
+                  - light
           - type: area
             area: balkon_ostflugel
             display_type: compact
@@ -76,6 +93,8 @@ views:
             features_position: inline
             features:
               - type: area-controls
+                controls:
+                  - light
 
       - type: grid
         cards:
@@ -90,6 +109,8 @@ views:
             features_position: inline
             features:
               - type: area-controls
+                controls:
+                  - light
           - type: area
             area: esszimmer
             display_type: compact
@@ -97,6 +118,8 @@ views:
             features_position: inline
             features:
               - type: area-controls
+                controls:
+                  - light
           - type: area
             area: kuche
             display_type: compact
@@ -104,6 +127,8 @@ views:
             features_position: inline
             features:
               - type: area-controls
+                controls:
+                  - light
           - type: area
             area: gastezimmer
             display_type: compact
@@ -111,6 +136,8 @@ views:
             features_position: inline
             features:
               - type: area-controls
+                controls:
+                  - light
           - type: area
             area: duschbad
             display_type: compact
@@ -118,6 +145,8 @@ views:
             features_position: inline
             features:
               - type: area-controls
+                controls:
+                  - light
           - type: area
             area: flur_westflugel
             display_type: compact
@@ -125,6 +154,8 @@ views:
             features_position: inline
             features:
               - type: area-controls
+                controls:
+                  - light
           - type: area
             area: balkon_westflugel
             display_type: compact
@@ -132,6 +163,8 @@ views:
             features_position: inline
             features:
               - type: area-controls
+                controls:
+                  - light
           - type: area
             area: wurmkiste
             display_type: compact
@@ -139,6 +172,8 @@ views:
             features_position: inline
             features:
               - type: area-controls
+                controls:
+                  - light
 
       - type: grid
         cards:
@@ -153,6 +188,8 @@ views:
             features_position: inline
             features:
               - type: area-controls
+                controls:
+                  - light
           - type: area
             area: garten
             display_type: compact
@@ -160,6 +197,8 @@ views:
             features_position: inline
             features:
               - type: area-controls
+                controls:
+                  - light
           - type: area
             area: hauswand
             display_type: compact
@@ -167,13 +206,16 @@ views:
             features_position: inline
             features:
               - type: area-controls
+                controls:
+                  - light
+          # No controls at all: this area is the Tesla. Its switchable
+          # entities are charging, defrost, sentry mode and the covers of
+          # frunk, trunk and windows. None of that belongs one stray tap
+          # away.
           - type: area
             area: strasse
             display_type: compact
             navigation_path: /homelab-cockpit/strasse
-            features_position: inline
-            features:
-              - type: area-controls
           - type: area
             area: keller
             display_type: compact
@@ -181,6 +223,8 @@ views:
             features_position: inline
             features:
               - type: area-controls
+                controls:
+                  - light
 
   - title: Energie
     path: energie
