@@ -980,7 +980,7 @@ kubectl get secret -n monitoring grafana-admin-credentials \
 | Gatus | v5.36.0 | Gatus |
 | Home Assistant | 2026.7.4 | Home Assistant |
 | Homepage | v1.13.2 | Homepage |
-| Kube Prometheus Stack | 88.0.1 | Kube Prometheus Stack |
+| Kube Prometheus Stack | 88.1.5 | Kube Prometheus Stack |
 | Landing Page | 1.31.3-alpine | Landing Page |
 | Longhorn | 1.12.0 | Longhorn |
 | Mealie | v3.22.0 | Mealie |
