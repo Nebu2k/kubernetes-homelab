@@ -1,13 +1,13 @@
 # Commit Message Convention
 
-Dieses Projekt verwendet [Conventional Commits](https://www.conventionalcommits.org/)
-als Lesehilfe für die git-History. Es gibt keine Versionierung, keine Tags und
-keinen generierten Changelog: die History ist die Änderungshistorie. Das Cluster
-deployt `HEAD`, ein Rollback läuft über `git revert`.
+This project uses [Conventional Commits](https://www.conventionalcommits.org/)
+as a reading aid for the git history. There is no versioning, no tags and no
+generated changelog: the history *is* the change log. The cluster deploys
+`HEAD`, a rollback is a `git revert`.
 
 ## Format
 
-```
+```text
 <type>(<scope>): <subject>
 
 <body>
@@ -15,43 +15,44 @@ deployt `HEAD`, ein Rollback läuft über `git revert`.
 <footer>
 ```
 
-Subject auf Deutsch, im Imperativ oder als knappe Zustandsbeschreibung.
+Everything in English, including the subject. Imperative mood or a short
+statement of the resulting state.
 
 ## Types
 
-- **feat**: Neue Funktion oder neuer Dienst
-- **fix**: Etwas war kaputt und ist es jetzt nicht mehr
-- **perf**: Performance-Verbesserung
-- **docs**, **style**, **refactor**, **test**, **build**, **ci**, **chore**: der Rest
+- **feat**: New capability or new service
+- **fix**: Something was broken and is not anymore
+- **perf**: Performance improvement
+- **docs**, **style**, **refactor**, **test**, **build**, **ci**, **chore**: the rest
 
-Für Breaking Changes ein `!` nach dem Type (`feat(metallb)!: ...`) oder
-`BREAKING CHANGE:` im Footer. Beides ist reine Markierung für den Leser.
+For breaking changes add a `!` after the type (`feat(metallb)!: ...`) or
+`BREAKING CHANGE:` in the footer. Both are pure markers for the reader.
 
 ## Scope (optional)
 
-Der Scope gibt an, welcher Teil des Projekts betroffen ist:
+The scope names the part of the project a change touches:
 
-- `traefik`, `cert-manager`, `argocd`, `metallb`, etc. (Komponenten)
-- `apps`, `overlays`, `scripts` (Verzeichnisse)
-- `docs`, `ci`, `deps` (Kategorien)
+- `traefik`, `cert-manager`, `argocd`, `metallb`, etc. (components)
+- `apps`, `overlays`, `scripts` (directories)
+- `docs`, `ci`, `deps` (categories)
 
-Renovate setzt `fix(deps)` für clusterrelevante Updates und `chore(ci)` für
-Workflow-Actions, siehe `renovate.json5`.
+Renovate uses `fix(deps)` for cluster-relevant updates and `chore(ci)` for
+workflow actions, see `renovate.json5`.
 
 ## Body
 
-Hier gehört hin, was nicht in die Dateien gehört: Begründung, verworfene
-Alternativen, Messwerte, Entstehungsgeschichte. Die Manifeste beschreiben den
-Ist-Zustand, der Commit beschreibt den Weg dahin.
+This is where everything goes that does not belong in the files themselves:
+rationale, rejected alternatives, measurements, how it came about. The
+manifests describe the current state, the commit describes the way there.
 
-## Beispiele
+## Examples
 
-```
-feat(traefik): Rate-Limiting-Middleware für alle Ingress-Routen
+```text
+feat(traefik): rate limiting middleware for all ingress routes
 
-fix(cert-manager): DNS-01-Timeout von 60s auf 300s
+fix(cert-manager): raise DNS-01 timeout from 60s to 300s
 
-docs(readme): Installationsschritte aktualisiert
+docs(readme): update installation steps
 
-chore(deps): ArgoCD auf v2.10.0
+chore(deps): ArgoCD to v2.10.0
 ```

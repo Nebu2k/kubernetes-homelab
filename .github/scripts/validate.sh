@@ -52,12 +52,12 @@ if command -v kustomize >/dev/null 2>&1; then
 elif command -v kubectl >/dev/null 2>&1; then
   kbuild() { kubectl kustomize "$1"; }
 else
-  echo "${RED}Weder kustomize noch kubectl gefunden${RESET}" >&2
+  echo "${RED}Neither kustomize nor kubectl found${RESET}" >&2
   exit 1
 fi
 
 for tool in kubeconform helm; do
-  command -v "$tool" >/dev/null 2>&1 || { echo "${RED}$tool fehlt${RESET}" >&2; exit 1; }
+  command -v "$tool" >/dev/null 2>&1 || { echo "${RED}$tool missing${RESET}" >&2; exit 1; }
 done
 
 conform() {
@@ -73,7 +73,7 @@ conform() {
 }
 
 validate_manifests() {
-  echo "== Kustomize-Manifeste =="
+  echo "== Kustomize manifests =="
   for dir in manifests/*/; do
     [ -f "$dir/kustomization.yaml" ] || continue
     name=$(basename "$dir")
@@ -98,7 +98,7 @@ validate_manifests() {
 }
 
 validate_helm() {
-  echo "== Helm-Charts aus apps/ =="
+  echo "== Helm charts from apps/ =="
 
   # Parse the ArgoCD Applications. Only sources with chart: are of interest,
   # the additional self-references to this repo are ignored.
@@ -126,7 +126,7 @@ for f in sorted(glob.glob("apps/*.yaml")):
 PY
   )
 
-  [ -z "$charts" ] && { echo "${YELLOW}keine Charts gefunden${RESET}"; return; }
+  [ -z "$charts" ] && { echo "${YELLOW}no charts found${RESET}"; return; }
 
   while IFS= read -r line; do
     name=$(printf '%s' "$line" | python3 -c 'import sys,json;print(json.load(sys.stdin)["name"])')
@@ -153,7 +153,7 @@ PY
     fi
 
     if ! rendered=$(helm "${args[@]}" 2>&1); then
-      echo "${RED}✗ $name${RESET} ($chart $version rendert nicht)"
+      echo "${RED}✗ $name${RESET} ($chart $version does not render)"
       printf '%s\n' "$rendered" | grep -m3 -i error | sed 's/^/    /'
       failures=$((failures + 1))
       [ -n "$tmpvals" ] && rm -f "$tmpvals"
@@ -182,10 +182,10 @@ PY
 # whether an amd64-only image is acceptable depends on the workload's
 # nodeSelector, which only appears there.
 validate_arch() {
-  echo "== arm64-Faehigkeit der Images =="
+  echo "== arm64 capability of the images =="
 
   if [ ! -s "$RENDERED" ]; then
-    echo "${YELLOW}nichts gerendert, uebersprungen${RESET}"
+    echo "${YELLOW}nothing rendered, skipped${RESET}"
     return
   fi
 
@@ -206,7 +206,7 @@ esac
 
 echo
 if [ "$failures" -gt 0 ]; then
-  echo "${RED}$failures Fehler${RESET}"
+  echo "${RED}$failures error(s)${RESET}"
   exit 1
 fi
-echo "${GREEN}Alles valide${RESET}"
+echo "${GREEN}All valid${RESET}"

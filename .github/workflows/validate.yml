@@ -28,7 +28,7 @@ env:
 
 jobs:
   validate:
-    name: Manifeste und Charts
+    name: Manifests and charts
     runs-on: ubuntu-latest
     steps:
       - name: Checkout

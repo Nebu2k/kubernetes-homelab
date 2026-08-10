@@ -2,13 +2,12 @@
 
 # Pre-commit hook: regenerate README.md from apps/ and manifests/.
 #
-# Seit Juli 2026 macht .github/workflows/docs.yml dasselbe nach jedem Push auf
-# main and is the last instance. The hook stays regardless, because it keeps
-# the division of labour clean: while it runs locally the README is already
-# correct in one's own commit and CI has nothing to add. Without it every
-# commit would be followed by a bot commit forcing a rebase before the next
-# push. CI therefore only steps in on Renovate merges, where nobody locally
-# ist.
+# .github/workflows/docs.yml does the same after every push to main and is the
+# last instance. The hook stays regardless, because it keeps the division of
+# labour clean: while it runs locally the README is already correct in one's
+# own commit and CI has nothing to add. Without it every commit would be
+# followed by a bot commit forcing a rebase before the next push. CI therefore
+# only steps in on Renovate merges, where nobody is local.
 #
 # A plain python3 with the three packages from docs-generator/requirements.txt
 # is enough, and if they are missing the hook skips instead of blocking. It
@@ -19,9 +18,9 @@ set -e
 PYTHON="${PYTHON:-python3}"
 
 if ! "$PYTHON" -c "import yaml, jinja2, pathspec" 2>/dev/null; then
-    echo "⚠️  README-Generator übersprungen: $PYTHON fehlen Abhängigkeiten."
-    echo "   Installieren mit: $PYTHON -m pip install -r docs-generator/requirements.txt"
-    echo "   Die CI generiert die README nach dem Push ohnehin neu."
+    echo "⚠️  README generator skipped: $PYTHON is missing dependencies."
+    echo "   Install them with: $PYTHON -m pip install -r docs-generator/requirements.txt"
+    echo "   CI regenerates the README after the push anyway."
     exit 0
 fi
 
@@ -31,9 +30,9 @@ PYTHON="$PYTHON" make --no-print-directory docs
 
 if git diff --name-only README.md | grep -q "README.md"; then
     git add README.md
-    echo "✨ README.md aktualisiert und zum Commit hinzugefügt"
+    echo "✨ README.md updated and staged"
 else
-    echo "ℹ️  README.md unverändert"
+    echo "ℹ️  README.md unchanged"
 fi
 
 exit 0

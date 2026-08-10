@@ -69,7 +69,7 @@ def get_token(registry, repo):
     elif registry == "ghcr.io":
         url = f"https://ghcr.io/token?scope=repository:{repo}:pull&service=ghcr.io"
     elif registry.endswith("quay.io"):
-        return None                        # quay laesst anonym direkt durch
+        return None                        # quay lets anonymous requests straight through
     else:
         url = f"https://{registry}/token?scope=repository:{repo}:pull&service={registry}"
     try:
@@ -150,11 +150,11 @@ def main():
         for doc in yaml.safe_load_all(text):
             collect(doc, None, images)
     except yaml.YAMLError as exc:
-        print(f"{red}gerendertes YAML nicht parsebar: {exc}{reset}", file=sys.stderr)
+        print(f"{red}rendered YAML not parseable: {exc}{reset}", file=sys.stderr)
         return 2
 
     if not images:
-        print("keine Images gefunden", file=sys.stderr)
+        print("no images found", file=sys.stderr)
         return 2
 
     missing, unknown, pinned, ok = [], [], [], 0
@@ -165,42 +165,41 @@ def main():
         name = image.split("@")[0]
         if err:
             unknown.append((image, err))
-            print(f"{yellow}?{reset} {name}  (Registry nicht erreichbar: {err})")
+            print(f"{yellow}?{reset} {name}  (registry unreachable: {err})")
         elif any(a.endswith("/arm64") for a in arches):
             ok += 1
             print(f"{green}✓{reset} {name}")
         elif None not in pins and "arm64" not in pins:
             pinned.append(image)
             fixed = ", ".join(sorted(pins))
-            print(f"{yellow}~{reset} {name}  (kein arm64, per nodeSelector auf {fixed})")
+            print(f"{yellow}~{reset} {name}  (no arm64, pinned via nodeSelector to {fixed})")
         else:
             missing.append((image, sorted(arches)))
-            print(f"{red}✗{reset} {name}  KEIN arm64: {sorted(arches) or 'unbekannt'}")
+            print(f"{red}✗{reset} {name}  NO arm64: {sorted(arches) or 'unknown'}")
 
     print()
     if unknown:
         # Do not fail hard: a registry having a bad moment should not block a
         # Renovate PR. It stays visible regardless.
-        print(f"{yellow}{len(unknown)} Image(s) nicht abfragbar, uebersprungen{reset}")
+        print(f"{yellow}{len(unknown)} image(s) not queryable, skipped{reset}")
     if missing:
-        print(f"{red}{len(missing)} Image(s) ohne arm64{reset}")
+        print(f"{red}{len(missing)} image(s) without arm64{reset}")
         print()
-        print("raspi5 ist arm64 und traegt wie alle Nodes das worker-Label. Ein")
-        print("solches Image scheitert nur dann, wenn der Scheduler den Pod dort")
-        print("hinlegt, also unvorhersehbar. Zwei Auswege:")
+        print("raspi5 is arm64 and carries the worker label like every node. Such")
+        print("an image only fails once the scheduler puts the pod there, which")
+        print("makes it unpredictable. Two ways out:")
         print()
-        print("  1. Multi-Arch-Alternative oder aeltere Version verwenden.")
-        print("  2. Den Workload mit nodeSelector kubernetes.io/arch: amd64")
-        print("     festnageln, an JEDER Stelle, an der das Image vorkommt.")
-        print("     Dieser Test liest den Pin aus den gerenderten Manifesten,")
-        print("     eine Allowlist gibt es nicht.")
+        print("  1. Use a multi-arch alternative or an older version.")
+        print("  2. Pin the workload with nodeSelector kubernetes.io/arch: amd64,")
+        print("     at EVERY place the image appears. This test reads the pin")
+        print("     from the rendered manifests, there is no allowlist.")
         return 1
 
-    summary = f"{ok} von {len(images)} Images koennen arm64"
+    summary = f"{ok} of {len(images)} images support arm64"
     if pinned:
-        summary += f", {len(pinned)} per nodeSelector festgenagelt"
+        summary += f", {len(pinned)} pinned via nodeSelector"
     if unknown:
-        summary += f", {len(unknown)} nicht geprueft"
+        summary += f", {len(unknown)} not checked"
     print(f"{green}{summary}{reset}")
     return 0
 

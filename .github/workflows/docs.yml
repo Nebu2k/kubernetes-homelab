@@ -26,7 +26,7 @@ concurrency:
 
 jobs:
   readme:
-    name: README generieren
+    name: Regenerate README
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -46,27 +46,27 @@ jobs:
         # point and cannot drift apart.
         run: make docs
 
-      - name: Commit bei Aenderung
+      - name: Commit if changed
         run: |
           set -euo pipefail
 
           if git diff --quiet README.md; then
-            echo "README.md unveraendert, nichts zu tun."
+            echo "README.md unchanged, nothing to do."
             exit 0
           fi
 
-          echo "README.md hat sich geaendert:"
+          echo "README.md changed:"
           git --no-pager diff --stat README.md
 
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add README.md
-          git commit -m "docs(readme): Versionstabelle aktualisieren [skip ci]"
+          git commit -m "docs(readme): update version table [skip ci]"
 
           # One retry in case something else pushed to main in the meantime
           # (two merges in quick succession).
           git push || {
-            echo "Push abgelehnt, rebase und zweiter Versuch."
+            echo "Push rejected, rebasing and retrying."
             git pull --rebase
             git push
           }

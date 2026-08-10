@@ -66,7 +66,7 @@ Use a different interpreter with `PYTHON=/path/to/python git commit ...`.
 
 ## Troubleshooting
 
-### "README-Generator übersprungen"
+### "README generator skipped"
 
 The interpreter is missing dependencies. Install them as shown above, or ignore
 it and let CI handle the README.
