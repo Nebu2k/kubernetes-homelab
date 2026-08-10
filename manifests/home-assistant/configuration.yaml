@@ -79,8 +79,8 @@ rest:
       or vector(0), "probe", "alerts_firing", "", "")
       or label_replace(count(kube_pod_status_phase{phase=~"Pending|Failed|Unknown"} == 1)
       or vector(0), "probe", "pods_unhealthy", "", "")
-      or label_replace(count(longhorn_volume_robustness > 1) or vector(0), "probe",
-      "volumes_unhealthy", "", "")
+      or label_replace(count(longhorn_volume_robustness{state=~"degraded|faulted"} == 1)
+      or vector(0), "probe", "volumes_unhealthy", "", "")
       or label_replace(homelab:longhorn_largest_placeable_volume_bytes or vector(0),
       "probe", "largest_placeable_bytes", "", "")
       or label_replace(max(time() - (longhorn_volume_last_backup_at > 0) and on (volume)
@@ -121,9 +121,9 @@ rest:
         unique_id: cluster_volumes_unhealthy
         icon: mdi:database-alert
         state_class: measurement
-        # robustness > 1 is degraded or faulted. 0 means unknown, which is
-        # what every detached volume reports, and counting those would show
-        # a permanent double-digit number on a healthy cluster.
+        # longhorn_volume_robustness is one-hot: four series per volume over a
+        # state label, exactly one of them 1. Comparing the value against 2 or
+        # 3 matches nothing, which is what made two alerts silent for months.
         value_template: >-
           {{ value_json.data.result | selectattr('metric.probe', 'eq', 'volumes_unhealthy')
              | map(attribute='value.1') | first | default(0) | int }}

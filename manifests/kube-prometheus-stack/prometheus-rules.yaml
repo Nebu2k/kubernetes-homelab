@@ -91,8 +91,13 @@ spec:
             summary: "Longhorn volume space usage is critical"
             description: "PVC {{ $labels.namespace }}/{{ $labels.persistentvolumeclaim }} is {{ $value | humanizePercentage }} full (threshold: 90%)."
 
+        # longhorn_volume_robustness is one-hot, not an enum: every volume gets
+        # four series (state=unknown|healthy|degraded|faulted) and exactly one
+        # of them is 1. The obvious "== 2" and "== 3" match nothing at all,
+        # max() over the whole metric is 1. Both alerts were silent from the
+        # day they were written, found 2026-08-10.
         - alert: LonghornVolumeDegraded
-          expr: longhorn_volume_robustness == 2
+          expr: longhorn_volume_robustness{state="degraded"} == 1
           for: 5m
           labels:
             severity: warning
@@ -101,7 +106,7 @@ spec:
             description: "Volume {{ $labels.volume }} is in degraded state. Check replica health."
 
         - alert: LonghornVolumeFaulted
-          expr: longhorn_volume_robustness == 3
+          expr: longhorn_volume_robustness{state="faulted"} == 1
           for: 1m
           labels:
             severity: critical
