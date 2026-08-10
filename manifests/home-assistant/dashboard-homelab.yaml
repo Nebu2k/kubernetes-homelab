@@ -5,6 +5,15 @@
 # Area ids come from HA's area registry, floor grouping from the floor
 # registry. When an area is added or renamed in the UI, it has to be added
 # here too, this file does not follow along.
+#
+# Every area card needs both halves to be usable:
+#   navigation_path  without it the card has tap_action "none" and is a
+#                    picture, not a link. It points at a subview further
+#                    down, so the path has to match lovelace.dashboards in
+#                    configuration.yaml.
+#   area-controls    the lights and switches of the area, right on the card.
+#                    The feature hides itself in areas that have nothing to
+#                    switch, so it can sit on every card.
 views:
   - title: Zuhause
     path: zuhause
@@ -21,24 +30,52 @@ views:
           - type: area
             area: wohnzimmer
             display_type: compact
+            navigation_path: /homelab-cockpit/wohnzimmer
+            features_position: inline
+            features:
+              - type: area-controls
           - type: area
             area: arbeitszimmer
             display_type: compact
+            navigation_path: /homelab-cockpit/arbeitszimmer
+            features_position: inline
+            features:
+              - type: area-controls
           - type: area
             area: kinderzimmer
             display_type: compact
+            navigation_path: /homelab-cockpit/kinderzimmer
+            features_position: inline
+            features:
+              - type: area-controls
           - type: area
             area: wannenbad
             display_type: compact
+            navigation_path: /homelab-cockpit/wannenbad
+            features_position: inline
+            features:
+              - type: area-controls
           - type: area
             area: hauswirtschaftsraum
             display_type: compact
+            navigation_path: /homelab-cockpit/hauswirtschaftsraum
+            features_position: inline
+            features:
+              - type: area-controls
           - type: area
             area: flur_ostflugel
             display_type: compact
+            navigation_path: /homelab-cockpit/flur_ostflugel
+            features_position: inline
+            features:
+              - type: area-controls
           - type: area
             area: balkon_ostflugel
             display_type: compact
+            navigation_path: /homelab-cockpit/balkon_ostflugel
+            features_position: inline
+            features:
+              - type: area-controls
 
       - type: grid
         cards:
@@ -49,27 +86,59 @@ views:
           - type: area
             area: schlafzimmer
             display_type: compact
+            navigation_path: /homelab-cockpit/schlafzimmer
+            features_position: inline
+            features:
+              - type: area-controls
           - type: area
             area: esszimmer
             display_type: compact
+            navigation_path: /homelab-cockpit/esszimmer
+            features_position: inline
+            features:
+              - type: area-controls
           - type: area
             area: kuche
             display_type: compact
+            navigation_path: /homelab-cockpit/kuche
+            features_position: inline
+            features:
+              - type: area-controls
           - type: area
             area: gastezimmer
             display_type: compact
+            navigation_path: /homelab-cockpit/gastezimmer
+            features_position: inline
+            features:
+              - type: area-controls
           - type: area
             area: duschbad
             display_type: compact
+            navigation_path: /homelab-cockpit/duschbad
+            features_position: inline
+            features:
+              - type: area-controls
           - type: area
             area: flur_westflugel
             display_type: compact
+            navigation_path: /homelab-cockpit/flur_westflugel
+            features_position: inline
+            features:
+              - type: area-controls
           - type: area
             area: balkon_westflugel
             display_type: compact
+            navigation_path: /homelab-cockpit/balkon_westflugel
+            features_position: inline
+            features:
+              - type: area-controls
           - type: area
             area: wurmkiste
             display_type: compact
+            navigation_path: /homelab-cockpit/wurmkiste
+            features_position: inline
+            features:
+              - type: area-controls
 
       - type: grid
         cards:
@@ -80,18 +149,38 @@ views:
           - type: area
             area: haustur
             display_type: compact
+            navigation_path: /homelab-cockpit/haustur
+            features_position: inline
+            features:
+              - type: area-controls
           - type: area
             area: garten
             display_type: compact
+            navigation_path: /homelab-cockpit/garten
+            features_position: inline
+            features:
+              - type: area-controls
           - type: area
             area: hauswand
             display_type: compact
+            navigation_path: /homelab-cockpit/hauswand
+            features_position: inline
+            features:
+              - type: area-controls
           - type: area
             area: strasse
             display_type: compact
+            navigation_path: /homelab-cockpit/strasse
+            features_position: inline
+            features:
+              - type: area-controls
           - type: area
             area: keller
             display_type: compact
+            navigation_path: /homelab-cockpit/keller
+            features_position: inline
+            features:
+              - type: area-controls
 
   - title: Energie
     path: energie
@@ -280,20 +369,169 @@ views:
             icon: mdi:open-in-new
           - type: markdown
             content: >-
-              - [Grafana](https://grafana.elmstreet79.de) — Dashboards und
+              - [Grafana](https://grafana.elmstreet79.de): Dashboards und
               Verläufe
 
-              - [Prometheus](https://prometheus.elmstreet79.de) — Queries und
+              - [Prometheus](https://prometheus.elmstreet79.de): Queries und
               Regeln
 
-              - [Alertmanager](https://alertmanager.elmstreet79.de) — was
+              - [Alertmanager](https://alertmanager.elmstreet79.de): was
               gerade feuert
 
-              - [ArgoCD](https://argocd.elmstreet79.de) — Sync-Status, hier
-              nicht als Kachel: der Install liefert keine Metriken
+              - [ArgoCD](https://argocd.elmstreet79.de): Sync-Status, hier
+              nicht als Kachel, der Install liefert keine Metriken
 
-              - [Longhorn](https://longhorn.elmstreet79.de) — Volumes und
+              - [Longhorn](https://longhorn.elmstreet79.de): Volumes und
               Backups
 
-              - [Gatus](https://status.elmstreet79.de) — Erreichbarkeit von
+              - [Gatus](https://status.elmstreet79.de): Erreichbarkeit von
               außen
+
+  # One subview per area, each generated by HA's area strategy: it collects
+  # the entities of the area into lights, covers, climate, media, security,
+  # actions and others. Only the stub is written here, the content follows
+  # the registry by itself.
+  #
+  # subview keeps them out of the tab bar, path is what the area cards above
+  # navigate to. The strategy result is merged over these keys but returns
+  # none of them, so title, path and subview survive.
+  - title: Wohnzimmer
+    path: wohnzimmer
+    subview: true
+    strategy:
+      type: area
+      area: wohnzimmer
+
+  - title: Arbeitszimmer
+    path: arbeitszimmer
+    subview: true
+    strategy:
+      type: area
+      area: arbeitszimmer
+
+  - title: Kinderzimmer
+    path: kinderzimmer
+    subview: true
+    strategy:
+      type: area
+      area: kinderzimmer
+
+  - title: Wannenbad
+    path: wannenbad
+    subview: true
+    strategy:
+      type: area
+      area: wannenbad
+
+  - title: Hauswirtschaftsraum
+    path: hauswirtschaftsraum
+    subview: true
+    strategy:
+      type: area
+      area: hauswirtschaftsraum
+
+  - title: Flur Ostflügel
+    path: flur_ostflugel
+    subview: true
+    strategy:
+      type: area
+      area: flur_ostflugel
+
+  - title: Balkon Ostflügel
+    path: balkon_ostflugel
+    subview: true
+    strategy:
+      type: area
+      area: balkon_ostflugel
+
+  - title: Schlafzimmer
+    path: schlafzimmer
+    subview: true
+    strategy:
+      type: area
+      area: schlafzimmer
+
+  - title: Esszimmer
+    path: esszimmer
+    subview: true
+    strategy:
+      type: area
+      area: esszimmer
+
+  - title: Küche
+    path: kuche
+    subview: true
+    strategy:
+      type: area
+      area: kuche
+
+  # Area id and name differ here, the area was renamed after it was created.
+  - title: Sonjas Zimmer
+    path: gastezimmer
+    subview: true
+    strategy:
+      type: area
+      area: gastezimmer
+
+  - title: Duschbad
+    path: duschbad
+    subview: true
+    strategy:
+      type: area
+      area: duschbad
+
+  - title: Flur Westflügel
+    path: flur_westflugel
+    subview: true
+    strategy:
+      type: area
+      area: flur_westflugel
+
+  - title: Balkon Westflügel
+    path: balkon_westflugel
+    subview: true
+    strategy:
+      type: area
+      area: balkon_westflugel
+
+  - title: Wurmkiste
+    path: wurmkiste
+    subview: true
+    strategy:
+      type: area
+      area: wurmkiste
+
+  - title: Haustür
+    path: haustur
+    subview: true
+    strategy:
+      type: area
+      area: haustur
+
+  - title: Garten
+    path: garten
+    subview: true
+    strategy:
+      type: area
+      area: garten
+
+  - title: Hauswand
+    path: hauswand
+    subview: true
+    strategy:
+      type: area
+      area: hauswand
+
+  - title: Straße
+    path: strasse
+    subview: true
+    strategy:
+      type: area
+      area: strasse
+
+  - title: Keller
+    path: keller
+    subview: true
+    strategy:
+      type: area
+      area: keller

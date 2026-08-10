@@ -40,13 +40,16 @@ prometheus:
 # The storage-mode dashboards (Home, Bereiche, Map, Roborock) are untouched
 # and stay editable in the UI; this one is added next to them.
 #
-# The url_path has to contain a hyphen, HA rejects single-word paths.
+# Not called "Übersicht": that is the title of HA's own default dashboard.
+# The url_path has to contain a hyphen, HA rejects single-word paths, and the
+# area cards navigate to it literally, so it has to match the paths in
+# dashboard-homelab.yaml.
 lovelace:
   mode: storage
   dashboards:
-    homelab-uebersicht:
+    homelab-cockpit:
       mode: yaml
-      title: Übersicht
+      title: Cockpit
       icon: mdi:view-dashboard
       show_in_sidebar: true
       filename: dashboard-homelab.yaml
