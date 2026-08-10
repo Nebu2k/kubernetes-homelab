@@ -33,7 +33,7 @@ spec:
       initContainers:
       - name: copy-config
         image: busybox:1.38.0
-        command: ['sh', '-c', 'cp -f /tmp/config/configuration.yaml /config/configuration.yaml']
+        command: ['sh', '-c', 'cp -f /tmp/config/configuration.yaml /tmp/config/dashboard-homelab.yaml /config/']
         volumeMounts:
         - name: config
           mountPath: /config
@@ -143,9 +143,6 @@ spec:
       - name: config-cm
         configMap:
           name: home-assistant-config-cm
-          items:
-            - key: configuration.yaml
-              path: configuration.yaml
       - name: matter-data
         persistentVolumeClaim:
           claimName: home-assistant-matter-data

@@ -1,0 +1,299 @@
+# Lovelace dashboard in yaml mode, wired up in configuration.yaml under
+# lovelace.dashboards. Not editable in the UI by design: it is the one view
+# that is supposed to be reviewable in git.
+#
+# Area ids come from HA's area registry, floor grouping from the floor
+# registry. When an area is added or renamed in the UI, it has to be added
+# here too, this file does not follow along.
+views:
+  - title: Zuhause
+    path: zuhause
+    icon: mdi:home
+    type: sections
+    max_columns: 3
+    sections:
+      - type: grid
+        cards:
+          - type: heading
+            heading: Ostflügel
+            heading_style: title
+            icon: mdi:home-floor-2
+          - type: area
+            area: wohnzimmer
+            display_type: compact
+          - type: area
+            area: arbeitszimmer
+            display_type: compact
+          - type: area
+            area: kinderzimmer
+            display_type: compact
+          - type: area
+            area: wannenbad
+            display_type: compact
+          - type: area
+            area: hauswirtschaftsraum
+            display_type: compact
+          - type: area
+            area: flur_ostflugel
+            display_type: compact
+          - type: area
+            area: balkon_ostflugel
+            display_type: compact
+
+      - type: grid
+        cards:
+          - type: heading
+            heading: Westflügel
+            heading_style: title
+            icon: mdi:home-floor-1
+          - type: area
+            area: schlafzimmer
+            display_type: compact
+          - type: area
+            area: esszimmer
+            display_type: compact
+          - type: area
+            area: kuche
+            display_type: compact
+          - type: area
+            area: gastezimmer
+            display_type: compact
+          - type: area
+            area: duschbad
+            display_type: compact
+          - type: area
+            area: flur_westflugel
+            display_type: compact
+          - type: area
+            area: balkon_westflugel
+            display_type: compact
+          - type: area
+            area: wurmkiste
+            display_type: compact
+
+      - type: grid
+        cards:
+          - type: heading
+            heading: Erdgeschoss und Keller
+            heading_style: title
+            icon: mdi:home-floor-g
+          - type: area
+            area: haustur
+            display_type: compact
+          - type: area
+            area: garten
+            display_type: compact
+          - type: area
+            area: hauswand
+            display_type: compact
+          - type: area
+            area: strasse
+            display_type: compact
+          - type: area
+            area: keller
+            display_type: compact
+
+  - title: Energie
+    path: energie
+    icon: mdi:lightning-bolt
+    type: sections
+    max_columns: 3
+    sections:
+      # The energy prefs are already configured (two Tibber grid sources,
+      # the two balcony inverters as solar), so these cards read the same
+      # data as the built-in energy panel.
+      - type: grid
+        cards:
+          - type: heading
+            heading: Bilanz
+            heading_style: title
+            icon: mdi:scale-balance
+          - type: energy-date-selection
+          - type: energy-distribution
+            link_dashboard: true
+
+      - type: grid
+        cards:
+          - type: heading
+            heading: Hausverbrauch
+            heading_style: title
+            icon: mdi:home-lightning-bolt
+          - type: tile
+            entity: sensor.tibber_pulse_ostflugel_power
+            name: Ostflügel
+          - type: tile
+            entity: sensor.tibber_pulse_westflugel_power
+            name: Westflügel
+          - type: history-graph
+            hours_to_show: 24
+            entities:
+              - entity: sensor.tibber_pulse_ostflugel_power
+                name: Ostflügel
+              - entity: sensor.tibber_pulse_westflugel_power
+                name: Westflügel
+          - type: tile
+            entity: sensor.tibber_pulse_ostflugel_accumulated_cost
+            name: Kosten heute Ostflügel
+          - type: tile
+            entity: sensor.tibber_pulse_westflugel_accumulated_cost
+            name: Kosten heute Westflügel
+
+      - type: grid
+        cards:
+          - type: heading
+            heading: Photovoltaik
+            heading_style: title
+            icon: mdi:solar-power-variant
+          - type: tile
+            entity: sensor.inverter_ac_power
+            name: Balkon Ost
+          - type: tile
+            entity: sensor.inverter_ac_power_3
+            name: Balkon West
+          - type: tile
+            entity: sensor.inverter_port_1_dc_daily_energy
+            name: Ertrag heute Ost
+          - type: tile
+            entity: sensor.inverter_port_1_dc_daily_energy_3
+            name: Ertrag heute West
+          - type: markdown
+            content: >-
+              Die dritte Anlage am selben DTU (*Inverter Gartenhaus*,
+              Entities auf `_2`) steht bei Mama und gehört nicht in diese
+              Bilanz. Sie ist hier und in den Energy-Prefs bewusst nicht
+              enthalten.
+
+      - type: grid
+        cards:
+          - type: heading
+            heading: Rack und Speicher
+            heading_style: title
+            icon: mdi:server
+          - type: tile
+            entity: sensor.delta_3_ac_out_power
+            name: Rack-Verbrauch
+          - type: gauge
+            entity: sensor.delta_3_battery_level
+            name: Ecoflow Ladestand
+            min: 0
+            max: 100
+            severity:
+              green: 60
+              yellow: 30
+              red: 0
+          - type: tile
+            entity: sensor.delta_3_ac_in_power
+            name: Ecoflow Ladeleistung
+          - type: tile
+            entity: sensor.delta_3_status
+            name: Status
+          - type: tile
+            entity: sensor.proxmox_server_power
+            name: Proxmox
+          - type: tile
+            entity: switch.proxmox_server
+            name: Proxmox Steckdose
+
+      - type: grid
+        cards:
+          - type: heading
+            heading: Wallbox
+            heading_style: title
+            icon: mdi:ev-station
+          - type: tile
+            entity: sensor.tesla_wall_connector_status
+            name: Status
+          - type: tile
+            entity: sensor.tesla_wall_connector_total_power
+            name: Ladeleistung
+          - type: tile
+            entity: sensor.tesla_wall_connector_session_energy
+            name: Aktuelle Sitzung
+
+      - type: grid
+        cards:
+          - type: heading
+            heading: Wo die Energie hingeht
+            heading_style: title
+            icon: mdi:table
+          - type: energy-sources-table
+
+  - title: Cluster
+    path: cluster
+    icon: mdi:kubernetes
+    type: sections
+    max_columns: 2
+    sections:
+      # All of these come from the single Prometheus query in
+      # configuration.yaml. They are deliberately counts and not lists:
+      # the detail belongs in Grafana, this view answers "is anything
+      # wrong" and links onward.
+      - type: grid
+        cards:
+          - type: heading
+            heading: Zustand
+            heading_style: title
+            icon: mdi:heart-pulse
+          - type: tile
+            entity: sensor.cluster_nodes_bereit
+            name: Nodes bereit
+            color: green
+          - type: tile
+            entity: sensor.cluster_nodes_gesamt
+            name: Nodes gesamt
+          - type: tile
+            entity: sensor.cluster_alerts_aktiv
+            name: Alerts aktiv
+            color: red
+          - type: tile
+            entity: sensor.cluster_pods_ungesund
+            name: Pods ungesund
+            color: red
+
+      - type: grid
+        cards:
+          - type: heading
+            heading: Longhorn
+            heading_style: title
+            icon: mdi:database
+          - type: tile
+            entity: sensor.longhorn_volumes_ungesund
+            name: Volumes degraded oder faulted
+            color: red
+          - type: tile
+            entity: sensor.longhorn_platzierbares_volume
+            name: Größtes platzierbares Volume
+          - type: tile
+            entity: sensor.longhorn_backup_alter
+            name: Ältestes Backup
+          - type: history-graph
+            hours_to_show: 168
+            entities:
+              - entity: sensor.longhorn_backup_alter
+                name: Backup-Alter
+
+      - type: grid
+        cards:
+          - type: heading
+            heading: Weiter zu
+            heading_style: title
+            icon: mdi:open-in-new
+          - type: markdown
+            content: >-
+              - [Grafana](https://grafana.elmstreet79.de) — Dashboards und
+              Verläufe
+
+              - [Prometheus](https://prometheus.elmstreet79.de) — Queries und
+              Regeln
+
+              - [Alertmanager](https://alertmanager.elmstreet79.de) — was
+              gerade feuert
+
+              - [ArgoCD](https://argocd.elmstreet79.de) — Sync-Status, hier
+              nicht als Kachel: der Install liefert keine Metriken
+
+              - [Longhorn](https://longhorn.elmstreet79.de) — Volumes und
+              Backups
+
+              - [Gatus](https://status.elmstreet79.de) — Erreichbarkeit von
+              außen

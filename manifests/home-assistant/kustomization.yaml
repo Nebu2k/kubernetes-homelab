@@ -13,7 +13,16 @@ resources:
   - deployment.yaml
   - service.yaml
   - ingress.yaml
-  - configmap-configuration.yaml
   - s3-archive-credentials-sealed.yaml
   - wol-ssh-key-sealed.yaml
   - backup-archive-cronjob.yaml
+
+# A generator rather than a handwritten ConfigMap, for the hash suffix: the
+# init container copies both files into /config once at startup, so without
+# it a change would sync and then sit unused until something restarted the
+# pod. With the suffix the name changes and the deployment rolls.
+configMapGenerator:
+  - name: home-assistant-config-cm
+    files:
+      - configuration.yaml
+      - dashboard-homelab.yaml

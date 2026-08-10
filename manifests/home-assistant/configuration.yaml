@@ -1,0 +1,176 @@
+http:
+  use_x_forwarded_for: true
+  trusted_proxies:
+    # IPv4 only: Traefik pods and LAN. No v6, the ISP GUA rotates.
+    - 10.42.0.0/16
+    - 172.16.0.0/12
+    - 192.168.0.0/16
+  ip_ban_enabled: true
+  login_attempts_threshold: 5
+
+default_config:
+
+# Metrics to Prometheus (/api/prometheus, bearer token), filtered
+# deliberately narrowly: HA holds well over a thousand entities and would
+# otherwise export all of them into what is already the largest volume in
+# the cluster.
+#
+# Included are the four sources that measure power and that Prometheus does
+# not already know from elsewhere:
+#   delta_3              Ecoflow at the rack, the real homelab draw
+#   tibber_pulse         house consumption, east and west wing
+#   inverter             Hoymiles PV, three plants on one DTU
+#   tesla_wall_connector wallbox
+# The inverter glob deliberately also catches sensor.inverter_*_2, which is
+# the plant at Mama's and does not belong in this household's balance. Keep
+# it apart when querying, and filter on entity rather than friendly_name:
+# a language switch in HA left a second, stale set of friendly_name series.
+# The USW-16 PoE values are left out on purpose, unpoller already provides
+# them as unpoller_device_port_poe_watts.
+prometheus:
+  namespace: hass
+  filter:
+    include_entity_globs:
+      - sensor.delta_3_*
+      - sensor.tibber_pulse_*
+      - sensor.inverter_*
+      - sensor.tesla_wall_connector_*
+
+# The deliberate dashboard, in yaml so it lives in git like everything else.
+# The storage-mode dashboards (Home, Bereiche, Map, Roborock) are untouched
+# and stay editable in the UI; this one is added next to them.
+#
+# The url_path has to contain a hyphen, HA rejects single-word paths.
+lovelace:
+  mode: storage
+  dashboards:
+    homelab-uebersicht:
+      mode: yaml
+      title: Übersicht
+      icon: mdi:view-dashboard
+      show_in_sidebar: true
+      filename: dashboard-homelab.yaml
+
+# Cluster health for the dashboard, read back from Prometheus. HA already
+# pushes power metrics into Prometheus; this is the return path, and it is
+# the only one that exists: HA has no Kubernetes integration and Prometheus
+# is where the truth about the cluster already lives.
+#
+# One request rather than seven: every probe is wrapped in label_replace to
+# tag it, and the sensors pick their value out of the combined vector by
+# that label. The "or vector(0)" on each is what makes a probe report zero
+# instead of vanishing, because an empty count() returns no series at all
+# and the sensor would go unavailable exactly when the news is good.
+#
+# argocd is missing on purpose: this install exposes no metrics services,
+# so there is nothing to scrape and no sync status to show.
+rest:
+  - resource: "http://kube-prometheus-stack-prometheus.monitoring.svc.cluster.local:9090/api/v1/query"
+    method: POST
+    headers:
+      Content-Type: application/x-www-form-urlencoded
+    scan_interval: 60
+    timeout: 15
+    payload: >-
+      query=label_replace(sum(kube_node_status_condition{condition="Ready",status="true"}
+      == 1) or vector(0), "probe", "nodes_ready", "", "")
+      or label_replace(count(kube_node_info) or vector(0), "probe", "nodes_total", "", "")
+      or label_replace(count(ALERTS{alertstate="firing",alertname!="Watchdog"})
+      or vector(0), "probe", "alerts_firing", "", "")
+      or label_replace(count(kube_pod_status_phase{phase=~"Pending|Failed|Unknown"} == 1)
+      or vector(0), "probe", "pods_unhealthy", "", "")
+      or label_replace(count(longhorn_volume_robustness > 1) or vector(0), "probe",
+      "volumes_unhealthy", "", "")
+      or label_replace(homelab:longhorn_largest_placeable_volume_bytes or vector(0),
+      "probe", "largest_placeable_bytes", "", "")
+      or label_replace(max(time() - (longhorn_volume_last_backup_at > 0) and on (volume)
+      homelab_longhorn_volume_recurring_job_group_info{backup_group="enabled"})
+      or vector(0), "probe", "backup_age_seconds", "", "")
+    sensor:
+      - name: "Cluster Nodes bereit"
+        unique_id: cluster_nodes_ready
+        icon: mdi:server
+        state_class: measurement
+        value_template: >-
+          {{ value_json.data.result | selectattr('metric.probe', 'eq', 'nodes_ready')
+             | map(attribute='value.1') | first | default(0) | int }}
+      - name: "Cluster Nodes gesamt"
+        unique_id: cluster_nodes_total
+        icon: mdi:server-network
+        state_class: measurement
+        value_template: >-
+          {{ value_json.data.result | selectattr('metric.probe', 'eq', 'nodes_total')
+             | map(attribute='value.1') | first | default(0) | int }}
+      - name: "Cluster Alerts aktiv"
+        unique_id: cluster_alerts_firing
+        icon: mdi:alert-circle
+        state_class: measurement
+        # Watchdog is excluded in the query: it fires permanently by design,
+        # as the proof that the alerting path itself works.
+        value_template: >-
+          {{ value_json.data.result | selectattr('metric.probe', 'eq', 'alerts_firing')
+             | map(attribute='value.1') | first | default(0) | int }}
+      - name: "Cluster Pods ungesund"
+        unique_id: cluster_pods_unhealthy
+        icon: mdi:cube-outline
+        state_class: measurement
+        value_template: >-
+          {{ value_json.data.result | selectattr('metric.probe', 'eq', 'pods_unhealthy')
+             | map(attribute='value.1') | first | default(0) | int }}
+      - name: "Longhorn Volumes ungesund"
+        unique_id: cluster_volumes_unhealthy
+        icon: mdi:database-alert
+        state_class: measurement
+        # robustness > 1 is degraded or faulted. 0 means unknown, which is
+        # what every detached volume reports, and counting those would show
+        # a permanent double-digit number on a healthy cluster.
+        value_template: >-
+          {{ value_json.data.result | selectattr('metric.probe', 'eq', 'volumes_unhealthy')
+             | map(attribute='value.1') | first | default(0) | int }}
+      # Names stay free of umlauts on purpose: the entity_id is the slugified
+      # name, and transliteration is not something to guess at.
+      - name: "Longhorn platzierbares Volume"
+        unique_id: cluster_largest_placeable_volume
+        icon: mdi:database-plus
+        unit_of_measurement: GB
+        device_class: data_size
+        state_class: measurement
+        value_template: >-
+          {{ (value_json.data.result | selectattr('metric.probe', 'eq', 'largest_placeable_bytes')
+             | map(attribute='value.1') | first | default(0) | float / 1024 / 1024 / 1024) | round(0) }}
+      - name: "Longhorn Backup Alter"
+        unique_id: cluster_backup_age_hours
+        icon: mdi:backup-restore
+        unit_of_measurement: h
+        state_class: measurement
+        # Oldest backup among the volumes labelled for backup. The daily job
+        # runs at 02:00, so anything past ~26h means a run was missed.
+        value_template: >-
+          {{ (value_json.data.result | selectattr('metric.probe', 'eq', 'backup_age_seconds')
+             | map(attribute='value.1') | first | default(0) | float / 3600) | round(1) }}
+
+# Shutting down the PC. Its counterpart is the Windows OpenSSH server; the
+# key is a secret mounted at /ssh-wol and deliberately not on the config
+# volume, which is archived to S3 monthly.
+shell_command:
+  nebu2k_pc_shutdown: >-
+    ssh -i /ssh-wol/id_ed25519 -o IdentitiesOnly=yes -o BatchMode=yes
+    -o ConnectTimeout=5 -o StrictHostKeyChecking=accept-new
+    -o UserKnownHostsFile=/config/ssh_known_hosts
+    sebastian@192.168.2.5 "shutdown /s /t 0"
+
+switch:
+  # host: turns the switch into a measured state (ping every 30s) rather
+  # than a guessed one. Depends on the static .5.
+  - platform: wake_on_lan
+    name: Nebu2k-PC
+    mac: d8:bb:c1:3d:c8:ae
+    host: 192.168.2.5
+    turn_off:
+      action: shell_command.nebu2k_pc_shutdown
+
+automation: !include automations.yaml
+
+script: !include scripts.yaml
+
+scene: !include scenes.yaml

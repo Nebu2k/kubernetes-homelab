@@ -2,7 +2,7 @@
 # figure for the homelab, RAPL only sees the CPU package), Tibber Pulse for
 # house consumption, the Hoymiles PV and the wallbox. Which entities are
 # exported is decided by the filter in the prometheus block of
-# manifests/home-assistant/configmap-configuration.yaml, not here.
+# manifests/home-assistant/configuration.yaml, not here.
 #
 # Static targets because ArgoCD does not apply Endpoints objects. Scraped
 # directly at the ClusterIP so the path needs no ingress and no certificate.

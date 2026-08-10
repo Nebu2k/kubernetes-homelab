@@ -42,7 +42,7 @@ Zonen-Label.
 
 Pod- und Service-CIDR sind `10.42.0.0/16` und `10.43.0.0/16`, nicht die
 Talos-Defaults. Manifeste verlassen sich darauf:
-`home-assistant/configmap-configuration.yaml` traegt `10.42.0.0/16` als
+`home-assistant/configuration.yaml` traegt `10.42.0.0/16` als
 trusted_proxy, `gatus/configmap.yaml` prueft CoreDNS unter `10.43.0.10`.
 
 ## Image

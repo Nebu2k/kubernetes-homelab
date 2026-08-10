@@ -26,7 +26,7 @@ kubernetesVersion: v1.36.3
 endpoint: https://192.168.2.29:6443
 
 # Not the Talos defaults. Manifests rely on these values:
-# home-assistant/configmap-configuration.yaml carries 10.42.0.0/16 as a
+# home-assistant/configuration.yaml carries 10.42.0.0/16 as a
 # trusted_proxy and gatus/configmap.yaml checks CoreDNS at 10.43.0.10.
 clusterPodNets:
   - 10.42.0.0/16
