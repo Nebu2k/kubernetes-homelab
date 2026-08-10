@@ -1,3 +1,15 @@
+# [5.10.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v5.9.0...v5.10.0) (2026-08-10)
+
+
+### Bug Fixes
+
+* **alerts:** LonghornBackupStale meldet keine ungesicherten Volumes mehr ([d5773c7](https://github.com/Nebu2k/kubernetes-homelab/commit/d5773c76658a8523fb1fe4b278777bdd5d64b641))
+
+
+### Features
+
+* **monitoring:** offene pve-Updates im Proxmox-Dashboard ([2d4ffc5](https://github.com/Nebu2k/kubernetes-homelab/commit/2d4ffc545db6d160292de56ca8a214af7634d6ac))
+
 # [5.9.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v5.8.0...v5.9.0) (2026-08-10)
 
 
