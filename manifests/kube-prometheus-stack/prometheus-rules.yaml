@@ -946,10 +946,12 @@ spec:
             description: "Erwartet werden rund 359k (AdAway + oisd big + 1Hosts Lite). Bei deutlich weniger fehlt eine ganze Liste und {{ $labels.instance }} filtert entsprechend weniger. Logs ansehen: kubectl -n blocky logs -l app.kubernetes.io/name=blocky -c blocky --tail=-1"
 
         # The direct signal, and the one that fires first: a source that 404s
-        # burns its five attempts on every refresh. Counts as increase() so a
-        # pod restart does not hide it.
+        # burns its five attempts on every refresh. increase() over a window
+        # wider than refreshPeriod so a restart cannot hide a permanent
+        # failure, guarded by the current counter so a fixed one clears with
+        # the next start instead of lingering for 26h.
         - alert: BlockyDownloadsFailing
-          expr: increase(blocky_failed_downloads_total[26h]) > 0
+          expr: increase(blocky_failed_downloads_total[26h]) > 0 and blocky_failed_downloads_total > 0
           for: 30m
           labels:
             severity: warning
