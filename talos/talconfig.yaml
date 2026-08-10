@@ -257,6 +257,22 @@ patches:
           - 192.168.2.254
           - 192.168.2.253
 
+  # Precondition for 2. above: with the Talos default the pod resolv.conf holds
+  # only the host DNS proxy (169.254.116.108), so CoreDNS sees a single upstream
+  # and cannot fail over. A dead first resolver then costs every lookup in the
+  # cluster several seconds. Turned off, the pods get both addresses and the
+  # forward plugin drops a dead upstream itself.
+  #
+  # The host keeps its own hostDNS on 127.0.0.53, this only concerns the pods.
+  # Takes effect without a reboot, but CoreDNS has to be restarted: the kubelet
+  # writes resolv.conf when the pod is created.
+  - |-
+    machine:
+      features:
+        hostDNS:
+          enabled: true
+          forwardKubeDNSToHost: false
+
   # Longhorn needs /var/lib/longhorn in the kubelet mount namespace or the
   # manager does not see the replicas. The required system extensions
   # (iscsi-tools, util-linux-tools) are in the schematic ID above. Note that

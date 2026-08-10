@@ -451,12 +451,33 @@ nicht ungeprueft ausgerollt.
   enumerate", an `3-2.3` laeuft er fehlerfrei. Bei USB-Problemen also zuerst
   `dmesg -T | grep -i usb` auf pve, nicht im Cluster suchen.
 
-- **CoreDNS forwardet an AdGuard.** Talos deployt vanilla CoreDNS mit
-  `forward . /etc/resolv.conf`, und dort stehen die beiden AdGuard-Instanzen.
-  Der Split-Horizon-Wildcard fuer `*.elmstreet79.de` greift damit auch fuer
-  Pods. Der Preis ist die Abhaengigkeit: stirbt AdGuard, verlieren die Pods jede
-  Namensaufloesung. Hinnehmbar, aber es ist die Vorbedingung fuer die
-  Blocky-Abloesung, siehe ROADMAP.
+- **CoreDNS forwardet direkt an die beiden Resolver, nicht an hostDNS.** Talos
+  deployt vanilla CoreDNS mit `forward . /etc/resolv.conf`. Per Default steht
+  dort nur der hostDNS-Proxy `169.254.116.108`, also ein einziger Upstream, und
+  ein toter erster Resolver kostet dann jeden Lookup im Cluster mehrere
+  Sekunden. Deshalb steht `forwardKubeDNSToHost: false` in `talconfig.yaml`:
+  die Pods sehen `.254` und `.253`, und das forward-Plugin nimmt einen toten
+  Upstream selbst heraus. Der Host behaelt seinen hostDNS auf `127.0.0.53` und
+  damit auch dessen traeges Failover, das betrifft aber nur ihn selbst, im
+  Wesentlichen Image-Pulls.
+
+  Kontrolle, welche Upstreams ein Pod wirklich benutzt:
+
+  ```bash
+  talosctl -n 192.168.2.23 read /system/resolved/resolv.conf
+  kubectl -n kube-system port-forward deploy/coredns 9153:9153
+  curl -s localhost:9153/metrics | grep 'proxy_request_duration_seconds_count{'
+  ```
+
+  Die Corefile selbst ist der falsche Hebel: die ConfigMap `kube-system/coredns`
+  traegt `managedFields` mit `manager: talos, operation: Apply`, Talos besitzt
+  also `data.Corefile` und ueberschreibt jeden Patch, sobald es die
+  Bootstrap-Manifeste neu anwendet.
+
+- **CoreDNS haengt an Blocky.** Der Split-Horizon-Wildcard fuer
+  `*.elmstreet79.de` greift damit auch fuer Pods. Der Preis ist die
+  Abhaengigkeit: sterben beide Instanzen, verlieren die Pods jede
+  Namensaufloesung.
 
 - **kured und system-upgrade-controller haben hier nichts zu suchen.** Beide
   setzen ein OS mit Paketmanager und Reboot-Semantik voraus. Talos-Upgrades
