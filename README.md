@@ -993,7 +993,7 @@ kubectl get secret -n monitoring grafana-admin-credentials \
 | Ripe Atlas | 5120 | Ripe Atlas |
 | Sealed Secrets | 2.19.1 | Sealed Secrets |
 | Teslamate | 4.0.1 | Teslamate |
-| Traefik | 41.1.0 | Traefik |
+| Traefik | 41.1.1 | Traefik |
 | Unifi Poller | v3.3.4 | Unifi Poller |
 | Talos Linux | v1.13.8 | Immutable node OS, no SSH, no package manager |
 | Kubernetes | v1.36.3 | Shipped and managed by Talos |
