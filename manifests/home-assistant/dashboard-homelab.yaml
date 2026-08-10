@@ -237,10 +237,18 @@ views:
           # entities are charging, defrost, sentry mode and the covers of
           # frunk, trunk and windows. None of that belongs one stray tap
           # away.
+          #
+          # grid_options is the price of that: the card asks for 12 columns
+          # only when it carries inline features, otherwise for 6, so
+          # without the override this one card sits at half width next to
+          # the others.
           - type: area
             area: strasse
             display_type: compact
             navigation_path: /homelab-cockpit/strasse
+            grid_options:
+              columns: 12
+              rows: 1
           - type: area
             area: keller
             display_type: compact
