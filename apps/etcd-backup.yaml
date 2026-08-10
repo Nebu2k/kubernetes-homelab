@@ -4,7 +4,7 @@ metadata:
   name: etcd-backup
   namespace: argocd
   annotations:
-    # Nach sealed-secrets (Wave 0), sonst gibt es die Zugangsdaten noch nicht.
+    # After sealed-secrets (wave 0), or the credentials do not exist yet.
     argocd.argoproj.io/sync-wave: "2"
   finalizers:
     - resources-finalizer.argocd.argoproj.io

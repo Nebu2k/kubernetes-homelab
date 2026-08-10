@@ -12,9 +12,8 @@ echo "🔧 Installing Git hooks..."
 
 # Configure Git to use .githooks directory.
 # Bewusst RELATIV: Git loest core.hooksPath vom Wurzelverzeichnis des Working
-# Tree auf. Ein absoluter Pfad ueberlebt kein Verschieben/Umbenennen des Repos,
-# und ein toter hooksPath wird von Git kommentarlos ignoriert - die Hooks waeren
-# dann still aus, ohne Fehlermeldung.
+# tree. An absolute path would not survive moving or renaming the repo, and Git
+# ignores a dead hooksPath silently: the hooks would be off without a word.
 git config core.hooksPath ".githooks"
 
 echo "✅ Git hooks installed successfully!"

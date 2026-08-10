@@ -1,10 +1,8 @@
-# ADSB-Ultrafeeder: readsb plus tar1090, direkt am RTL-Stick.
+# ADSB Ultrafeeder: readsb plus tar1090, straight off the RTL dongle. The
+# dongle sits on pve and is passed into talos-cp-1 via qemu USB, see
+# talos/README.md.
 #
-# Der Stick steckt an pve und wird per qemu-USB in talos-cp-1 durchgereicht,
-# siehe talos/README.md.
-#
-# Ultrafeeder und nicht docker-readsb-protobuf: dessen Repo ist archiviert,
-# Ultrafeeder wird aktiv gepflegt und ist bei sdr-enthusiasts der Nachfolger.
+# Ultrafeeder rather than docker-readsb-protobuf, whose repo is archived.
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -14,9 +12,9 @@ metadata:
     app: readsb
 spec:
   replicas: 1
-  # Recreate, nicht RollingUpdate. Es gibt genau einen Stick. Bei einem Rolling
-  # Update wuerde der neue Pod starten, waehrend der alte das Geraet noch haelt,
-  # und beide scheitern abwechselnd am "usb_claim_interface error -6".
+  # Recreate, not RollingUpdate: there is exactly one dongle, and a rolling
+  # update would start the new pod while the old one still holds the device,
+  # leaving both to fail alternately on "usb_claim_interface error -6".
   strategy:
     type: Recreate
   selector:
@@ -29,12 +27,10 @@ spec:
       annotations:
         reloader.stakater.com/auto: "true"
     spec:
-      # Der Stick haengt physisch an talos-cp-1, der Pod kann nirgendwo sonst
-      # laufen. Damit ist diese Node ein Pet, bewusst und dokumentiert in
-      # ROADMAP.md: der Preis dafuer, keine eigene SDR-VM zu bauen.
-      #
-      # Wandert der Stick an eine andere VM, aendert sich hier der Hostname und
-      # in homelab-terraform/proxmox/vm-talos.tf der usb-Block. Sonst nichts.
+      # The dongle is physically attached to talos-cp-1, so the pod can run
+      # nowhere else, which makes that node a pet. Moving the dongle means
+      # changing the hostname here and the usb block in
+      # homelab-terraform/proxmox/vm-talos.tf, nothing else.
       nodeSelector:
         kubernetes.io/hostname: talos-cp-1
       containers:
@@ -42,10 +38,10 @@ spec:
           image: ghcr.io/sdr-enthusiasts/docker-adsb-ultrafeeder:latest-build-845
           imagePullPolicy: IfNotPresent
           securityContext:
-            # privileged statt device_cgroup_rules aus dem Upstream-Compose:
-            # Kubernetes kennt keine cgroup-Regeln pro Pod. Zusammen mit dem
-            # hostPath unten ist das der Weg an den Stick, und er ueberlebt ein
-            # Neu-Enumerieren nach einem Reset des Dongles.
+            # privileged instead of the upstream compose's
+            # device_cgroup_rules, which Kubernetes has no equivalent for.
+            # Together with the hostPath below this is the path to the dongle,
+            # and it survives a re-enumeration after a device reset.
             privileged: true
           ports:
             - containerPort: 80
@@ -62,18 +58,14 @@ spec:
               value: "Europe/Berlin"
             - name: READSB_DEVICE_TYPE
               value: "rtlsdr"
-            # READSB_RTLSDR_DEVICE bleibt ungesetzt: es ist genau ein Stick im
-            # Spiel, readsb nimmt dann den einzigen gefundenen.
+            # READSB_RTLSDR_DEVICE stays unset: with exactly one dongle readsb
+            # takes the only one it finds. READSB_GAIN stays unset too, its
+            # default is readsb's built-in autogain, which needs no persistent
+            # state.
             #
-            # READSB_GAIN ebenfalls ungesetzt. Der Default ist seit November
-            # 2024 "auto", also readsbs eingebaute Autogain-Regelung, und die
-            # ist dem festen GAIN=max von dump1090-mutability vorzuziehen. Sie
-            # braucht keinen persistenten Zustand, anders als das alte
-            # autogain-Skript.
-            #
-            # Antennenposition: Pflichtparameter bei Ultrafeeder, ohne sie
-            # startet der Container nicht. Sie stehen im SealedSecret, weil das
-            # Repo public ist und das die Hauskoordinaten sind.
+            # The antenna position is mandatory for Ultrafeeder, the container
+            # does not start without it. It lives in the SealedSecret because
+            # the repo is public and those are the house coordinates.
             - name: READSB_LAT
               valueFrom:
                 secretKeyRef:
@@ -89,9 +81,9 @@ spec:
                 secretKeyRef:
                   name: readsb-secret
                   key: alt
-            # tar1090 haelt Traces und Heatmap unter /var/globe_history. Ohne
-            # Deckel waechst das unbegrenzt, und es liegt auf einem emptyDir,
-            # also auf der EPHEMERAL-Partition der Node.
+            # tar1090 keeps traces and heatmap under /var/globe_history, which
+            # grows without bound and sits on an emptyDir, i.e. on the node's
+            # EPHEMERAL partition.
             - name: MAX_GLOBE_HISTORY
               value: "3"
           volumeMounts:
@@ -125,10 +117,8 @@ spec:
           hostPath:
             path: /dev/bus/usb
             type: Directory
-        # Bewusst emptyDir und kein Longhorn-Volume. tar1090-Traces werden
-        # dauernd geschrieben, das ist genau das Schreibmuster, das im alten
-        # Cluster das Prometheus-Volume auf das Zehnfache aufgeblaeht hat. Der
-        # Verlust bei einem Neustart ist die Flugspur-Historie von drei Tagen,
-        # nicht der Feed.
+        # emptyDir rather than a Longhorn volume: tar1090 rewrites its traces
+        # constantly, exactly the write pattern that bloats a Longhorn volume.
+        # A restart costs three days of flight history, not the feed.
         - name: globe-history
           emptyDir: {}

@@ -1,10 +1,9 @@
-# PVs zu den aus dem NAS-Backup restaurierten Longhorn-Volumes.
+# PVs for the Longhorn volumes restored from the NAS backup. Why this is
+# needed and how the restore works is written out once in
+# manifests/ripe-atlas/pv.yaml and as a recipe in talos/README.md.
 #
-# Warum das noetig ist und wie das Restore ablaeuft, steht einmal ausfuehrlich
-# in manifests/ripe-atlas/pv.yaml und als Rezept in talos/README.md.
-#
-# Die beiden mosquitto-Volumes heissen im Longhorn teslamate-mosquitto-*: Volume-
-# und PV-Namen sind clusterweit, die PVC-Namen nur im Namespace eindeutig.
+# The two mosquitto volumes are called teslamate-mosquitto-* in Longhorn:
+# volume and PV names are cluster-wide, PVC names only unique per namespace.
 apiVersion: v1
 kind: PersistentVolume
 metadata:

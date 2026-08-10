@@ -1,16 +1,16 @@
-# Vorlage. Echte Werte nach mealie-backup-token-unsealed.yaml kopieren
-# (gitignored), dann versiegeln:
+# Template. Copy the real values to mealie-backup-token-unsealed.yaml
+# (gitignored), then seal:
 #
 #   kubeseal --format=yaml --controller-namespace=kube-system \
 #     < mealie-backup-token-unsealed.yaml \
 #     > mealie-backup-token-sealed.yaml
 #
-# Der Token entsteht in der Mealie-UI unter Profil -> API-Tokens und MUSS einem
-# Admin-Konto gehoeren: /api/admin/backups ist eine Admin-Route und antwortet
-# einem normalen Konto mit 403.
+# The token is created in the Mealie UI under Profile -> API tokens and MUST
+# belong to an admin account: /api/admin/backups is an admin route and answers
+# a normal account with 403.
 #
-# Bewusst getrennt vom S3-Secret: es ist eine andere Art Zugangsdatum mit einem
-# anderen Rotationsweg (Mealie-UI statt AWS-Konsole).
+# Kept separate from the S3 secret on purpose: a different kind of credential
+# with a different rotation path (Mealie UI instead of the AWS console).
 apiVersion: v1
 kind: Secret
 metadata:

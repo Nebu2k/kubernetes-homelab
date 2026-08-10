@@ -1,28 +1,26 @@
-# Mountet CIFS-Shares als Volume. Der Mount passiert im Node-Plugin (das ist
-# privilegiert, aber eine abgegrenzte Infrastrukturkomponente) und nicht im
-# Anwendungs-Pod, wo er ein privileged: true erzwingen wuerde.
+# Mounts CIFS shares as volumes. The mount happens in the node plugin, which
+# is privileged but a contained infrastructure component, instead of in the
+# application pod where it would force privileged: true.
 #
-# Die kubelet-Directory ist der Default /var/lib/kubelet, deshalb bleibt
-# linux.kubelet unveraendert. Der cifs-Kernelmodul-Support reicht, cifs-utils
-# muss NICHT auf den Nodes installiert sein: die Mount-Tools liegen im
-# smbplugin-Image.
+# Kernel cifs support is enough, cifs-utils does NOT have to be installed on
+# the nodes: the mount tools live in the smbplugin image.
 
-# Keine Windows-Nodes im Cluster.
+# No Windows nodes in this cluster.
 windows:
   enabled: false
 
 controller:
-  # Upstream-Default ist 5 (Debug) und flutet die Logs dauerhaft.
+  # The upstream default of 5 (debug) floods the logs permanently.
   logLevel: 2
-  # Der Controller macht nur Provisioning/Resize, gehoert nicht auf die
-  # Control-Plane. Die Raspis sind ohnehin schon genug belastet.
+  # The controller only does provisioning and resize, it does not belong on
+  # the control plane.
   runOnControlPlane: false
 
 node:
-  # Siehe oben, gleiche Begruendung.
+  # Same reason as above.
   logLevel: 2
 
-# Das Node-Plugin laeuft bewusst auf ALLEN Nodes (Default-Tolerations
-# "operator: Exists"). Sonst koennte ein Pod mit SMB-Volume auf einem Node
-# landen, auf dem kein Plugin registriert ist, und haenge in ContainerCreating.
-# Die Images sind multi-arch, laufen also auch auf den beiden Raspis.
+# The node plugin deliberately runs on ALL nodes (default tolerations
+# "operator: Exists"). Otherwise a pod with an SMB volume could land on a node
+# without a registered plugin and hang in ContainerCreating. The images are
+# multi-arch.

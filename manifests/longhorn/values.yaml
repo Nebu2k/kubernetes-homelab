@@ -8,42 +8,32 @@ persistence:
     enable: true
     jobList: '[{"name":"backup","isGroup":true},{"name":"snapshot","isGroup":true},{"name":"maintenance","isGroup":true}]'
 
-# Backup-Target: SMB-Share direkt auf dem UniFi-NAS (192.168.2.6, 300 GB).
-#
-# Das NAS ist das einzige Backup-Ziel von Longhorn. Es gibt keine
-# Offsite-Kopie der Volume-Backups: nach S3 gehen nur die etcd-Snapshots
-# (manifests/etcd-backup/) und die anwendungseigenen Dumps
-# (paperless-ngx, teslamate, Home Assistant).
+# SMB share on the UniFi NAS, Longhorn's only backup target. There is no
+# offsite copy of the volume backups: only the etcd snapshots and the
+# application-level dumps go to S3.
 defaultBackupStore:
     backupTarget: "cifs://192.168.2.6/longhorn_backup"
     backupTargetCredentialSecret: longhorn-nas-cifs-secret
 defaultSettings:
-  # Jede Node traegt ein Zonen-Label, gesetzt in talos/talconfig.yaml: "pve"
-  # talos-cp-1, "blech" prodesk, "raspi5" der Pi. "false" zwingt Longhorn, die
-  # zwei Repliken auf zwei Zonen zu verteilen.
+  # Every node carries a zone label set in talos/talconfig.yaml. "false"
+  # forces Longhorn to spread the two replicas across two zones. Two different
+  # NODES would not be enough here: two pve VMs are two nodes but one NVMe, so
+  # both replicas there would be two copies on the same disk rather than
+  # redundancy.
   #
-  # Ohne das genuegt Longhorn schon, dass die Repliken auf zwei verschiedenen
-  # NODES liegen, und das waere hier zu wenig: zwei pve-VMs sind zwei Nodes,
-  # aber eine einzige NVMe. Beide Repliken dort waeren keine Redundanz, nur
-  # zwei Kopien auf demselben Datentraeger.
-  #
-  # Je Geraet eine Zone, nicht je Geraeteklasse: laegen prodesk und raspi5
-  # zusammen in "blech", gaebe es nur zwei Zonen und damit zwangslaeufig immer
-  # eine Replik auf pve. Mit drei Zonen kann Longhorn auch beide auf Blech
-  # legen.
+  # One zone per device, not per device class: with prodesk and raspi5 sharing
+  # a zone there would be only two, forcing one replica onto pve every time.
   replicaZoneSoftAntiAffinity: "false"
   defaultReplicaCount: "2"
   rwxVolumeFastFailover: "true"
   replicaAutoBalance: "best-effort"
-  # Gedrosselt, damit ein Rebuild oder ein Nachtbackup raspi5 nicht umlegt.
+  # Throttled so a rebuild or a nightly backup does not knock over raspi5.
   concurrentReplicaRebuildPerNodeLimit: "2"
   backupConcurrentLimit: "1"
-  # Volume-Engines automatisch mit der Manager-Version mitziehen. Auf 0 bleiben
-  # die Engines auf ihrer alten Version stehen, waehrend der Manager weiterlaeuft;
-  # Longhorn erlaubt aber nur einen Minor-Schritt am Stueck (1.10 -> 1.11 ->
-  # 1.12), und dann ist der naechste Schritt nicht mehr sauber abgedeckt.
-  # 1 statt hoeher, gleiche Ruecksicht auf die ARM-Node wie oben.
-  # Live-Upgrade greift nur bei gesunden Volumes ohne iSCSI-Frontend.
+  # Pull the volume engines along with the manager version. At 0 the engines
+  # stay on their old version while the manager moves on, and since Longhorn
+  # allows only one minor step at a time the next upgrade is no longer covered.
+  # Live upgrade only applies to healthy volumes without an iSCSI frontend.
   concurrentAutomaticEngineUpgradePerNodeLimit: "1"
   concurrentVolumeBackupRestorePerNodeLimit: "2"
   # Do not block on replica availability when a node is drained.

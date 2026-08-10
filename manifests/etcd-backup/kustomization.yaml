@@ -1,8 +1,8 @@
-# Offsite-Backup des Talos-etcd.
+# Offsite backup of the Talos etcd.
 #
-# Kein namespace.yaml: kube-system existiert immer. Frei waehlbar ist der
-# Namespace hier trotzdem nicht, machine.features.kubernetesTalosAPIAccess in
-# talos/talconfig.yaml laesst genau diesen einen zu.
+# No namespace.yaml, kube-system always exists. The namespace is not free to
+# choose either: machine.features.kubernetesTalosAPIAccess in
+# talos/talconfig.yaml permits exactly this one.
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 

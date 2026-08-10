@@ -18,13 +18,12 @@ stringData:
         http_listen = "0.0.0.0:9130"
         report_errors = false
         namespace = "unpoller"
-        # Ab v3: /metrics wird aus einem Cache bedient, den ein
-        # Hintergrund-Poller in diesem Takt erneuert. Ohne den Schluessel
-        # pollt unpoller pro /metrics-Aufruf, und da die Liveness- und
-        # Readiness-Sonden ebenfalls auf /metrics gehen, waren das ~10
-        # Controller-Polls/min statt 2. 30s deckt sich mit dem
-        # ServiceMonitor-Intervall; schneller ist sinnlos, weil der
-        # Controller seine Traffic-Statistik nur alle ~30s fortschreibt.
+        # Since v3 /metrics is served from a cache that a background poller
+        # refreshes at this interval. Without the key unpoller polls per
+        # /metrics call, and since the liveness and readiness probes also hit
+        # /metrics that multiplies the controller polls. 30s matches the
+        # ServiceMonitor interval; faster is pointless because the controller
+        # only advances its traffic statistics every ~30s.
         interval = "30s"
         
     [influxdb]

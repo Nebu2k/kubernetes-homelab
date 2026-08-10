@@ -25,10 +25,9 @@ spec:
         node-role.kubernetes.io/worker: "worker"
       initContainers:
       - name: fix-permissions
-        # consume fehlt hier bewusst: das ist ein CIFS-Mount, dessen Eigentuemer
-        # ueber die uid/gid-Mountoptionen im PV festgelegt wird. chown/chmod
-        # darauf scheitert mit "Operation not permitted" und wuerde den Pod-Start
-        # blockieren.
+        # consume is deliberately absent: it is a CIFS mount whose ownership
+        # comes from the uid/gid mount options in the PV. chown on it fails
+        # with "Operation not permitted" and would block the pod start.
         image: busybox:1.38.0
         command:
         - sh
@@ -66,20 +65,17 @@ spec:
           value: "https://paperless.elmstreet79.de"
         - name: PAPERLESS_CSRF_TRUSTED_ORIGINS
           value: "https://paperless.elmstreet79.de"
-        # Kein PAPERLESS_TRUSTED_PROXIES. Die Variable will Praefixe echter
-        # IP-Adressen, und sobald sie gesetzt ist, verhindert sie die Client-IP
-        # hier komplett: python-ipware verlangt bei gesetzter proxy_list
-        # mindestens einen Eintrag mehr im X-Forwarded-For als Eintraege in der
-        # Liste. Traefik setzt XFF aber auf genau einen Eintrag, die Liste ist
-        # also nie erfuellbar und im Log steht "Unable to determine IP
-        # address".
-        # Leer gelassen nimmt ipware den ersten XFF-Eintrag, und das ist hier
-        # der echte Client: Traefik laeuft ohne forwardedHeaders.trustedIPs und
-        # ueberschreibt eingehende X-Forwarded-*-Header, statt sie zu ergaenzen.
+        # No PAPERLESS_TRUSTED_PROXIES. Once set, python-ipware requires at
+        # least one more X-Forwarded-For entry than the list has, but Traefik
+        # sets exactly one, so the list can never be satisfied and the log says
+        # "Unable to determine IP address". Left empty, ipware takes the first
+        # XFF entry, which here is the real client: Traefik runs without
+        # forwardedHeaders.trustedIPs and overwrites incoming X-Forwarded-*
+        # headers instead of appending to them.
         #
-        # Der Proxy-Count fuer allauth haengt sonst an der Laenge dieser Liste
-        # und faellt ohne sie auf 0, womit alle Clients im Rate-Limit denselben
-        # Topf teilen wuerden. Deshalb hier explizit, statt als Nebenwirkung.
+        # allauth's proxy count would otherwise derive from that list's length
+        # and fall to 0, putting every client into the same rate-limit bucket.
+        # Hence it is set explicitly rather than as a side effect.
         - name: PAPERLESS_ALLAUTH_TRUSTED_PROXY_COUNT
           value: "1"
         - name: PAPERLESS_USE_X_FORWARD_HOST
@@ -90,9 +86,8 @@ spec:
         - name: PAPERLESS_REDIS
           value: "redis://redis:6379"
         
-        # Muss explizit stehen. Paperless leitet die Engine als Fallback zwar
-        # noch aus der Anwesenheit von PAPERLESS_DBHOST ab, verlaesst sich
-        # darauf aber ausdruecklich nicht.
+        # Must be explicit. Paperless still derives the engine from the
+        # presence of PAPERLESS_DBHOST as a fallback, but does not rely on it.
         - name: PAPERLESS_DBENGINE
           value: "postgresql"
         - name: PAPERLESS_DBHOST
@@ -131,24 +126,23 @@ spec:
               name: paperless-secrets
               key: PAPERLESS_SECRET_KEY
         
-        # Consume liegt auf CIFS, wo inotify nicht funktioniert. Deshalb
-        # Polling statt nativer Events. Hiess bis v2 PAPERLESS_CONSUMER_POLLING.
+        # Consume sits on CIFS, where inotify does not work, so polling
+        # instead of native events. Called PAPERLESS_CONSUMER_POLLING until v2.
         - name: PAPERLESS_CONSUMER_POLLING_INTERVAL
           value: "30"
-        # v3 laesst Duplikate standardmaessig durch und markiert sie nur noch in
-        # der UI. Das hier haelt das alte Verhalten: Duplikat wird abgewiesen.
+        # v3 lets duplicates through by default and only marks them in the UI.
+        # This keeps the old behaviour of rejecting them.
         - name: PAPERLESS_CONSUMER_DELETE_DUPLICATES
           value: "true"
         - name: PAPERLESS_CONSUMER_RECURSIVE
           value: "true"
         - name: PAPERLESS_CONSUMER_SUBDIRS_AS_TAGS
           value: "true"
-        # Kein PAPERLESS_CONSUMER_IGNORE_PATTERNS: die NAS-Artefakte
-        # (.DS_Store, ._*, desktop.ini, @eaDir) stehen alle in den eingebauten
-        # Defaults des Consumer-Filters.
+        # No PAPERLESS_CONSUMER_IGNORE_PATTERNS: the NAS artefacts (.DS_Store,
+        # ._*, desktop.ini, @eaDir) are all in the built-in defaults.
 
-        # Trennt "OCR laufen lassen" von "Archivdatei erzeugen". "always" heisst
-        # hier: zu jedem Dokument entsteht eine durchsuchbare Archivdatei.
+        # Separates "run OCR" from "produce an archive file". "always" means
+        # every document gets a searchable archive file.
         - name: PAPERLESS_ARCHIVE_FILE_GENERATION
           value: "always"
         - name: PAPERLESS_FILENAME_FORMAT
@@ -218,7 +212,7 @@ spec:
               fi
             fi
             
-            # Der Export laeuft einmal taeglich um 02:00, stuendlich reicht.
+            # The export runs once daily at 02:00, hourly is enough.
             sleep 3600
           done
         env:
@@ -262,7 +256,7 @@ spec:
       - name: export
         persistentVolumeClaim:
           claimName: paperless-export
-      # Der Scanner-Share direkt, per csi-driver-smb. Siehe smb-consume-pv.yaml.
+      # The scanner share directly, via csi-driver-smb. See smb-consume-pv.yaml.
       - name: consume
         persistentVolumeClaim:
           claimName: paperless-consume-smb

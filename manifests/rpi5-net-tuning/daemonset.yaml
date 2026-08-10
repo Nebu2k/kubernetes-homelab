@@ -1,42 +1,32 @@
-# Netzwerk-Einstellungen fuer raspi5, nach siderolabs/sbc-raspberrypi#91
+# Network settings for raspi5, following siderolabs/sbc-raspberrypi#91.
 #
-# WARUM ES DAS GIBT: end0 kommt mit einem 512er-TX-Ring und aktivem TSO/GSO
-# hoch. Sobald echter Verkehr anliegt, haengt der macb-TX-Ring lautlos. Fuer
-# etcd sieht das so aus: der Leader protokolliert massenhaft "dropped internal
-# Raft message since sending buffer is full" in Richtung raspi5, dazu "lost TCP
-# streaming connection with remote peer" mit error=EOF und "prober detected
-# unhealthy status" mit i/o timeout. raspi5 sieht dabei laufend neue Leader,
-# waehrend der Raft-Term clusterweit steht: es gibt keine Wahl, dieser eine
-# Member verliert nur wiederholt den Kontakt.
+# end0 comes up with a 512-entry TX ring and TSO/GSO enabled, and once real
+# traffic arrives the macb TX ring stalls silently. For etcd that looks like
+# the leader logging "dropped internal Raft message since sending buffer is
+# full" towards raspi5 plus lost peer connections, while raspi5 keeps seeing
+# new leaders although the Raft term stands cluster-wide: no election, just
+# one member repeatedly losing contact.
 #
-# DAS TUECKISCHE DARAN IST, DASS ALLES ANDERE GESUND AUSSIEHT. Leitung (ICMP um
-# 4 ms, 0 % Verlust), Link (1000 Mbit/s, null NIC-Fehler, MTU wie ueberall),
-# Platte (WAL-fsync im einstelligen Millisekundenbereich), CPU, Speicher,
-# Temperatur und cgroup-Drosselung sind unauffaellig, ethtool zaehlt NULL
-# Fehler und dmesg schweigt. Mit den ueblichen Netzwerk-Alerts faellt es nicht
-# auf.
+# The tricky part is that everything else looks healthy: line, link, disk,
+# CPU, memory, temperature and cgroup throttling are all unremarkable, ethtool
+# counts ZERO errors and dmesg stays quiet. The usual network alerts miss it.
 #
-# DIE IRREFUEHRENDE SPUR: die Stalls setzen ein, wenn raspi5 Longhorn-Repliken
-# bekommt. Die Longhorn-Last ist aber nicht die Ursache, sie ist nur der
-# Verkehr, der den zu kleinen TX-Ring erstmals fuellt.
+# The misleading trail is Longhorn: the stalls begin when raspi5 receives
+# replicas, but that load is not the cause, only the traffic that first fills
+# the undersized ring.
 #
-# DREI TRIGGER, DREI GEGENMASSNAHMEN:
-#   1. EEE-AutogrEEEn-LPI-Wake-Race auf PHY-Ebene    -> eee off
-#   2. macb TSO/GSO TX-Ring-Hang, ohne Treiberfehler -> tso off, gso off
-#   3. zu kleiner Default-Ring (512)                 -> rx 4096, tx 2048
+# Three triggers, three countermeasures:
+#   1. EEE/LPI wake race at PHY level             -> eee off
+#   2. macb TSO/GSO TX ring hang, no driver error -> tso off, gso off
+#   3. undersized default ring (512)              -> rx 4096, tx 2048
 #
-# Der macb-TX-Fix aus netdev ist in Talos v1.13.3 eingeflossen, Trigger 2
-# sollte damit bereits entschaerft sein. Trigger 1 gilt im Issue ausdruecklich
-# nur als reduziert, nicht behoben, und laesst sich hier gar nicht pruefen:
-# "ethtool --show-eee end0" antwortet mit "netlink error: Not supported".
-# Deshalb alle drei, sie kosten nichts ausser etwas TX-Effizienz und sind
-# jederzeit reversibel.
+# All three, although the macb TX fix has landed in Talos and trigger 1 counts
+# as reduced rather than fixed upstream. They cost nothing but a little TX
+# efficiency and are reversible at any time; trigger 1 cannot even be checked
+# here, "ethtool --show-eee end0" answers "netlink error: Not supported".
 #
-# WAS ES BRINGT, gemessen beim Ausrollen: etcd-Stalls von 8 bis 42 pro Minute
-# auf 0, Peer-Latenz zu und von raspi5 von 200 bis 370 ms auf 6 bis 13 ms.
-#
-# Die Werte ueberleben einen Link-Reset nicht, deshalb ein DaemonSet, das sie
-# haelt, und kein einmaliger Aufruf.
+# The settings do not survive a link reset, hence a DaemonSet that holds them
+# instead of a one-off call.
 apiVersion: apps/v1
 kind: DaemonSet
 metadata:
@@ -53,13 +43,12 @@ spec:
       labels:
         app: rpi5-net-tuning
     spec:
-      # Nur raspi5. Die Einstellungen sind eine Pi-5-Eigenheit und haetten auf
-      # prodesk oder talos-cp-1 nichts zu suchen.
+      # raspi5 only: these settings are a Pi 5 quirk.
       nodeSelector:
         kubernetes.io/hostname: raspi5
       tolerations:
         - operator: Exists
-      # ethtool wirkt auf das Interface der Node, nicht auf das des Pods.
+      # ethtool acts on the node's interface, not on the pod's.
       hostNetwork: true
       dnsPolicy: ClusterFirstWithHostNet
       priorityClassName: system-node-critical

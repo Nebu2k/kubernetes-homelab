@@ -28,8 +28,8 @@ spec:
           name: http
           protocol: TCP
         env:
-        # readsb laeuft als Pod im selben Cluster, damit reicht der
-        # Service-Name statt einer festen Adresse.
+        # readsb runs as a pod in the same cluster, so the service name is
+        # enough instead of a fixed address.
         - name: BEASTHOST
           value: "readsb.adsb.svc.cluster.local"
         - name: FR24KEY

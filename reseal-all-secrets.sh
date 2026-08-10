@@ -1,13 +1,13 @@
 #!/bin/bash
 set -euo pipefail
 
-# Versiegelt alle *-unsealed.yaml unter manifests/ neu.
+# Reseals every *-unsealed.yaml under manifests/.
 #
-# Sealt direkt gegen den Controller (--controller-namespace) statt gegen ein
-# lokales Cert-File. Ein Cert im Repo waere eine reine Fehlerquelle: der
-# Controller rotiert seinen Sealing-Key alle 30 Tage, das File bliebe stehen,
-# und man versiegelte irgendwann gegen einen Monate alten Key, ohne dass etwas
-# fehlschlaegt. Preis dafuer: das Skript braucht Cluster-Zugriff.
+# Seals directly against the controller (--controller-namespace) rather than a
+# local cert file. A cert in the repo would be a pure source of error: the
+# controller rotates its sealing key every 30 days, the file would stay put,
+# and one would eventually seal against a months-old key without anything
+# failing. The price is that this script needs cluster access.
 
 HOMELAB_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 CONTROLLER_NS="kube-system"
@@ -16,8 +16,8 @@ GREEN='\033[0;32m'
 RED='\033[0;31m'
 NC='\033[0m'
 
-# Erst pruefen, ob der Controller ueberhaupt erreichbar ist. Sonst laeuft das
-# Skript durch und meldet fuer jedes Secret einzeln einen Fehlschlag.
+# Check first whether the controller is reachable at all, otherwise the script
+# runs through and reports a failure for every single secret.
 if ! kubeseal --fetch-cert --controller-namespace="${CONTROLLER_NS}" >/dev/null 2>&1; then
   echo -e "${RED}Kein Zugriff auf den sealed-secrets-Controller in ${CONTROLLER_NS}.${NC}" >&2
   echo "kubectl-Kontext pruefen, dann erneut versuchen." >&2
@@ -39,9 +39,9 @@ while IFS= read -r unsealed_path; do
 
   echo -n "[$dir] $unsealed -> $sealed ... "
 
-  # Ueber eine temporaere Datei, nicht per ">" direkt aufs Ziel: die Umlenkung
-  # wuerde das bestehende sealed.yaml leeren, BEVOR kubeseal laeuft. Ein
-  # Fehlschlag haette bisher also das funktionierende Secret zerstoert.
+  # Through a temporary file rather than ">" onto the target directly: the
+  # redirection would truncate the existing sealed.yaml BEFORE kubeseal runs,
+  # so a failure would destroy the working secret.
   tmp=$(mktemp)
   if kubeseal --format=yaml --controller-namespace="${CONTROLLER_NS}" \
        < "$unsealed_path" > "$tmp" 2>/dev/null && [ -s "$tmp" ]; then

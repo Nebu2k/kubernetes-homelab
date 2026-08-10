@@ -1,10 +1,10 @@
-# PVs zu den aus dem NAS-Backup restaurierten Longhorn-Volumes.
+# PVs for the Longhorn volumes restored from the NAS backup.
 #
-# Warum das noetig ist und wie das Restore ablaeuft, steht einmal ausfuehrlich
-# in manifests/ripe-atlas/pv.yaml und als Rezept in talos/README.md.
+# Why this is needed and how the restore works is written out once in
+# manifests/ripe-atlas/pv.yaml and as a recipe in talos/README.md.
 #
-# home-assistant-config ist mit 20 Gi das groesste Volume im Cluster, den
-# Platz braucht die Recorder-Datenbank.
+# home-assistant-config is the largest volume in the cluster; the recorder
+# database needs the space.
 apiVersion: v1
 kind: PersistentVolume
 metadata:

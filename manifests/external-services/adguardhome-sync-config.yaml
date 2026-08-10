@@ -33,7 +33,7 @@ data:
       clientSettings: true
       services: true
       filters: true
-      # DHCP macht der UniFi-Controller, nicht AdGuard.
+      # DHCP is handled by the UniFi controller, not by AdGuard.
       dhcp:
         serverConfig: false
         staticLeases: false

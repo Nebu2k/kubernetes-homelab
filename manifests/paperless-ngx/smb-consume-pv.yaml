@@ -1,11 +1,10 @@
-# Der Scanner-Share des UniFi-NAS wird direkt als paperless-Consume-Verzeichnis
-# gemountet, ueber csi-driver-smb. Kein privileged-Container im Anwendungs-Pod,
-# kein Eigenbau-Image und keine Kopie ueber ein Longhorn-Zwischenvolume.
-# Paperless raeumt den Share selbst auf und loescht konsumierte Dateien.
+# The UniFi NAS scanner share is mounted directly as the paperless consume
+# directory through csi-driver-smb: no privileged container in the application
+# pod, no custom image and no copy through an intermediate Longhorn volume.
+# Paperless cleans up the share itself and deletes consumed files.
 #
-# Statisches PV (kein StorageClass-Provisioning): der Share existiert bereits
-# und wir wollen genau sein Wurzelverzeichnis, nicht ein pro-PV angelegtes
-# Unterverzeichnis.
+# A static PV rather than StorageClass provisioning: the share already exists
+# and we want exactly its root, not a per-PV subdirectory.
 ---
 apiVersion: v1
 kind: PersistentVolume
@@ -13,15 +12,15 @@ metadata:
   name: paperless-consume-smb
 spec:
   capacity:
-    # Bei SMB bedeutungslos, das Feld ist aber Pflicht.
+    # Meaningless for SMB, but the field is mandatory.
     storage: 100Gi
   accessModes:
     - ReadWriteMany
-  # Retain: das PV zeigt auf echte Daten auf dem NAS. Ein geloeschtes PVC darf
-  # hier niemals irgendetwas anfassen.
+  # Retain: the PV points at real data on the NAS, so a deleted PVC must never
+  # touch anything here.
   persistentVolumeReclaimPolicy: Retain
-  # Leerer String = kein StorageClass, sonst wuerde der Default-Provisioner
-  # das PVC an sich reissen.
+  # Empty string means no StorageClass, otherwise the default provisioner
+  # would claim the PVC.
   storageClassName: ""
   mountOptions:
     - vers=3.0
@@ -29,16 +28,16 @@ spec:
     - gid=1000
     - dir_mode=0770
     - file_mode=0660
-    # Upstream-Empfehlung: manche NAS liefern doppelte Inode-Nummern, was zu
-    # Datenkorruption fuehren kann.
+    # Upstream recommendation: some NAS devices return duplicate inode
+    # numbers, which can corrupt data.
     - noserverino
   csi:
     driver: smb.csi.k8s.io
-    # Muss clusterweit eindeutig sein.
+    # Must be unique cluster-wide.
     volumeHandle: paperless-consume-smb
     volumeAttributes:
       source: //192.168.2.6/scans
-    # Keys username + password, genau so erwartet der Treiber sie.
+    # Keys username + password, exactly as the driver expects them.
     nodeStageSecretRef:
       name: smb-credentials
       namespace: paperless-ngx
@@ -51,7 +50,7 @@ metadata:
 spec:
   accessModes:
     - ReadWriteMany
-  # Bindet fest an das PV oben, nicht ueber einen Selector.
+  # Binds directly to the PV above rather than through a selector.
   volumeName: paperless-consume-smb
   storageClassName: ""
   resources:

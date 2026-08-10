@@ -1,6 +1,6 @@
 ---
-# Ingress-only default-deny: nichts von außerhalb des Namespace erreicht die Pods,
-# außer den unten explizit erlaubten Pfaden. Egress bleibt offen (Tesla-API, DNS).
+# Ingress-only default-deny: nothing from outside the namespace reaches the
+# pods except the paths allowed below. Egress stays open (Tesla API, DNS).
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
@@ -11,7 +11,8 @@ spec:
   policyTypes:
     - Ingress
 ---
-# Intra-Namespace frei: teslamate/grafana/exporter <-> database, teslamate <-> mosquitto.
+# Free within the namespace: teslamate/grafana/exporter <-> database,
+# teslamate <-> mosquitto.
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
@@ -25,7 +26,7 @@ spec:
     - from:
         - podSelector: {}
 ---
-# Traefik (ns traefik) darf die TeslaMate-UI auf 4000 erreichen.
+# Traefik may reach the TeslaMate UI on 4000.
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
@@ -46,7 +47,7 @@ spec:
         - protocol: TCP
           port: 4000
 ---
-# Traefik (ns traefik) darf die Grafana-UI auf 3000 erreichen.
+# Traefik may reach the Grafana UI on 3000.
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
@@ -67,7 +68,7 @@ spec:
         - protocol: TCP
           port: 3000
 ---
-# Prometheus (ns monitoring) darf den postgres-exporter auf 9187 scrapen.
+# Prometheus may scrape the postgres-exporter on 9187.
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:

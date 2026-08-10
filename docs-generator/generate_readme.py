@@ -29,9 +29,9 @@ def get_sync_waves():
     """Extract sync-wave annotations from ArgoCD Applications."""
     sync_waves = defaultdict(list)
 
-    # sorted(), weil Path.glob() die Reihenfolge des Dateisystems durchreicht.
-    # Ohne das erzeugen macOS (APFS) und der CI-Runner (ext4) unterschiedliche
-    # READMEs, und lokaler Hook und Docs-Workflow ueberschreiben sich abwechselnd.
+    # sorted(), because Path.glob() passes the filesystem's order through.
+    # Without it macOS and the CI runner produce different READMEs, and the
+    # local hook and the docs workflow overwrite each other in turn.
     for app_file in sorted(APPS_DIR.glob("*.yaml")):
         if app_file.name == "kustomization.yaml":
             continue
@@ -48,7 +48,7 @@ def get_sync_waves():
         
         sync_waves[int(sync_wave)].append(app_name)
     
-    # Waves nach Nummer, Komponenten innerhalb einer Wave alphabetisch.
+    # Waves by number, components within a wave alphabetically.
     return {wave: sorted(apps) for wave, apps in sorted(sync_waves.items())}
 
 
@@ -59,9 +59,9 @@ def get_component_versions():
     versions = {}
     base_dir = REPO_ROOT / "base"
 
-    # sorted() bestimmt hier die Zeilenfolge der Versionstabelle, siehe
-    # get_sync_waves(). Ohne das ist sie zufaellig und driftet zwischen
-    # lokalem Hook und CI.
+    # sorted() determines the row order of the version table here, see
+    # get_sync_waves(). Without it the order is arbitrary and drifts between
+    # the local hook and CI.
     for app_file in sorted(APPS_DIR.glob("*.yaml")):
         if app_file.name == "kustomization.yaml":
             continue
@@ -205,7 +205,7 @@ def get_documentation_links():
     }
 
     # Extract unique charts from applications
-    # sorted() aus demselben Grund, siehe get_sync_waves().
+    # sorted() for the same reason, see get_sync_waves().
     for app_file in sorted(APPS_DIR.glob("*.yaml")):
         if app_file.name == "kustomization.yaml":
             continue
@@ -324,7 +324,7 @@ def generate_tree_fallback():
     manifest_dirs = sorted([d for d in (REPO_ROOT / "manifests").iterdir() 
                           if d.is_dir() and not d.name.startswith('.') and not is_ignored(d, gitignore_spec)])
     
-    # manifests/ ist nicht mehr der letzte Top-Level-Block, talos/ kommt danach.
+    # manifests/ is not the last top-level block, talos/ follows it.
     # Deshalb haengt alles darunter an einem durchlaufenden "│".
     for i, manifest_dir in enumerate(manifest_dirs):
         is_last_dir = i == len(manifest_dirs) - 1
@@ -345,13 +345,12 @@ def generate_tree_fallback():
 
             lines.append(f"{file_prefix}{manifest_file.name}")
 
-    # Die Talos-Ebene. Kein GitOps: talconfig.yaml ist die Quelle, aus der
-    # talhelper die machine configs erzeugt, und die liegen verschluesselt
-    # daneben. Bedienung und Fallen stehen in talos/README.md.
+    # The Talos layer. Not GitOps: talconfig.yaml is the source talhelper
+    # generates the machine configs from, and those sit next to it encrypted.
     lines.append("└── talos/")
-    lines.append("    ├── README.md                  # Bedienung, Restore-Rezept, Fallen")
-    lines.append("    ├── talconfig.yaml             # Quelle der machine configs (talhelper)")
-    lines.append("    └── talsecret.sops.yaml        # Secrets-Bundle, SOPS-verschluesselt")
+    lines.append("    ├── README.md                  # operation, restore recipe, pitfalls")
+    lines.append("    ├── talconfig.yaml             # source of the machine configs (talhelper)")
+    lines.append("    └── talsecret.sops.yaml        # secrets bundle, SOPS-encrypted")
 
     return "\n".join(lines)
 
@@ -409,8 +408,8 @@ def main():
     
     print("  🔐 Extracting sealed secrets...")
     sealed_secrets = get_sealed_secrets()
-    # Homepage-Widgets werden separat dokumentiert: sie koennen erst versiegelt
-    # werden, wenn Grafana & Co. laufen und ihre Tokens existieren.
+    # Homepage widgets are documented separately: they can only be sealed once
+    # Grafana and friends are running and their tokens exist.
     homepage_secrets = [s for s in sealed_secrets if s['component'] == 'homepage']
     bootstrap_secrets = [s for s in sealed_secrets if s['component'] != 'homepage']
     print(f"      Found {len(sealed_secrets)} secrets "

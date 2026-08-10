@@ -1,21 +1,16 @@
-# Home Assistant als Metrikquelle.
+# Home Assistant as a metric source: Ecoflow at the rack (the only honest
+# figure for the homelab, RAPL only sees the CPU package), Tibber Pulse for
+# house consumption, the Hoymiles PV and the wallbox. Which entities are
+# exported is decided by the filter in the prometheus block of
+# manifests/home-assistant/configmap-configuration.yaml, not here.
 #
-# HA misst laengst Strom, es stand nur nichts davon in Prometheus: Ecoflow am
-# Rack (der einzige ehrliche Wert fuers Homelab, RAPL sieht nur das
-# CPU-Package), Tibber Pulse fuer den Hausverbrauch, Hoymiles-PV und die
-# Wallbox. Welche Entities exportiert werden, entscheidet der Filter im
-# prometheus-Block von manifests/home-assistant/configmap-configuration.yaml,
-# nicht diese Datei.
+# Static targets because ArgoCD does not apply Endpoints objects. Scraped
+# directly at the ClusterIP so the path needs no ingress and no certificate.
 #
-# Statische Targets aus demselben Grund wie ueberall hier: ArgoCD wendet
-# Endpoints-Objekte nicht an. Gescrapt wird direkt am ClusterIP, nicht ueber
-# Traefik, damit der Weg keinen Ingress und kein Cert braucht.
-#
-# ACHTUNG Token: HA hat ip_ban_enabled mit login_attempts_threshold 5. Ein
-# falscher oder abgelaufener Token sperrt nach fuenf Scrapes die Pod-IP von
-# Prometheus aus, und der Bann ueberlebt in /config/ip_bans.yaml den Neustart.
-# Nach einem Token-Tausch also den ersten Scrape kontrollieren, nicht blind
-# committen.
+# Mind the token: HA runs ip_ban_enabled with login_attempts_threshold 5, so a
+# wrong or expired token bans Prometheus' pod IP after five scrapes, and the
+# ban survives restarts in /config/ip_bans.yaml. After rotating the token,
+# check the first scrape instead of committing blind.
 apiVersion: monitoring.coreos.com/v1alpha1
 kind: ScrapeConfig
 metadata:
@@ -26,7 +21,7 @@ metadata:
 spec:
   scheme: HTTP
   metricsPath: /api/prometheus
-  # Das Secret muss im Namespace von Prometheus liegen, nicht bei HA.
+  # The secret must live in Prometheus' namespace, not in HA's.
   authorization:
     type: Bearer
     credentials:

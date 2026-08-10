@@ -1,14 +1,13 @@
-# Der Resolver-Eingang fuer das Haus. Die .253 liegt am oberen Ende des
-# MetalLB-Pools (.240-.253) und wird explizit angefordert statt der
-# Vergabereihenfolge ueberlassen: sie steht im DHCP-Feld des UniFi-Controllers.
+# The resolver entry point for the house. .253 sits at the top of the MetalLB
+# pool and is requested explicitly rather than left to allocation order,
+# because it is configured in the UniFi controller's DHCP settings.
 #
-# Nachbaradresse ist die .254, das ist die zweite Blocky-Instanz als LXC auf
-# pve. Die liegt ausserhalb des Pools, MetalLB vergibt sie nie.
+# Its neighbour .254 is the second Blocky instance, the LXC on pve; that one
+# lies outside the pool and MetalLB never hands it out.
 #
-# Beide Adressen fallen unter die UniFi-Regel, die den Gast-VLANs .249-.254
-# erlaubt. Fuer einen Resolver ist das hier ausnahmsweise erwuenscht: die
-# Gast-VLANs brauchen den Split-Horizon-Rewrite, sonst laufen fuer sie auch die
-# oeffentlich erreichbaren Dienste ins Leere.
+# Both addresses fall under the UniFi rule granting the guest VLANs
+# .249-.254. For a resolver that is wanted here: the guest VLANs need the
+# split-horizon rewrite, otherwise even the public services fail for them.
 apiVersion: v1
 kind: Service
 metadata:
@@ -21,11 +20,10 @@ metadata:
     metallb.io/loadBalancerIPs: "192.168.2.253"
 spec:
   type: LoadBalancer
-  # Pflicht, nicht Kosmetik: Blocky gruppiert Clients nach IP. Ohne Local
-  # SNAT-tet kube-proxy jedes Paket auf das CNI-Gateway der Node, Blocky saehe
-  # nur eine einzige Client-IP und saemtliche Client-Regeln waeren still
-  # wirkungslos. Dasselbe gilt fuer clientLookup und die Client-Labels der
-  # Prometheus-Metriken.
+  # Load-bearing: Blocky groups clients by IP. Without Local, kube-proxy SNATs
+  # every packet to the node's CNI gateway, Blocky would see a single client
+  # address and every client rule would be silently ineffective. The same goes
+  # for clientLookup and the client labels on the Prometheus metrics.
   externalTrafficPolicy: Local
   ports:
     - name: dns-udp
@@ -40,8 +38,8 @@ spec:
     app.kubernetes.io/name: blocky
     app.kubernetes.io/instance: blocky
 ---
-# Getrennt vom LoadBalancer, damit die Metriken nicht ueber die .253 im LAN
-# haengen. Prometheus scrapt clusterintern.
+# Separate from the LoadBalancer so the metrics are not exposed on .253 in the
+# LAN. Prometheus scrapes cluster-internally.
 apiVersion: v1
 kind: Service
 metadata:
@@ -50,8 +48,8 @@ metadata:
   labels:
     app.kubernetes.io/name: blocky
     app.kubernetes.io/instance: blocky
-    # Der ServiceMonitor waehlt ueber dieses Label. Ohne es traefe sein Selektor
-    # auch den LoadBalancer und Prometheus haette ein Target ohne http-Port.
+    # The ServiceMonitor selects on this label. Without it the selector would
+    # also match the LoadBalancer, leaving a target without an http port.
     app.kubernetes.io/component: metrics
 spec:
   type: ClusterIP

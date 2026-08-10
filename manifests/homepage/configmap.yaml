@@ -39,7 +39,7 @@ data:
         url: http://longhorn-frontend.longhorn-system.svc.cluster.local
 
   services.yaml: |
-    # Services die manuell konfiguriert werden müssen, da nicht in Kubernetes gehostet
+    # Services configured by hand because they are not hosted in Kubernetes.
     
     - Management:
       - AWS Console:
@@ -49,9 +49,9 @@ data:
           weight: 20
 
     - Monitoring:
-      # Direktlink aufs Node-Overview: alle sieben Hosts auf einen Blick. Die
-      # Grafana-Kachel selbst kommt per gethomepage.dev-Annotation am Ingress
-      # und zeigt nur auf die Startseite.
+      # Direct link to the node overview. The Grafana tile itself comes from a
+      # gethomepage.dev annotation on the ingress and only points at the start
+      # page.
       - Node Overview:
           href: https://grafana.elmstreet79.de/d/homelab-node-overview
           description: Alle sieben Hosts (CPU, RAM, Disk, Temperatur)
@@ -190,8 +190,7 @@ data:
   kubernetes.yaml: |
     mode: cluster
 
-  # Leer, aber vorhanden: ohne die Datei sucht homepage sie und schreibt bei
-  # jedem Rendern eine Warnung. Es gibt hier keinen Docker-Host, alles laeuft
-  # im Cluster.
+  # Empty but present: without the file homepage looks for it and logs a
+  # warning on every render. There is no Docker host here.
   docker.yaml: |
     {}

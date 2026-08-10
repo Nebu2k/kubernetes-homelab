@@ -36,8 +36,9 @@ spec:
               cpu: 100m
               memory: 128Mi
             limits:
-              # Bewusst kein CPU-Limit: ~31m Schnitt, aber kurze Bursts in der
-              # CFS-Periode ergaben 36% Throttling trotz Reserve bis 500m.
+              # No CPU limit on purpose: average usage is tiny, but short
+              # bursts within the CFS period caused heavy throttling even with
+              # generous headroom.
               memory: 256Mi
           volumeMounts:
             - name: config

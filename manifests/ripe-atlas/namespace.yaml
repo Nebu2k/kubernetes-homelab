@@ -1,9 +1,8 @@
-# Das PodSecurity-Label ist keine Kuer: der Container laeuft als root und setzt
-# NET_RAW, weil die Probe mit ICMP und Traceroute misst. NET_RAW steht nicht auf
-# der Liste erlaubter capabilities.add des baseline-Profils, das Talos
-# clusterweit erzwingt (CHOWN, KILL, SETUID, SETGID, FOWNER und DAC_OVERRIDE
-# dagegen schon). Ohne das Label lehnt der Namespace den Pod ab, das Deployment
-# bleibt bei 0/1 und die App meldet trotzdem Synced.
+# The PodSecurity label is required: the container runs as root and sets
+# NET_RAW, because the probe measures with ICMP and traceroute, and NET_RAW is
+# not among the capabilities the baseline profile permits. Without the label
+# the namespace rejects the pod, the deployment stays at 0/1 and the app still
+# reports Synced.
 apiVersion: v1
 kind: Namespace
 metadata:

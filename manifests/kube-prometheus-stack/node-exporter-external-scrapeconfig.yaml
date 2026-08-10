@@ -1,24 +1,18 @@
-# node-exporter der zwei Hosts ausserhalb des Clusters: pve und macmini.
+# node-exporter on the two hosts outside the cluster: pve and macmini. The
+# chart's DaemonSet covers the cluster nodes, not these; for pve the
+# pve-exporter only provides the API view (no disk IO, interface counters,
+# temperatures or SMART).
 #
-# Die Cluster-Nodes bringt das DaemonSet aus dem Chart mit, diese beiden nicht.
-# Der pve-exporter deckt fuer pve nur die API-Sicht ab (Node-, VM- und
-# Storage-Status, aber kein Disk-IO, keine Interface-Zaehler, keine
-# Temperaturen, kein SMART).
+# Static targets instead of Service+Endpoints: ArgoCD excludes Endpoints and
+# EndpointSlice globally, so such an object never reaches the cluster and
+# leaves a target that silently never appears. See etcd-scrapeconfig.yaml.
 #
-# Statische Targets statt Service+Endpoints wie sonst im external-services-
-# Muster: ArgoCD hat Endpoints und EndpointSlice global in resource.exclusions,
-# ein Endpoints-Objekt aus dem Repo kommt lautlos nie im Cluster an. Kein
-# Sync-Fehler, kein OutOfSync, nur ein Ziel, das nie auftaucht. Dieselbe Falle
-# wie bei etcd, Begruendung ausfuehrlich in etcd-scrapeconfig.yaml.
+# job=node-exporter is load-bearing, not cosmetic: every node-exporter rule
+# from defaultRules, the mixin's recording rules and the "Node Exporter Full"
+# dashboard select on it, and thereby cover these two hosts for free. Without
+# the relabeling none of them would match.
 #
-# job=node-exporter ist der eigentliche Trick, nicht Kosmetik: samtliche
-# node-exporter-Regeln aus defaultRules, die Recording-Rules des Mixins und das
-# Dashboard "Node Exporter Full" (gnetId 1860) selektieren darauf. Mit dem
-# gleichen Job-Label decken sie diese zwei Hosts ohne weiteres Zutun mit ab.
-# Ohne relabeling hiesse der Job "scrapeConfig/monitoring/node-exporter-external"
-# und keine einzige davon wuerde greifen.
-#
-# Port 9100 ist Klartext ohne Auth, aber nur im LAN erreichbar.
+# Port 9100 is plaintext without auth, reachable only from the LAN.
 apiVersion: monitoring.coreos.com/v1alpha1
 kind: ScrapeConfig
 metadata:
@@ -30,26 +24,21 @@ spec:
   scheme: HTTP
   metricsPath: /metrics
   staticConfigs:
-    # Proxmox-Host. prometheus-node-exporter aus Debian trixie, dazu die
-    # Textfile-Collectors des Pakets (apt.prom, nvme.prom). smartmon.prom bleibt
-    # leer und das ist richtig so: die Timer-Unit hat
-    # ConditionPathExistsGlob=/dev/sd*, pve hat nur NVMe, deren SMART-Werte
-    # liefert nvme.prom.
+    # Proxmox host, Debian's prometheus-node-exporter plus the package's
+    # textfile collectors. smartmon.prom stays empty on purpose: its timer has
+    # ConditionPathExistsGlob=/dev/sd*, pve has only NVMe and nvme.prom covers
+    # those SMART values.
     - targets:
         - 192.168.2.8:9100
-    # Die Blocky-LXC auf pve. Der node_exporter steht dort nicht wegen der
-    # Host-Metriken, sondern wegen seines Textfile-Collectors: der Sync-Job,
-    # der config.yml aus dem Repo holt, legt sein Ergebnis als
-    # blocky_config_sync_success ab. Ohne diesen Weg waere ein dauerhaft
-    # scheiterndes Sync unsichtbar, Blocky liefe einfach mit altem Stand
-    # weiter. Die Host-Metriken sind Mitnahme.
+    # The Blocky LXC on pve. node_exporter runs there for its textfile
+    # collector, not for the host metrics: the config sync job writes its
+    # result as blocky_config_sync_success. Without it a permanently failing
+    # sync would be invisible, Blocky would just keep running the old config.
     - targets:
         - 192.168.2.254:9100
-    # macmini. node_exporter per brew als LaunchAgent
-    # (homebrew.mxcl.node_exporter), gleiches Muster wie die uebrigen
-    # macmini-Dienste, kein sudo noetig. darwin hat deutlich weniger Collectors
-    # als linux (13 statt ~45) und teilweise andere Metriknamen, siehe
-    # betrieb.md "Monitoring und Alerts".
+    # macmini. node_exporter via brew as a LaunchAgent, same pattern as the
+    # other macmini services. darwin has far fewer collectors than linux and
+    # partly different metric names, see betrieb.md.
     - targets:
         - 192.168.2.4:9100
   relabelings:

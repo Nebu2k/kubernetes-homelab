@@ -8,17 +8,13 @@ resources:
   - service.yaml
   - servicemonitor.yaml
 
-# Der Regler kommt als ConfigMap ins Cluster und nicht als eigenes
-# Container-Image. Ein eigenes Image braeuchte eine Build-Kette, eine Registry
-# und einen Renovate-Eintrag; fan.py sind rund 240 Zeilen ohne Abhaengigkeiten
-# ausser der Python-Standardbibliothek. Das offizielle python-Image reicht, und
-# Renovate haelt dessen Tag im DaemonSet aktuell.
+# The controller enters the cluster as a ConfigMap rather than its own
+# container image: that would need a build chain, a registry and a Renovate
+# entry, while fan.py has no dependencies beyond the Python standard library.
 #
-# generator statt handgeschriebener ConfigMap wegen des Hash-Suffixes: der Pod
-# liest fan.py nur beim Start. Ohne Suffix wuerde eine Aenderung zwar brav
-# synchronisiert, der laufende Pod behielte aber die alte Fassung, bis ihn
-# zufaellig etwas neu startet. Mit Suffix aendert sich der ConfigMap-Name, und
-# das DaemonSet rollt von selbst.
+# A generator rather than a handwritten ConfigMap, for the hash suffix: the
+# pod reads fan.py only at startup, so without it a change would sync but the
+# running pod would keep the old copy until something restarted it.
 configMapGenerator:
   - name: rpi5-fan-controller
     files:

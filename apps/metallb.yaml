@@ -29,9 +29,9 @@ spec:
     automated:
       prune: true
       selfHeal: true
-    # Der Namespace entsteht aus CreateNamespace, deshalb reicht hier
-    # managedNamespaceMetadata; bei einem Dienst, der sein namespace.yaml selbst
-    # mitbringt, muesste das Label ans Manifest.
+    # The namespace comes from CreateNamespace, so managedNamespaceMetadata is
+    # enough here; a service shipping its own namespace.yaml needs the label on
+    # that manifest instead.
     managedNamespaceMetadata:
       labels:
         pod-security.kubernetes.io/enforce: privileged

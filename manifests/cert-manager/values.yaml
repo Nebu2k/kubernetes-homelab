@@ -1,11 +1,9 @@
 ---
-# cert-manager Helm values.
-# Install CRDs together with the chart (managed by ArgoCD).
+# Install CRDs together with the chart, managed by ArgoCD.
 crds:
   enabled: true
   keep: true
 
-# Run on worker nodes, consistent with the rest of the cluster.
 nodeSelector:
   node-role.kubernetes.io/worker: "worker"
 
@@ -21,13 +19,10 @@ startupapicheck:
   nodeSelector:
     node-role.kubernetes.io/worker: "worker"
 
-# Prometheus-Metriken.
-#
-# prometheus.enabled ist der Chart-Default und heisst NUR, dass die Pods
-# prometheus.io-Annotationen bekommen. Die wertet dieser Stack nicht aus, er
-# arbeitet ausschliesslich mit ServiceMonitors. Ohne servicemonitor.enabled
-# kommt deshalb keine einzige certmanager_*-Metrik an, obwohl die Services auf
-# 9402 durchgehend welche liefern.
+# prometheus.enabled is the chart default and ONLY adds prometheus.io
+# annotations to the pods, which this stack ignores: it works with
+# ServiceMonitors exclusively. Without servicemonitor.enabled not a single
+# certmanager_* metric arrives, although the services serve them on 9402.
 prometheus:
   enabled: true
   servicemonitor:

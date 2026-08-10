@@ -2,25 +2,22 @@ name: Renovate
 
 on:
   schedule:
-    # Taeglich 04:00 UTC. Einzige Zeitsteuerung, die Renovate-Config selbst hat
-    # bewusst kein "schedule:".
+    # The only schedule; the Renovate config deliberately carries no
+    # "schedule:" of its own.
     #
-    # Taeglich und nicht woechentlich, weil Renovate selbst merged statt
-    # GitHubs Auto-Merge zu nutzen (Begruendung in renovate.json5 bei
-    # platformAutomerge): gemerged wird nur waehrend eines Laufs. Der Puffer
-    # gegen frische kaputte Releases ist minimumReleaseAge, nicht der Cron.
+    # Daily rather than weekly, because Renovate merges itself instead of using
+    # GitHub's auto-merge (see platformAutomerge in renovate.json5): merging
+    # only happens during a run. The buffer against freshly broken releases is
+    # minimumReleaseAge, not the cron.
     #
-    # Zwei Laeufe pro Tag, und das ist kein Komfort, sondern die Bedingung dafuer
-    # dass Automerge ueberhaupt greift. Ein Lauf, der den Branch anfasst (neue
-    # Version, Rebase bei Konflikt), setzt die Status-Checks zurueck. Die
-    # brauchen ~60s, der Lauf ist nach ~80s vorbei: er sieht den gruenen Stand
-    # nie und merged folglich nicht.
+    # Two runs a day, and that is not convenience but the condition for
+    # automerge to work at all. A run that touches the branch (new version,
+    # rebase on conflict) resets the status checks, which take longer than the
+    # run itself: it never sees the green state and therefore does not merge.
     #
-    # Bei einer Dependency mit taeglichem Release trifft das jeden Lauf.
-    # amazon/aws-cli taggt werktags gegen 19:15 UTC, mit minimumReleaseAge von
-    # 3 Tagen wird also jeden Abend eine neue Version reif. Der 04:00-Lauf hebt
-    # den Branch darauf an, statt den vom Vortag zu mergen. Der zweite Lauf
-    # findet ihn gruen und unveraendert vor und merged ihn.
+    # With a dependency that releases daily that hits every run. The first run
+    # lifts the branch onto the new version instead of merging yesterday's, and
+    # the second finds it green and unchanged and merges it.
     - cron: '0 4 * * *'
     - cron: '30 4 * * *'
   workflow_dispatch:
@@ -52,23 +49,22 @@ jobs:
       - name: Renovate
         uses: renovatebot/github-action@v46.2.0
         with:
-          # Fine-grained PAT, nur auf dieses Repo eingeschraenkt, als
-          # Repo-Secret RENOVATE_TOKEN hinterlegt. Noetige Permissions:
-          # Contents RW, Pull requests RW, Issues RW (Dependency Dashboard),
-          # Workflows RW (sonst blocken Action-Updates), Commit statuses RW.
-          # Der Default-GITHUB_TOKEN reicht nicht: von ihm erzeugte PRs starten
-          # keine Workflows, semantic-release wuerde also nie greifen.
+          # Fine-grained PAT scoped to this repo, stored as the repo secret
+          # RENOVATE_TOKEN. Required permissions: Contents RW, Pull requests
+          # RW, Issues RW (dependency dashboard), Workflows RW (action updates
+          # block otherwise), Commit statuses RW. The default GITHUB_TOKEN is
+          # not enough: PRs it creates start no workflows, so semantic-release
+          # would never fire.
           token: ${{ secrets.RENOVATE_TOKEN }}
         env:
-          # Beide Repos aus einem Lauf, der PAT deckt beide ab. Ein
-          # GitHub-Secret laesst sich nicht auslesen: es im zweiten Repo
-          # zu hinterlegen hiesse, den Token neu auszustellen.
+          # Both repos from one run, the PAT covers both. A GitHub secret
+          # cannot be read back, so storing it in the second repo would mean
+          # issuing a new token.
           #
-          # Renovate liest die Konfiguration je Repo aus dem Repo selbst, die
-          # beiden renovate.json5 bleiben also getrennt und unterschiedlich
-          # zugeschnitten (drueben kein Automerge, weil dort nichts von selbst
-          # ausrollt).
+          # Renovate reads each repo's configuration from the repo itself, so
+          # the two renovate.json5 stay separate and differently scoped (no
+          # automerge over there, because nothing rolls out by itself).
           RENOVATE_REPOSITORIES: Nebu2k/kubernetes-homelab,Nebu2k/homelab-terraform
-          # Die Action erwartet fuer "aus" den String "null", nicht leer.
+          # The action expects the string "null" for "off", not an empty value.
           RENOVATE_DRY_RUN: ${{ inputs.dryRun == true && 'full' || 'null' }}
           LOG_LEVEL: ${{ inputs.logLevel || 'info' }}

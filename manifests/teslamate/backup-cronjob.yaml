@@ -1,24 +1,20 @@
-# Offsite-Backup der Teslamate-Datenbank nach S3.
+# Offsite backup of the Teslamate database to S3.
 #
-# Teslamate ist der einzige Datensatz im Cluster, der bei einem Hausbrand
-# ersatzlos weg waere und weh taete: die Fahrhistorie laesst sich nicht neu
-# erzeugen. Grafana-Dashboards und uptime-kuma-Historie gelten als verschmerzbar.
+# Teslamate holds the one dataset in this cluster that a house fire would
+# destroy irreplaceably: the driving history cannot be recreated.
 #
-# Gesichert wird gezielt die Datenbank per pg_dump, NICHT das Longhorn-Volume.
-# Ein Dump ist in sich geschlossen und ohne Longhorn wiederherstellbar, ein
-# Volume-Snapshot braucht wieder ein Longhorn.
+# The database is dumped with pg_dump rather than snapshotting the Longhorn
+# volume: a dump is self-contained and restorable without Longhorn.
 #
-# Ablage und Aufbewahrung stehen in
-# homelab-terraform/aws/s3-teslamate-backup.tf:
-#   daily/   30 Tage
-#   monthly/ 365 Tage (nur der Lauf am Monatsersten legt zusaetzlich hier ab)
-# Aendern sich die Praefixe hier, MUESSEN die Variablen dort mitgehen, sonst
-# raeumt niemand mehr auf.
+# Layout and retention live in homelab-terraform/aws/s3-teslamate-backup.tf:
+#   daily/   30 days
+#   monthly/ 365 days (only the run on the 1st writes there as well)
+# Changing the prefixes here REQUIRES changing the variables there, or nothing
+# cleans up any more.
 #
-# Der Bucket ist versioniert und der IAM-User "homelab-teslamate-backup" hat
-# WEDER DeleteObject NOCH DeleteObjectVersion. Dieser Job kann also nichts
-# loeschen, nur schreiben. Wer hier ein "aws s3 rm" ergaenzt, bekommt
-# AccessDenied, und das ist Absicht.
+# The bucket is versioned and the IAM user has neither DeleteObject nor
+# DeleteObjectVersion, so this job can only write. An "aws s3 rm" added here
+# gets AccessDenied, deliberately.
 apiVersion: batch/v1
 kind: CronJob
 metadata:
@@ -27,13 +23,11 @@ metadata:
   labels:
     app.kubernetes.io/name: teslamate-db-backup
 spec:
-  # 01:30 UTC, bewusst vor dem Paperless-Export (02:00) und dem HA-Archiv
-  # (04:00 am Monatsersten), damit sich die Backup-Laeufe nicht ueberlappen.
+  # 01:30 UTC, ahead of the paperless export (02:00) and the HA archive
+  # (04:00 on the 1st) so the backup runs do not overlap.
   #
-  # timeZone ist Pflicht, nicht Kosmetik: ohne das Feld laeuft ein CronJob in
-  # der Zeitzone der Node, die gerade den kube-controller-manager haelt, und
-  # die Nodes haben nicht alle dieselbe. Der Zeitplan wandert also mit dem
-  # Lease und kann um Stunden verrutschen.
+  # timeZone is mandatory: without it the job runs in the timezone of whichever
+  # node holds the kube-controller-manager lease, and the nodes do not agree.
   schedule: "30 1 * * *"
   timeZone: "Etc/UTC"
   successfulJobsHistoryLimit: 3
@@ -50,22 +44,18 @@ spec:
           volumes:
             - name: dump
               emptyDir:
-                # Der Dump liegt bei rund 60 MB (DB 259 MB, custom format ist
-                # komprimiert). Das Limit ist grosszuegig, aber vorhanden: ohne
-                # sizeLimit schreibt ein entgleister Lauf die Node-Disk voll und
-                # reisst alles mit, was auf demselben Node laeuft.
+                # Generous but present: without sizeLimit a derailed run fills
+                # the node disk and takes down everything else on that node.
                 sizeLimit: 1Gi
 
-          # Zwei Schritte, bewusst als initContainer + container und nicht als
-          # ein Skript: so ist im Fehlerfall am Pod-Status ablesbar, ob der Dump
-          # oder der Upload gescheitert ist.
+          # Split into initContainer and container rather than one script, so
+          # the pod status shows whether the dump or the upload failed.
           initContainers:
             - name: dump
-              # MUSS zur Version in database-deployment.yaml passen. pg_dump
-              # weigert sich, einen Server zu dumpen, der neuer ist als es
-              # selbst. Renovate hebt beide Stellen, weil beide denselben Tag
-              # tragen. Wer eine davon von Hand anfasst, bricht das Backup, und
-              # zwar erst beim naechsten naechtlichen Lauf.
+              # MUST match the version in database-deployment.yaml: pg_dump
+              # refuses to dump a server newer than itself. Renovate bumps both
+              # because they share the tag; changing one by hand breaks the
+              # backup, and only at the next nightly run.
               image: postgres:18.4
               command:
                 - /bin/sh
@@ -77,16 +67,14 @@ spec:
 
                   echo "Dumpe ${PGDATABASE} von ${PGHOST} nach ${DUMP}"
 
-                  # -Fc (custom format): komprimiert, und pg_restore kann daraus
-                  # gezielt einzelne Tabellen ziehen. Ein reiner SQL-Dump kann
-                  # das nicht.
+                  # -Fc (custom format): compressed, and pg_restore can pull
+                  # individual tables out of it, which a plain SQL dump cannot.
                   pg_dump -Fc -f "${DUMP}"
 
-                  # Gegenprobe, bevor irgendwas hochgeht: pg_restore -l liest
-                  # Header und Inhaltsverzeichnis des Archivs. Ein abgebrochener
-                  # oder halb geschriebener Dump faellt hier durch, statt als
-                  # scheinbar erfolgreiches Backup in S3 zu landen und erst beim
-                  # Restore aufzufliegen.
+                  # Counter-check before anything is uploaded: pg_restore -l
+                  # reads the archive's header and table of contents, so a
+                  # truncated dump fails here instead of landing in S3 as an
+                  # apparently successful backup.
                   ENTRIES=$(pg_restore -l "${DUMP}" | grep -c ';' || true)
                   if [ "${ENTRIES}" -lt 1 ]; then
                     echo "FEHLER: ${DUMP} ist kein lesbares pg_dump-Archiv."
@@ -141,10 +129,10 @@ spec:
 
                   LOCAL_SIZE=$(stat -c %s "${DUMP}")
 
-                  # "aws s3 cp" ist hier richtig, anders als im HA-Archiv-Job.
-                  # Dort ging es um eine Kopie S3 nach S3, und die liest die
-                  # Objekt-Tags der Quelle (s3:GetObjectTagging, fehlt dem Key).
-                  # Ein Upload vom lokalen Dateisystem macht nur PutObject.
+                  # "aws s3 cp" is right here, unlike in the HA archive job:
+                  # that one copies S3 to S3 and reads the source's object tags
+                  # (s3:GetObjectTagging, which this key lacks). An upload from
+                  # the local filesystem only does PutObject.
                   upload() {
                     KEY="$1"
                     echo "Lade hoch nach s3://${S3_BUCKET_NAME}/${KEY}"
@@ -164,14 +152,10 @@ spec:
 
                   upload "daily/teslamate_${DAY}.dump"
 
-                  # Am Monatsersten derselbe Dump ein zweites Mal, unter dem
-                  # Praefix mit der langen Aufbewahrung.
-                  #
-                  # Bewusst ein zweiter Upload und kein copy-object innerhalb S3:
-                  # die Datei liegt ohnehin lokal, der zweite Upload kostet einmal
-                  # im Monat 60 MB Traffic und spart dem IAM-User jedes
-                  # Kopier-Recht. Damit bleibt seine Policy bei GetObject und
-                  # PutObject.
+                  # On the 1st the same dump goes up a second time under the
+                  # long-retention prefix. A second upload rather than a
+                  # copy-object: the file is local anyway, and this keeps the
+                  # IAM policy at GetObject and PutObject.
                   if [ "$(date -u +%d)" = "01" ]; then
                     upload "monthly/teslamate_$(date -u +%Y-%m).dump"
                   fi

@@ -4,9 +4,9 @@
 #   > manifests/home-assistant/wol-ssh-key-unsealed.yaml
 # ./reseal-all-secrets.sh
 #
-# Der Public Key gehoert auf dem Nebu2k-PC nach
-# C:\ProgramData\ssh\administrators_authorized_keys. Der Pfad unter %USERPROFILE%
-# wird bei Konten mit Admin-Rechten von sshd ignoriert.
+# On the PC the public key belongs in
+# C:\ProgramData\ssh\administrators_authorized_keys. sshd ignores the path
+# under %USERPROFILE% for accounts with admin rights.
 ---
 apiVersion: v1
 kind: Secret

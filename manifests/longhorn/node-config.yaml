@@ -1,58 +1,52 @@
-# Longhorn-Node-Konfiguration.
+# Longhorn node configuration.
 #
-# MIT disks-Block, und der ist Pflicht: Longhorn erzeugt die default-disk nur,
-# wenn es das Node-CR SELBST anlegt. Unter GitOps ist ArgoCD schneller,
-# longhorn-manager findet das CR bereits vor, adoptiert es und ergaenzt nichts.
-# Ergebnis waeren Nodes mit Ready=True, Schedulable=True und null Kapazitaet.
-# Das faellt nicht auf, bis das erste Volume Pending bleibt: an der Node selbst
-# ist nichts rot.
+# The disks block is mandatory: Longhorn only creates the default disk when it
+# creates the Node CR ITSELF. Under GitOps ArgoCD is faster, longhorn-manager
+# finds the CR already there, adopts it and adds nothing. The result would be
+# nodes with Ready=True, Schedulable=True and zero capacity, which goes
+# unnoticed until the first volume stays Pending.
 #
-# WELCHER DISK-SCHLUESSEL HIER STEHT, HAENGT AN DER REIHENFOLGE. Tritt eine Node
-# dem Cluster bei, waehrend Longhorn schon laeuft, war longhorn-manager zuerst
-# da und hat das Node-CR mit einem Namen wie default-disk-<fsid-hash> selbst
-# angelegt. Dann gilt: erst lesen, dann uebernehmen.
+# WHICH DISK KEY BELONGS HERE DEPENDS ON THE ORDER OF EVENTS. If a node joins
+# while Longhorn is already running, longhorn-manager got there first and
+# named the disk something like default-disk-<fsid-hash>. So read it first,
+# then adopt it:
 #
 #   kubectl -n longhorn-system get nodes.longhorn.io <name> \
 #     -o jsonpath='{.spec.disks}'
 #
-# Ein frei gewaehlter Name waere ein ZWEITER Eintrag auf /var/lib/longhorn/ und
-# damit eine Sackgasse: Umbenennen ginge auch nachtraeglich nicht, das waere ein
-# Entfernen und Hinzufuegen auf demselben Pfad in einem Schritt, und der
-# validator.longhorn.io-Webhook laesst das nicht durch. Der haessliche Name ist
-# der Preis dafuer, den Webhook nicht zu bekaempfen.
+# A freely chosen name would be a SECOND entry on /var/lib/longhorn/ and a
+# dead end: renaming later is a remove and an add on the same path in one
+# step, which the validator.longhorn.io webhook rejects. The ugly name is the
+# price for not fighting the webhook.
 #
-# Aus demselben Grund NIE ein Node-CR loeschen, auch nicht "zum Aufraeumen":
-# Longhorn legt es sofort mit seinem eigenen Disk-Namen neu an, ArgoCD schreibt
-# seinen Eintrag dazu, und das Duplikat ist nicht mehr aufloesbar.
+# For the same reason NEVER delete a Node CR, not even to tidy up: Longhorn
+# recreates it immediately with its own disk name, ArgoCD adds its entry, and
+# the duplicate cannot be resolved.
 #
-# Einen Node hier ZU ENTFERNEN reicht nicht, ArgoCD kommt beim Prune nicht
-# durch: der validator.longhorn.io-Webhook lehnt das Loeschen ab, solange
-# allowScheduling true ist, selbst wenn die Node laengst weg ist und null
-# Replikate und null Engines traegt. Die Fehlermeldung steht dann nur in
-# .status.operationState.message der Application, die App bleibt OutOfSync und
-# retryt endlos. Also vor dem Entfernen aus dieser Datei:
+# REMOVING a node from this file is not enough either, ArgoCD cannot prune it:
+# the webhook refuses the deletion while allowScheduling is true, even when
+# the node is long gone and carries zero replicas and engines. The error only
+# appears in the Application's .status.operationState.message, the app stays
+# OutOfSync and retries forever. So before removing it here:
 #
 #   kubectl -n longhorn-system patch nodes.longhorn.io <name> \
 #     --type=merge -p '{"spec":{"allowScheduling":false}}'
 #
-# Die tags sind kein Schmuck. Die StorageClass longhorn selektiert
-# nodeSelector: storage. Ein Node ohne den Tag bekommt nie ein Replikat und
-# meldet trotzdem Ready und Schedulable. Longhorn legt Auto-CRs ohne Tags an.
+# The tags are not decoration: the longhorn StorageClass selects
+# nodeSelector: storage, and a node without the tag never receives a replica
+# while still reporting Ready and Schedulable. Auto-created CRs have no tags.
 #
-# storageReserved: 30 GiB, auf allen Nodes gleich. /var/lib/longhorn liegt auf
-# der EPHEMERAL-Partition (xfs), und die traegt auch die Container-Images und
-# die Logs. Ohne Reserve fuellt Longhorn sie bis an den Rand und nimmt das
-# kubelet mit.
+# storageReserved is 30 GiB on every node. /var/lib/longhorn sits on the
+# EPHEMERAL partition, which also carries the container images and the logs;
+# without a reserve Longhorn fills it to the brim and takes the kubelet down.
 #
-# Der Betrag ist bewusst absolut und nicht anteilig, obwohl die Partitionen
-# sehr unterschiedlich gross sind (talos-cp-1 395 GiB, prodesk 236 GiB, raspi5
-# 931 GiB): Images und Logs brauchen, was sie brauchen, das skaliert nicht mit
-# der Plattengroesse. Longhorns Default waeren 30 Prozent, auf raspi5 also
-# 279 GiB verschenkt. Nutzbar sind damit rund 371 GiB auf talos-cp-1, rund
-# 198 GiB auf prodesk und rund 909 GiB auf raspi5.
+# The amount is deliberately absolute rather than proportional although the
+# partitions differ widely in size: images and logs need what they need, that
+# does not scale with disk size. Longhorn's default of 30 percent would waste
+# hundreds of GiB on the largest node.
 #
-# Alle Nodes tragen Storage. Sie sind alle Control-Plane und tragen alle
-# Workloads, eine Unterscheidung gaebe es nicht abzubilden.
+# Every node carries storage. They are all control plane and all carry
+# workloads, so there is no distinction to model.
 apiVersion: longhorn.io/v1beta2
 kind: Node
 metadata:
@@ -75,8 +69,8 @@ spec:
         - storage
 
 ---
-# Disk-Schluessel von Longhorn vorgefunden, nicht frei gewaehlt. Begruendung
-# steht oben im Kopf, kurz: er kam nach Longhorn ins Cluster.
+# Disk key found rather than chosen: this node joined after Longhorn was
+# already running, see the header.
 apiVersion: longhorn.io/v1beta2
 kind: Node
 metadata:
@@ -99,12 +93,11 @@ spec:
         - storage
 
 ---
-# Ebenfalls vorgefundener Disk-Schluessel, gleicher Grund wie bei prodesk.
+# Disk key found as well, same reason as prodesk.
 #
-# raspi5 ist die groesste Storage-Node im Cluster: sein EPHEMERAL liegt nicht
-# auf dem Bootmedium, sondern auf der 1-TB-NVMe (die SD-Karte traegt nur EFI,
-# BOOT, META und STATE, siehe talos/talconfig.yaml). Longhorns Default haette
-# hier 279 GiB reserviert, die 30 GiB gelten aus demselben Grund wie oben.
+# raspi5 is the largest storage node: its EPHEMERAL partition is not on the
+# boot medium but on the NVMe, while the SD card only carries EFI, BOOT, META
+# and STATE (see talos/talconfig.yaml).
 apiVersion: longhorn.io/v1beta2
 kind: Node
 metadata:

@@ -5,8 +5,8 @@ metadata:
   name: kube-router
   namespace: argocd
   annotations:
-    # Netzwerkschicht, vor allem was Policies mitbringt. metallb ist 1, die
-    # Dienste mit default-deny beginnen bei 9.
+    # Network layer, ahead of anything carrying policies: metallb is 1 and the
+    # services with default-deny start at 9.
     argocd.argoproj.io/sync-wave: "2"
   finalizers:
     - resources-finalizer.argocd.argoproj.io

@@ -1,7 +1,7 @@
 ---
-# Ingress-only default-deny: nichts von außerhalb des Namespace erreicht die Pods,
-# außer den unten explizit erlaubten Pfaden. Egress bleibt offen (Rezept-Import
-# von fremden Webseiten, DNS).
+# Ingress-only default-deny: nothing from outside the namespace reaches the
+# pods except the paths allowed below. Egress stays open (recipe import from
+# third-party sites, DNS).
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
@@ -12,7 +12,7 @@ spec:
   policyTypes:
     - Ingress
 ---
-# Intra-Namespace frei: mealie <-> postgresql (gleiche Trust-Domain).
+# Free within the namespace: mealie <-> postgresql.
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
@@ -26,7 +26,7 @@ spec:
     - from:
         - podSelector: {}
 ---
-# Traefik (ns traefik) darf die Web-UI auf 9000 erreichen.
+# Traefik may reach the web UI on 9000.
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:

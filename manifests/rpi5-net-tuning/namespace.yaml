@@ -1,7 +1,7 @@
-# Eigener Namespace, gleiche Begruendung wie bei rpi5-fan: der Pod braucht
-# NET_ADMIN und den Host-Netzwerk-Namespace, und das soll eingegrenzt bleiben.
-# Die PodSecurity-Labels sind Pflicht, der restricted-Default weist so einen Pod
-# still bei der Erzeugung ab, nicht sichtbar am DaemonSet.
+# Its own namespace, same reasoning as rpi5-fan: the pod needs NET_ADMIN and
+# the host network namespace, and that should stay contained. The PodSecurity
+# labels are mandatory, the restricted default rejects such a pod silently at
+# creation, invisibly from the DaemonSet.
 apiVersion: v1
 kind: Namespace
 metadata:

@@ -1,25 +1,21 @@
-# Vanilla Kubernetes bringt keinen metrics-server mit, und das faellt leise
-# aus: `kubectl top` sagt "Metrics API not available", die Kubernetes-Widgets
-# der Homepage melden "API error", und jede HorizontalPodAutoscaler-Idee liefe
-# ins Leere.
+# Vanilla Kubernetes ships no metrics-server, and its absence fails quietly:
+# kubectl top says "Metrics API not available", the homepage widgets report
+# "API error", and any HorizontalPodAutoscaler would do nothing.
 
-# Das kubelet stellt seine Metriken ueber ein selbstsigniertes Zertifikat
-# bereit, das auf die Node-IP und nicht auf eine im Cluster aufloesbare CA
-# ausgestellt ist. Ohne das Flag scheitert jeder Scrape mit "x509: cannot
-# validate certificate". Der uebliche Weg dagegen waere, das kubelet seine
-# Server-Zertifikate von der Cluster-CA signieren zu lassen
-# (rotateKubeletServerCertificates plus einen Approver); das ist bei Talos eine
-# Aenderung an der machine config und damit ein Reboot der Control-Plane fuer
-# eine Kennzahl. Der Scrape laeuft im eigenen Cluster-Netz gegen die eigenen
-# Nodes, das ist der Preis wert.
+# The kubelet serves its metrics over a self-signed certificate issued for the
+# node IP, so without this flag every scrape fails with "x509: cannot validate
+# certificate". The proper fix would be signing the kubelet server
+# certificates with the cluster CA, which on Talos means a machine config
+# change and thus a control-plane reboot for one metric. The scrape runs in
+# our own cluster network against our own nodes.
 args:
   - --kubelet-insecure-tls
-  # Node-IP zuerst. Die Talos-Nodes haben keinen im Cluster aufloesbaren
-  # Hostnamen, der Default ginge ueber InternalDNS/Hostname ins Leere.
+  # Node IP first: the Talos nodes have no cluster-resolvable hostname, so the
+  # default order via InternalDNS/Hostname leads nowhere.
   - --kubelet-preferred-address-types=InternalIP,ExternalIP,Hostname
 
-# Eine Replik. Zwei waeren HA fuer eine Kennzahl, die nach 15 Sekunden ohnehin
-# neu erhoben wird, und kosten auf drei Nodes mehr als sie bringen.
+# One replica. Two would be HA for a number that is re-collected every 15
+# seconds anyway, and cost more on three nodes than they are worth.
 replicas: 1
 
 resources:
@@ -29,7 +25,7 @@ resources:
   limits:
     memory: 192Mi
 
-# Der ServiceMonitor kommt mit, kube-prometheus-stack laeuft in diesem Cluster.
+# The ServiceMonitor comes along, kube-prometheus-stack runs in this cluster.
 metrics:
   enabled: true
 serviceMonitor:

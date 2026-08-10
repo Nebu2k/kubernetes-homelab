@@ -14,7 +14,7 @@ spec:
   sources:
     - repoURL: https://charts.jetstack.io
       chart: cert-manager
-      # TODO: auf aktuelle stabile Version pinnen/prüfen (Renovate).
+      # TODO: pin to a current stable version (Renovate).
       targetRevision: v1.21.1
       helm:
         valueFiles:

@@ -1,7 +1,6 @@
-# Eigener Namespace, weil der Pod privilegiert laufen muss und das hier
-# eingegrenzt bleiben soll. Die PodSecurity-Labels sind Pflicht: der
-# restricted-Default weist einen privilegierten Pod ab, und zwar still bei der
-# Erzeugung, nicht sichtbar am DaemonSet.
+# Its own namespace, because the pod must run privileged and that should stay
+# contained. The PodSecurity labels are mandatory: the restricted default
+# rejects a privileged pod silently at creation, invisibly from the DaemonSet.
 apiVersion: v1
 kind: Namespace
 metadata:

@@ -5,11 +5,9 @@ deployment:
 nodeSelector:
   node-role.kubernetes.io/worker: "worker"
 
-# Ohne das landen beide Replicas auf derselben Node. Mit
-# externalTrafficPolicy: Local (siehe service unten) kuendigt MetalLB die .250
-# nur noch von Nodes an, auf denen ein bereiter Traefik-Pod laeuft: diese eine
-# Node waere dann ein Single Point of Failure, bei ihrem Ausfall braucht es
-# erst einen Pod-Start anderswo, bevor die Adresse wieder angekuendigt wird.
+# Without this both replicas land on the same node. With
+# externalTrafficPolicy: Local MetalLB only announces .250 from nodes running
+# a ready Traefik pod, so that single node would be a point of failure.
 topologySpreadConstraints:
   - labelSelector:
       matchLabels:
@@ -19,30 +17,26 @@ topologySpreadConstraints:
     topologyKey: kubernetes.io/hostname
     whenUnsatisfiable: DoNotSchedule
 
-# Muss zur harten Spreizung oben passen. Der Chart-Default ist
-# maxUnavailable: 0 / maxSurge: 1, wuerde beim Rollout also einen dritten
-# Pod hochziehen. Bei zwei Replicas auf zwei zulaessigen Nodes verletzt der
-# die maxSkew und bliebe Pending: das Update haengt fest. Andersherum
-# ersetzt der Rollout je einen Pod an Ort und Stelle, ohne dritten Platz.
+# Must match the hard spread above. The chart default would pull up a third
+# pod during a rollout, which violates maxSkew and stays Pending: the update
+# deadlocks. This way each pod is replaced in place.
 updateStrategy:
   type: RollingUpdate
   rollingUpdate:
     maxUnavailable: 1
     maxSurge: 0
 
-# Schuetzt den Ingress bei freiwilligen Stoerungen, vor allem beim Node-Drain
-# durch den system-upgrade-controller. Ohne PDB darf ein Drain beide Pods
-# gleichzeitig raeumen, und mit externalTrafficPolicy: Local haette dann kein
-# Node mehr einen bereiten Endpoint: MetalLB kuendigt die .250 nicht mehr an,
-# der komplette Ingress ist weg.
+# Protects the ingress during voluntary disruptions, above all a node drain.
+# Without the PDB a drain may evict both pods at once, and with
+# externalTrafficPolicy: Local no node would have a ready endpoint left:
+# MetalLB stops announcing .250 and the whole ingress is gone.
 #
-# minAvailable statt maxUnavailable, weil die Zusage dann an der absoluten Zahl
-# haengt und nicht an replicas: bei einem versehentlichen Scale-Down auf 1
-# blockiert der PDB den Drain, statt stillschweigend alles freizugeben.
+# minAvailable rather than maxUnavailable, so the guarantee is an absolute
+# number instead of a fraction of replicas.
 #
-# Kein Deadlock mit der harten Spreizung oben: der geraeumte Pod bleibt Pending,
-# bis der Node zurueck ist (der andere Node hat wegen maxSkew keinen Platz).
-# Der PDB verlangt nur einen laufenden Pod, und den gibt es die ganze Zeit.
+# No deadlock with the hard spread above: the evicted pod stays Pending until
+# its node returns, and the PDB only demands one running pod, which exists
+# throughout.
 podDisruptionBudget:
   enabled: true
   minAvailable: 1
@@ -54,32 +48,27 @@ providers:
   kubernetesIngress:
     enabled: true
 
-# MUSS als Annotation gesetzt werden. Das Traefik-Chart kennt keinen
-# service.loadBalancerIP-Wert, Helm hat den Key bisher stillschweigend
-# ignoriert (im gerenderten Service stuende dann nie eine IP).
-# metallb.io/ ist der aktuelle Prefix, metallb.universe.tf/ ist seit 0.14.9
-# deprecated.
+# MUST be an annotation: the Traefik chart has no service.loadBalancerIP value
+# and Helm silently ignores the key, leaving the rendered service without an
+# address. metallb.io/ is the current prefix, metallb.universe.tf/ has been
+# deprecated since 0.14.9.
 #
-# An der .250 haengen der UniFi-Portforward (80/443) und der
-# Split-Horizon-Wildcard *.elmstreet79.de. Sie darf nicht wandern, und sie
-# gehoert explizit angefordert statt der Vergabereihenfolge von MetalLB
-# ueberlassen.
+# The UniFi port forward (80/443) and the split-horizon wildcard both point at
+# .250, so it must not move and is requested explicitly rather than left to
+# MetalLB's allocation order.
 service:
   annotations:
     metallb.io/loadBalancerIPs: "192.168.2.250"
-  # Ab Chart 41 liegt type unter spec, ein top-level service.type gibt es
-  # nicht mehr.
+  # Since chart 41 type lives under spec, there is no top-level service.type.
   spec:
     type: LoadBalancer
-    # Ohne das SNAT-tet kube-proxy jedes eingehende Paket auf das
-    # CNI-Gateway des Nodes, auf dem Traefik laeuft. Traefik sah dadurch
-    # clusterweit nur 10.42.6.1 statt echter Clients, und jedes Backend
-    # hinter dem Ingress bekam dieselbe Adresse in X-Forwarded-For. Mit
-    # Local reicht MetalLB (L2) die Quell-IP unveraendert durch.
+    # Without this kube-proxy SNATs every incoming packet to the CNI gateway
+    # of Traefik's node, so Traefik and every backend behind the ingress see
+    # one single address in X-Forwarded-For. With Local, MetalLB (L2) passes
+    # the source IP through unchanged.
     #
-    # Preis: die .250 wird nur noch von Nodes mit einem bereiten
-    # Traefik-Pod angekuendigt. Deshalb die topologySpreadConstraints oben,
-    # damit das nicht auf einen einzelnen Node zusammenfaellt.
+    # The price is that .250 is only announced from nodes with a ready Traefik
+    # pod, hence the topologySpreadConstraints above.
     externalTrafficPolicy: Local
 
 metrics:
@@ -90,21 +79,21 @@ metrics:
     serviceMonitor:
       enabled: true
 
-# Logs. Chart 41 folgt der Traefik-Syntax: aus logs.general wurde log,
-# aus logs.access wurde accessLog.
+# Chart 41 follows Traefik's own syntax: logs.general became log,
+# logs.access became accessLog.
 log:
   level: INFO
 accessLog:
   enabled: true
 
-# KEIN globalArguments-Block. Den Key kennt das Chart seit dem Wechsel auf
-# global.xx nicht mehr, er wird stillschweigend geschluckt und taucht weder im
-# gerenderten noch im laufenden Pod auf. api.dashboard und ping setzt das Chart
-# ohnehin selbst.
+# NO globalArguments block. Since the move to global.xx the chart no longer
+# knows the key and swallows it silently, so it appears neither in the
+# rendered manifest nor in the running pod. api.dashboard and ping are set by
+# the chart anyway.
 #
-# Traefik laeuft damit auf seinem readTimeout-Default von 60s, und das reicht.
-# Falls doch mal noetig (Kandidaten: HA-Websockets, Plex), waere der native Key
-# in v41 ports.websecure.transport.respondingTimeouts.readTimeout.
+# Traefik therefore runs on its 60s readTimeout default. If that ever needs
+# changing, the native key in v41 is
+# ports.websecure.transport.respondingTimeouts.readTimeout.
 
 ingressRoute:
   dashboard:
@@ -125,7 +114,7 @@ ports:
       default: true
     http3:
       enabled: false
-    # Ab Chart 41 liegt tls unter http.
+    # Since chart 41 tls lives under http.
     http:
       tls:
         enabled: true

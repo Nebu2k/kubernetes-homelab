@@ -19,19 +19,15 @@ spec:
       labels:
         app.kubernetes.io/name: home-assistant
     spec:
-      # hostNetwork bleibt Pflicht: mDNS-Discovery, CoIoT-Multicast (224.0.1.187,
-      # Shelly Gen1) und die HomeKit-Bridges brauchen das Node-Netz. Die
-      # Bindung an prodesk ist dagegen weg, siehe unten.
+      # hostNetwork is mandatory: mDNS discovery, CoIoT multicast
+      # (224.0.1.187, Shelly Gen1) and the HomeKit bridges need the node
+      # network.
       hostNetwork: true
       dnsPolicy: ClusterFirstWithHostNet
-      # Keine nodeAffinity auf prodesk mehr. Sie hing an zwei Dingen, beide sind
-      # aufgeloest:
-      #   - Bluetooth: kein lokaler Adapter mehr, BLE laeuft ueber die
-      #     Shelly-Proxies (bluetooth-Config-Entries mit source_config_entry_id,
-      #     ble_scanner_mode passive). Deshalb ist auch der /run/dbus-Mount weg.
-      #   - Shelly Gen1: die acht Geraete pushten CoIoT per Unicast auf
-      #     192.168.2.7:5683. Umgestellt auf Multicast (coiot_peer=mcast), damit
-      #     folgt der Push dem Pod auf jede Node.
+      # No nodeAffinity: BLE runs through the Shelly proxies rather than a
+      # local adapter, and the Gen1 Shellys push CoIoT via multicast
+      # (coiot_peer=mcast) rather than unicast to one node, so the pod may
+      # move freely.
       nodeSelector:
         node-role.kubernetes.io/worker: "worker"
       initContainers:
@@ -156,5 +152,5 @@ spec:
       - name: wol-ssh-key
         secret:
           secretName: wol-ssh-key
-          # ssh verweigert den Dienst bei laxeren Rechten am Private Key.
+          # ssh refuses to work with looser permissions on the private key.
           defaultMode: 0400

@@ -4,8 +4,8 @@ metadata:
   name: backup-monitor
   namespace: argocd
   annotations:
-    # Nach kube-prometheus-stack (6): der Namespace "monitoring" und die
-    # Alert-Regel, die den fehlgeschlagenen Job meldet, gehoeren dorthin.
+    # After kube-prometheus-stack (6): the "monitoring" namespace and the alert
+    # rule reporting the failed job belong to it.
     argocd.argoproj.io/sync-wave: "11"
   finalizers:
     - resources-finalizer.argocd.argoproj.io

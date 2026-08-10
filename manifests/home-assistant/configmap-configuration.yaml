@@ -8,7 +8,7 @@ data:
     http:
       use_x_forwarded_for: true
       trusted_proxies:
-        # IPv4-only: Traefik-Pods + LAN. Kein v6 (kein Public-v6, ISP-GUA rotiert).
+        # IPv4 only: Traefik pods and LAN. No v6, the ISP GUA rotates.
         - 10.42.0.0/16
         - 172.16.0.0/12
         - 192.168.0.0/16
@@ -17,20 +17,19 @@ data:
     
     default_config:
 
-    # Metriken nach Prometheus (/api/prometheus, Bearer-Token).
+    # Metrics to Prometheus (/api/prometheus, bearer token), filtered
+    # deliberately narrowly: HA holds well over a thousand entities and would
+    # otherwise export all of them into what is already the largest volume in
+    # the cluster.
     #
-    # Gefiltert, und zwar bewusst eng: HA haelt 1652 Entities, exportiert wuerde
-    # sonst alles. Das Prometheus-Volume ist ohnehin der groesste Posten im
-    # Cluster und liegt genau deswegen ausserhalb der Backup-Gruppe.
-    #
-    # Drin sind die vier Quellen, die Strom messen und die Prometheus nicht schon
-    # anderweitig kennt:
-    #   delta_3              Ecoflow am Rack, der echte Homelab-Verbrauch
-    #   tibber_pulse         Hausverbrauch Ost- und Westfluegel
-    #   inverter             Hoymiles-PV
-    #   tesla_wall_connector Wallbox
-    # Die PoE-Werte des USW-16 fehlen absichtlich: die liefert unpoller bereits
-    # als unpoller_device_port_poe_watts, ein zweiter Weg waere nur Dopplung.
+    # Included are the four sources that measure power and that Prometheus does
+    # not already know from elsewhere:
+    #   delta_3              Ecoflow at the rack, the real homelab draw
+    #   tibber_pulse         house consumption, east and west wing
+    #   inverter             Hoymiles PV
+    #   tesla_wall_connector wallbox
+    # The USW-16 PoE values are left out on purpose, unpoller already provides
+    # them as unpoller_device_port_poe_watts.
     prometheus:
       namespace: hass
       filter:
@@ -40,9 +39,9 @@ data:
           - sensor.inverter_*
           - sensor.tesla_wall_connector_*
     
-    # Ausschalten des Nebu2k-PC. Der Windows-eigene OpenSSH-Server ist das
-    # Gegenstueck, der Key liegt als Secret unter /ssh-wol und bewusst nicht auf
-    # dem Config-Volume: das wandert monatlich als Archiv nach S3.
+    # Shutting down the PC. Its counterpart is the Windows OpenSSH server; the
+    # key is a secret mounted at /ssh-wol and deliberately not on the config
+    # volume, which is archived to S3 monthly.
     shell_command:
       nebu2k_pc_shutdown: >-
         ssh -i /ssh-wol/id_ed25519 -o IdentitiesOnly=yes -o BatchMode=yes
@@ -51,8 +50,8 @@ data:
         sebastian@192.168.2.5 "shutdown /s /t 0"
 
     switch:
-      # host: macht aus dem Schalter einen gemessenen Zustand (Ping alle 30 s)
-      # statt eines geratenen. Haengt an der festen .5.
+      # host: turns the switch into a measured state (ping every 30s) rather
+      # than a guessed one. Depends on the static .5.
       - platform: wake_on_lan
         name: Nebu2k-PC
         mac: d8:bb:c1:3d:c8:ae

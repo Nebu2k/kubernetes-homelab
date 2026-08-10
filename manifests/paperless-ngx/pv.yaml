@@ -1,11 +1,9 @@
-# PVs zu den aus dem NAS-Backup restaurierten Longhorn-Volumes.
+# PVs for the Longhorn volumes restored from the NAS backup. Why this is
+# needed and how the restore works is written out once in
+# manifests/ripe-atlas/pv.yaml and as a recipe in talos/README.md.
 #
-# Warum das noetig ist und wie das Restore ablaeuft, steht einmal ausfuehrlich
-# in manifests/ripe-atlas/pv.yaml und als Rezept in talos/README.md.
-#
-# Nicht hier drin: paperless-consume-smb. Das ist ein CIFS-Share und kein
-# Longhorn-Volume, sein PV steht in manifests/paperless-ngx/smb-consume-pv.yaml
-# und gilt in beiden Clustern unveraendert.
+# Not in here: paperless-consume-smb, which is a CIFS share rather than a
+# Longhorn volume and has its own PV in smb-consume-pv.yaml.
 apiVersion: v1
 kind: PersistentVolume
 metadata:
@@ -96,9 +94,8 @@ spec:
       dataEngine: v1
       backupTargetName: default
 ---
-# postgresql-data und redis-data heissen im Longhorn mit paperless-Praefix:
-# Volume- und PV-Namen sind clusterweit, mealie bringt eine PVC namens
-# postgresql-data mit.
+# postgresql-data and redis-data carry a paperless prefix in Longhorn: volume
+# and PV names are cluster-wide and mealie ships a PVC named postgresql-data.
 apiVersion: v1
 kind: PersistentVolume
 metadata:

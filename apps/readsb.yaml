@@ -4,7 +4,7 @@ metadata:
   name: readsb
   namespace: argocd
   annotations:
-    # Vor fr24 (15): fr24feed verbindet sich auf den Beast-Ausgang von readsb.
+    # Before fr24 (15): fr24feed connects to readsb's Beast output.
     argocd.argoproj.io/sync-wave: "14"
   finalizers:
     - resources-finalizer.argocd.argoproj.io
@@ -22,8 +22,8 @@ spec:
       prune: true
       selfHeal: true
     syncOptions:
-      # Kein CreateNamespace: der Namespace steht als Manifest im Pfad, weil er
-      # das PodSecurity-Label tragen muss.
+      # No CreateNamespace: the namespace is a manifest in the path because it
+      # has to carry the PodSecurity label.
       - CreateNamespace=false
     retry:
       limit: 5

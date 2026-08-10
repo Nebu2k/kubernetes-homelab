@@ -1,19 +1,18 @@
-# App-of-Apps: die vollstaendige Liste dessen, was im Cluster laeuft.
-#
-# Reihenfolge egal, die sync-waves stehen in den Applications selbst.
+# App of apps: the complete list of what runs in the cluster. Order does not
+# matter here, the sync waves live in the Applications themselves.
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
 resources:
-  # Plattform
+  # Platform
   - sealed-secrets.yaml
   - metallb.yaml
-  # Setzt die NetworkPolicies durch, Flannel allein tut das nicht.
+  # Enforces the NetworkPolicies, which Flannel alone does not.
   - kube-router.yaml
-  # kubectl top und die Kubernetes-Widgets der Homepage.
+  # kubectl top and the homepage's Kubernetes widgets.
   - metrics-server.yaml
-  # etcd-Snapshots nach S3. Talos schreibt sie nur auf Anforderung heraus, der
-  # Upload ist deshalb Sache des Clusters.
+  # etcd snapshots to S3. Talos only writes them out on request, so the upload
+  # is the cluster's job.
   - etcd-backup.yaml
   - reloader.yaml
   - traefik.yaml
@@ -23,24 +22,23 @@ resources:
   - kube-prometheus-stack.yaml
   - argocd-config.yaml
   - backup-monitor.yaml
-  # Haus-Resolver, Cluster-Instanz auf 192.168.2.253. Die zweite Instanz laeuft
-  # als LXC auf pve (.254) und steht in homelab-terraform, damit ein Cluster-
-  # oder ein pve-Ausfall nie beide gleichzeitig trifft.
+  # House resolver, cluster instance on 192.168.2.253. The second instance is
+  # an LXC on pve (.254) defined in homelab-terraform, so neither a cluster nor
+  # a pve outage can take both down at once.
   - blocky.yaml
 
   # Exporter
   - proxmox-exporter.yaml
   - unifi-poller.yaml
 
-  # Hardware. Ersetzt auf raspi5 einen Kernel-Treiber, den der Talos-Kernel
-  # nicht mitbringt, siehe manifests/rpi5-fan/fan.py.
+  # Hardware. Replaces a kernel driver the Talos kernel does not ship, see
+  # manifests/rpi5-fan/fan.py.
   - rpi5-fan.yaml
-  # Ebenfalls raspi5: haelt die ethtool-Einstellungen von end0, ohne die der
-  # etcd-Member Raft-Nachrichten verwirft. Siehe Kopf von
-  # manifests/rpi5-net-tuning/daemonset.yaml.
+  # raspi5 as well: holds end0's ethtool settings, without which the etcd
+  # member drops Raft messages. See manifests/rpi5-net-tuning/daemonset.yaml.
   - rpi5-net-tuning.yaml
 
-  # Anwendungen
+  # Applications
   - landing-page.yaml
   - homepage.yaml
   - gatus.yaml
