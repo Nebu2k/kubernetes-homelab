@@ -1,3 +1,10 @@
+# [5.8.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v5.7.1...v5.8.0) (2026-08-10)
+
+
+### Features
+
+* **monitoring:** Energie-Board in Grafana ([5503176](https://github.com/Nebu2k/kubernetes-homelab/commit/5503176fdcb1bf576c1d474a55498bc5a0b5dbe9))
+
 ## [5.7.1](https://github.com/Nebu2k/kubernetes-homelab/compare/v5.7.0...v5.7.1) (2026-08-10)
 
 
