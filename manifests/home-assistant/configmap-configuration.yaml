@@ -26,8 +26,12 @@ data:
     # not already know from elsewhere:
     #   delta_3              Ecoflow at the rack, the real homelab draw
     #   tibber_pulse         house consumption, east and west wing
-    #   inverter             Hoymiles PV
+    #   inverter             Hoymiles PV, three plants on one DTU
     #   tesla_wall_connector wallbox
+    # The inverter glob deliberately also catches sensor.inverter_*_2, which is
+    # the plant at Mama's and does not belong in this household's balance. Keep
+    # it apart when querying, and filter on entity rather than friendly_name:
+    # a language switch in HA left a second, stale set of friendly_name series.
     # The USW-16 PoE values are left out on purpose, unpoller already provides
     # them as unpoller_device_port_poe_watts.
     prometheus:
