@@ -1,0 +1,754 @@
+{
+  "title": "Energie",
+  "uid": "homelab-energie",
+  "description": "Strom im Haus aus den hass_*-Sensoren: die beiden eigenen Balkonkraftwerke, Tibber Pulse an beiden Zaehlern, Ecoflow am Rack und die Wallbox. Die Anlage im Gartenhaus gehoert Mama und steht deshalb unten in einer eigenen Zeile, nie in einer Summe. Alle Queries filtern auf entity und nie auf friendly_name: ein Sprachwechsel in HA hat pro Sensor eine zweite, veraltete friendly_name-Serie hinterlassen, die max by (entity) hier heraushaelt.",
+  "tags": [
+    "homelab",
+    "energie",
+    "home-assistant"
+  ],
+  "timezone": "browser",
+  "schemaVersion": 39,
+  "editable": true,
+  "refresh": "1m",
+  "time": {
+    "from": "now-24h",
+    "to": "now"
+  },
+  "templating": {
+    "list": []
+  },
+  "annotations": {
+    "list": []
+  },
+  "panels": [
+    {
+      "id": 1,
+      "type": "row",
+      "title": "Jetzt",
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 0 },
+      "collapsed": false,
+      "panels": []
+    },
+    {
+      "id": 2,
+      "type": "stat",
+      "title": "PV jetzt",
+      "description": "AC-Leistung der beiden eigenen Wechselrichter, Balkon Ost und Balkon West. Ohne Gartenhaus.",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 4, "w": 4, "x": 0, "y": 1 },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "sum(max by (entity) (hass_sensor_power_w{job=\"home-assistant\",entity=~\"sensor.inverter_ac_power(_3)?\"}))",
+          "legendFormat": "PV",
+          "instant": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "watt",
+          "decimals": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "text", "value": null },
+              { "color": "green", "value": 50 }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "colorMode": "value",
+        "graphMode": "area",
+        "textMode": "auto"
+      }
+    },
+    {
+      "id": 3,
+      "type": "stat",
+      "title": "Hausverbrauch jetzt",
+      "description": "Tibber Pulse, Ost- und Westfluegel summiert. Das Rack steckt hier mit drin.",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 4, "w": 4, "x": 4, "y": 1 },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "sum(max by (entity) (hass_sensor_power_w{job=\"home-assistant\",entity=~\"sensor.tibber_pulse_(ost|west)flugel_power\"}))",
+          "legendFormat": "Bezug",
+          "instant": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "watt",
+          "decimals": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 2000 },
+              { "color": "red", "value": 5000 }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "colorMode": "value",
+        "graphMode": "area",
+        "textMode": "auto"
+      }
+    },
+    {
+      "id": 4,
+      "type": "stat",
+      "title": "Einspeisung jetzt",
+      "description": "Was gerade ins Netz geht. Bezug und Einspeisung sind bei Tibber getrennte Sensoren, es ist immer nur einer von beiden ungleich null.",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 4, "w": 4, "x": 8, "y": 1 },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "sum(max by (entity) (hass_sensor_power_w{job=\"home-assistant\",entity=~\"sensor.tibber_pulse_(ost|west)flugel_power_production\"}))",
+          "legendFormat": "Einspeisung",
+          "instant": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "watt",
+          "decimals": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "text", "value": null },
+              { "color": "blue", "value": 1 }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "colorMode": "value",
+        "graphMode": "area",
+        "textMode": "auto"
+      }
+    },
+    {
+      "id": 5,
+      "type": "stat",
+      "title": "Wallbox jetzt",
+      "description": "Tesla Wall Connector, Gesamtleistung ueber alle drei Phasen. Der Sensor liefert kW, nicht W.",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 4, "w": 4, "x": 12, "y": 1 },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "max by (entity) (hass_sensor_power_kw{job=\"home-assistant\",entity=\"sensor.tesla_wall_connector_total_power\"})",
+          "legendFormat": "Wallbox",
+          "instant": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "kwatt",
+          "decimals": 2,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "text", "value": null },
+              { "color": "orange", "value": 1 }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "colorMode": "value",
+        "graphMode": "area",
+        "textMode": "auto"
+      }
+    },
+    {
+      "id": 6,
+      "type": "stat",
+      "title": "Rack jetzt",
+      "description": "Ecoflow Delta 3 am Rack. Derselbe Wert steht im Node Overview, hier zum Einordnen gegen den Hausverbrauch.",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 4, "w": 4, "x": 16, "y": 1 },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "max by (entity) (hass_sensor_power_w{job=\"home-assistant\",entity=\"sensor.delta_3_total_out_power\"})",
+          "legendFormat": "Rack",
+          "instant": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "watt",
+          "decimals": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 200 },
+              { "color": "red", "value": 350 }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "colorMode": "value",
+        "graphMode": "area",
+        "textMode": "auto"
+      }
+    },
+    {
+      "id": 7,
+      "type": "stat",
+      "title": "Ecoflow Ladestand",
+      "description": "Im TOU-Modus faellt der Stand tagsueber absichtlich, geladen wird in der guenstigen Zeit.",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 4, "w": 4, "x": 20, "y": 1 },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "max by (entity) (hass_sensor_battery_percent{job=\"home-assistant\",entity=\"sensor.delta_3_battery_level\"})",
+          "legendFormat": "Ladestand",
+          "instant": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "decimals": 0,
+          "min": 0,
+          "max": 100,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "red", "value": null },
+              { "color": "yellow", "value": 30 },
+              { "color": "green", "value": 60 }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "colorMode": "value",
+        "graphMode": "area",
+        "textMode": "auto"
+      }
+    },
+    {
+      "id": 8,
+      "type": "row",
+      "title": "PV (eigene Anlagen)",
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 5 },
+      "collapsed": false,
+      "panels": []
+    },
+    {
+      "id": 9,
+      "type": "timeseries",
+      "title": "PV-Leistung je Anlage",
+      "description": "AC-Leistung der beiden Wechselrichter plus Summe. Die entity_ids tragen die Anlage nicht, deshalb steht der Name nur im legendFormat: ohne Suffix ist Balkon Ost, _3 ist Balkon West.",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 8, "w": 16, "x": 0, "y": 6 },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "max by (entity) (hass_sensor_power_w{job=\"home-assistant\",entity=\"sensor.inverter_ac_power\"})",
+          "legendFormat": "Balkon Ost"
+        },
+        {
+          "refId": "B",
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "max by (entity) (hass_sensor_power_w{job=\"home-assistant\",entity=\"sensor.inverter_ac_power_3\"})",
+          "legendFormat": "Balkon West"
+        },
+        {
+          "refId": "C",
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "sum(max by (entity) (hass_sensor_power_w{job=\"home-assistant\",entity=~\"sensor.inverter_ac_power(_3)?\"}))",
+          "legendFormat": "Summe"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "watt",
+          "min": 0,
+          "custom": { "drawStyle": "line", "lineWidth": 1, "fillOpacity": 10, "showPoints": "never" }
+        },
+        "overrides": [
+          {
+            "matcher": { "id": "byName", "options": "Summe" },
+            "properties": [
+              { "id": "custom.lineWidth", "value": 2 },
+              { "id": "custom.fillOpacity", "value": 0 }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "legend": { "displayMode": "table", "placement": "right", "calcs": ["mean", "max"], "showLegend": true },
+        "tooltip": { "mode": "multi", "sort": "desc" }
+      }
+    },
+    {
+      "id": 10,
+      "type": "bargauge",
+      "title": "Ertrag heute",
+      "description": "DC-Tagesenergie am Port des jeweiligen Wechselrichters. Der Zaehler springt um Mitternacht auf null, ein Blick auf einen laengeren Zeitbereich zeigt hier also den letzten Wert im Fenster.",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 8, "w": 8, "x": 16, "y": 6 },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "max by (entity) (hass_sensor_energy_wh{job=\"home-assistant\",entity=\"sensor.inverter_port_1_dc_daily_energy\"})",
+          "legendFormat": "Balkon Ost",
+          "instant": true
+        },
+        {
+          "refId": "B",
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "max by (entity) (hass_sensor_energy_wh{job=\"home-assistant\",entity=\"sensor.inverter_port_1_dc_daily_energy_3\"})",
+          "legendFormat": "Balkon West",
+          "instant": true
+        },
+        {
+          "refId": "C",
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "sum(max by (entity) (hass_sensor_energy_wh{job=\"home-assistant\",entity=~\"sensor.inverter_port_1_dc_daily_energy(_3)?\"}))",
+          "legendFormat": "Summe",
+          "instant": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "watth",
+          "decimals": 0,
+          "min": 0,
+          "color": { "mode": "fixed", "fixedColor": "green" },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [{ "color": "green", "value": null }]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "displayMode": "gradient",
+        "orientation": "horizontal",
+        "showUnfilled": true
+      }
+    },
+    {
+      "id": 11,
+      "type": "stat",
+      "title": "Gesamtertrag seit Installation",
+      "description": "DC-Gesamtenergie, monoton steigend. Faellt der Wert, hat der Wechselrichter seinen Zaehler verloren.",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 4, "w": 16, "x": 0, "y": 14 },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "max by (entity) (hass_sensor_energy_wh{job=\"home-assistant\",entity=\"sensor.inverter_port_1_dc_total_energy\"})",
+          "legendFormat": "Balkon Ost",
+          "instant": true
+        },
+        {
+          "refId": "B",
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "max by (entity) (hass_sensor_energy_wh{job=\"home-assistant\",entity=\"sensor.inverter_port_1_dc_total_energy_3\"})",
+          "legendFormat": "Balkon West",
+          "instant": true
+        },
+        {
+          "refId": "C",
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "sum(max by (entity) (hass_sensor_energy_wh{job=\"home-assistant\",entity=~\"sensor.inverter_port_1_dc_total_energy(_3)?\"}))",
+          "legendFormat": "Summe",
+          "instant": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "watth",
+          "decimals": 1,
+          "color": { "mode": "fixed", "fixedColor": "green" },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [{ "color": "green", "value": null }]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "colorMode": "none",
+        "graphMode": "none",
+        "textMode": "auto",
+        "orientation": "horizontal"
+      }
+    },
+    {
+      "id": 12,
+      "type": "stat",
+      "title": "Verbrauch und Einspeisung heute",
+      "description": "Tibber-Tageswerte beider Zaehler summiert. Sie laufen um Mitternacht zurueck auf null.",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 4, "w": 8, "x": 16, "y": 14 },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "sum(max by (entity) (hass_sensor_energy_kwh{job=\"home-assistant\",entity=~\"sensor.tibber_pulse_(ost|west)flugel_accumulated_consumption\"}))",
+          "legendFormat": "Bezug",
+          "instant": true
+        },
+        {
+          "refId": "B",
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "sum(max by (entity) (hass_sensor_energy_kwh{job=\"home-assistant\",entity=~\"sensor.tibber_pulse_(ost|west)flugel_accumulated_production\"}))",
+          "legendFormat": "Einspeisung",
+          "instant": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "kwatth",
+          "decimals": 2,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [{ "color": "text", "value": null }]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": { "id": "byName", "options": "Einspeisung" },
+            "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "blue" } }]
+          }
+        ]
+      },
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "colorMode": "value",
+        "graphMode": "none",
+        "textMode": "auto",
+        "orientation": "horizontal"
+      }
+    },
+    {
+      "id": 13,
+      "type": "row",
+      "title": "Haus",
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 18 },
+      "collapsed": false,
+      "panels": []
+    },
+    {
+      "id": 14,
+      "type": "timeseries",
+      "title": "Bezug und Einspeisung",
+      "description": "Beide Tibber-Zaehler getrennt, Einspeisung negativ aufgetragen, damit die Richtung sichtbar ist.",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 19 },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "max by (entity) (hass_sensor_power_w{job=\"home-assistant\",entity=\"sensor.tibber_pulse_ostflugel_power\"})",
+          "legendFormat": "Bezug Ostflügel"
+        },
+        {
+          "refId": "B",
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "max by (entity) (hass_sensor_power_w{job=\"home-assistant\",entity=\"sensor.tibber_pulse_westflugel_power\"})",
+          "legendFormat": "Bezug Westflügel"
+        },
+        {
+          "refId": "C",
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "- sum(max by (entity) (hass_sensor_power_w{job=\"home-assistant\",entity=~\"sensor.tibber_pulse_(ost|west)flugel_power_production\"}))",
+          "legendFormat": "Einspeisung"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "watt",
+          "custom": { "drawStyle": "line", "lineWidth": 1, "fillOpacity": 10, "showPoints": "never" }
+        },
+        "overrides": [
+          {
+            "matcher": { "id": "byName", "options": "Einspeisung" },
+            "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "blue" } }]
+          }
+        ]
+      },
+      "options": {
+        "legend": { "displayMode": "table", "placement": "right", "calcs": ["mean", "max"], "showLegend": true },
+        "tooltip": { "mode": "multi", "sort": "desc" }
+      }
+    },
+    {
+      "id": 15,
+      "type": "timeseries",
+      "title": "Rack und Wallbox",
+      "description": "Die beiden groessten Einzelverbraucher im Haus. Die Wallbox liefert kW und ist deshalb auf eine eigene Achse gelegt.",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 19 },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "max by (entity) (hass_sensor_power_w{job=\"home-assistant\",entity=\"sensor.delta_3_total_out_power\"})",
+          "legendFormat": "Rack"
+        },
+        {
+          "refId": "B",
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "max by (entity) (hass_sensor_power_kw{job=\"home-assistant\",entity=\"sensor.tesla_wall_connector_total_power\"})",
+          "legendFormat": "Wallbox"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "watt",
+          "min": 0,
+          "custom": { "drawStyle": "line", "lineWidth": 1, "fillOpacity": 10, "showPoints": "never" }
+        },
+        "overrides": [
+          {
+            "matcher": { "id": "byName", "options": "Wallbox" },
+            "properties": [
+              { "id": "unit", "value": "kwatt" },
+              { "id": "custom.axisPlacement", "value": "right" }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "legend": { "displayMode": "table", "placement": "right", "calcs": ["mean", "max"], "showLegend": true },
+        "tooltip": { "mode": "multi", "sort": "desc" }
+      }
+    },
+    {
+      "id": 16,
+      "type": "stat",
+      "title": "Zaehlerstaende und Wallbox gesamt",
+      "description": "Die Tibber-Werte sind die abgelesenen Zaehlerstaende beider Zaehler, nicht kumulierte Tageswerte.",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 4, "w": 24, "x": 0, "y": 27 },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "sum(max by (entity) (hass_sensor_energy_kwh{job=\"home-assistant\",entity=~\"sensor.tibber_pulse_(ost|west)flugel_last_meter_consumption\"}))",
+          "legendFormat": "Zählerstand Bezug",
+          "instant": true
+        },
+        {
+          "refId": "B",
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "sum(max by (entity) (hass_sensor_energy_kwh{job=\"home-assistant\",entity=~\"sensor.tibber_pulse_(ost|west)flugel_last_meter_production\"}))",
+          "legendFormat": "Zählerstand Einspeisung",
+          "instant": true
+        },
+        {
+          "refId": "C",
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "max by (entity) (hass_sensor_energy_kwh{job=\"home-assistant\",entity=\"sensor.tesla_wall_connector_energy\"})",
+          "legendFormat": "Wallbox gesamt",
+          "instant": true
+        },
+        {
+          "refId": "D",
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "max by (entity) (hass_sensor_energy_kwh{job=\"home-assistant\",entity=\"sensor.tesla_wall_connector_session_energy\"})",
+          "legendFormat": "Wallbox letzter Vorgang",
+          "instant": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "kwatth",
+          "decimals": 1,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [{ "color": "text", "value": null }]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "colorMode": "none",
+        "graphMode": "none",
+        "textMode": "auto",
+        "orientation": "horizontal"
+      }
+    },
+    {
+      "id": 17,
+      "type": "row",
+      "title": "Gartenhaus (Mamas Anlage, nicht in der Bilanz oben)",
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 31 },
+      "collapsed": false,
+      "panels": []
+    },
+    {
+      "id": 18,
+      "type": "stat",
+      "title": "Leistung jetzt",
+      "description": "Der dritte Wechselrichter an derselben DTU 192.168.2.34. Er steht bei Mama, sein Ertrag gehoert nicht in die Bilanz dieser Wohnung und taucht deshalb in keiner Summe oben auf.",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 6, "w": 4, "x": 0, "y": 32 },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "max by (entity) (hass_sensor_power_w{job=\"home-assistant\",entity=\"sensor.inverter_ac_power_2\"})",
+          "legendFormat": "Gartenhaus",
+          "instant": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "watt",
+          "decimals": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "text", "value": null },
+              { "color": "green", "value": 50 }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "colorMode": "value",
+        "graphMode": "area",
+        "textMode": "auto"
+      }
+    },
+    {
+      "id": 19,
+      "type": "stat",
+      "title": "Ertrag heute",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 6, "w": 4, "x": 4, "y": 32 },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "max by (entity) (hass_sensor_energy_wh{job=\"home-assistant\",entity=\"sensor.inverter_port_1_dc_daily_energy_2\"})",
+          "legendFormat": "Gartenhaus",
+          "instant": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "watth",
+          "decimals": 0,
+          "color": { "mode": "fixed", "fixedColor": "green" },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [{ "color": "green", "value": null }]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "colorMode": "none",
+        "graphMode": "none",
+        "textMode": "auto"
+      }
+    },
+    {
+      "id": 20,
+      "type": "stat",
+      "title": "Gesamtertrag",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 6, "w": 4, "x": 8, "y": 32 },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "max by (entity) (hass_sensor_energy_wh{job=\"home-assistant\",entity=\"sensor.inverter_port_1_dc_total_energy_2\"})",
+          "legendFormat": "Gartenhaus",
+          "instant": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "watth",
+          "decimals": 1,
+          "color": { "mode": "fixed", "fixedColor": "green" },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [{ "color": "green", "value": null }]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "colorMode": "none",
+        "graphMode": "none",
+        "textMode": "auto"
+      }
+    },
+    {
+      "id": 21,
+      "type": "timeseries",
+      "title": "Verlauf Gartenhaus",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 6, "w": 12, "x": 12, "y": 32 },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "max by (entity) (hass_sensor_power_w{job=\"home-assistant\",entity=\"sensor.inverter_ac_power_2\"})",
+          "legendFormat": "Gartenhaus"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "watt",
+          "min": 0,
+          "custom": { "drawStyle": "line", "lineWidth": 1, "fillOpacity": 10, "showPoints": "never" }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": { "displayMode": "list", "placement": "bottom", "calcs": [], "showLegend": false },
+        "tooltip": { "mode": "single", "sort": "none" }
+      }
+    }
+  ]
+}
