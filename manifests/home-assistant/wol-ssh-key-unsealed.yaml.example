@@ -1,0 +1,21 @@
+# ssh-keygen -t ed25519 -N '' -C 'home-assistant-wol@elmstreet79' -f /tmp/wol
+# kubectl create secret generic wol-ssh-key -n home-assistant \
+#   --from-file=id_ed25519=/tmp/wol --dry-run=client -o yaml \
+#   > manifests/home-assistant/wol-ssh-key-unsealed.yaml
+# ./reseal-all-secrets.sh
+#
+# Der Public Key gehoert auf dem Nebu2k-PC nach
+# C:\ProgramData\ssh\administrators_authorized_keys. Der Pfad unter %USERPROFILE%
+# wird bei Konten mit Admin-Rechten von sshd ignoriert.
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: wol-ssh-key
+  namespace: home-assistant
+type: Opaque
+stringData:
+  id_ed25519: |
+    -----BEGIN OPENSSH PRIVATE KEY-----
+    ...
+    -----END OPENSSH PRIVATE KEY-----

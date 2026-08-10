@@ -42,6 +42,26 @@ data:
           - sensor.inverter_*
           - sensor.tesla_wall_connector_*
     
+    # Ausschalten des Nebu2k-PC. Der Windows-eigene OpenSSH-Server ist das
+    # Gegenstueck, der Key liegt als Secret unter /ssh-wol und bewusst nicht auf
+    # dem Config-Volume: das wandert monatlich als Archiv nach S3.
+    shell_command:
+      nebu2k_pc_shutdown: >-
+        ssh -i /ssh-wol/id_ed25519 -o IdentitiesOnly=yes -o BatchMode=yes
+        -o ConnectTimeout=5 -o StrictHostKeyChecking=accept-new
+        -o UserKnownHostsFile=/config/ssh_known_hosts
+        sebastian@192.168.2.5 "shutdown /s /t 0"
+
+    switch:
+      # host: macht aus dem Schalter einen gemessenen Zustand (Ping alle 30 s)
+      # statt eines geratenen. Haengt an der festen .5.
+      - platform: wake_on_lan
+        name: Nebu2k-PC
+        mac: d8:bb:c1:3d:c8:ae
+        host: 192.168.2.5
+        turn_off:
+          action: shell_command.nebu2k_pc_shutdown
+
     # Enable automations UI
     automation: !include automations.yaml
     

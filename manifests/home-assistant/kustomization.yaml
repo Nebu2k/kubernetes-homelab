@@ -15,4 +15,5 @@ resources:
   - ingress.yaml
   - configmap-configuration.yaml
   - s3-archive-credentials-sealed.yaml
+  - wol-ssh-key-sealed.yaml
   - backup-archive-cronjob.yaml

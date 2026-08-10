@@ -88,6 +88,9 @@ spec:
         volumeMounts:
         - name: config
           mountPath: /config
+        - name: wol-ssh-key
+          mountPath: /ssh-wol
+          readOnly: true
         livenessProbe:
           httpGet:
             path: /
@@ -150,3 +153,8 @@ spec:
       - name: matter-data
         persistentVolumeClaim:
           claimName: home-assistant-matter-data
+      - name: wol-ssh-key
+        secret:
+          secretName: wol-ssh-key
+          # ssh verweigert den Dienst bei laxeren Rechten am Private Key.
+          defaultMode: 0400
