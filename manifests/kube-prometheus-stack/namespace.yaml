@@ -1,16 +1,11 @@
-# Der monitoring-Namespace als echte Ressource, nur damit das PodSecurity-Label
-# verlaesslich sitzt.
+# The namespace exists as a real resource only so the PodSecurity label sits
+# reliably. managedNamespaceMetadata on the Application only applies when the
+# namespace is CREATED; as a manifest the namespace is part of the sync.
 #
-# managedNamespaceMetadata an der Application taugt dafuer nicht: das wirkt nur
-# beim ANLEGEN des Namespace. Existiert er schon, kommt das Label nicht mehr an,
-# auch nicht nach einer terminierten Sync-Operation. Als Manifest ist der
-# Namespace Teil des Sync und die Sache eindeutig.
-#
-# Gebraucht wird die Ausnahme fuer den node-exporter-DaemonSet: hostNetwork,
-# hostPID, hostPort 9100 und drei hostPath-Volumes, alles unter dem
-# baseline-Profil verboten, das Talos clusterweit erzwingt. Ohne das Label
-# bleibt der DaemonSet bei 0/3, waehrend Prometheus, Grafana und Alertmanager
-# normal starten und die App Synced meldet.
+# The exemption is for the node-exporter DaemonSet: hostNetwork, hostPID,
+# hostPort 9100 and three hostPath volumes, all forbidden under the baseline
+# profile Talos enforces cluster-wide. Without the label the DaemonSet stays
+# at 0/3 while everything else starts and the app reports Synced.
 apiVersion: v1
 kind: Namespace
 metadata:

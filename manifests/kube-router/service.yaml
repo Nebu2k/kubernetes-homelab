@@ -1,5 +1,5 @@
-# Nur fuer den ServiceMonitor. kube-router bedient hier keinen Verkehr, der
-# Service existiert allein, damit Prometheus ein Ziel hat.
+# For the ServiceMonitor only. kube-router serves no traffic here, the service
+# exists purely to give Prometheus a target.
 apiVersion: v1
 kind: Service
 metadata:

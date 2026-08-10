@@ -1,8 +1,7 @@
-# Rechte des NetworkPolicy-Controllers: ausschliesslich lesen.
-#
-# Er muss wissen, welche Policies es gibt und welche Pods, Namespaces und
-# Services deren Selektoren treffen. Geschrieben wird nichts im API, die
-# Wirkung entsteht in iptables auf der Node.
+# Permissions of the NetworkPolicy controller: read only. It needs to know
+# which policies exist and which pods, namespaces and services their selectors
+# match. Nothing is written to the API, the effect happens in iptables on the
+# node.
 apiVersion: v1
 kind: ServiceAccount
 metadata:
@@ -46,8 +45,8 @@ rules:
       - list
       - get
       - watch
-  # Der Controller meldet Fehler als Event am betroffenen Objekt, statt sie nur
-  # ins eigene Log zu schreiben.
+  # The controller reports errors as events on the affected object rather than
+  # only writing them to its own log.
   - apiGroups:
       - ""
     resources:

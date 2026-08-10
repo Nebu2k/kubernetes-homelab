@@ -1,35 +1,33 @@
-# Luefterregelung fuer den Raspberry Pi 5 unter Talos.
+# Fan control for the Raspberry Pi 5 under Talos.
 #
-# WARUM ES DAS GIBT: der Official Active Cooler haengt am PWM des RP1, und
-# der Talos-Kernel bringt CONFIG_PWM_RP1 nicht mit (auch nicht als Modul,
-# der Treiber existiert nur im Fork raspberrypi/linux, nicht in Mainline).
-# Ohne PWM-Provider findet pwm-fan nichts, an dem er haengen koennte:
+# The Official Active Cooler hangs off the RP1's PWM, and the Talos kernel
+# does not ship CONFIG_PWM_RP1 (not even as a module, the driver exists only
+# in the raspberrypi/linux fork). Without a PWM provider pwm-fan finds nothing
+# to attach to:
 #
 #   platform cooling_fan: deferred probe pending: pwm-fan: Could not get PWM
 #
-# Es gibt dann kein cooling_device, also auch nichts zu regeln, und der
-# Luefter laeuft ungeregelt auf voller Drehzahl. Bei 46 Grad.
+# There is then no cooling_device, nothing to control, and the fan runs
+# unregulated at full speed even at idle temperatures.
 #
-# Dieses Programm ersetzt den fehlenden Treiber im Userspace: es
-# programmiert die PWM-Register des RP1 direkt ueber das PCI-Resource-File
-# und regelt in einer Schleife nach der Temperatur.
+# This program replaces the missing driver in userspace: it programs the RP1's
+# PWM registers directly through the PCI resource file and controls the fan in
+# a loop based on temperature.
 #
-# Der Preis dafuer ist ein privilegierter Pod. Der Gegenwert ist, dass hier
-# nichts an die Kernel-Version gebunden ist: eine Kernel-Modul-Extension
-# muesste wegen CONFIG_MODVERSIONS vor JEDEM Talos-Upgrade neu gebaut sein,
-# sonst haengt die Node zurueck. Dieses Programm ueberlebt Upgrades
-# unveraendert.
+# The price is a privileged pod. The return is that nothing here is bound to
+# the kernel version: a kernel module extension would have to be rebuilt
+# before EVERY Talos upgrade because of CONFIG_MODVERSIONS, or the node falls
+# behind. This program survives upgrades unchanged.
 #
-# Register und Offsets stammen aus den Kernelquellen (drivers/pwm/pwm-rp1.c,
-# drivers/clk/clk-rp1.c, arch/arm64/boot/dts/broadcom/rp1.dtsi) und aus dem
-# Ansatz von Sung-jin Hong (0BSD), der das in
-# https://github.com/siderolabs/sbc-raspberrypi/issues/90 als Einmal-Setzer
-# gezeigt hat. Hier ist daraus ein Regelkreis mit Hysterese geworden.
+# Registers and offsets come from the kernel sources (drivers/pwm/pwm-rp1.c,
+# drivers/clk/clk-rp1.c, arch/arm64/boot/dts/broadcom/rp1.dtsi) and from
+# Sung-jin Hong's approach (0BSD) in
+# https://github.com/siderolabs/sbc-raspberrypi/issues/90, which set the
+# registers once. This turns it into a control loop with hysteresis.
 #
-# WENN MAINLINE DEN TREIBER BEKOMMT (der Patch von Andrea Porta liegt seit
-# 2026-08 im Review), gehoert das hier ersatzlos geloescht: dann gibt es ein
-# echtes cooling_device und der step_wise-Governor macht das von selbst.
-# Beides gleichzeitig waere ein Kampf um dieselben Register.
+# Once mainline gains the driver this file should be deleted outright: there
+# will be a real cooling_device and the step_wise governor handles it. Running
+# both would be a fight over the same registers.
 import mmap
 import os
 import signal
@@ -44,22 +42,19 @@ THERMAL = "/host-sys/class/thermal/thermal_zone0/temp"
 POLL_SECONDS = 5
 METRICS_PORT = 9101
 
-# Kennlinie: (Einschaltschwelle in Grad, Drehzahl in Prozent).
+# Curve: (switch-on threshold in degrees, speed in percent).
 #
-# Unter 50 Grad bleibt er aus. "Aus" ist die einzige wirklich lautlose Stufe.
+# Below 50 degrees the fan stays off, the only truly silent step. 30 percent
+# is the lowest step that still turns; below that the fan stalls or hums
+# without moving air.
 #
-# 30 Prozent ist die unterste Stufe, die noch dreht: darunter bleibt der
-# Luefter je nach Exemplar stehen oder brummt, ohne Luft zu bewegen.
-#
-# DIE ZWEITE STUFE STEHT AUF 65 UND NICHT AUF 60, und das ist gemessen, nicht
-# geschaetzt: bei 30 Prozent liegt das Gleichgewicht im Leerlauf stabil bei
-# 57-59 Grad. Mit der Schwelle bei 60 streift die Node sie alle paar Minuten,
-# faehrt kurz auf 55 Prozent, kuehlt in 40 Sekunden unter die Hysteresegrenze
-# und faellt zurueck. Dieses Pumpen faellt deutlich mehr auf als
-# eine konstante niedrige Drehzahl, und es ist genau das, was die Hysterese
-# eigentlich verhindern soll: sie kann nur nicht helfen, wenn der Ruhepunkt
-# direkt unter der Schwelle liegt. 65 legt die naechste Stufe ueber den
-# Leerlauf, sie greift dann unter echter Last. Der Pi 5 drosselt erst ab 80.
+# The second step sits at 65 and not at 60 by measurement: at 30 percent the
+# idle equilibrium is stable around 57-59 degrees. With the threshold at 60
+# the node grazes it every few minutes and pumps up and down, which is far
+# more noticeable than a constant low speed and is exactly what hysteresis
+# cannot prevent when the resting point sits just below the threshold. 65 puts
+# the next step above idle so it engages under real load. The Pi 5 does not
+# throttle before 80.
 CURVE = [
     (78, 100),
     (72, 80),
@@ -68,14 +63,13 @@ CURVE = [
     (0, 0),
 ]
 
-# Hysterese in Grad. Ohne sie pendelt der Luefter an jeder Schwelle im
-# Sekundentakt an und aus, und genau dieses Pumpen faellt mehr auf als eine
-# konstante niedrige Drehzahl. Heruntergeschaltet wird deshalb erst, wenn
-# die Temperatur die Schwelle um diesen Betrag unterschritten hat.
+# Hysteresis in degrees. Without it the fan toggles at every threshold from
+# second to second. Stepping down happens only once the temperature has
+# dropped this far below the threshold.
 HYSTERESIS = 4
 
-# --- RP1-Register ---------------------------------------------------------
-# Taktgeber (clk-rp1.c). PWM1 haengt am xosc mit 50 MHz.
+# RP1 registers.
+# Clock source (clk-rp1.c). PWM1 hangs off the 50 MHz xosc.
 CLK_PWM1_CTRL = 0x18084
 CLK_PWM1_DIV_INT = 0x18088
 CLK_PWM1_DIV_FRAC = 0x1808C
@@ -83,12 +77,12 @@ CLK_PWM1_SEL = 0x18090
 CLK_CTRL_ENABLE = 1 << 11
 AUXSRC_XOSC = 2
 
-# GPIO45 traegt den Luefter und muss auf die PWM-Funktion stehen
-# (pinctrl-rp1.c: Bank 2, lokaler Pin 11, FUNCSEL 0 ist pwm1).
+# GPIO45 carries the fan and must be set to the PWM function
+# (pinctrl-rp1.c: bank 2, local pin 11, FUNCSEL 0 is pwm1).
 GPIO45_CTRL = 0xD0000 + 0x8000 + 11 * 8 + 4
 PWM_FUNCSEL = 0
 
-# PWM1, Kanal 3 (pwm-rp1.c).
+# PWM1, channel 3 (pwm-rp1.c).
 PWM1 = 0x9C000
 CH = 3
 GLOB_CTRL = PWM1 + 0x000
@@ -96,13 +90,13 @@ CHAN_CTRL = PWM1 + 0x014 + CH * 16
 RANGE_REG = PWM1 + 0x018 + CH * 16
 DUTY_REG = PWM1 + 0x020 + CH * 16
 
-# 41566 ns Periode (~24 kHz) laut Device-Tree, bei 50 MHz sind das 20 ns je
-# Takt. Die Frequenz ist bewusst oberhalb des Hoerbaren.
+# 41566 ns period (~24 kHz) per the device tree; at 50 MHz that is 20 ns per
+# tick. The frequency is deliberately above the audible range.
 RANGE_TICKS = 41566 // 20
 
 # BIT(8) FIFO_POP_MASK | BIT(3) POLARITY_INV | BIT(0) M/S_MODE.
-# Die Invertierung macht die Hardware, deshalb gilt hier geradeaus:
-# duty=0 ist aus, duty=range ist volle Drehzahl.
+# The hardware does the inversion, so here it reads straight: duty=0 is off,
+# duty=range is full speed.
 CHAN_CTRL_INIT = 0x109
 
 
@@ -121,9 +115,8 @@ class Rp1Pwm:
         struct.pack_into("<I", self.mm, off, val)
 
     def setup(self):
-        # Takt erst abschalten, dann die Quelle wechseln, dann einschalten.
-        # Ein Quellwechsel im laufenden Betrieb kann den Teiler haengen
-        # lassen.
+        # Disable the clock, switch the source, then enable: switching the
+        # source while running can hang the divider.
         ctrl = self.read32(CLK_PWM1_CTRL)
         self.write32(CLK_PWM1_CTRL, ctrl & ~CLK_CTRL_ENABLE)
         self.write32(CLK_PWM1_DIV_INT, 1)
@@ -147,8 +140,8 @@ class Rp1Pwm:
 
     def set_percent(self, percent):
         self.write32(DUTY_REG, RANGE_TICKS * percent // 100)
-        # SET_UPDATE muss in einem EIGENEN Schreibzugriff kommen, sonst
-        # uebernimmt der Kanal die neuen Werte nicht.
+        # SET_UPDATE must come in its OWN write, otherwise the channel does
+        # not pick up the new values.
         glob = self.read32(GLOB_CTRL)
         self.write32(GLOB_CTRL, glob | (1 << 31))
 
@@ -163,8 +156,8 @@ def target_percent(temp, current):
         if temp >= threshold:
             if percent >= current:
                 return percent
-            # Runter erst, wenn die Hysterese ueberschritten ist. Dafuer
-            # zaehlt die Schwelle der AKTUELLEN Stufe, nicht der neuen.
+            # Step down only past the hysteresis, measured against the
+            # CURRENT step's threshold rather than the new one.
             for t2, p2 in CURVE:
                 if p2 == current:
                     return current if temp > t2 - HYSTERESIS else percent
@@ -184,11 +177,11 @@ class Metrics(BaseHTTPRequestHandler):
             "# HELP rpi5_fan_temperature_celsius Temperatur, nach der geregelt wird.\n"
             "# TYPE rpi5_fan_temperature_celsius gauge\n"
             f"rpi5_fan_temperature_celsius {state['temp']:.1f}\n"
-            # Ein konstantes "up 1" waere hier wertlos: dieser Handler laeuft in
-            # einem eigenen Thread und antwortet auch dann noch brav, wenn die
-            # Regelschleife im Hauptthread haengt. Der Luefter waere dann
-            # unreguliert, und Liveness-Probe wie Alert blieben gruen. Nur der
-            # Zeitstempel des letzten Durchlaufs belegt, dass geregelt wird.
+            # A constant "up 1" would be worthless: this handler runs in its
+            # own thread and keeps answering even when the control loop in the
+            # main thread is stuck, leaving the fan unregulated while probe
+            # and alert stay green. Only the timestamp of the last iteration
+            # proves that control is happening.
             "# HELP rpi5_fan_last_loop_timestamp_seconds Zeitpunkt des letzten Regeldurchlaufs.\n"
             "# TYPE rpi5_fan_last_loop_timestamp_seconds gauge\n"
             f"rpi5_fan_last_loop_timestamp_seconds {state['loop']:.0f}\n"
@@ -207,9 +200,8 @@ def main():
     pwm = Rp1Pwm()
     pwm.setup()
 
-    # Volle Drehzahl beim Beenden. Wenn dieser Prozess weg ist, regelt
-    # niemand mehr, und ein Luefter, der auf 30 Prozent stehenbleibt, ist
-    # schlechter als einer, der laut ist.
+    # Full speed on shutdown: with this process gone nobody controls the fan,
+    # and one stuck at 30 percent is worse than a loud one.
     def on_signal(signum, frame):
         print("beende, setze Luefter auf 100 Prozent", flush=True)
         pwm.set_percent(100)
@@ -223,9 +215,8 @@ def main():
         daemon=True,
     ).start()
 
-    # Start bei voller Drehzahl und nicht bei 0: bis die erste Messung
-    # vorliegt, ist der sichere Zustand der laute. Der erste Schleifen-
-    # durchlauf regelt sofort herunter, das dauert keine Sekunde.
+    # Start at full speed rather than 0: until the first reading arrives the
+    # safe state is the loud one. The first loop iteration turns it down.
     current = 100
     pwm.set_percent(current)
     state["percent"] = current
@@ -238,8 +229,8 @@ def main():
         state["loop"] = time.time()
         if want != current:
             pwm.set_percent(want)
-            # Nur Aenderungen loggen. Eine Zeile alle 5 Sekunden waere in
-            # einem Cluster mit zentralem Logging reine Last.
+            # Log changes only. A line every 5 seconds would be pure load in
+            # a cluster with central logging.
             print(
                 f"{temp:.1f} C: {current} -> {want} Prozent "
                 f"(nach {int(time.time() - state['since'])} s)",

@@ -1,11 +1,9 @@
-# DaemonSet und nicht Deployment, obwohl es genau eine Node trifft: so steht die
-# Bedingung ("die Node, die ein Pi 5 ist") im nodeSelector statt in einer
-# Replikatzahl, und ein zweiter Pi 5 im Cluster braeuchte keine Aenderung.
+# A DaemonSet rather than a Deployment although it hits exactly one node: the
+# condition ("the node that is a Pi 5") then lives in the nodeSelector instead
+# of a replica count, and a second Pi 5 would need no change.
 #
-# Der nodeSelector geht ueber den Hostnamen, nicht ueber ein eigenes Label. Ein
-# eigenes Label muesste in talos/talconfig.yaml gesetzt werden, und das kostet
-# ein apply-config auf der Node. Die Node ist ohnehin ein Pet, siehe
-# ROADMAP-Randbedingung zur Hardware-Diversitaet.
+# The nodeSelector uses the hostname rather than a dedicated label, which
+# would have to be set in talos/talconfig.yaml and cost an apply-config.
 apiVersion: apps/v1
 kind: DaemonSet
 metadata:
@@ -24,21 +22,20 @@ spec:
     spec:
       nodeSelector:
         kubernetes.io/hostname: raspi5
-      # Die Node ist Control-Plane. Sie traegt zwar auch das worker-Label und
-      # hat keinen Taint, aber ein Taint kaeme bei einem Talos-Upgrade
-      # voruebergehend zurueck, und dann soll die Luefterregelung gerade NICHT
-      # verschwinden.
+      # The node is control plane. It carries the worker label and has no
+      # taint, but a taint returns temporarily during a Talos upgrade, and
+      # that is precisely when fan control must NOT disappear.
       tolerations:
         - operator: Exists
-      # Ohne das laeuft der Pod beim Node-Shutdown eventuell noch, waehrend das
-      # Netz schon weg ist. 10 Sekunden reichen fuer den SIGTERM-Handler, der
-      # den Luefter auf 100 Prozent stellt.
+      # Without this the pod may still run during node shutdown after the
+      # network is gone. 10 seconds suffice for the SIGTERM handler that sets
+      # the fan to 100 percent.
       terminationGracePeriodSeconds: 10
       priorityClassName: system-node-critical
       containers:
         - name: fan
-          # Renovate haelt den Tag aktuell. Es ist das offizielle Image, der
-          # Regler selbst kommt aus der ConfigMap daneben.
+          # The official image, kept current by Renovate; the controller
+          # itself comes from the ConfigMap next to it.
           image: python:3.14-slim
           command:
             - python3
@@ -48,21 +45,20 @@ spec:
             - name: metrics
               containerPort: 9101
           securityContext:
-            # privileged, nicht einzelne Capabilities. Gebraucht wird der
-            # Schreibzugriff auf das PCI-Resource-File des RP1 und dessen
-            # mmap; mit CAP_SYS_RAWIO allein scheitert schon das Oeffnen mit
-            # O_RDWR, weil sysfs-Resource-Dateien root plus die Lockdown-Freigabe
-            # verlangen.
+            # privileged rather than individual capabilities: what is needed
+            # is write access to the RP1's PCI resource file and its mmap, and
+            # with CAP_SYS_RAWIO alone even opening it O_RDWR fails, because
+            # sysfs resource files demand root plus the lockdown clearance.
             privileged: true
           volumeMounts:
             - name: sys
               mountPath: /host-sys
             - name: script
               mountPath: /opt/fan
-          # Die Sonde prueft den Regelkreis, nicht nur den Prozess: der
-          # Metrics-Endpunkt wird vom selben Thread bedient, der auch laeuft,
-          # solange Python lebt. Faellt der Regelkreis aus, bleibt der Luefter
-          # auf seinem letzten Wert stehen, und genau das soll auffallen.
+          # The probe tests the control loop, not just the process: the
+          # metrics endpoint is served by a thread that keeps answering as
+          # long as Python lives, while a stalled loop leaves the fan at its
+          # last value.
           livenessProbe:
             httpGet:
               path: /metrics

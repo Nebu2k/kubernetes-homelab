@@ -1,7 +1,7 @@
-# Gatus schreibt seine Ergebnisse als Prometheus-Metriken (metrics: true in der
-# config). Alarmiert wird daraus in
-# manifests/kube-prometheus-stack/prometheus-rules.yaml (Gruppe "gatus"), damit
-# es bei EINEM Alarmweg bleibt (Alertmanager -> SNS).
+# Gatus writes its results as Prometheus metrics (metrics: true in its
+# config). Alerting happens in the "gatus" group of
+# manifests/kube-prometheus-stack/prometheus-rules.yaml so there is ONE path
+# (Alertmanager -> SNS).
 apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:

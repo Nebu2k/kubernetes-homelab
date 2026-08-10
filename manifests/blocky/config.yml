@@ -1,65 +1,57 @@
 # yaml-language-server: $schema=https://raw.githubusercontent.com/0xERR0R/blocky/main/docs/config.schema.json
 #
-# EINE Wahrheit fuer BEIDE Blocky-Instanzen, und ein Commit genuegt.
+# One truth for BOTH Blocky instances, one commit is enough. The cluster picks
+# this file up through a configMapGenerator; the LXC on pve fetches the exact
+# same file from raw.githubusercontent.com every 15 minutes, validates it with
+# "blocky validate" and restarts. No terraform apply needed, Terraform only
+# owns the container.
 #
-# Das Cluster zieht diese Datei per configMapGenerator, ArgoCD rollt sie aus.
-# Der LXC-Container auf pve holt sich exakt dieselbe Datei alle 15 Minuten
-# selbst von raw.githubusercontent.com (homelab-terraform, blocky/
-# config-sync.sh.tftpl) und prueft sie mit "blocky validate", bevor er
-# neustartet. Ein "terraform apply" ist dafuer NICHT noetig, Terraform besitzt
-# nur den Container.
+# The LXC therefore trails the cluster by up to a quarter of an hour, on
+# purpose: a bad change shows up in the cluster while the second resolver
+# still runs the previous state.
 #
-# Der LXC laeuft dem Cluster bis zu eine Viertelstunde hinterher. Das ist
-# Absicht: geht eine Aenderung schief, faellt sie im Cluster auf, waehrend der
-# zweite Resolver noch den alten Stand faehrt.
-#
-# Die Datei enthaelt bewusst nichts Instanz-Spezifisches: kein Bind-Interface,
-# keine eigene IP, kein Hostname. Was beide Instanzen unterscheidet, steht in
-# ihrem jeweiligen Deployment.
+# Nothing instance-specific belongs here: no bind interface, no address, no
+# hostname. What differs between the two lives in their deployments.
 
-# Einziger Upstream ist der lokale Unbound. Im Cluster ist das ein Sidecar im
-# selben Pod, auf dem LXC das Alpine-Paket, in beiden Faellen 127.0.0.1:5335.
+# The only upstream is the local Unbound: a sidecar in the same pod here, the
+# Alpine package on the LXC, 127.0.0.1:5335 either way.
 upstreams:
   init:
-    # Nicht am hochfahrenden Unbound haengen bleiben: Blocky nimmt den Dienst
-    # sofort an und probiert den Upstream beim ersten Query.
+    # Do not block on a starting Unbound: Blocky serves immediately and tries
+    # the upstream on the first query.
     strategy: fast
-  # strict, nicht parallel_best. Bei parallel_best waehlt Blocky pro Query zwei
-  # zufaellige Resolver aus der Gruppe; steht dort neben Unbound irgendwann ein
-  # oeffentlicher Fallback, leckt die Haelfte aller Queries nach draussen,
-  # obwohl Unbound laeuft. Mit strict ist die Reihenfolge bindend.
+  # strict, not parallel_best: the latter picks two random resolvers per query,
+  # so adding a public fallback next to Unbound some day would leak half of all
+  # queries even while Unbound is healthy. strict makes the order binding.
   strategy: strict
   groups:
     default:
       - tcp+udp:127.0.0.1:5335
-  # Grosszuegiger als der Default (2s): ein Cold-Cache-Query geht bei Unbound
-  # rekursiv bis zur Root und ist spuerbar langsamer als ein Cloudflare-Anycast.
+  # More generous than the 2s default: a cold-cache query recurses all the way
+  # to the root and is noticeably slower than a Cloudflare anycast answer.
   timeout: 5s
 
-# Aufloesung der Blocklisten-URLs laeuft ebenfalls ueber den lokalen Unbound und
-# nicht ueber /etc/resolv.conf. Im Cluster zeigt resolv.conf auf CoreDNS, und
-# CoreDNS forwardet an den Haus-Resolver: ohne diese Zeile haengt der Start der
-# Cluster-Instanz an genau dem Resolver, den sie ersetzen soll.
+# The blocklist URLs resolve through the local Unbound too, not through
+# /etc/resolv.conf: in the cluster that points at CoreDNS, which forwards to
+# the house resolver, so the instance would depend on what it replaces.
 bootstrapDns:
   - tcp+udp:127.0.0.1:5335
 
-# Ausgehend nur v4, passend zu "do-ip6: no" im Unbound.
+# Outbound v4 only, matching "do-ip6: no" in Unbound.
 connectIPVersion: v4
 
-# Split-Horizon. Deckt Apex und alle Subdomains ab; den Apex faengt Traefik mit
-# einem 301 auf www (manifests/landing-page/apex-redirect.yaml).
-# filterUnmappedTypes bleibt an: AAAA und alles andere ausser A wird leer
-# beantwortet statt an Unbound weitergereicht, sonst antwortet fuer
-# elmstreet79.de mal Traefik und mal die oeffentliche Adresse.
+# Split horizon, covering the apex and every subdomain; Traefik 301s the apex
+# to www (manifests/landing-page/apex-redirect.yaml). filterUnmappedTypes stays
+# on so AAAA and everything but A is answered empty instead of forwarded to
+# Unbound: otherwise elmstreet79.de sometimes resolves to the public address.
 customDNS:
   customTTL: 1h
   filterUnmappedTypes: true
   mapping:
     elmstreet79.de: 192.168.2.250
 
-# Reverse-Lookups der drei Haus-Subnetze gehen an das jeweilige UniFi-Gateway.
-# Unbound kann sie nicht beantworten, private Adressen haben keine Delegation
-# in der oeffentlichen Root.
+# Reverse lookups for the three house subnets go to their UniFi gateway.
+# Unbound cannot answer them, private ranges have no delegation in the root.
 conditional:
   fallbackUpstream: false
   mapping:
@@ -70,19 +62,16 @@ conditional:
 blocking:
   denylists:
     ads:
-      # AdAway im Hosts-Format. Die AdGuard-Fassung derselben Liste
-      # (HostlistsRegistry/filter_2.txt) ist Adblock-Syntax ("||domain^") und
-      # fuer Blocky unbrauchbar: Blocky liest Hosts-Format, nackte Domains,
-      # Wildcards und Regexe, sonst nichts.
+      # AdAway in hosts format. The AdGuard edition of the same list is
+      # adblock syntax and useless here: Blocky reads hosts format, bare
+      # domains, wildcards and regexes, nothing else.
       - https://adaway.org/hosts.txt
-      # Ersatz fuer den "AdGuard DNS filter", der aus demselben Grund ausfaellt.
-      # HaGeZi Pro im Wildcard-Format, rund 215k Eintraege und damit deutlich
-      # breiter als die AdGuard-Liste. Bei False Positives ist
-      # wildcard/light.txt (rund 40k) die kleinere Stufe derselben Reihe.
+      # Replaces the "AdGuard DNS filter", which fails for the same reason.
+      # HaGeZi Pro in wildcard format, considerably broader than the AdGuard
+      # list. On false positives, wildcard/light.txt is the smaller tier.
       - https://raw.githubusercontent.com/hagezi/dns-blocklists/main/wildcard/pro.txt
-      # iCloud Private Relay. Umgeht sonst den Haus-Resolver und damit
-      # Split-Horizon und Filterung. Entspricht dem AdGuard-Dienst
-      # "icloud_private_relay".
+      # iCloud Private Relay would otherwise bypass the house resolver and
+      # with it split horizon and filtering.
       - |
         mask.icloud.com
         mask-h2.icloud.com
@@ -90,7 +79,7 @@ blocking:
   clientGroupsBlock:
     default:
       - ads
-  # 0.0.0.0 als Antwort, wie AdGuards blocking_mode "default".
+  # Answer 0.0.0.0, like AdGuard's blocking_mode "default".
   blockType: zeroIp
   loading:
     refreshPeriod: 24h
@@ -98,21 +87,20 @@ blocking:
       timeout: 60s
       attempts: 5
       cooldown: 10s
-    # fast, nicht failOnError: ein Resolver, der wegen einer nicht erreichbaren
-    # Blockliste gar nicht erst antwortet, ist schlimmer als ein Resolver, der
-    # eine Minute lang ungefiltert antwortet.
+    # fast, not failOnError: a resolver that refuses to answer because a
+    # blocklist is unreachable is worse than one answering unfiltered briefly.
     strategy: fast
 
 caching:
-  # Federt den kalten Unbound-Cache ab: haeufig gefragte Namen werden erneuert,
-  # bevor ihre TTL ablaeuft.
+  # Cushions the cold Unbound cache: frequent names are refreshed before their
+  # TTL expires.
   prefetching: true
   prefetchExpires: 2h
   prefetchThreshold: 5
 
-# Client-Namen fuer Metriken und spaetere Client-Gruppen. Wirkt nur, wenn Blocky
-# die echte Client-IP sieht, im Cluster also nur mit
-# externalTrafficPolicy: Local am LoadBalancer-Service.
+# Client names for metrics and later client groups. Only works while Blocky
+# sees the real client IP, which in the cluster requires
+# externalTrafficPolicy: Local on the LoadBalancer service.
 clientLookup:
   upstream: 192.168.2.1
 
@@ -124,9 +112,9 @@ ports:
   dns: 53
   http: 4000
 
-# Kein Query-Log. Ein CSV im Pod waere nach jedem Neustart weg, und eine
-# Datenbank dafuer ist der Sache nicht angemessen. Wer sehen will, was gefragt
-# und was geblockt wurde, nimmt die Prometheus-Metriken.
+# No query log. A CSV in the pod would be gone after every restart and a
+# database for it is out of proportion; the Prometheus metrics show what was
+# asked and what was blocked.
 queryLog:
   type: none
 
@@ -134,7 +122,7 @@ log:
   level: info
   format: text
 
-# Extended DNS Errors: Blocky schreibt den Grund (geblockt, Upstream-Fehler,
-# SERVFAIL aus der DNSSEC-Pruefung) in die Antwort, statt ihn zu verschlucken.
+# Extended DNS Errors: Blocky puts the reason (blocked, upstream error,
+# SERVFAIL from DNSSEC validation) into the answer instead of swallowing it.
 ede:
   enable: true

@@ -1,23 +1,18 @@
 .PHONY: docs help
 
-# Einziger Einstiegspunkt fuer die README-Generierung. Der pre-commit-Hook und
-# .github/workflows/docs.yml rufen beide dieses Target auf, damit lokal und in
-# CI garantiert dasselbe passiert.
+# The single entry point for the README generation. The pre-commit hook and
+# .github/workflows/docs.yml both call this target so local runs and CI do
+# exactly the same thing.
 #
-# Frueher stand hier "conda run -n jinja2". Das band die Generierung an eine
-# lokale conda-Umgebung, die es auf einem CI-Runner nicht gibt. Die drei
-# Abhaengigkeiten aus docs-generator/requirements.txt reichen in jedem python3.
+# Plain python3 rather than a local conda environment, which a CI runner does
+# not have; the three dependencies in docs-generator/requirements.txt suffice.
 PYTHON ?= python3
 
 help:
 	@echo "Available targets:"
 	@echo "  make docs        - Generate README.md from template"
 
-# Das Skript gibt selbst Fortschritt und Ergebnis aus, deshalb hier kein echo.
+# The script prints progress and result itself, hence no echo here.
 docs:
 	@$(PYTHON) docs-generator/generate_readme.py
 
-# Das Target vendor-suc ist am 2026-08-09 mit dem k3s-Cluster entfallen. Es zog
-# crd.yaml und deployment.yaml des system-upgrade-controllers als
-# Upstream-Releaseartefakte nach; Talos-Upgrades laufen ueber "talosctl upgrade"
-# und brauchen keinen Controller im Cluster.

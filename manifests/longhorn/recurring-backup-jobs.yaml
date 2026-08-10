@@ -1,5 +1,5 @@
-# Die Zeiten sind gespreizt und concurrency steht ueberall auf 1: mehrere
-# gleichzeitige Laeufe belasten etcd spuerbar.
+# The schedules are staggered and concurrency is 1 everywhere: concurrent runs
+# put noticeable load on etcd.
 ---
 apiVersion: longhorn.io/v1beta2
 kind: RecurringJob
@@ -29,7 +29,7 @@ spec:
     - snapshot
   labels: {}
 ---
-# Gibt freien Speicher an die NVMe zurueck.
+# Returns free space to the NVMe.
 apiVersion: longhorn.io/v1beta2
 kind: RecurringJob
 metadata:
@@ -100,9 +100,9 @@ spec:
     - backup
   labels: {}
 ---
-# Sichert nur die Longhorn-Konfiguration. volume-backup-policy=disabled ist
-# Pflicht: sonst erzeugt jeder Lauf pro Volume zusaetzlich Snapshot und
-# Volume-Backup, und die raeumt kein retain je auf.
+# Backs up the Longhorn configuration only. volume-backup-policy=disabled is
+# mandatory: otherwise every run additionally creates a snapshot and a volume
+# backup per volume, and no retain ever cleans those up.
 apiVersion: longhorn.io/v1beta2
 kind: RecurringJob
 metadata:

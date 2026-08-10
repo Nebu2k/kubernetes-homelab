@@ -1,12 +1,11 @@
-# Schuetzt das Haus-DNS bei freiwilligen Stoerungen, vor allem beim Node-Drain
-# eines Talos-Upgrades. Ohne PDB darf ein Drain beide Pods gleichzeitig raeumen,
-# und mit externalTrafficPolicy: Local haette dann keine Node mehr einen
-# bereiten Endpoint: MetalLB kuendigt die .253 nicht mehr an, das halbe Haus
-# hat kein DNS.
+# Protects the house DNS during voluntary disruptions, above all a node drain
+# in a Talos upgrade. Without the PDB a drain may evict both pods at once, and
+# with externalTrafficPolicy: Local no node would have a ready endpoint left:
+# MetalLB stops announcing .253 and half the house has no DNS.
 #
-# minAvailable statt maxUnavailable, weil die Zusage dann an der absoluten Zahl
-# haengt und nicht an replicas: bei einem versehentlichen Scale-Down auf 1
-# blockiert der PDB den Drain, statt stillschweigend alles freizugeben.
+# minAvailable rather than maxUnavailable, so the guarantee is an absolute
+# number instead of a fraction of replicas: after an accidental scale-down to
+# 1 the PDB blocks the drain instead of silently releasing everything.
 apiVersion: policy/v1
 kind: PodDisruptionBudget
 metadata:

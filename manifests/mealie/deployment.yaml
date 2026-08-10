@@ -23,10 +23,9 @@ spec:
     spec:
       nodeSelector:
         node-role.kubernetes.io/worker: "worker"
-      # Kein initContainer und kein fsGroup: /app/run.sh startet als root, legt
-      # den User abc mit PUID/PGID an, macht selbst ein chown -R auf /app und
-      # dropt per gosu. Ein securityContext, der root verbietet, bricht genau
-      # diesen Ablauf.
+      # No initContainer and no fsGroup: /app/run.sh starts as root, creates
+      # the abc user from PUID/PGID, chowns /app itself and drops via gosu. A
+      # securityContext forbidding root breaks exactly that.
       containers:
       - name: mealie
         image: ghcr.io/mealie-recipes/mealie:v3.22.0
@@ -38,17 +37,15 @@ spec:
         env:
         - name: TZ
           value: "Europe/Berlin"
-        # Steuert die Links in Benachrichtigungen und Einladungen. Ohne das
-        # meldet Mealie im Log "BASE_URL is not set" und verschickt Links auf
-        # localhost:8080.
+        # Controls the links in notifications and invitations. Without it
+        # Mealie logs "BASE_URL is not set" and sends localhost:8080 links.
         - name: BASE_URL
           value: "https://mealie.elmstreet79.de"
-        # Intern-only-Dienst, aber Selbstregistrierung bleibt trotzdem zu.
-        # Neue Familienmitglieder kommen ueber einen Einladungslink aus der UI.
+        # Internal-only service, but self-registration stays closed anyway.
+        # New family members join through an invitation link from the UI.
         - name: ALLOW_SIGNUP
           value: "false"
 
-        # PostgreSQL
         - name: DB_ENGINE
           value: "postgres"
         - name: POSTGRES_SERVER
@@ -80,9 +77,9 @@ spec:
             memory: 512Mi
           limits:
             memory: 1Gi
-        # /api/app/about ist unauthentifiziert und dasselbe Ziel, das die
-        # eingebaute healthcheck.sh des Images abfragt. / liefert die SPA und
-        # taugt hier nicht: die steht auch dann, wenn das Backend haengt.
+        # /api/app/about is unauthenticated and the same target the image's
+        # own healthcheck.sh uses. / serves the SPA, which stays up even when
+        # the backend hangs.
         livenessProbe:
           httpGet:
             path: /api/app/about

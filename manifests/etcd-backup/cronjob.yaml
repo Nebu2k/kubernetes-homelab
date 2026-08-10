@@ -1,38 +1,29 @@
-# Offsite-Backup des Talos-etcd, je ein CronJob pro Control-Plane.
+# Offsite backup of the Talos etcd, one CronJob per control plane.
 #
-# WARUM ES DAS UEBERHAUPT BRAUCHT: Talos laedt Snapshots nicht selbst
-# irgendwohin hoch, es schreibt einen nur auf Anforderung ueber die API heraus.
-# Der Upload ist damit Sache des Clusters und nicht der Node.
+# Talos does not upload snapshots anywhere itself, it only writes one out on
+# request through the API, so the upload is the cluster's job, not the node's.
 #
-# WARUM EIN CRONJOB JE NODE UND NICHT EINER MIT MEHREREN SCHRITTEN: damit eine
-# nicht erreichbare Node nur ihren eigenen Lauf reisst. In einem gemeinsamen Job
-# waeren die Snapshots initContainers, die laufen streng nacheinander und
-# muessen alle durchkommen: eine tote Node haette dann auch die Snapshots der
-# gesunden verhindert, und in S3 wuerde alles gleichzeitig alt. Genau diese
-# Unterscheidung ist der Sinn der Praefixe, die die Frische-Sonde in
-# manifests/backup-monitor/freshness-cronjob.yaml einzeln prueft.
+# One CronJob per node rather than one with several steps, so an unreachable
+# node only breaks its own run. In a shared job the snapshots would be
+# initContainers running strictly in sequence and all having to succeed: a
+# dead node would then also prevent the healthy ones' snapshots and everything
+# in S3 would age at once.
 #
-# WARUM UEBERHAUPT MEHRERE SNAPSHOTS, wo etcd repliziert und der Inhalt derselbe
-# ist: sie belegen mehrere unabhaengige Wege ins Bucket. Ein Snapshot liegt bei
-# rund 55 MB, bei zweimal taeglich und 30 Tagen Lifecycle sind das unter
-# 10 GB im Bucket. Der Preis dafuer ist kleiner als der Aufwand, sich im
-# Ernstfall zu fragen, ob der eine Weg noch geht.
+# Several snapshots although etcd replicates and the content is identical:
+# they prove several independent paths into the bucket, and at roughly 55 MB
+# each with a 30-day lifecycle that costs under 10 GB.
 #
-# DIE LISTE MUSS DER LISTE DER ETCD-MEMBER FOLGEN. Kommt eine Control-Plane
-# dazu, gehoert sie hier UND in die Node-Schleife der Frische-Sonde; faellt eine
-# weg, muss sie aus beiden raus. Sonst faellt es entweder gar nicht auf, dass
-# eine Node nicht sichert (fehlt sie hier), oder die Sonde meldet dauerhaft
-# "kein einziges Objekt" fuer eine Node, die es nicht mehr gibt (fehlt sie dort).
+# THIS LIST MUST FOLLOW THE ETCD MEMBERS. A new control plane belongs here AND
+# in the node loop of the freshness probe; a removed one has to go from both.
+# Otherwise either a node stops backing up unnoticed, or the probe reports
+# "no object at all" forever for a node that no longer exists.
 #
-# Der Zeitplan ist gestaffelt (00:00, 00:20, 00:40 UTC und dieselben Zeiten
-# mittags), damit nicht mehrere Snapshots gleichzeitig ueber dieselbe Leitung
-# gehen. timeZone ist Pflicht und nicht Kosmetik: ohne das Feld laeuft ein
-# CronJob in der Zeitzone der Node, die gerade den kube-controller-manager
-# haelt.
+# The schedule is staggered so no two snapshots share the line. timeZone is
+# mandatory: without it a CronJob runs in the timezone of whichever node holds
+# the kube-controller-manager lease.
 #
-# Der Objektname ist "etcd-snapshot-<node>-<unix-ts>". Die Frische-Sonde in
-# manifests/backup-monitor/ prueft je Node auf dieses Praefix, ihre Node-Liste
-# muss also zu den CronJobs hier passen.
+# The object name is "etcd-snapshot-<node>-<unix-ts>", which is the prefix the
+# freshness probe checks per node.
 ---
 apiVersion: batch/v1
 kind: CronJob
@@ -49,8 +40,8 @@ spec:
   failedJobsHistoryLimit: 3
   jobTemplate:
     spec:
-      # Kein Retry. Ist die Node weg, ist sie beim zweiten Versuch auch weg, und
-      # der fehlgeschlagene Job IST das Signal.
+      # No retry. A node that is gone is still gone on the second attempt, and
+      # the failed job IS the signal.
       backoffLimit: 0
       template:
         metadata:
@@ -59,9 +50,9 @@ spec:
         spec:
           restartPolicy: Never
           initContainers:
-            # Das talosctl-Image ist distroless: kein /tmp, keine Shell. Der
-            # Snapshot muss deshalb in ein gemountetes Volume, und der Upload
-            # braucht ein zweites Image.
+            # The talosctl image is distroless: no /tmp, no shell. The
+            # snapshot therefore goes into a mounted volume and the upload
+            # needs a second image.
             - name: snapshot
               image: ghcr.io/siderolabs/talosctl:v1.13.8
               command:
@@ -95,8 +86,8 @@ spec:
                   set -eu
                   KEY="etcd-snapshot-${NODE_NAME}-$(date +%s)"
                   echo "lade $(stat -c %s /snapshot/db) Bytes nach s3://${ETCD_BUCKET}/${KEY}"
-                  # --only-show-errors, sonst schreibt die aws-cli fuer jedes
-                  # MiB eine Fortschrittszeile und das Job-Log ist unlesbar.
+                  # --only-show-errors, otherwise the aws-cli writes a
+                  # progress line per MiB and the job log is unreadable.
                   aws s3 cp --only-show-errors /snapshot/db "s3://${ETCD_BUCKET}/${KEY}"
               env:
                 - name: NODE_NAME
@@ -117,7 +108,7 @@ spec:
           volumes:
             - name: talosconfig
               secret:
-                # Legt Talos an, sobald das ServiceAccount-CR daneben existiert.
+                # Created by Talos as soon as the ServiceAccount CR exists.
                 secretName: etcd-backup
             - name: snapshot
               emptyDir:
@@ -179,8 +170,8 @@ spec:
                   set -eu
                   KEY="etcd-snapshot-${NODE_NAME}-$(date +%s)"
                   echo "lade $(stat -c %s /snapshot/db) Bytes nach s3://${ETCD_BUCKET}/${KEY}"
-                  # --only-show-errors, sonst schreibt die aws-cli fuer jedes
-                  # MiB eine Fortschrittszeile und das Job-Log ist unlesbar.
+                  # --only-show-errors, otherwise the aws-cli writes a
+                  # progress line per MiB and the job log is unreadable.
                   aws s3 cp --only-show-errors /snapshot/db "s3://${ETCD_BUCKET}/${KEY}"
               env:
                 - name: NODE_NAME
@@ -206,8 +197,8 @@ spec:
               emptyDir:
                 sizeLimit: 2Gi
 ---
-# raspi5. Der Snapshot laeuft ueber die Talos-API und nicht auf der Node, der Pod kann
-# also irgendwo im Cluster liegen. arm64 spielt hier keine Rolle.
+# raspi5. The snapshot runs through the Talos API rather than on the node, so
+# the pod can sit anywhere in the cluster and arm64 does not matter.
 apiVersion: batch/v1
 kind: CronJob
 metadata:
@@ -264,8 +255,8 @@ spec:
                   set -eu
                   KEY="etcd-snapshot-${NODE_NAME}-$(date +%s)"
                   echo "lade $(stat -c %s /snapshot/db) Bytes nach s3://${ETCD_BUCKET}/${KEY}"
-                  # --only-show-errors, sonst schreibt die aws-cli fuer jedes
-                  # MiB eine Fortschrittszeile und das Job-Log ist unlesbar.
+                  # --only-show-errors, otherwise the aws-cli writes a
+                  # progress line per MiB and the job log is unreadable.
                   aws s3 cp --only-show-errors /snapshot/db "s3://${ETCD_BUCKET}/${KEY}"
               env:
                 - name: NODE_NAME

@@ -1,21 +1,21 @@
 name: Docs
 
-# Haelt README.md aktuell. Die Datei wird aus apps/ und manifests/ generiert
-# (docs-generator/generate_readme.py). Der lokale pre-commit-Hook allein reicht
-# dafuer nicht: Renovate merged auf GitHub, und mit Automerge gibt es gar keine
-# lokalen Commits mehr, die den Hook ausloesen wuerden.
+# Keeps README.md current. The file is generated from apps/ and manifests/ by
+# docs-generator/generate_readme.py. The local pre-commit hook alone is not
+# enough: Renovate merges on GitHub, and with automerge there are no local
+# commits left to trigger it.
 #
-# Trigger ist bewusst workflow_run und nicht push:main. Semantic Release pusht
-# bei jedem Release per @semantic-release/git selbst einen Commit nach main.
-# Liefen beide auf demselben push-Event, wuerden sie gleichzeitig pushen und
-# einer scheitert mit non-fast-forward. So laeuft dieser Workflow garantiert
-# danach und sieht den fertigen Stand inklusive Release-Commit.
+# The trigger is workflow_run and not push:main on purpose. Semantic release
+# pushes a commit to main itself on every release, and running both on the
+# same push event would have them push simultaneously with one failing
+# non-fast-forward. This way the workflow runs after it and sees the finished
+# state including the release commit.
 #
-# Kein Commit-Loop: Pushes mit GITHUB_TOKEN loesen per GitHub-Design keine
-# weiteren Workflows aus, das [skip ci] im Commit ist zusaetzlicher Gurt.
+# No commit loop: by GitHub's design, pushes with GITHUB_TOKEN trigger no
+# further workflows, and the [skip ci] in the commit is the belt on top.
 #
-# Der lokale Hook bleibt bestehen (schnelles Feedback beim Entwickeln), ist aber
-# nicht mehr die einzige Instanz.
+# The local hook stays for fast feedback while developing, it is just no
+# longer the only instance.
 
 on:
   workflow_run:
@@ -38,9 +38,9 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v7
         with:
-          # Explizit main: bei workflow_run zeigt der Default auf den Stand,
-          # der den ausloesenden Workflow gestartet hat, nicht auf dessen
-          # Ergebnis. Wir wollen den Release-Commit mit drin haben.
+          # Explicitly main: on workflow_run the default points at the state
+          # that started the triggering workflow, not at its result, and we
+          # want the release commit included.
           ref: main
           token: ${{ secrets.GITHUB_TOKEN }}
 
@@ -48,8 +48,8 @@ jobs:
         run: python3 -m pip install --quiet -r docs-generator/requirements.txt
 
       - name: Generate README
-        # Ueber make, damit CI und lokaler pre-commit-Hook denselben
-        # Einstiegspunkt nutzen und nicht auseinanderlaufen koennen.
+        # Through make so CI and the local pre-commit hook share one entry
+        # point and cannot drift apart.
         run: make docs
 
       - name: Commit bei Aenderung
@@ -67,11 +67,11 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add README.md
-          # docs() loest mit dem angular-Preset keinen Release aus.
+          # docs() triggers no release under the angular preset.
           git commit -m "docs(readme): Versionstabelle aktualisieren [skip ci]"
 
-          # Einmal nachfassen, falls zwischenzeitlich etwas anderes nach main
-          # gepusst hat (zwei Merges kurz hintereinander).
+          # One retry in case something else pushed to main in the meantime
+          # (two merges in quick succession).
           git push || {
             echo "Push abgelehnt, rebase und zweiter Versuch."
             git pull --rebase

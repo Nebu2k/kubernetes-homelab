@@ -1,18 +1,14 @@
-# etcd-Metriken der drei Talos-Control-Planes.
+# etcd metrics of the three Talos control planes. Static targets, because etcd
+# is not a pod with a service and ArgoCD excludes Endpoints objects globally.
 #
-# Gleiche Bauart wie manifests/kube-prometheus-stack/etcd-scrapeconfig.yaml, nur
-# andere Adressen: statische Targets, weil etcd auch hier kein Pod mit Service
-# ist, und weil ArgoCD Endpoints-Objekte global ausschliesst.
+# Requires the etcd patch in talos/talconfig.yaml
+# (listen-metrics-urls: http://0.0.0.0:2381); otherwise Talos binds the metrics
+# to 127.0.0.1 and a Prometheus in the pod network sees nothing. The parameter
+# only takes effect after a node reboot, there is no
+# "talosctl service etcd restart".
 #
-# Voraussetzung ist der etcd-Patch in talos/talconfig.yaml
-# (listen-metrics-urls: http://0.0.0.0:2381). Talos bindet die Metriken sonst
-# auf 127.0.0.1, und ein Prometheus im Pod-Netz sieht davon nichts. Achtung: der
-# Parameter greift erst nach einem Node-Reboot, "talosctl service etcd restart"
-# gibt es nicht ("doesn't support restart operation via API").
-#
-# Das Job-Label muss `.*etcd.*` erfuellen, sonst greifen weder die etcd-Regeln
-# aus defaultRules noch das etcd-Dashboard noch die Gruppe etcd-homelab aus
-# prometheus-rules.yaml.
+# The job label must match `.*etcd.*`, or neither the etcd rules from
+# defaultRules nor the etcd dashboard nor the etcd-homelab group apply.
 apiVersion: monitoring.coreos.com/v1alpha1
 kind: ScrapeConfig
 metadata:
@@ -23,10 +19,9 @@ metadata:
 spec:
   scheme: HTTP
   metricsPath: /metrics
-  # Die Liste ist statisch und muss den etcd-Membern folgen. Eine fehlende Node
-  # faellt hier NICHT auf: Prometheus scrapet dann einfach zwei statt drei
-  # Ziele, alle gruen, und die etcd-Alerts gelten stillschweigend nur noch fuer
-  # die Ziele, die dastehen. Bei jedem Node-Tausch also mit anfassen.
+  # This list must follow the etcd members. A missing node does NOT show up
+  # here: Prometheus simply scrapes two targets instead of three, all green,
+  # and the etcd alerts silently apply only to the ones listed.
   staticConfigs:
     - targets:
         - 192.168.2.20:2381

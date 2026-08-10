@@ -1,7 +1,6 @@
-# Die Kennzahl, auf die es ankommt, ist die Zahl der aktiven Policies und die
-# Dauer des letzten Sync (kube_router_controller_iptables_sync_time). Faellt der
-# Sync aus, sind die Policies wieder wirkungslos, und genau das soll nicht
-# nochmal unbemerkt passieren.
+# The numbers that matter are the count of active policies and the duration of
+# the last sync (kube_router_controller_iptables_sync_time): if the sync stops,
+# the policies are ineffective again, silently.
 apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:

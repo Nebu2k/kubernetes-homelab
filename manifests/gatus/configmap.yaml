@@ -5,23 +5,21 @@ metadata:
   namespace: gatus
 data:
   config.yaml: |
-    # Abgrenzung zum Prometheus-Stack: Prometheus misst von INNEN (Metriken der
-    # Dienste selbst), Gatus misst von AUSSEN (kommt eine Antwort, und ist sie
-    # richtig). Alerting laeuft trotzdem ueber genau einen Weg: Gatus schreibt
-    # nur Metriken, die Regeln dazu stehen in
-    # manifests/kube-prometheus-stack/prometheus-rules.yaml (Gruppe "gatus")
-    # und gehen wie alles andere per Alertmanager an SNS. Gatus-eigene
-    # Alert-Provider sind bewusst NICHT konfiguriert.
+    # Prometheus measures from INSIDE, Gatus from OUTSIDE: does an answer
+    # arrive and is it correct. Alerting still takes one path only: Gatus
+    # writes metrics, the rules live in the "gatus" group of
+    # manifests/kube-prometheus-stack/prometheus-rules.yaml and go to SNS via
+    # Alertmanager. Gatus' own alert providers stay unconfigured on purpose.
     #
-    # Aufloesung: der Pod haengt an CoreDNS, also greift der Split-Horizon-
-    # Rewrite *.elmstreet79.de -> 192.168.2.250. Die Checks auf Cluster-Dienste
-    # gehen damit ueber Traefik und pruefen die ganze Kette (DNS, LB, TLS, App).
-    # ndots: 1, damit externe Namen nicht erst durch die Search-Domains laufen.
+    # The pod resolves through CoreDNS, so the split-horizon rewrite applies
+    # and the cluster checks run through Traefik, testing the whole chain
+    # (DNS, LB, TLS, app). ndots: 1 keeps external names out of the search
+    # domains.
 
     metrics: true
 
-    # Default ist 3. Bei ~40 Endpoints haelt ein einzelner Timeout (10s) sonst
-    # ein Drittel der Warteschlange auf.
+    # The default is 3, where a single 10s timeout would hold up a third of
+    # the queue across ~40 endpoints.
     concurrency: 8
 
     storage:
@@ -49,7 +47,7 @@ data:
         conditions:
           - "[STATUS] == 200"
           - "[RESPONSE_TIME] < 2000"
-          # Kanarienvogel fuer das Wildcard-Cert, das ALLE Hosts hier nutzen.
+          # Canary for the wildcard cert that ALL hosts here share.
           - "[CERTIFICATE_EXPIRATION] > 240h"
 
       - name: Landing Page
@@ -73,7 +71,7 @@ data:
         interval: 60s
         conditions:
           - "[STATUS] == 200"
-          # Grafana antwortet auch dann noch 200, wenn nur die DB weg ist.
+          # Grafana still answers 200 when only its database is gone.
           - "[BODY].database == ok"
 
       - name: Prometheus
@@ -147,12 +145,10 @@ data:
         interval: 60s
         conditions:
           - "[STATUS] == 200"
-      # Infrastruktur ausserhalb des Clusters.
-      #
-      # Bewusst direkt auf die IP, NICHT ueber <host>.elmstreet79.de: faellt
-      # Traefik aus, sind oben alle Cluster-Checks rot und hier alles gruen.
-      # Genau diese Aufteilung sagt beim Blick aufs Dashboard sofort, ob der
-      # Reverse-Proxy oder das Blech dahinter kaputt ist.
+      # Infrastructure outside the cluster, addressed by IP rather than by
+      # name on purpose: if Traefik fails, every cluster check above goes red
+      # while these stay green, which tells at a glance whether the reverse
+      # proxy or the hardware behind it broke.
       - name: Proxmox
         group: Infrastruktur
         url: "https://192.168.2.8:8006/"
@@ -180,8 +176,9 @@ data:
         conditions:
           - "[STATUS] == 200"
 
-      # Das NAS traegt die Longhorn-Backups per CIFS. Ist der Share weg, laufen
-      # die RecurringJobs ins Leere, und das faellt sonst erst nach Stunden auf.
+      # The NAS carries the Longhorn backups over CIFS. If the share is gone
+      # the recurring jobs run into nothing, which would otherwise take hours
+      # to notice.
       - name: UniFi NAS (SMB)
         group: Infrastruktur
         url: "tcp://192.168.2.6:445"
@@ -217,8 +214,8 @@ data:
         client:
           insecure: true
         conditions:
-          # 401 ist die gesunde Antwort (Basic Auth). Ein 502/000 waere der
-          # Fehlerfall, deshalb hier exakt statt "< 500".
+          # 401 is the healthy answer (basic auth); 502 or 000 would be the
+          # failure, hence an exact match instead of "< 500".
           - "[STATUS] == 401"
 
       - name: AdGuard (LXC pve)
@@ -234,11 +231,10 @@ data:
         interval: 2m
         conditions:
           - "[STATUS] == 200"
-      # DNS. Prueft nicht nur "Resolver lebt", sondern dass der
-      # Split-Horizon-Rewrite *.elmstreet79.de -> 192.168.2.250 wirklich
-      # antwortet. Der muss an drei Stellen gleich sein (beide AdGuards +
-      # CoreDNS), und ein stiller Ausfall einer davon trifft nur einen Teil
-      # der Clients.
+      # DNS. Checks not just that a resolver is alive but that the
+      # split-horizon rewrite actually answers. It has to be identical in
+      # three places, and a silent failure of one of them hits only a subset
+      # of the clients.
       - name: AdGuard (LXC pve)
         group: DNS
         url: "192.168.2.16"
@@ -272,13 +268,11 @@ data:
           - "[DNS_RCODE] == NOERROR"
           - "[BODY] == 192.168.2.250"
 
-      # Dieselbe Frage an den LXC, aber ueber seine ULA statt ueber v4. Der Weg
-      # dahin laeuft ueber den DNS-Relay (dns-v6-relay.yaml), weil das Pod-Netz
-      # v4-only ist und Gatus fd2e:9a71:c3b5::16 sonst gar nicht erreicht.
-      # Faellt die statische ULA am LXC weg, ist das der einzige Check, der das
-      # sieht: v4 antwortet dann unveraendert weiter.
-      #
-      # Der macmini hat bewusst kein Gegenstueck, er hat keine v6-Adresse.
+      # The same question to the LXC, but over its ULA instead of v4, via the
+      # DNS relay (dns-v6-relay.yaml) because the pod network is v4-only. If
+      # the LXC loses its static ULA this is the only check that sees it: v4
+      # keeps answering unchanged. The macmini has no counterpart, it has no
+      # v6 address.
       - name: AdGuard LXC (IPv6)
         group: DNS
         url: "dns-v6-relay.gatus.svc.cluster.local:5354"
@@ -290,9 +284,9 @@ data:
           - "[DNS_RCODE] == NOERROR"
           - "[BODY] == 192.168.2.250"
 
-      # Die beiden Blocky-Instanzen, die AdGuard ersetzen sollen. Sie stehen
-      # noch in keinem DHCP-Feld; die Checks sind genau deshalb da, damit der
-      # Parallelbetrieb nicht unbeobachtet laeuft.
+      # The two Blocky instances replacing AdGuard. They are not in any DHCP
+      # setting yet, and these checks exist so the parallel operation does not
+      # run unobserved.
       - name: Blocky (Cluster)
         group: DNS
         url: "192.168.2.253"
@@ -315,12 +309,11 @@ data:
           - "[DNS_RCODE] == NOERROR"
           - "[BODY] == 192.168.2.250"
 
-      # Wie beim AdGuard ueber den Relay, weil das Pod-Netz v4-only ist. Nach
-      # dem Abbau von AdGuard haengt das v6-DNS des Hauses allein an dieser
-      # Adresse: die Cluster-Instanz kann keine v6-Adresse anbieten, solange
-      # das Cluster single-stack ist. Faellt die ULA weg, bleibt alles andere
-      # gruen und nur v6-Clients sind tot. Dieser Check ist die einzige Stelle,
-      # die das sieht.
+      # Through the relay as with AdGuard, because the pod network is v4-only.
+      # Once AdGuard is gone the house's v6 DNS hangs off this address alone:
+      # the cluster instance cannot offer a v6 address while the cluster is
+      # single-stack. If the ULA disappears everything else stays green and
+      # only v6 clients are dead, and this check is the only one that sees it.
       - name: Blocky LXC (IPv6)
         group: DNS
         url: "dns-v6-relay.gatus.svc.cluster.local:5355"
@@ -332,11 +325,10 @@ data:
           - "[DNS_RCODE] == NOERROR"
           - "[BODY] == 192.168.2.250"
 
-      # Prueft nicht Erreichbarkeit, sondern ob die Blocklisten wirklich
-      # geladen sind. Blocky startet mit "loading.strategy: fast" bewusst auch
-      # dann, wenn kein Download klappt: es antwortet dann vollstaendig, aber
-      # ungefiltert. Ohne diesen Check waere das unsichtbar, alle anderen
-      # DNS-Endpoints blieben gruen.
+      # Checks not reachability but whether the blocklists are actually
+      # loaded. With loading.strategy: fast Blocky starts even when no
+      # download succeeds and then answers fully but unfiltered, which every
+      # other DNS endpoint here would happily report as green.
       - name: Blocky Filter (Cluster)
         group: DNS
         url: "192.168.2.253"
@@ -359,8 +351,8 @@ data:
           - "[DNS_RCODE] == NOERROR"
           - "[BODY] == 0.0.0.0"
 
-      # Gegenprobe von aussen: loest der oeffentliche Name noch auf (CNAME auf
-      # nebu2k.ipv64.net)? Die IP selbst ist dynamisch, also nur der RCODE.
+      # Counter-check from outside: does the public name still resolve (CNAME
+      # to nebu2k.ipv64.net)? The address is dynamic, so only the RCODE.
       - name: Cloudflare (oeffentlicher Record)
         group: DNS
         url: "1.1.1.1"
@@ -408,14 +400,13 @@ data:
         conditions:
           - "[STATUS] == 200"
           - "[CERTIFICATE_EXPIRATION] > 240h"
-      # Domain-Laufzeiten (RDAP/WHOIS). Bewusst eigene Gruppe: eine zickige
-      # WHOIS-Antwort soll die Site oben nicht rot faerben. Gatus laesst hier
-      # ohnehin kein Intervall unter 5m zu, taeglich reicht voellig.
+      # Domain expiry (RDAP/WHOIS) in its own group, so a cranky WHOIS answer
+      # does not turn the site above red. Gatus allows no interval below 5m
+      # here anyway and daily is plenty.
       #
-      # KEINE .de-Domains hier. DENIC veroeffentlicht kein Ablaufdatum, Gatus
-      # antwortet fuer elmstreet79.de und haushelden-service.de mit
-      # "domain extension de does not have an expiration date". Das ist
-      # dauerhaft so und waere ein Endpoint, der nie gruen werden kann.
+      # NO .de domains: DENIC publishes no expiry date, so Gatus answers
+      # "domain extension de does not have an expiration date" permanently.
+      # That would be an endpoint which can never go green.
       - name: peters.club
         group: Domains
         url: "https://peters.club"

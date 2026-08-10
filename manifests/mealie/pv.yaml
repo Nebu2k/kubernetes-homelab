@@ -1,10 +1,8 @@
-# PVs zu den aus dem NAS-Backup restaurierten Longhorn-Volumes.
-#
-# Warum das noetig ist und wie das Restore ablaeuft, steht einmal ausfuehrlich
-# in manifests/ripe-atlas/pv.yaml und als Rezept in talos/README.md. Kurz:
-# ohne vorgebundenes PV bindet die PVC aus manifests/ an ein frisch
-# provisioniertes, leeres Volume, und das faellt erst auf, wenn die Daten
-# fehlen.
+# PVs for the Longhorn volumes restored from the NAS backup. Why this is
+# needed and how the restore works is written out once in
+# manifests/ripe-atlas/pv.yaml and as a recipe in talos/README.md. In short:
+# without a pre-bound PV the PVC binds to a freshly provisioned empty volume,
+# which only shows once the data is missing.
 apiVersion: v1
 kind: PersistentVolume
 metadata:
@@ -35,9 +33,9 @@ spec:
       dataEngine: v1
       backupTargetName: default
 ---
-# Das Longhorn-Volume heisst mealie-postgresql-data und nicht wie die PVC nur
-# postgresql-data: Volume- und PV-Namen sind clusterweit, und paperless-ngx
-# bringt eine PVC desselben Namens mit.
+# The Longhorn volume is called mealie-postgresql-data rather than just
+# postgresql-data like the PVC: volume and PV names are cluster-wide and
+# paperless-ngx ships a PVC of the same name.
 apiVersion: v1
 kind: PersistentVolume
 metadata:

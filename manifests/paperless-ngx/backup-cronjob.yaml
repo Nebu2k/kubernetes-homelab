@@ -6,9 +6,9 @@ metadata:
   labels:
     app.kubernetes.io/name: paperless-backup
 spec:
-  # timeZone ist Pflicht: ohne das Feld laeuft der Job in der Zeitzone der Node,
-  # die gerade den kube-controller-manager haelt, und der Zeitplan wandert mit
-  # dem Lease und kann um Stunden verrutschen.
+  # timeZone is mandatory: without it the job runs in the timezone of
+  # whichever node holds the kube-controller-manager lease, so the schedule
+  # wanders with the lease.
   schedule: "0 2 * * *"  # Daily at 02:00 UTC
   timeZone: "Etc/UTC"
   successfulJobsHistoryLimit: 3
@@ -55,22 +55,16 @@ spec:
                 echo "Export completed successfully!"
                 echo "S3 backup sidecar will sync changed files to S3 within 1 hour (S3 Versioning handles history)"
 
-                # Heartbeat fuer die Frische-Sonde in manifests/backup-monitor/.
+                # Heartbeat for the freshness probe in
+                # manifests/backup-monitor/. The sidecar syncs without --delete
+                # and uploads only what is newer than the S3 copy, and
+                # document_exporter keeps the old mtimes of the media files, so
+                # the age of the newest object is NOT a health signal here.
                 #
-                # Warum ueberhaupt: der Sidecar synct ohne --delete und laedt nur
-                # hoch, was neuer ist als die Kopie in S3. "document_exporter"
-                # uebernimmt dabei die alten mtimes der Medien-Dateien, also
-                # bleibt bei unveraenderten Dokumenten alles liegen und die
-                # aeltesten Objekte im Bucket sind Monate alt. Das Alter des
-                # juengsten Objekts taugt hier also NICHT als
-                # Gesundheitssignal.
-                #
-                # Diese Datei dagegen wird bei jedem Lauf frisch geschrieben,
-                # bekommt eine neue mtime und wird deshalb immer synchronisiert.
-                # Ist sie in S3 aktuell, sind beide Haelften belegt: der Export
-                # lief UND der Sidecar hat hochgeladen. Genau die zweite Haelfte
-                # sieht sonst niemand, ein gescheiterter Sync schreibt nur eine
-                # Zeile ins Sidecar-Log und schlaeft weiter.
+                # This file is rewritten on every run, gets a fresh mtime and is
+                # therefore always synced. If it is current in S3, both halves
+                # are proven: the export ran AND the sidecar uploaded. Nobody
+                # else sees the second half, a failed sync only logs a line.
                 kubectl exec -n paperless-ngx deployment/paperless-ngx -c paperless-ngx -- \
                   bash -c "date -u +%Y-%m-%dT%H:%M:%SZ > ${EXPORT_DIR}/last-export.txt"
                 echo "Heartbeat last-export.txt geschrieben"

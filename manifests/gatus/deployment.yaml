@@ -22,10 +22,9 @@ spec:
       nodeSelector:
         node-role.kubernetes.io/worker: "worker"
 
-      # CoreDNS ist gewollt: nur damit greift der Split-Horizon-Rewrite und die
-      # Checks auf *.elmstreet79.de laufen ueber Traefik. ndots: 1, damit
-      # externe Namen (haushelden-service.de) nicht erst die Search-Domains
-      # durchlaufen muessen.
+      # CoreDNS is wanted: only through it does the split-horizon rewrite
+      # apply and the checks run through Traefik. ndots: 1 keeps external
+      # names out of the search domains.
       dnsConfig:
         options:
           - name: ndots

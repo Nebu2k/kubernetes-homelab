@@ -1,10 +1,7 @@
-# Das PodSecurity-Label ist Pflicht: der Pod laeuft mit hostNetwork und setzt
-# NET_ADMIN und NET_RAW, alle drei verbietet das baseline-Profil, das Talos
-# clusterweit erzwingt. Der Grund steht im Deployment: mDNS-Discovery,
-# CoIoT-Multicast der Gen1-Shellys und die HomeKit-Bridges brauchen das
-# Node-Netz.
-#
-# Ohne das Label bleibt das Deployment bei 0/1, waehrend die App Synced meldet.
+# The PodSecurity label is mandatory: the pod uses hostNetwork and sets
+# NET_ADMIN and NET_RAW, all forbidden by the baseline profile Talos enforces
+# cluster-wide. The reason is in the deployment. Without the label the
+# deployment stays at 0/1 while the app reports Synced.
 apiVersion: v1
 kind: Namespace
 metadata:

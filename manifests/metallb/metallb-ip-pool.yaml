@@ -6,28 +6,20 @@ metadata:
   namespace: metallb-system
 spec:
   addresses:
-    # Ein durchgehender Bereich. Der VIP des Clusters liegt bewusst ausserhalb
-    # (192.168.2.29, siehe talos/talconfig.yaml), sonst muesste der Pool ein
-    # Loch haben, damit MetalLB die Kubernetes-API nicht an einen Service
-    # vergibt.
+    # One contiguous range. The cluster VIP lies outside it on purpose (see
+    # talos/talconfig.yaml), otherwise the pool would need a hole so MetalLB
+    # cannot hand the Kubernetes API to a service.
     #
-    # Die .250 traegt Traefik (UniFi-Portforward auf 80/443 und der
-    # Split-Horizon-Wildcard *.elmstreet79.de). Sie ist in
-    # manifests/traefik/values.yaml ausdruecklich angefordert und nicht der
-    # Vergabereihenfolge ueberlassen: bei einer Adresse, an der ein
-    # Portforward haengt, muss das fest sein.
+    # .250 carries Traefik and .253 Blocky, both requested explicitly in their
+    # own manifests rather than left to allocation order: a port forward and a
+    # DHCP setting point at them, so they must not move. The neighbouring .254
+    # is the second Blocky instance on pve and lies outside the pool.
     #
-    # Die .253 traegt Blocky (Haus-Resolver), ebenfalls explizit angefordert in
-    # manifests/blocky/service.yaml. Sie steht im DHCP-Feld des UniFi-
-    # Controllers und darf genauso wenig wandern. Die Nachbaradresse .254 ist
-    # die zweite Blocky-Instanz als LXC auf pve und liegt absichtlich
-    # ausserhalb des Pools.
-    #
-    # ACHTUNG bei allem ab .249: die UniFi-Regel fuer die beiden Gast-VLANs
-    # erlaubt .249-.254. Was MetalLB von dort vergibt, ist aus den Gast-VLANs
-    # erreichbar, aus dem vorderen Teil dagegen nicht. MetalLB vergibt der
-    # Reihe nach, neue Dienste landen also vorn; hierher kommt nur, was seine
-    # Adresse explizit anfordert. Bei genau so einem Dienst zweimal hinsehen.
+    # Careful with everything from .249 up: the UniFi rule grants the two
+    # guest VLANs .249-.254, so whatever MetalLB allocates from there is
+    # reachable from them while the lower part is not. MetalLB allocates in
+    # order, so new services land at the front and only explicit requests end
+    # up here.
     - 192.168.2.240-192.168.2.253
 ---
 apiVersion: metallb.io/v1beta1

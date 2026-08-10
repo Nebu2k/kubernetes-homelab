@@ -9,20 +9,14 @@ metadata:
     release: kube-prometheus-stack
 spec:
   groups:
-    # Zwei Filter, die dazugehoeren, weil pve und macmini per ScrapeConfig
-    # unter job=node-exporter mit drinhaengen:
+    # Two filters that exist because pve and macmini are scraped under
+    # job=node-exporter as well:
     #
-    # - `unless ... node_filesystem_readonly == 1`: macOS mountet die
-    #   CoreSimulator-Runtimes als readonly-Volumes, die konstruktionsbedingt zu
-    #   ~97% voll sind. Ohne den Zweig feuert NodeFilesystemSpaceCritical dort
-    #   sofort und dauerhaft. Ein readonly-Dateisystem kann ohnehin nicht
-    #   vollaufen, deshalb ist der Filter auch fuer linux richtig. Das Upstream-
-    #   Mixin macht es genauso. macminis `/` ist als versiegeltes System-Volume
-    #   ebenfalls readonly und faellt mit raus, ohne Verlust: es teilt sich den
-    #   APFS-Container mit /System/Volumes/Data, das beobachtet wird.
-    # - `mountpoint!~"/System/Volumes/(Preboot|Update|VM)"`: dieselben Zahlen aus
-    #   demselben Container. Ohne den Filter waere jeder volle macmini vier
-    #   Alerts statt einem.
+    # - readonly filesystems are excluded. They cannot fill up, and macOS
+    #   mounts its CoreSimulator runtimes and the sealed system volume readonly
+    #   at ~97% full by construction. The upstream mixin does the same.
+    # - the /System/Volumes/* mountpoints report the same numbers from the same
+    #   APFS container, so a full macmini would raise four alerts instead of one.
     - name: node-disk-space
       interval: 30s
       rules:
@@ -141,31 +135,20 @@ spec:
             summary: "Longhorn node storage usage is critical"
             description: "Node {{ $labels.node }} storage is {{ $value | humanizePercentage }} full (threshold: 90%)."
 
-    # Scheduling-Budget statt echter Belegung
+    # Scheduling budget, not actual usage. The alerts above measure what is on
+    # disk; Longhorn schedules by REQUESTED volume size, and a disk can stop
+    # accepting replicas long before it looks full (80% budget at 16% usage is
+    # a normal operating point). The failure mode is a PVC stuck on Pending
+    # with the volume on "Scheduling Failed", which is not an error state on
+    # any existing object and therefore escapes every other Longhorn alert.
     #
-    # Die beiden Alerts oben messen `usage / capacity`, also was wirklich auf der
-    # Platte liegt. Longhorn plant aber nach der ANGEFORDERTEN Volumegroesse,
-    # und ein Volume kann lange vorher unplatzierbar werden. Die beiden Zahlen
-    # gehen weit auseinander: 80 % Scheduling-Budget bei 16 % echter Belegung
-    # ist ein normaler Betriebspunkt. Die Alerts oben schweigen dann, waehrend
-    # die Node keine neue Replik mehr annimmt.
+    # Two rules decide whether a disk still accepts, the tighter one wins:
     #
-    # Das Fehlerbild ohne diese Regeln: eine neue PVC bleibt auf `Pending`, das
-    # Volume auf `Scheduling Failed`, der Pod startet nie. Nichts davon ist ein
-    # Fehlerzustand an einem bestehenden Objekt, deshalb faengt es keiner der
-    # anderen Longhorn-Alerts.
+    #   over-provisioning (100%): scheduled must stay below capacity - reserved
+    #   minimum free      ( 25%): 25% of capacity must remain free afterwards
     #
-    # Zwei Regeln entscheiden, ob eine Disk noch annimmt, und es gilt die
-    # jeweils engere:
-    #
-    #   Over-Provisioning (100 %): scheduled darf (capacity - reserved) nicht
-    #                              ueberschreiten
-    #   Mindestens frei   ( 25 %): nach dem Anlegen muessen 25 % der capacity
-    #                              frei bleiben
-    #
-    # PromQL kann zwei Vektoren nicht elementweise minimieren, deshalb der
-    # bool-Multiplikationstrick in der dritten Regel. Er ist haesslich, aber er
-    # haelt die eigentlichen Alerts lesbar.
+    # PromQL cannot minimise two vectors element-wise, hence the bool
+    # multiplication in the third rule. Ugly, but it keeps the alerts readable.
     - name: longhorn-scheduling
       interval: 30s
       rules:
@@ -184,7 +167,7 @@ spec:
               - longhorn_node_storage_usage_bytes
             )
 
-        # Was diese Node noch annimmt: das Minimum aus beiden Regeln, nie negativ.
+        # What this node still accepts: the minimum of both rules, never negative.
         - record: homelab:longhorn_node_schedulable_bytes
           expr: |
             clamp_min(
@@ -200,14 +183,10 @@ spec:
                 ) * homelab:longhorn_node_headroom_minavailable_bytes
             , 0)
 
-        # Das groesste Volume, das das Cluster noch anlegen kann.
-        #
-        # Jedes Volume braucht zwei Repliken auf zwei verschiedenen Nodes in zwei
-        # verschiedenen Zonen (replicaSoftAntiAffinity und
-        # replicaZoneSoftAntiAffinity stehen beide auf false, sind also hart).
-        # Jede Node ist ihre eigene Zone, also erfuellt jedes Paar die
-        # Zonenregel und es zaehlt schlicht die zweitgroesste Node.
-        # min(topk(2, ...)) ist genau das.
+        # The largest volume the cluster can still create. Every volume needs
+        # two replicas on two nodes in two zones (both anti-affinity settings
+        # are false, so hard), and each node is its own zone: the second
+        # largest node decides, which is what min(topk(2, ...)) yields.
         - record: homelab:longhorn_largest_placeable_volume_bytes
           expr: min(topk(2, homelab:longhorn_node_schedulable_bytes))
 
@@ -250,28 +229,23 @@ spec:
               Pending, jeder zugehoerige Pod startet nicht. Auch ein Rebuild
               nach einem Node-Ausfall findet dann kein Ziel mehr.
 
-    # Backup-Ziel-Alerts. Die Longhorn-Alerts oben decken Volumes und
-    # Node-Disks ab, aber keiner davon meldet, dass Backups nicht mehr
-    # durchlaufen. Das Ziel ist ein SMB-Share am UniFi-NAS mit 300 GB, ein
-    # stiller Ausfall waere teuer.
+    # None of the Longhorn alerts above notices that backups stopped running.
+    # The target is a 300 GB SMB share on the UniFi NAS; a silent failure there
+    # would be expensive.
     - name: longhorn-backup
       interval: 60s
       rules:
-        # Hauptalert. Faengt JEDE Ursache, unter der Backups aufhoeren: Share
-        # voll, Auth kaputt, NAS aus, RecurringJob gescheitert, Target nicht
-        # erreichbar. Deshalb bewusst auf das Ergebnis gemuenzt statt auf einen
-        # bestimmten Fehlerzustand.
+        # Aimed at the result rather than a specific failure state, so it
+        # catches every cause: share full, auth broken, NAS off, RecurringJob
+        # failed, target unreachable.
         #
-        # Das "> 0" ist nicht kosmetisch: Volumes ohne jemals ein Backup melden
-        # last_backup_at = 0 und wuerden sonst dauerhaft feuern. Damit faellt
-        # auch das Prometheus-Volume automatisch raus, das bewusst nicht mehr
-        # gesichert wird. Preis: ein Volume, das faelschlich NIE gesichert wird,
-        # faellt durch dieses Netz. Das ist ein Konfigurationsfehler und wird
-        # ueber die Gruppenlabels geprueft, LonghornBackupNeverRan faengt
-        # genau diesen Fall ab.
+        # The "> 0" is load-bearing: volumes that were never backed up report
+        # last_backup_at = 0 and would fire forever, which also excludes the
+        # deliberately unbacked Prometheus volume. LonghornBackupNeverRan
+        # covers the case that slips through.
         #
-        # 36h statt 24h, damit ein einzelner ausgefallener Lauf (backup-daily
-        # laeuft 02:00) nicht sofort meldet, zwei aufeinanderfolgende aber schon.
+        # 36h, not 24h: one missed run (backup-daily at 02:00) stays quiet,
+        # two consecutive ones do not.
         - alert: LonghornBackupStale
           expr: |
             (
@@ -286,23 +260,16 @@ spec:
             summary: "Longhorn volume has not been backed up recently"
             description: "Volume {{ $labels.volume }} had no successful backup for over 36h. Check the CIFS target //192.168.2.6/longhorn_backup (share full? NAS reachable? credentials still valid?)."
 
-        # Die Kehrseite von LonghornBackupStale, und der Grund, warum es diese
-        # Regel ueberhaupt gibt: das "> 0" oben laesst ein Volume, das NIE
-        # gesichert wurde, absichtlich durch. Ob es gesichert werden SOLL,
-        # steht nur im Label recurring-job-group.longhorn.io/backup am
-        # Volume-Objekt, und kein Longhorn-Exporter gibt das heraus. Die
-        # Metrik hier kommt deshalb aus dem customResourceState-Block der
-        # kube-state-metrics (values.yaml).
+        # The other half of LonghornBackupStale, whose "> 0" deliberately lets
+        # a never-backed-up volume through. Whether it SHOULD be backed up
+        # lives only in the volume's group label, so the metric comes from the
+        # customResourceState block in values.yaml.
         #
-        # Die Altersschranke steckt bewusst im offset und NICHT in einem langen
-        # "for": ein frisch angelegtes Volume hat legitim noch kein Backup, es
-        # muss erst der 02:00-Lauf drueber. 26h deckt einen vollen Zyklus plus
-        # Reserve ab. Ein "for: 26h" wuerde dasselbe leisten, aber der Timer
-        # laeuft im Speicher und faengt nach jedem Prometheus-Neustart von vorn
-        # an. Das offset liest gespeicherte Daten und ueberlebt den Neustart.
-        #
-        # Folge davon: nach dem Ausrollen bleibt die Regel 26h still, so lange
-        # hat die Metrik noch keine Historie.
+        # The age bound sits in the offset and not in a long "for": a fresh
+        # volume legitimately has no backup until the 02:00 run, and a "for"
+        # timer lives in memory and restarts with Prometheus. The offset reads
+        # stored data and survives. It also stays quiet for 26h after rollout,
+        # until the metric has that much history.
         - alert: LonghornBackupNeverRan
           expr: |
             (
@@ -318,9 +285,9 @@ spec:
             summary: "Longhorn volume {{ $labels.volume }} soll gesichert werden, hat aber noch nie ein Backup gehabt"
             description: "Das Volume traegt recurring-job-group.longhorn.io/backup=enabled und meldet trotzdem last_backup_at = 0, seit ueber 26h. Typischer Fall: per fromBackup restauriert und der erste 02:00-Lauf steht noch aus, oder ein RecurringJob greift nicht. Backup von Hand erzwingen: Snapshot-CR plus Backup-CR mit RecurringJob: backup-daily in spec.labels, Rezept in betrieb.md."
 
-        # Ergaenzung zum Alert oben, meldet frueher und nennt das konkrete
-        # Backup. longhorn_backup_state: 0=New 1=Pending 2=InProgress
-        # 3=Completed 4=Error 5=Unknown.
+        # Fires earlier than the alert above and names the concrete backup.
+        # longhorn_backup_state: 0=New 1=Pending 2=InProgress 3=Completed
+        # 4=Error 5=Unknown.
         - alert: LonghornBackupFailed
           expr: longhorn_backup_state == 4
           for: 10m
@@ -330,11 +297,10 @@ spec:
             summary: "Longhorn backup failed"
             description: "Backup {{ $labels.backup }} of volume {{ $labels.volume }} is in Error state."
 
-        # Fuellstand des Backup-Ziels. Der Share liegt auf dem UniFi-NAS und hat
-        # keinen eigenen Exporter, deshalb ueber die Summe der Backup-Groessen
-        # statt ueber echte Share-Statistik. Naeherung nach unten (Longhorn
-        # dedupliziert Bloecke), als Frueh-Warnung reicht das.
-        # 240 GiB = 80% der 300 GB des Shares.
+        # The share has no exporter of its own, so this sums backup sizes
+        # instead of reading real share statistics. An underestimate, because
+        # Longhorn deduplicates blocks, but good enough as an early warning.
+        # 240 GiB = 80% of the 300 GB share.
         - alert: LonghornBackupStoreSpaceWarning
           expr: sum(longhorn_backup_actual_size_bytes) > 257698037760
           for: 15m
@@ -344,44 +310,34 @@ spec:
             summary: "Longhorn backup store is filling up"
             description: "Backups on //192.168.2.6/longhorn_backup total {{ $value | humanize1024 }}B (threshold: 240GiB of 300GB). Longhorn does NOT free space by itself when the share is full, backups just start failing. Reduce retain values or drop volumes from the backup group."
 
-    # Offsite-Backup-Jobs (S3)
+    # Offsite backup jobs (S3).
     #
-    # Diese Gruppe deckt eine Luecke, die die Upstream-Alerts NICHT schliessen.
-    # KubeJobFailed und KubeJobNotCompleted melden einen Job, der laeuft und
-    # dabei scheitert oder haengt. Sie melden nicht den Fall, der bei einem
-    # Backup viel gefaehrlicher ist: einen Job, der ueberhaupt nicht mehr laeuft.
-    # CronJob versehentlich aus der kustomization geflogen, suspended, Schedule
-    # vertippt, Namespace leer geraeumt: in all diesen Faellen ist upstream
-    # still, und das faellt erst auf, wenn man das Backup braucht.
+    # KubeJobFailed and KubeJobNotCompleted report a job that runs and fails or
+    # hangs. They do not report the case that matters more for a backup: a job
+    # that stopped running at all (dropped from the kustomization, suspended,
+    # schedule typo). The anchor is therefore the AGE of the last successful
+    # job, like LonghornBackupStale above.
     #
-    # Anker ist deshalb das ALTER des letzten erfolgreich abgeschlossenen Jobs,
-    # analog zu LonghornBackupStale weiter oben.
+    # Two things this construction hangs on:
     #
-    # Zwei Dinge, die an dieser Konstruktion haengen und leicht kaputtgehen:
+    # 1. The "or absent(...)" is the core. If the CronJob disappears so do its
+    #    jobs and the metric, and the alert would evaporate exactly in the
+    #    worst case. It stands per job rather than over a shared selector,
+    #    because absent() across several only fires once ALL are missing.
+    # 2. The metric only lives while the job object does
+    #    (successfulJobsHistoryLimit: 3). Shrinking that history breaks this.
     #
-    # 1. Das "or absent(...)" ist der eigentliche Kern. Verschwindet der CronJob,
-    #    verschwinden mit ihm auch seine Jobs und damit die Metrik. Ohne den
-    #    absent-Zweig loest sich der Alert dann in Luft auf, statt zu feuern,
-    #    also genau im schlimmsten Fall. Deshalb steht er hier pro Job einzeln
-    #    und nicht ueber einen gemeinsamen Selektor: absent() ueber mehrere Jobs
-    #    feuert erst, wenn ALLE fehlen.
-    # 2. Die Metrik lebt nur, solange der Job im Cluster liegt
-    #    (successfulJobsHistoryLimit: 3). Bei einem taeglichen Job sind das drei
-    #    Tage, bei einem monatlichen drei Monate, beides deutlich mehr als die
-    #    Schwellen unten. Wer die History verkleinert, muss hier mitdenken.
+    # Trigger such a job once by hand after its first deployment
+    # (kubectl create job --from=cronjob/<name>), otherwise the absent branch
+    # fires rightfully until the first scheduled run.
     #
-    # Nach dem ERSTEN Deployment eines solchen Jobs einmal von Hand anstossen
-    # (kubectl create job --from=cronjob/<name>), sonst feuert der absent-Zweig
-    # bis zum ersten regulaeren Lauf zu Recht ins Leere. Bei einem monatlichen
-    # Job waeren das bis zu vier Wochen Dauerfeuer.
-    #
-    # NICHT abgedeckt: ob das Objekt wirklich in S3 angekommen ist. Dafuer
-    # braucht es eine S3-Metrikquelle, siehe ROADMAP Punkt 7.
+    # NOT covered: whether the object actually arrived in S3. That needs an S3
+    # metric source, see ROADMAP.
     - name: offsite-backup-jobs
       interval: 60s
       rules:
-        # Taeglich 01:30 UTC. 36h wie bei Longhorn: ein einzelner ausgefallener
-        # Lauf soll nicht sofort melden, zwei aufeinanderfolgende schon.
+        # Daily at 01:30 UTC. 36h as with Longhorn: one missed run stays quiet,
+        # two consecutive ones do not.
         - alert: TeslaMateBackupJobStale
           expr: |
             (
@@ -396,10 +352,9 @@ spec:
             summary: "TeslaMate database backup has not succeeded recently"
             description: "No successful teslamate-db-backup job for over 36h (or the CronJob is gone entirely). This is the ONLY offsite copy of the driving history. Check `kubectl -n teslamate get cronjob,job` and the logs of the last attempt."
 
-        # Laeuft nur am 1. des Monats. Der groesste regulaere Abstand sind 31
-        # Tage, 35 lassen also vier Tage Luft und melden trotzdem lange bevor
-        # der naechste Lauf faellig waere. Das ist der Job mit der laengsten
-        # Blindzeit ueberhaupt, deshalb hier ueberhaupt ein Alert.
+        # Runs on the 1st only. The longest regular gap is 31 days, so 35
+        # leaves four days of slack and still reports long before the next run
+        # would be due. This job has the longest blind window of all.
         - alert: HomeAssistantArchiveJobStale
           expr: |
             (
@@ -414,10 +369,9 @@ spec:
             summary: "Home Assistant monthly archive job has not succeeded recently"
             description: "No successful ha-backup-archive job for over 35 days (or the CronJob is gone entirely). Without it the S3 bucket only holds HA's last 3 automatic backups, so the long-term restore point stops growing. Check `kubectl -n home-assistant get cronjob,job`."
 
-        # Deckt NUR die Export-Haelfte ab. Der Upload macht der S3-Sidecar auf
-        # eigenem Timer, ein erfolgreicher Job beweist also nicht, dass etwas in
-        # S3 gelandet ist. Trotzdem sinnvoll: faellt der Export aus, exportiert
-        # der Sidecar unbemerkt denselben alten Stand weiter.
+        # Covers the export half ONLY. The S3 sidecar uploads on its own
+        # timer, so a successful job proves nothing about S3. Still worth it:
+        # if the export stops, the sidecar keeps syncing the same stale state.
         - alert: PaperlessExportJobStale
           expr: |
             (
@@ -432,24 +386,17 @@ spec:
             summary: "Paperless document export has not succeeded recently"
             description: "No successful paperless-backup-trigger job for over 36h. The S3 sidecar keeps syncing, so the bucket looks healthy while its content silently ages. NOTE: this alert only covers the export, not the upload to S3. The upload half is covered by OffsiteBackupNotArriving below."
 
-        # Die drei Alerts oben belegen, dass ein Job gelaufen ist. Dieser hier
-        # belegt, dass etwas im Bucket ANGEKOMMEN ist, und das ist nicht
-        # dasselbe: bei paperless laeuft der Upload im Sidecar auf eigenem
-        # Timer, und bei HA gibt es ueberhaupt keinen Job. Der CronJob
-        # offsite-backup-freshness (manifests/backup-monitor/) prueft das einmal
-        # taeglich um 06:00 UTC und endet mit exit 1, sobald ein Bucket zu alt
-        # ist.
+        # The three alerts above prove a job ran. This one proves something
+        # ARRIVED in the bucket, which is not the same: paperless uploads from
+        # a sidecar on its own timer and HA has no job at all. The CronJob
+        # offsite-backup-freshness (manifests/backup-monitor/) checks daily at
+        # 06:00 UTC and exits 1 as soon as a bucket is too old.
         #
-        # Der erste Zweig braucht die Altersbedingung, sonst meldet der Alert
-        # ewig weiter: failedJobsHistoryLimit haelt fehlgeschlagene Jobs am
-        # Leben, ein blosses "max(...) > 0" bliebe also auch dann feuernd, wenn
-        # der naechste Lauf laengst wieder gruen war. Die 90000s (25h) decken
-        # genau einen Tagesabstand ab.
+        # The first branch needs the age condition: failedJobsHistoryLimit
+        # keeps failed jobs around, so a bare "max(...) > 0" would keep firing
+        # long after the next run went green. 90000s covers one daily gap.
         #
-        # Kein "for": ein fehlgeschlagener Job bleibt fehlgeschlagen, da wartet
-        # nichts darauf, sich von selbst zu erholen. Der absent-Zweig faengt den
-        # Fall, dass der CronJob verschwindet, wie bei den drei Alerts oben, der
-        # mittlere den Fall, dass er gar nicht mehr zum Laufen kommt.
+        # No "for": a failed job stays failed, nothing recovers on its own.
         - alert: OffsiteBackupNotArriving
           expr: |
             (
@@ -486,11 +433,9 @@ spec:
             summary: "Pod is crash looping"
             description: "Pod {{ $labels.namespace }}/{{ $labels.pod }} container {{ $labels.container }} is restarting frequently."
 
-        # Job-owned pods are excluded, same as in PodCrashLooping above. A Job
-        # that retries leaves its failed attempt lying around until the
-        # controller cleans up, which would otherwise fire this alert on every
-        # CronJob retry. Genuinely failed Jobs are already covered by the
-        # upstream KubeJobFailed, so this closes no gap.
+        # Job-owned pods are excluded, same as PodCrashLooping above: a
+        # retrying Job leaves its failed attempt around until the controller
+        # cleans up. Real Job failures are covered by upstream KubeJobFailed.
         - alert: PodNotReady
           expr: |
             kube_pod_status_phase{phase!~"Succeeded|Running"} > 0
@@ -558,17 +503,13 @@ spec:
             summary: "Node memory usage is high"
             description: "Node {{ $labels.instance }} memory usage is {{ $value | humanizePercentage }} (threshold: 85%)."
 
-        # macmini braucht eine eigene Regel, weil darwins node_exporter andere
-        # Metriknamen liefert: kein node_memory_MemTotal_bytes, kein
-        # node_memory_MemAvailable_bytes, stattdessen node_memory_total_bytes und
-        # die Mach-Seitenklassen. Die Regel oben und NodeMemoryHighUtilization aus
-        # dem Mixin greifen dort also nicht, und zwar still: eine fehlende Metrik
-        # ergibt keine Serie, kein Alert, keine Fehlermeldung. Genau die Sorte
-        # Luecke, die man nur beim Hinschauen findet.
+        # macmini needs its own rule: darwin's node_exporter uses different
+        # metric names (node_memory_total_bytes and the Mach page classes), so
+        # the rule above and the mixin's NodeMemoryHighUtilization silently
+        # match nothing there.
         #
-        # "Verfuegbar" ist auf macOS free + inactive + purgeable; wired, active
-        # und compressed sind belegt. Die Summe der beiden Seiten geht auf die
-        # Gesamtgroesse auf, das ist die Gegenprobe.
+        # "Available" on macOS is free + inactive + purgeable; wired, active
+        # and compressed are in use. Both sides add up to the total.
         - alert: NodeHighMemoryDarwin
           expr: |
             (
@@ -587,9 +528,8 @@ spec:
     - name: teslamate
       interval: 60s
       rules:
-        # Fires when TeslaMate stopped recording data (e.g. expired Tesla API
-        # token). Threshold is generous to tolerate a car sleeping while parked;
-        # raise it if you get false positives during long idle periods.
+        # Fires when TeslaMate stopped recording (e.g. expired API token).
+        # The threshold tolerates a car sleeping while parked.
         - alert: TeslaMateNoData
           expr: max by (car_id) (teslamate_last_data_age_seconds) > 86400
           for: 1h
@@ -599,8 +539,8 @@ spec:
             summary: "TeslaMate hat seit über 24h keine Daten empfangen"
             description: "Auto {{ $labels.car_id }}: letzter Datenpunkt vor {{ $value | humanizeDuration }}. Tesla-API-Token prüfen (Sign-in in der TeslaMate-Web-UI) und teslamate-Logs kontrollieren."
 
-        # Safety net: if the exporter itself is down the metric disappears, which
-        # would otherwise silence TeslaMateNoData without anyone noticing.
+        # Safety net: without a scrape the metric disappears and the alert
+        # above goes silent instead of firing.
         - alert: TeslaMateFreshnessExporterDown
           expr: absent(teslamate_last_data_age_seconds)
           for: 30m
@@ -610,17 +550,15 @@ spec:
             summary: "TeslaMate Freshness-Exporter liefert keine Metrik"
             description: "teslamate_last_data_age_seconds fehlt seit >30m. Der No-Data-Alert ist damit blind. Deployment teslamate/teslamate-postgres-exporter prüfen."
 
-    # UniFi-Poller. Ein stiller unpoller laesst die UniFi-Dashboards leer
-    # laufen, ohne dass es auffaellt. Die beiden Selbstauskunfts-Metriken ab v3
-    # machen das sichtbar.
+    # A silent unpoller leaves the UniFi dashboards empty without anyone
+    # noticing. The two self-reporting metrics added in v3 make that visible.
     - name: unifi-poller
       interval: 30s
       rules:
-        # Der Hauptalert. Ab v3 bedient unpoller /metrics aus einem Cache, den
-        # ein Hintergrund-Poller alle 30s erneuert. Waechst das Alter, kommt
-        # unpoller nicht mehr an den Controller: die Werte sind dann zwar noch
-        # da, aber eingefroren, und genau das sieht man im Graphen nicht.
-        # 300s ist das Zehnfache des Intervalls, also weit jenseits von Jitter.
+        # Since v3 unpoller serves /metrics from a cache refreshed every 30s.
+        # A growing cache age means it can no longer reach the controller: the
+        # values are still there but frozen, which a graph does not show.
+        # 300s is ten times the interval, well beyond jitter.
         - alert: UnpollerCacheStale
           expr: unpoller_prometheus_cache_age_seconds > 300
           for: 5m
@@ -630,10 +568,9 @@ spec:
             summary: "unpoller liefert eingefrorene UniFi-Daten"
             description: "Der Metrik-Cache ist {{ $value | humanizeDuration }} alt (erwartet: <30s). unpoller erreicht den Controller https://192.168.2.1 nicht mehr oder wird abgewiesen. UniFi-Dashboards zeigen ab jetzt Standdaten."
 
-        # Zaehlt fehlgeschlagene Hintergrund-Aktualisierungen. Faengt den Fall,
-        # dass einzelne Polls scheitern, aber genug durchkommen, damit das
-        # Cache-Alter unter der Schwelle bleibt. Typisch: 429-Backoff oder ein
-        # abgelaufenes Controller-Passwort.
+        # Catches the case where individual polls fail but enough get through
+        # to keep the cache age below the threshold. Typically a 429 backoff
+        # or an expired controller password.
         - alert: UnpollerRefreshFailing
           expr: increase(unpoller_prometheus_refresh_failures_total[15m]) > 3
           for: 15m
@@ -643,9 +580,8 @@ spec:
             summary: "unpoller scheitert wiederholt am UniFi-Controller"
             description: "{{ $value | printf \"%.0f\" }} fehlgeschlagene Aktualisierungen in 15min. Zugangsdaten des Benutzers readonly und Erreichbarkeit des Controllers pruefen (kubectl logs -n monitoring -l app.kubernetes.io/name=unpoller)."
 
-        # Sicherheitsnetz, gleiche Logik wie bei TeslaMate: faellt unpoller
-        # ganz aus, verschwinden beide Metriken und die Alerts oben werden
-        # still, statt zu feuern.
+        # Safety net: if unpoller dies both metrics disappear and the alerts
+        # above go silent instead of firing.
         - alert: UnpollerDown
           expr: absent(unpoller_prometheus_cache_age_seconds)
           for: 15m
@@ -655,26 +591,21 @@ spec:
             summary: "unpoller liefert keine Metriken mehr"
             description: "unpoller_prometheus_cache_age_seconds fehlt seit >15m. Die beiden anderen unpoller-Alerts sind damit blind. Deployment monitoring/unifi-poller pruefen."
 
-    # SealedSecrets. Der ServiceMonitor dazu haengt an apps/sealed-secrets.yaml.
-    #
-    # Das Ziel ist genau EIN Signal: ein SealedSecret, das sich nicht mehr
-    # entschluesseln laesst. Das ist der Fall, der sonst erst beim naechsten
-    # Cluster-Neuaufbau auffaellt, und SealedSecrets sind nicht
-    # rueckentschluesselbar. Key-Alter oder Cert-Ablauf lassen sich hier NICHT
-    # alarmieren, dafuer gibt es keine Metrik.
+    # SealedSecrets, ServiceMonitor in apps/sealed-secrets.yaml. Exactly one
+    # signal matters: a SealedSecret that can no longer be decrypted, which
+    # would otherwise surface at the next cluster rebuild. Key age and cert
+    # expiry cannot be alerted on, there is no metric for them.
     - name: sealed-secrets
       interval: 60s
       rules:
-        # condition_info ist -1 (false), 0 (unknown/absent) oder 1 (true).
-        # Alarmiert wird nur auf -1: 0 steht auch fuer "Bedingung noch nicht
-        # gesetzt" und waere direkt nach dem Anlegen eines SealedSecrets ein
-        # Fehlalarm.
+        # condition_info is -1 (false), 0 (unknown/absent) or 1 (true). Only
+        # -1 alerts: 0 also means "condition not set yet" and would be a false
+        # alarm right after creating a SealedSecret.
         #
-        # Haeufigste Ursache ist nicht ein kaputtes Secret, sondern ein
-        # fehlender privater Key: versiegelt wird immer gegen den laufenden
-        # Controller, und der rotiert alle 30 Tage. Wer die alten
-        # sealed-secrets-key*-Secrets in kube-system verliert, verliert damit
-        # alles, was gegen sie versiegelt wurde.
+        # The usual cause is a missing private key rather than a broken secret.
+        # Sealing always happens against the running controller, which rotates
+        # every 30 days: losing the old sealed-secrets-key* secrets in
+        # kube-system loses everything sealed against them.
         - alert: SealedSecretUnsealFailed
           expr: sealed_secrets_controller_condition_info{condition="Synced"} == -1
           for: 5m
@@ -684,10 +615,9 @@ spec:
             summary: "SealedSecret laesst sich nicht mehr entschluesseln"
             description: "{{ $labels.namespace }}/{{ $labels.name }} steht auf Synced=False. Der zugehoerige Sealing-Key fehlt im Cluster (Secrets sealed-secrets-key* in kube-system) oder das Secret wurde gegen einen fremden Controller versiegelt. Das dahinterliegende Secret ist damit nicht neu erzeugbar: kubectl -n kube-system logs -l app.kubernetes.io/name=sealed-secrets pruefen, bevor irgendetwas geloescht wird."
 
-        # Sicherheitsnetz, gleiche Logik wie bei unpoller und TeslaMate. Ohne
-        # Scrape verschwindet condition_info und der Alert oben wird still,
-        # statt zu feuern. build_info ist dafuer der stabilere Anker: es gibt
-        # sie auch dann, wenn kein einziges SealedSecret existiert.
+        # Safety net: without a scrape condition_info disappears and the alert
+        # above goes silent. build_info is the stabler anchor, it exists even
+        # when no SealedSecret does.
         - alert: SealedSecretsControllerDown
           expr: absent(sealed_secrets_controller_build_info)
           for: 15m
@@ -697,21 +627,17 @@ spec:
             summary: "SealedSecrets-Controller liefert keine Metriken mehr"
             description: "sealed_secrets_controller_build_info fehlt seit >15m. SealedSecretUnsealFailed ist damit blind. Deployment kube-system/sealed-secrets-controller und den ServiceMonitor sealed-secrets-controller pruefen."
 
-    # Gatus misst von aussen, was Prometheus von innen misst: kommt eine
-    # Antwort, kommt sie schnell genug, und stimmt sie inhaltlich. Gatus hat
-    # eigene Alert-Provider, die sind bewusst NICHT konfiguriert. Alarmiert
-    # wird nur hier, damit es bei EINEM Weg bleibt (Alertmanager -> SNS) und
-    # Stummschaltungen und Zeitfenster an einer Stelle liegen.
+    # Gatus measures from outside what Prometheus measures from inside. Its
+    # own alert providers stay unconfigured on purpose so that there is ONE
+    # path (Alertmanager -> SNS) and silences live in one place.
     #
-    # Die Schwellen hier liegen absichtlich VOR denen in der Gatus-Config
-    # (manifests/gatus/configmap.yaml): der Alert warnt, bevor der Endpoint auf
-    # dem Dashboard rot wird.
+    # These thresholds sit deliberately ahead of those in the Gatus config:
+    # the alert warns before the endpoint turns red on the dashboard.
     - name: gatus
       interval: 60s
       rules:
-        # gatus_results_endpoint_success ist eine Gauge (0 = Check rot).
-        # 10m deckt auch die Endpoints mit 5m-Intervall ab, ein einzelner
-        # verpasster Lauf meldet also noch nicht.
+        # gatus_results_endpoint_success is a gauge (0 = check red). 10m also
+        # covers the endpoints on a 5m interval, so one missed run stays quiet.
         - alert: GatusEndpointDown
           expr: gatus_results_endpoint_success == 0
           for: 10m
@@ -721,13 +647,10 @@ spec:
             summary: "Gatus: {{ $labels.group }}/{{ $labels.name }} ist rot"
             description: "Der Check {{ $labels.group }}/{{ $labels.name }} (Typ {{ $labels.type }}) scheitert seit >10m. Welche Bedingung genau, steht auf https://status.elmstreet79.de. Faustregel: ist die Gruppe Cluster komplett rot und Infrastruktur gruen, liegt es an Traefik oder am Wildcard-Cert, nicht an den Diensten."
 
-        # Das Wildcard-Cert *.elmstreet79.de haengt an cert-manager (DNS-01 ueber
-        # Cloudflare). Bleibt die Erneuerung aus, faellt das sonst erst auf,
-        # wenn der Browser meckert.
-        #
-        # Der > 0-Zweig ist Pflicht: fuer Endpoints ohne TLS (TCP, DNS, http)
-        # steht die Metrik auf 0, ohne ihn wuerde der Alert fuer jeden davon
-        # sofort feuern.
+        # Without this, a stalled renewal of the wildcard cert only surfaces
+        # once a browser complains. The "> 0" branch is mandatory: the metric
+        # is 0 for endpoints without TLS (TCP, DNS, http), which would
+        # otherwise all fire immediately.
         - alert: GatusCertificateExpiringSoon
           expr: gatus_results_certificate_expiration_seconds > 0 < 1209600
           for: 1h
@@ -737,8 +660,8 @@ spec:
             summary: "Zertifikat fuer {{ $labels.name }} laeuft in <14 Tagen ab"
             description: "{{ $labels.group }}/{{ $labels.name }}: noch {{ $value | humanizeDuration }}. Bei *.elmstreet79.de zuerst cert-manager pruefen (Certificate wildcard-elmstreet79-de in cert-manager, ClusterIssuer letsencrypt-prod, Cloudflare-Token)."
 
-        # Domain-Laufzeiten kommen per RDAP/WHOIS und nur alle 12h. Eine
-        # abgelaufene Domain ist der eine Ausfall, den kein Redeploy repariert.
+        # Domain expiry comes from RDAP/WHOIS every 12h. An expired domain is
+        # the one outage no redeploy fixes.
         - alert: GatusDomainExpiringSoon
           expr: gatus_results_domain_expiration_seconds > 0 < 3888000
           for: 6h
@@ -748,10 +671,9 @@ spec:
             summary: "Domain {{ $labels.name }} laeuft in <45 Tagen ab"
             description: "{{ $labels.name }}: noch {{ $value | humanizeDuration }}. Verlaengerung beim Registrar pruefen (INWX bzw. Cloudflare)."
 
-        # Sicherheitsnetz, gleiche Logik wie bei unpoller und SealedSecrets:
-        # ohne Scrape verschwinden die Gauges oben und die Alerts werden still,
-        # statt zu feuern. Gatus ist die einzige Quelle dieser Metriken, ein
-        # Ausfall macht die ganze Gruppe blind.
+        # Safety net: without a scrape the gauges above disappear and the
+        # alerts go silent. Gatus is the only source of these metrics, so an
+        # outage blinds the whole group.
         - alert: GatusDown
           expr: absent(gatus_results_endpoint_success)
           for: 15m
@@ -761,22 +683,17 @@ spec:
             summary: "Gatus liefert keine Metriken mehr"
             description: "gatus_results_endpoint_success fehlt seit >15m, alle Gatus-Alerts sind damit blind. Deployment gatus/gatus und den ServiceMonitor gatus pruefen."
 
-    # Der Chart-Default von cert-manager setzt nur prometheus.io-Annotationen,
-    # und die wertet dieser Stack nicht aus: der ServiceMonitor steht deshalb in
-    # manifests/cert-manager/values.yaml. Das Wildcard-Cert *.elmstreet79.de
-    # haengt an genau einem ClusterIssuer mit DNS-01 ueber Cloudflare, und an
-    # ihm haengt jeder Host im Haus.
+    # Every host in the house hangs off one wildcard cert from a single
+    # ClusterIssuer (DNS-01 via Cloudflare).
     #
-    # Reihenfolge der Alarme nach Frueherkennung: NotReady und
-    # RenewalOverdue schlagen an, waehrend das alte Cert noch laenger gilt,
-    # ExpiringSoon ist nur das Sicherheitsnetz darunter.
+    # Ordered by how early they catch things: NotReady and RenewalOverdue fire
+    # while the old cert is still valid, ExpiringSoon is the net below them.
     - name: cert-manager
       interval: 60s
       rules:
-        # certmanager_certificate_ready_status traegt je Certificate drei
-        # Serien (True/False/Unknown), aktiv ist immer genau eine. Der Selektor
-        # auf condition="True" ist deshalb Pflicht: ohne ihn ist die Bedingung
-        # fuer ein kerngesundes Cert dauerhaft erfuellt.
+        # The metric carries three series per certificate (True/False/Unknown)
+        # and exactly one is active. Without the condition="True" selector the
+        # expression is permanently satisfied even for a healthy cert.
         - alert: CertManagerCertNotReady
           expr: certmanager_certificate_ready_status{condition="True"} == 0
           for: 15m
@@ -786,11 +703,9 @@ spec:
             summary: "Certificate {{ $labels.namespace }}/{{ $labels.name }} ist nicht ready"
             description: "Ausgestellt ueber {{ $labels.issuer_kind }} {{ $labels.issuer_name }}. Das bestehende Cert gilt meist noch, die Erneuerung scheitert aber. kubectl describe certificate -n {{ $labels.namespace }} {{ $labels.name }}, dann die CertificateRequest und die Order dazu."
 
-        # certmanager_certificate_renewal_timestamp_seconds ist der Zeitpunkt,
-        # zu dem cert-manager erneuern WILL (bei Let's Encrypt 30 Tage vor
-        # Ablauf). Liegt der laenger in der Vergangenheit, ist die Erneuerung
-        # faellig und nicht passiert. Nach einem erfolgreichen Lauf wandert der
-        # Wert von selbst wieder nach vorn.
+        # The metric is when cert-manager WANTS to renew (30 days before
+        # expiry with Let's Encrypt). If that lies in the past, renewal was due
+        # and did not happen. A successful run moves the value forward again.
         - alert: CertManagerCertRenewalOverdue
           expr: time() - certmanager_certificate_renewal_timestamp_seconds > 259200
           for: 1h
@@ -800,8 +715,7 @@ spec:
             summary: "Erneuerung von {{ $labels.namespace }}/{{ $labels.name }} ist seit >3 Tagen ueberfaellig"
             description: "cert-manager wollte laengst erneuern und hat es nicht geschafft. Bis zum Ablauf bleiben noch Wochen, aber der Fehler ist jetzt schon da: haeufigste Ursache ist das Cloudflare-Token fuer die DNS-01-Challenge (SealedSecret in cert-manager) oder ein Rate-Limit bei Let's Encrypt."
 
-        # Sicherheitsnetz unter den beiden oberen. Feuert erst, wenn die
-        # Erneuerung ueber eine Woche lang nicht geklappt hat.
+        # Net below the two above, fires only after a week of failed renewal.
         - alert: CertManagerCertExpiringSoon
           expr: certmanager_certificate_expiration_timestamp_seconds - time() < 1814400
           for: 1h
@@ -820,9 +734,8 @@ spec:
             summary: "ClusterIssuer {{ $labels.name }} ist nicht ready"
             description: "Solange der Issuer haengt, kann kein einziges Zertifikat ausgestellt oder erneuert werden. Zuerst das Cloudflare-API-Token pruefen."
 
-        # Let's Encrypt deckelt pro Domain und Woche. Ins Limit laeuft man
-        # typischerweise durch eine Schleife aus fehlschlagenden Orders, und
-        # danach ist fuer Tage nichts mehr auszustellen.
+        # Let's Encrypt caps per domain and week. The usual way in is a loop of
+        # failing orders, after which nothing can be issued for days.
         - alert: CertManagerAcmeRateLimited
           expr: sum(rate(certmanager_http_acme_client_request_count{status="429"}[10m])) > 0
           for: 5m
@@ -832,10 +745,8 @@ spec:
             summary: "Let's Encrypt antwortet mit 429 (Rate-Limit)"
             description: "cert-manager laeuft ins ACME-Rate-Limit. Nicht weiter retriggern, sondern die Ursache der fehlschlagenden Orders suchen: die Limits gelten pro Domain und Woche."
 
-        # Sicherheitsnetz, gleiche Logik wie bei unpoller und SealedSecrets.
-        # certmanager_clock_time_seconds ist der stabilere Anker als die
-        # Certificate-Metriken: es gibt sie auch dann, wenn gerade kein
-        # einziges Certificate existiert.
+        # Safety net. certmanager_clock_time_seconds is the stabler anchor
+        # than the certificate metrics: it exists even with no Certificate.
         - alert: CertManagerDown
           expr: absent(certmanager_clock_time_seconds)
           for: 15m
@@ -845,31 +756,22 @@ spec:
             summary: "cert-manager liefert keine Metriken mehr"
             description: "certmanager_clock_time_seconds fehlt seit >15m, alle cert-manager-Alerts sind damit blind. Deployment cert-manager/cert-manager und den ServiceMonitor cert-manager pruefen."
 
-    # etcd. Die 15 Upstream-Regeln (defaultRules.rules.etcd) decken den Ausfall
-    # ab, hier steht nur, was fuer dieses Cluster zu grob oder gar nicht dabei
-    # ist. Gescrapt wird ueber etcd-scrapeconfig.yaml, Job-Label "etcd".
+    # The 15 upstream rules (defaultRules.rules.etcd) cover outright failure;
+    # this group only adds what is too coarse or missing for this cluster.
+    # Scraped through etcd-scrapeconfig.yaml under job label "etcd".
     - name: etcd-homelab
       interval: 60s
       rules:
-        # Upstream feuert erst ab p99 > 0.5s, kritisch > 1s. Deren Aufgabe ist
-        # "etcd steht gleich", nicht "die Platte wird langsam", und das Zweite
-        # ist hier die wahrscheinlichere Entwicklung.
+        # Upstream only fires at p99 > 0.5s. Its job is "etcd is about to
+        # stop", not "the disk is getting slow", and the latter is the likelier
+        # development here: /var/lib/etcd and /var/lib/longhorn share the same
+        # EPHEMERAL partition on every node, so Longhorn IO and etcd's fsync
+        # compete for one disk. The value grows with the node's replica count.
         #
-        # WAS DEN WERT HIER TREIBT: auf jeder Node liegen /var/lib/etcd UND
-        # /var/lib/longhorn auf derselben EPHEMERAL-Partition. Longhorn-IO und
-        # etcds fsync konkurrieren also um dieselbe Platte, auf allen dreien
-        # gleichermassen. Der Wert waechst monoton mit der Replikenzahl der
-        # Node und liegt im Normalbetrieb im einstelligen bis niedrigen
-        # zweistelligen Millisekundenbereich.
-        #
-        # Feuert das hier, ist die Frage also nicht "welche Node ist kaputt",
-        # sondern "ist irgendwo deutlich mehr Longhorn-Last dazugekommen".
-        # Repliken umzuverteilen hilft nicht, das verschiebt nur die Last auf
-        # derselben Kurve; helfen wuerde eine eigene Platte fuer den
-        # Longhorn-Pfad. Details und Kosten je Node in der ROADMAP.
-        #
-        # 50ms ist rund das Vierfache des heutigen Hoechstwerts: es meldet eine
-        # echte Verschlechterung, nicht den bekannten Normalzustand.
+        # When this fires the question is not which node broke but where extra
+        # Longhorn load appeared. Redistributing replicas only moves the load
+        # along the same curve; a separate disk for the Longhorn path would
+        # help. 50ms is about four times the current peak.
         - alert: EtcdFsyncSlow
           expr: |
             histogram_quantile(0.99, sum by (node, le) (
@@ -882,45 +784,36 @@ spec:
             summary: "etcd-fsync auf {{ $labels.node }} ist langsam (p99 {{ $value | humanizeDuration }})"
             description: "Die WAL-fsync-Dauer liegt ueber 50ms. etcd bestaetigt jeden Write erst nach dem fsync, eine langsame Platte bremst damit den gesamten API-Server. Auf jeder Node teilen sich /var/lib/etcd und /var/lib/longhorn dieselbe EPHEMERAL-Partition, der Wert haengt also an der Longhorn-Last dieser Node. Erst pruefen, ob dort Repliken neu aufgebaut werden (kubectl -n longhorn-system get replicas.longhorn.io -o wide): waehrend eines Rebuilds ist ein erhoehter Wert erwartbar und geht von selbst zurueck."
 
-        # Ein Member, der den Leader dauernd aus den Augen verliert
+        # A member that keeps losing sight of the leader.
         #
-        # WARUM DAS NEBEN etcdHighNumberOfLeaderChanges STEHT: die Upstream-Regel
-        # prueft increase(...[15m:1m]) >= 4 mit for: 5m und verschlaeft genau
-        # diesen Fall. Nicht weil die Schwelle zu hoch waere, sondern weil der
-        # Wert in einem so kurzen Fenster um sie herum oszilliert: jeder
-        # Ausschlag nach unten setzt die Haltezeit zurueck, also kommen die
-        # noetigen fuenf Minuten am Stueck nie zustande. Ein laengeres Fenster
-        # hat dieses Problem nicht.
+        # Upstream's etcdHighNumberOfLeaderChanges checks a 15m window with
+        # for: 5m and sleeps through this: the value oscillates around the
+        # threshold, every dip resets the hold time, so the five minutes never
+        # accumulate. A longer window does not have that problem.
         #
-        # WAS ES ANZEIGT, und was nicht: der Zaehler steht pro Member und meint
-        # "ich habe einen anderen Leader gesehen als vorher". Steigt er auf EINEM
-        # Member, waehrend der Raft-Term clusterweit steht, hat es keine Wahl
-        # gegeben: dieser eine Member verliert wiederholt den Kontakt zum Leader
-        # und findet ihn wieder. Das Quorum ist dabei nicht in Gefahr, die
-        # anderen beiden tragen es. Genau deshalb faellt es sonst nirgends auf.
+        # The counter is per member and means "I saw a different leader than
+        # before". Rising on ONE member while the Raft term stands cluster-wide
+        # means there was no election: that member repeatedly loses and regains
+        # contact. Quorum is never at risk, which is why nothing else notices.
         #
-        # DIE WAHRSCHEINLICHSTE URSACHE IST DAS NETZ, nicht die Platte und nicht
-        # die Last. Auf raspi5 ist es der TX-Ring von end0, siehe
-        # siderolabs/sbc-raspberrypi#91 und manifests/rpi5-net-tuning/: ein
-        # haengender TX-Ring erzeugt NULL Fehlerzaehler, waehrend Platte, CPU,
-        # Temperatur, Linkgeschwindigkeit, MTU und ICMP-Latenz alle unauffaellig
-        # sind. Die irrefuehrende Spur ist dabei die Longhorn-Last, die
-        # zeitgleich einsetzt: sie ist nur der Verkehr, der den zu kleinen Ring
-        # erstmals fuellt.
+        # The likeliest cause is the network, not the disk and not load. On
+        # raspi5 it is end0's TX ring (siderolabs/sbc-raspberrypi#91 and
+        # manifests/rpi5-net-tuning/): a stalled TX ring produces ZERO error
+        # counters while disk, CPU, temperature, link speed, MTU and ICMP
+        # latency all look fine. Concurrent Longhorn load is the misleading
+        # trail, it is merely the traffic that first fills the undersized ring.
         #
-        # Die Diagnose beginnt also NICHT bei der Platte:
+        # So diagnosis does not start at the disk:
         #
-        #   talosctl -n <alle> etcd status     # Term und Index vergleichen
+        #   talosctl -n <all> etcd status     # compare term and index
         #   histogram_quantile(0.99, sum by (instance,To,le) (
         #     rate(etcd_network_peer_round_trip_time_seconds_bucket[10m])))
         #
-        # Der zweite Ausdruck ist der entscheidende: nach Quelle UND Ziel
-        # aufgeschluesselt zeigt er sofort, ob eine Node klemmt oder eine
-        # Strecke. Summiert man ihn nur nach Ziel, sieht es aus, als waeren alle
-        # drei betroffen.
+        # The second expression is the decisive one: split by source AND
+        # target it shows at once whether a node or a path is stuck. Summed by
+        # target alone it looks as if all three were affected.
         #
-        # 6 pro Stunde liegt bewusst ueber dem, was ein rollendes Talos-Upgrade
-        # erzeugt (drei Neustarts, also hoechstens ein paar Wechsel).
+        # 6 per hour sits above what a rolling Talos upgrade produces.
         - alert: EtcdMemberLosesLeader
           expr: |
             max by (node) (
@@ -933,17 +826,14 @@ spec:
             summary: "etcd auf {{ $labels.node }} verliert staendig den Leader ({{ $value | printf \"%.0f\" }} Wechsel in einer Stunde)"
             description: "Dieser Member sieht laufend neue Leader, die anderen nicht. Zuerst mit talosctl etcd status pruefen, ob der Raft-Term wirklich steigt: steht er, hat es keine Wahl gegeben und der Member verliert nur wiederholt den Kontakt. Dann die Peer-Latenz nach Quelle UND Ziel aufschluesseln, nicht nur nach Ziel. Platte und CPU sind erst danach dran."
 
-        # Sicherheitsnetz unter allen etcd-Alerts, gleiche Logik wie bei
-        # cert-manager und unpoller. Faellt die ScrapeConfig weg oder fehlt
-        # listen-metrics-urls in der machine config einer Node, wird es sonst
-        # einfach still.
-        # ACHTUNG, die Grenze dieser Regel: sie zaehlt Ziele, sie prueft nicht,
-        # WELCHE. Steht nach einem Node-Tausch die alte Node noch in der
-        # ScrapeConfig und die neue nicht, bleiben es drei Ziele und diese Regel
-        # bleibt still, waehrend saemtliche etcd-Alerts fuer die neue Node
-        # stillschweigend gar nicht gelten. Die Liste steht in
-        # manifests/kube-prometheus-stack/etcd-scrapeconfig.yaml und muss den
-        # Membern folgen.
+        # Net below every etcd alert: without it a dropped ScrapeConfig or a
+        # missing listen-metrics-urls in a node's machine config just goes
+        # quiet.
+        #
+        # Its limit: it counts targets, it does not check WHICH. After a node
+        # swap that left the old node in the ScrapeConfig it still counts
+        # three and stays quiet, while every etcd alert silently does not
+        # apply to the new node. The list must follow the members.
         - alert: EtcdMetricsMissing
           expr: count(up{job="etcd"} == 1) < 3 or absent(up{job="etcd"})
           for: 15m
@@ -953,15 +843,14 @@ spec:
             summary: "Es liefern nur {{ $value }} von 3 etcd-Membern Metriken"
             description: "Entweder ist ein Member weg (dann feuert auch etcdMembersDown), oder auf der Node fehlt der etcd-Patch listen-metrics-urls: http://0.0.0.0:2381 aus talos/talconfig.yaml und Port 2381 bindet wieder nur auf 127.0.0.1. Der Parameter greift erst nach einem Node-Reboot."
 
-    # Luefterregelung auf raspi5, siehe manifests/rpi5-fan/.
+    # Fan control on raspi5, see manifests/rpi5-fan/.
     - name: rpi5-fan
       interval: 60s
       rules:
-        # Der Regler ersetzt einen fehlenden Kernel-Treiber im Userspace. Faellt
-        # er aus, bleibt der Luefter auf seinem zuletzt gesetzten Wert stehen,
-        # und das ist der Ausfall, den man NICHT hoert: ein leiser Pi klingt
-        # genau wie ein leiser Pi mit totem Regler, nur dass der zweite bis zum
-        # Throttling hochheizt.
+        # The controller replaces a missing kernel driver in userspace. If it
+        # dies the fan stays at its last setting, and that is the failure you
+        # do NOT hear: a quiet Pi sounds exactly like a quiet Pi with a dead
+        # controller, except the second one heats up until it throttles.
         - alert: Rpi5FanControllerDown
           expr: absent(rpi5_fan_last_loop_timestamp_seconds)
           for: 15m
@@ -971,11 +860,9 @@ spec:
             summary: "Die Luefterregelung auf raspi5 liefert keine Metriken mehr"
             description: "Der Luefter steht auf seinem letzten Wert. Beim Beenden per SIGTERM setzt der Regler auf 100 Prozent, das gilt aber nicht, wenn der Pod hart stirbt oder gar nicht erst startet. Nachsehen mit: kubectl -n rpi5-fan logs ds/rpi5-fan"
 
-        # Der Fall, den weder absent() noch die Liveness-Probe sehen: der Pod
-        # laeuft, der Metrics-Thread antwortet, aber die Regelschleife im
-        # Hauptthread kommt nicht mehr durch. Dann ist alles gruen und der
-        # Luefter trotzdem unreguliert. Die Schleife laeuft alle 5 Sekunden,
-        # 120 Sekunden Stillstand sind also eindeutig.
+        # The case neither absent() nor the liveness probe sees: the pod runs
+        # and the metrics thread answers, but the control loop in the main
+        # thread is stuck. The loop runs every 5s, so 120s is unambiguous.
         - alert: Rpi5FanControllerStalled
           expr: time() - rpi5_fan_last_loop_timestamp_seconds > 120
           for: 5m
@@ -985,9 +872,9 @@ spec:
             summary: "Die Luefterregelung auf raspi5 laeuft, regelt aber nicht mehr"
             description: "Der letzte Regeldurchlauf ist {{ $value | humanizeDuration }} her, erwartet werden 5 Sekunden. Der Prozess lebt und antwortet auf /metrics, die Schleife steht aber. Pod neu starten: kubectl -n rpi5-fan rollout restart ds/rpi5-fan"
 
-        # Zweite, unabhaengige Sicht auf dasselbe Problem: die Temperatur. Sie
-        # meldet auch dann, wenn der Regler zwar laeuft und Metriken liefert,
-        # die Kennlinie aber nicht ausreicht oder der Luefter mechanisch steht.
+        # Second, independent view on the same problem. It also reports when
+        # the controller runs fine but the curve is too weak or the fan is
+        # mechanically stuck.
         - alert: Rpi5TooHot
           expr: rpi5_fan_temperature_celsius > 80
           for: 10m
@@ -999,17 +886,15 @@ spec:
 
 
 
-    # Blocky. Die Verfuegbarkeit misst Gatus von aussen (Gruppe DNS, inklusive
-    # eines Checks darauf, dass wirklich gefiltert wird), das schlaegt hier
-    # ueber GatusEndpointDown auf. Hier stehen nur die Dinge, die Gatus NICHT
-    # sehen kann, weil sie im Resolver selbst liegen.
+    # Availability is measured by Gatus from outside (group DNS, including a
+    # check that filtering actually happens) and surfaces as GatusEndpointDown.
+    # This group only holds what Gatus cannot see from there.
     - name: blocky
       interval: 60s
       rules:
-        # Der Scrape-Ausfall ist nicht dasselbe wie ein toter Resolver: Blocky
-        # kann DNS beantworten und trotzdem seinen Metrik-Port verloren haben.
-        # Umgekehrt deckt es den Fall ab, dass die LXC ganz weg ist, bevor ein
-        # Client den Ausfall merkt.
+        # A lost scrape is not the same as a dead resolver: Blocky can answer
+        # DNS and still have lost its metrics port. Conversely this catches the
+        # LXC vanishing before any client notices.
         - alert: BlockyTargetDown
           expr: up{job="blocky-metrics"} == 0
           for: 10m
@@ -1019,10 +904,9 @@ spec:
             summary: "Blocky {{ $labels.instance }} liefert keine Metriken mehr"
             description: "Das Ziel {{ $labels.instance }} antwortet seit >10m nicht auf /metrics. Ob DNS selbst noch geht, steht auf https://status.elmstreet79.de in der Gruppe DNS. Cluster-Instanz: kubectl -n blocky get pods. LXC: pct status 402 auf pve."
 
-        # Blocky startet mit loading.strategy: fast bewusst auch dann, wenn
-        # kein Download klappt, und antwortet dann vollstaendig, aber
-        # ungefiltert. Ein leerer Cache ist deshalb still: nichts ist rot,
-        # nichts ist langsam, es wird nur nicht mehr geblockt.
+        # With loading.strategy: fast Blocky starts even when no download
+        # succeeds and then answers fully but unfiltered. An empty cache is
+        # therefore silent: nothing red, nothing slow, just nothing blocked.
         - alert: BlockyDenylistEmpty
           expr: blocky_denylist_cache_entries < 1000
           for: 15m
@@ -1032,9 +916,9 @@ spec:
             summary: "Blockys Denylist {{ $labels.group }} hat nur {{ $value }} Eintraege"
             description: "Erwartet werden rund 222k (AdAway + HaGeZi Pro). Bei deutlich weniger ist ein Download gescheitert und {{ $labels.instance }} antwortet ungefiltert weiter. Logs ansehen: kubectl -n blocky logs -l app.kubernetes.io/name=blocky -c blocky --tail=-1"
 
-        # Die Listen werden alle 24h neu geladen (loading.refreshPeriod). Bleibt
-        # das aus, altern sie lautlos: geblockt wird weiter, nur eben der Stand
-        # von vorgestern. 30h laesst einen ausgefallenen Lauf durchgehen.
+        # The lists reload every 24h (loading.refreshPeriod). If that stops
+        # they age silently: blocking continues, just with stale data. 30h
+        # tolerates one missed run.
         - alert: BlockyListsStale
           expr: time() - blocky_last_list_group_refresh_timestamp_seconds > 108000
           for: 1h
@@ -1044,11 +928,10 @@ spec:
             summary: "Blocky auf {{ $labels.instance }} hat seine Listen seit {{ $value | humanizeDuration }} nicht erneuert"
             description: "Erwartet wird alle 24h. Meist erreicht der Resolver die Download-Quellen nicht mehr; blocky_failed_downloads_total steigt dann mit. Das Blocking selbst laeuft mit dem alten Stand weiter."
 
-        # Blocking laesst sich zur Laufzeit ueber Blockys REST-API abschalten,
-        # unauthentifiziert. Auf der LXC ist dieser Port aus den Gast-VLANs
-        # erreichbar, solange die UniFi-Regel ein Adressbereich statt einer
-        # Portliste ist (siehe ROADMAP). Bis dahin ist diese Regel die einzige
-        # Stelle, die ein Abschalten ueberhaupt bemerkt.
+        # Blocking can be switched off at runtime through Blocky's REST API,
+        # unauthenticated. On the LXC that port is reachable from the guest
+        # VLANs while the UniFi rule covers an address range instead of a port
+        # list (see ROADMAP), so this rule is the only thing that would notice.
         - alert: BlockyBlockingDisabled
           expr: blocky_blocking_enabled == 0
           for: 15m
@@ -1058,10 +941,9 @@ spec:
             summary: "Blocky auf {{ $labels.instance }} filtert nicht mehr"
             description: "Das Blocking ist zur Laufzeit abgeschaltet worden und geht durch einen Neustart von selbst wieder an, weil es nirgends in der Konfiguration steht. Wenn das niemand war, gehoert der Port 4000 dieser Instanz zugesperrt."
 
-        # Der Upstream ist ausschliesslich der lokale Unbound. Faellt der aus,
-        # antwortet Blocky weiter, aber nur noch aus dem Cache und mit
-        # SERVFAIL fuer alles andere. Der Anteil an Fehlerantworten ist das
-        # frueheste Signal dafuer.
+        # The only upstream is the local Unbound. If it dies Blocky keeps
+        # answering from cache and returns SERVFAIL for everything else; the
+        # error response ratio is the earliest signal.
         - alert: BlockyHighServfailRate
           expr: |
             sum by (instance) (rate(blocky_response_total{response_code="SERVFAIL"}[10m]))
@@ -1073,13 +955,13 @@ spec:
             summary: "Blocky auf {{ $labels.instance }} beantwortet {{ $value | humanizePercentage }} aller Anfragen mit SERVFAIL"
             description: "Fast immer der lokale Unbound: entweder tot, oder er kommt nicht mehr an die Root-Server. Cluster-Instanz: kubectl -n blocky logs -l app.kubernetes.io/name=blocky -c unbound --tail=-1. LXC: pct exec 402 -- rc-service unbound status"
 
-        # Die LXC holt sich config.yml alle 15 Minuten selbst aus dem Repo,
-        # damit beide Instanzen ohne "terraform apply" denselben Stand fahren.
-        # Scheitert das dauerhaft, faellt nichts aus: Blocky laeuft mit dem
-        # alten Stand weiter, und genau deshalb merkt es sonst niemand.
+        # The LXC pulls config.yml from the repo every 15 minutes so both
+        # instances run the same state without a terraform apply. Persistent
+        # failure breaks nothing: Blocky keeps running the old config, which
+        # is exactly why nobody would notice.
         #
-        # Die Metrik kommt ueber den Textfile-Collector des node_exporter im
-        # Container, nicht von Blocky selbst.
+        # The metric comes from the node_exporter textfile collector in the
+        # container, not from Blocky.
         - alert: BlockyConfigSyncFailing
           expr: blocky_config_sync_success == 0
           for: 1h

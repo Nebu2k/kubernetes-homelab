@@ -43,10 +43,10 @@ spec:
               name: postgresql-secrets
               key: POSTGRES_PASSWORD
         volumeMounts:
-        # Nicht /var/lib/postgresql/data, wie es die Mealie-Doku fuer postgres:17
-        # zeigt. Ab Postgres 18 liegt PGDATA unter /var/lib/postgresql/<major>/docker,
-        # ein Mount auf den alten Pfad haengt das Volume neben die Daten. Gleicher
-        # Mountpunkt wie bei paperless-ngx.
+        # Not /var/lib/postgresql/data as the Mealie docs show for postgres:17.
+        # From Postgres 18 on, PGDATA lives under
+        # /var/lib/postgresql/<major>/docker, and mounting the old path puts
+        # the volume beside the data. Same mount point as paperless-ngx.
         - name: data
           mountPath: /var/lib/postgresql
         resources:

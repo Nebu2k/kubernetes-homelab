@@ -4,10 +4,7 @@ kind: Kustomization
 namespace: monitoring
 
 resources:
-  # Traegt nur das PodSecurity-Label. Gebraucht wird die Ausnahme fuer den
-  # node-exporter-DaemonSet: hostNetwork, hostPID, hostPort 9100 und drei
-  # hostPath-Volumes, alles unter dem baseline-Profil verboten, das Talos
-  # clusterweit erzwingt.
+  # Carries the PodSecurity label only, see namespace.yaml.
   - namespace.yaml
   - grafana-ingress.yaml
   - prometheus-ingress.yaml
@@ -21,15 +18,12 @@ resources:
   - grafana-admin-sealed.yaml
   - home-assistant-token-sealed.yaml
 
-# Eigene Grafana-Dashboards. Der grafana-sc-dashboard-Sidecar sammelt alle
-# ConfigMaps mit dem Label grafana_dashboard=1 ueber alle Namespaces ein
-# (METHOD=WATCH), das Chart braucht dafuer nichts. Fremd-Dashboards aus
-# grafana.com laufen dagegen weiter ueber grafana.dashboards.default.*.gnetId
-# in values.yaml.
+# Our own Grafana dashboards. The grafana-sc-dashboard sidecar collects every
+# ConfigMap labelled grafana_dashboard=1 across all namespaces (METHOD=WATCH);
+# third-party boards go through grafana.dashboards.*.gnetId in values.yaml.
 #
-# disableNameSuffixHash, weil der Name sonst bei jeder Aenderung wechselt: der
-# Sidecar wuerde das Dashboard unter neuem Namen zusaetzlich importieren, statt
-# es zu ersetzen.
+# disableNameSuffixHash, because a changing name would make the sidecar import
+# the dashboard additionally under the new name instead of replacing it.
 configMapGenerator:
   - name: grafana-dashboard-node-overview
     files:

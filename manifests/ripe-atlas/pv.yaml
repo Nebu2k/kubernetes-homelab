@@ -1,41 +1,37 @@
-# Die beiden PVs zu den aus dem NAS-Backup restaurierten Longhorn-Volumes.
+# The two PVs for the Longhorn volumes restored from the NAS backup.
 #
-# Dynamisch provisionierte PVs legt der Provisioner selbst an, sie heissen
-# pvc-<uuid> und stehen in keinem Manifest. Ein Restore erzeugt dagegen ein
-# Volume mit einem gewaehlten Namen, und dazu gehoert ein handgeschriebenes
-# PV.
+# Dynamically provisioned PVs are created by the provisioner, are named
+# pvc-<uuid> and appear in no manifest. A restore instead produces a volume
+# with a chosen name, which needs a handwritten PV.
 #
-# Warum ueberhaupt ins git und nicht bloss von Hand angelegt: ohne PV bindet die
-# PVC aus manifests/ripe-atlas/pvc.yaml an ein FRISCH provisioniertes, leeres
-# Volume. Das faellt nicht auf, der Pod startet, und die Probe-Keys sind weg.
-# Mit dem PV hier ist die Verdrahtung explizit; fehlt das Longhorn-Volume
-# dahinter, scheitert das Attachen sichtbar, statt still leer zu starten.
+# Why in git rather than created by hand: without a PV the PVC binds to a
+# FRESHLY provisioned, empty volume. That goes unnoticed, the pod starts, and
+# the probe keys are gone. With the PV the wiring is explicit, and a missing
+# Longhorn volume behind it fails the attach visibly instead of starting empty.
 #
-# claimRef zeigt vorwaerts auf die PVC, die ArgoCD aus derselben App anlegt.
-# Damit ist das PV vorgebunden und der Provisioner fasst die PVC nicht an. Ohne
-# claimRef koennte parallel dynamisch provisioniert werden.
+# claimRef points forward at the PVC that ArgoCD creates from the same app, so
+# the PV is pre-bound and the provisioner leaves the PVC alone.
 #
-# Der Longhorn-Volume-Name steht in volumeHandle und ist die einzige Verbindung
-# zum restaurierten Volume. Das Restore selbst (Volume-CR mit fromBackup) ist
-# Handarbeit und steht bewusst nicht im git: der Backup-URL ist eine
-# Momentaufnahme, ein Re-Sync duerfte daraus nie einen alten Stand herstellen.
-# Das Rezept steht in talos/README.md.
+# The Longhorn volume name in volumeHandle is the only link to the restored
+# volume. The restore itself (a Volume CR with fromBackup) is manual and
+# deliberately not in git: the backup URL is a snapshot, and a re-sync must
+# never recreate an old state from it. The recipe is in talos/README.md.
 apiVersion: v1
 kind: PersistentVolume
 metadata:
   name: ripe-atlas-etc
   annotations:
-    # Ohne die Annotation raeumt bei reclaimPolicy Delete niemand das
-    # Longhorn-Volume ab: das erledigt der external-provisioner, und der fasst
-    # nur PVs an, die ihn als Erzeuger nennen.
+    # Without this annotation nobody cleans up the Longhorn volume under
+    # reclaimPolicy Delete: the external-provisioner does that, and it only
+    # touches PVs naming it as their creator.
     pv.kubernetes.io/provisioned-by: driver.longhorn.io
 spec:
   capacity:
     storage: 128Mi
   accessModes:
     - ReadWriteOnce
-  # Delete wie bei den dynamisch provisionierten PVs: ein Prune der App nimmt
-  # damit auch hier das Longhorn-Volume mit.
+  # Delete as with the dynamically provisioned PVs, so pruning the app takes
+  # the Longhorn volume with it here too.
   persistentVolumeReclaimPolicy: Delete
   storageClassName: longhorn
   volumeMode: Filesystem
@@ -51,8 +47,8 @@ spec:
     volumeAttributes:
       numberOfReplicas: "2"
       staleReplicaTimeout: "30"
-      # Muss zum nodeSelector des restaurierten Volumes passen, sonst findet
-      # Longhorn keine Disk: die StorageClass selektiert auf den Tag storage.
+      # Must match the restored volume's nodeSelector, otherwise Longhorn
+      # finds no disk: the StorageClass selects on the storage tag.
       nodeSelector: storage
       dataEngine: v1
       backupTargetName: default

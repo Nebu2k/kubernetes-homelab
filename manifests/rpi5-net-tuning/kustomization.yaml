@@ -6,10 +6,9 @@ resources:
   - namespace.yaml
   - daemonset.yaml
 
-# Wie bei rpi5-fan: das Skript liegt als eigene Datei daneben, nicht als
-# YAML-Block im DaemonSet. So ist es lesbar und man kann es einzeln pruefen.
-# Der Hash im Namen sorgt dafuer, dass eine Aenderung am Skript den Pod neu
-# startet, ohne dass jemand daran denken muss.
+# As with rpi5-fan the script lives in its own file rather than as a YAML
+# block, so it stays readable and can be checked on its own. The hash in the
+# name restarts the pod on a change without anyone having to remember.
 configMapGenerator:
   - name: rpi5-net-tuning-script
     files:

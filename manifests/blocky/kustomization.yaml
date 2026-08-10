@@ -9,14 +9,12 @@ resources:
   - poddisruptionbudget.yaml
   - servicemonitor.yaml
 
-# generator statt handgeschriebener ConfigMap wegen des Hash-Suffixes: Blocky
-# und Unbound lesen ihre Konfiguration nur beim Start. Ohne Suffix wuerde eine
-# Aenderung zwar synchronisiert, die laufenden Pods behielten aber die alte
-# Fassung, bis sie zufaellig etwas neu startet. Mit Suffix aendert sich der
-# ConfigMap-Name und das Deployment rollt von selbst.
+# A generator rather than a handwritten ConfigMap, for the hash suffix: Blocky
+# and Unbound read their configuration only at startup, so without it a change
+# would sync but the running pods would keep the old copy until something
+# restarted them. With the suffix the name changes and the deployment rolls.
 #
-# config.yml ist zugleich die Vorlage fuer die LXC-Instanz auf pve, siehe
-# Kopf der Datei.
+# config.yml is also the source for the LXC instance on pve, see its header.
 configMapGenerator:
   - name: blocky-config
     files:

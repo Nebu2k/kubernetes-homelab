@@ -1,25 +1,8 @@
-# CRDs vor dem Operator aktualisieren.
-#
-# Helm aktualisiert CRDs grundsaetzlich nicht, ArgoCD rendert sie zwar mit
-# (--include-crds) und wendet sie an, kommt beim Major-Upgrade aber nicht dazu:
-# beim Sprung 80.13.2 -> 87.21.0 blockierte der Diff mit
-#   ComparisonError: .spec.hostNetwork: field not declared in schema
-# Die alertmanagers-CRD im Cluster kannte das Feld noch nicht, Chart 87 rendert
-# es. ArgoCD diffed gegen das Cluster-Schema, scheitert, und wendet deshalb auch
-# die neue CRD nie an. Henne-Ei, aufgeloest nur per manuellem
-# kubectl apply --server-side aus dem Chart-Tarball.
-#
-# Der Job des crds-Subcharts nimmt genau diesen Schritt vorweg: PreSync-Hook,
-# entpackt die mitgelieferten CRDs und wendet sie server-side an, bevor der
-# Operator kommt. Mechanisch nichts Neues fuer uns, ArgoCD faehrt fuer diese App
-# schon die admission-create/patch-Hooks derselben Bauart.
-#
-# forceConflicts ist Pflicht: ArgoCD ist durch ServerSideApply=true bereits
-# Field-Manager der CRDs, ohne --force-conflicts scheitert der Job daran.
-# Die Felder wandern dabei kurz an den Manager "kubectl" und beim folgenden
-# Sync zurueck an ArgoCD. Inhaltlich identisch, also kein Dauer-Diff.
-#
-# Upstream markiert das Feature als preview. Bei Chart-Upgrades im Blick behalten.
+# PreSync hook that applies the chart's CRDs before the operator starts.
+# Without it a major upgrade deadlocks: ArgoCD diffs the rendered chart against
+# the old cluster schema, fails, and therefore never applies the new CRDs.
+# forceConflicts is required because ServerSideApply already made ArgoCD the
+# field manager. Upstream still marks the feature as preview.
 crds:
   upgradeJob:
     enabled: true
@@ -34,26 +17,17 @@ defaultRules:
     kubeControllerManager: false
     kubeProxy: false  # kube-router statt kube-proxy
 
-# Ohne im Cluster erreichbaren Metrik-Endpoint, deshalb aus.
+# No metrics endpoint reachable from inside the cluster.
 kubeScheduler:
   enabled: false
 kubeControllerManager:
   enabled: false
 kubeProxy:
   enabled: false
-# etcd laeuft auf allen drei Control-Plane-Nodes. enabled: true schaltet hier
-# nur die Alert-Regeln und das etcd-Dashboard frei, gescrapt wird NICHT ueber
-# den Chart, sondern ueber etcd-scrapeconfig.yaml.
-#
-# Grund: der Chart-Weg fuer externe etcd-Member ist `endpoints:`, und daraus
-# entsteht ein Endpoints-Objekt. ArgoCD hat `Endpoints` und `EndpointSlice` in
-# `resource.exclusions` und wendet sie deshalb nie an: der Service kaeme sauber
-# im Cluster an, das Endpoints-Objekt lautlos nicht, also ein Ziel, das nie
-# erscheint, ohne Fehlermeldung dazu. Service und ServiceMonitor bleiben darum
-# aus, sonst stehen sie leer herum.
-#
-# Voraussetzung auf den Nodes ist listen-metrics-urls in talos/talconfig.yaml,
-# sonst bindet Port 2381 nur auf 127.0.0.1.
+# enabled: true only unlocks the alert rules and the etcd dashboard. Scraping
+# runs through etcd-scrapeconfig.yaml, because the chart's `endpoints:` path
+# produces an Endpoints object and ArgoCD has those in resource.exclusions: it
+# would never reach the cluster, silently, leaving a target that never appears.
 kubeEtcd:
   enabled: true
   service:
@@ -63,17 +37,15 @@ kubeEtcd:
 
 prometheus:
   prometheusSpec:
-    # Steht in jedem Alert und damit in der Mail. Bei nur einem Cluster
-    # redundant, aber das group_by in dieser Datei enthaelt 'cluster' ohnehin:
-    # kommt je eine zweite Instanz dazu, die in dieselbe SNS-Topic alarmiert,
-    # ist die Unterscheidung schon da.
+    # Carried into every alert mail. Redundant with a single cluster, but
+    # group_by below already contains 'cluster', so a second one alerting into
+    # the same SNS topic stays distinguishable without further changes.
     externalLabels:
       cluster: talos
-    # Use EndpointSlice instead of deprecated Endpoints API (required for Kubernetes v1.33+)
+    # Endpoints is deprecated as of Kubernetes v1.33.
     discoveryRole: endpointslice
     
-    # Request reflects real TSDB usage (~1.3Gi) so the scheduler accounts
-    # honestly for this pod instead of over-packing the node.
+    # Request reflects real TSDB usage so the scheduler does not over-pack.
     resources:
       requests:
         cpu: 200m
@@ -81,16 +53,14 @@ prometheus:
       limits:
         memory: 2Gi
     
-    # arch ist hier bewusst zusaetzlich gesetzt und keine Doppelung: das
-    # worker-Label tragen alle Nodes, es sagt nur "traegt Workloads". Prometheus
-    # ist der speicherhungrigste Pod im Cluster, auf raspi5 waere er ein Problem
-    # fuer die Node und fuer sich selbst. amd64 macht daraus eine Eigenschaft
-    # der Hardware statt eines Versprechens ueber Labels.
+    # arch is not a duplicate of the worker label: every node carries that one.
+    # Prometheus is the most memory-hungry pod in the cluster and would hurt
+    # both itself and the node on raspi5.
     nodeSelector:
       node-role.kubernetes.io/worker: worker
       kubernetes.io/arch: amd64
 
-    # Lifecycle hooks to prevent Longhorn volume attachment issues
+    # Release the Longhorn volume cleanly, otherwise the next attach hangs.
     containers:
       - name: prometheus
         lifecycle:
@@ -103,38 +73,16 @@ prometheus:
     
     terminationGracePeriodSeconds: 120
     
-    # Labels select the Longhorn recurring-job groups (backup-daily/weekly/monthly,
-    # snapshot-daily, snapshot-cleanup-daily, filesystem-trim-weekly).
-    # Without these, the volume falls into the "default" group, which has no jobs.
+    # Deliberately WITHOUT the backup group: the TSDB rewrites its blocks
+    # constantly, so every retention point pins another copy and this volume
+    # dominates the backup target. Metrics are regenerable and capped at 30d.
     #
-    # BEWUSST OHNE die backup-Gruppe. Dieses Volume ist sonst mit Abstand der
-    # teuerste Posten im Backup-Bestand, in der Groessenordnung 97 GB von 126 GB
-    # bei 37 GiB Live-Daten. Grund ist die Kombination aus TSDB und
-    # Retention-Kette:
-    # Prometheus schreibt seine Blocks permanent um, und jeder der bis zu 18
-    # Behaltepunkte (7 daily + 4 weekly + 6 monthly + 1 yearly) haelt die
-    # geaenderten Bloecke fest.
-    #
-    # Metriken sind regenerierbar und ohnehin auf retention: 30d begrenzt, ein
-    # Restore aus einem Monate alten Backup waere wertlos. snapshot und
-    # maintenance bleiben: Snapshots sind lokal und billig, filesystem-trim gibt
-    # sogar Platz zurueck.
-    #
-    # ACHTUNG, diese Labels allein reichen nicht. Longhorn liest keine
-    # PVC-Labels: die Gruppen eines dynamisch provisionierten Volumes kommen aus
-    # dem "recurringJobSelector" der StorageClass (manifests/longhorn/values.yaml),
-    # und der setzt backup, snapshot und maintenance. Das frisch provisionierte
-    # Volume traegt also backup, egal was hier steht.
-    #
-    # Nach jedem Neuanlegen dieses Volumes (Cluster-Neubau, PVC geloescht und
-    # neu gebunden) muss die Gruppe deshalb von Hand wieder weg, sonst landet
-    # die TSDB erneut im Backup:
+    # These labels alone do not achieve that. Longhorn ignores PVC labels and
+    # takes the groups from the StorageClass recurringJobSelector, which does
+    # set backup. After every re-provisioning of this volume, drop it by hand:
     #
     #   kubectl -n longhorn-system label volumes.longhorn.io <pvc-...> \
     #     recurring-job-group.longhorn.io/backup-
-    #
-    # Die Labels hier bleiben trotzdem stehen: sie dokumentieren die Absicht an
-    # der Stelle, an der man sie sucht.
     storageSpec:
       volumeClaimTemplate:
         metadata:
@@ -157,10 +105,9 @@ prometheus:
 grafana:
   enabled: true
   
-  # Admin credentials aus dem SealedSecret, nicht im Klartext hier: Grafana
-  # haengt an einem Ingress. Die beiden Sidecars melden sich mit genau diesen
-  # Werten an /api/admin/provisioning/*/reload an, deshalb muss das Secret zum
-  # Passwort in der Grafana-DB passen (siehe grafana-admin-unsealed.yaml.example).
+  # The provisioning sidecars authenticate against /api/admin/provisioning/*
+  # with exactly these values, so the secret must match the password in
+  # Grafana's own database (see grafana-admin-unsealed.yaml.example).
   admin:
     existingSecret: grafana-admin-credentials
     userKey: admin-user
@@ -169,8 +116,7 @@ grafana:
   nodeSelector:
     node-role.kubernetes.io/worker: worker
   
-  # RWO Longhorn volume: use Recreate so the old pod releases the volume
-  # before the new one starts. RollingUpdate deadlocks on Multi-Attach.
+  # RWO Longhorn volume: RollingUpdate deadlocks on Multi-Attach.
   deploymentStrategy:
     type: Recreate
 
@@ -182,7 +128,7 @@ grafana:
   ingress:
     enabled: false
   
-  # Request reflects real usage (~300Mi) for honest scheduling.
+  # Request reflects real usage for honest scheduling.
   resources:
     requests:
       cpu: 100m
@@ -203,17 +149,12 @@ grafana:
         options:
           path: /var/lib/grafana/dashboards/default
   
-  # Fremd-Dashboards von grafana.com. Eigene Dashboards laufen NICHT hier,
-  # sondern als ConfigMap mit dem Label grafana_dashboard=1, siehe
-  # kustomization.yaml und dashboards/.
+  # Third-party boards from grafana.com. Our own live as ConfigMaps labelled
+  # grafana_dashboard=1, see kustomization.yaml and dashboards/.
   #
-  # Vor jedem neuen gnetId-Eintrag lohnt ein Test: Dashboard-JSON ziehen, die
-  # Metriknamen aus den Queries gegen /api/v1/label/__name__/values abgleichen.
-  # Ein Community-Board, dessen Metriken es hier nicht gibt, meldet sich nicht,
-  # es zeigt leere Panels und sieht damit genauso aus wie eines, bei dem gerade
-  # nichts passiert. Genau daran sind mehrere gescheitert (nginx-Boards fuer
-  # Traefik, pve-Boards fuer einen anderen Exporter): eigene Boards unter
-  # dashboards/ sind in solchen Faellen der kuerzere Weg.
+  # Check the metric names of a new gnetId against /api/v1/label/__name__/values
+  # first: a board whose metrics do not exist here shows empty panels and looks
+  # exactly like one where nothing is currently happening.
   dashboards:
     default:
       # Node exporter full
@@ -231,7 +172,7 @@ grafana:
         gnetId: 11315
         revision: 9
         datasource: Prometheus
-      # UniFi Poller - Client DPI (braucht save_dpi im Poller-Config)
+      # UniFi Poller - Client DPI (needs save_dpi in the poller config)
       unifi-client-dpi:
         gnetId: 11310
         revision: 5
@@ -251,7 +192,7 @@ grafana:
         gnetId: 11312
         revision: 9
         datasource: Prometheus
-      # UniFi Poller - USG Insights (WAN/Uplink, greift auch fuer die UDR)
+      # UniFi Poller - USG Insights (WAN/uplink, also covers the UDR)
       unifi-usg:
         gnetId: 11313
         revision: 9
@@ -271,11 +212,11 @@ alertmanager:
       repeat_interval: 4h
       receiver: 'sns-receiver'
       routes:
-        # Watchdog - silence (always firing, no notification needed)
+        # Always firing by design, nothing to notify about.
         - match:
             alertname: Watchdog
           receiver: 'null'
-        # InfoInhibitor - silence (meta-alert for info-level inhibition)
+        # Meta-alert for info-level inhibition.
         - match:
             alertname: InfoInhibitor
           receiver: 'null'
@@ -306,7 +247,7 @@ alertmanager:
       - name: 'null'  # No notifications (for Watchdog)
       - name: 'sns-receiver'
         sns_configs:
-          # Topic, Mail-Subscription und der publizierende IAM-User stehen in
+          # Topic, mail subscription and the publishing IAM user live in
           # homelab-terraform/aws/sns-alerts.tf.
           - topic_arn: 'arn:aws:sns:eu-central-1:077448369105:homelab'
             sigv4:
@@ -370,30 +311,23 @@ alertmanager:
 nodeExporter:
   enabled: true
 
-# Kube-state-metrics (cluster state metrics) - note: uses hyphens not camelCase
+# Chart key uses hyphens, not camelCase.
 kube-state-metrics:
   nodeSelector:
     node-role.kubernetes.io/worker: "worker"
 
-  # Leserecht auf die Longhorn-Volumes, ausschliesslich fuer den Block
-  # customResourceState darunter. list+watch, mehr braucht ksm nicht.
+  # Read access to the Longhorn volumes, solely for customResourceState below.
   rbac:
     extraRules:
       - apiGroups: ["longhorn.io"]
         resources: ["volumes"]
         verbs: ["list", "watch"]
 
-  # Traegt das Gruppenlabel eines Longhorn-Volumes als Metrik nach.
-  #
-  # Der Grund: ein Volume, das noch NIE gesichert wurde, meldet
-  # longhorn_volume_last_backup_at = 0 und faellt damit aus
-  # LonghornBackupStale heraus (das "> 0" dort ist Absicht, sonst feuert das
-  # bewusst ungesicherte Prometheus-Volume dauerhaft). Ob das Volume ueberhaupt
-  # gesichert werden SOLL, steht nur im Label
-  # recurring-job-group.longhorn.io/backup am Volume-Objekt, und kein
-  # Longhorn-Exporter gibt das heraus. Erst mit dieser Metrik laesst sich
-  # "soll gesichert werden, wurde aber nie" als Alert ausdruecken
-  # (LonghornBackupNeverRan in prometheus-rules.yaml).
+  # Exposes a Longhorn volume's group label as a metric. A volume that has
+  # never been backed up reports last_backup_at = 0 and thus escapes
+  # LonghornBackupStale; whether it SHOULD be backed up lives only in the
+  # recurring-job-group.longhorn.io/backup label, which no Longhorn exporter
+  # publishes. LonghornBackupNeverRan builds on this metric.
   customResourceState:
     enabled: true
     config:
@@ -403,21 +337,18 @@ kube-state-metrics:
               group: longhorn.io
               version: v1beta2
               kind: Volume
-            # Eigener Prefix statt des Default kube_customresource_, und
-            # bewusst NICHT longhorn_*: dieser Namensraum gehoert dem
-            # Longhorn-Exporter, eine Kollision waere schwer zu sehen.
+            # Not longhorn_*: that namespace belongs to the Longhorn exporter
+            # and a collision would be hard to spot.
             metricNamePrefix: homelab_longhorn_volume
             labelsFromPath:
               volume: [metadata, name]
             metrics:
-              # Der Suffix _info ist Pflicht, nicht Geschmack: bei type: Info
-              # haengt ksm ihn NICHT selbst an, sondern uebernimmt den Namen
-              # wie er dasteht und loggt nur ein "Info metric does not have
-              # _info suffix" auf Info-Level weg. Die Metrik entsteht dann
-              # unter dem verkuerzten Namen und jede Regel, die den
-              # konventionellen erwartet, laeuft still ins Leere.
+              # The _info suffix is mandatory: ksm does not append it for
+              # type: Info, it only logs a note and creates the metric under
+              # the shortened name. Rules expecting the conventional one then
+              # match nothing, silently.
               - name: recurring_job_group_info
-                help: "Gruppenlabels eines Longhorn-Volumes, 1 je Volume"
+                help: "Recurring-job group labels of a Longhorn volume"
                 each:
                   type: Info
                   info:
@@ -436,16 +367,7 @@ prometheusOperator:
   nodeSelector:
     node-role.kubernetes.io/worker: worker
   
-  # KEIN prometheusOperator.namespaces setzen, der Operator soll alle
-  # Namespaces sehen.
-  #
-  # Das Feld ist eine Allowlist und ihr Versagen ist still: ein ServiceMonitor
-  # ausserhalb der Liste wird nicht abgelehnt, sondern ignoriert. Kein
-  # Scrape-Pool, kein Target, keine Zeile im Operator-Log, in ArgoCD steht er
-  # gruen und synced da. Eine Liste, die man bei jedem neuen Dienst nachziehen
-  # muss und deren Vergessen nicht auffaellt, ist im Homelab die schlechtere
-  # Wahl als der Default. Zugriffsrechte kostet das nichts: der Operator haengt
-  # an einer ClusterRole, Namespace-Roles gibt es keine.
-  #
-  # Die Auswahl passiert stattdessen ueber serviceMonitorSelector weiter oben
-  # (serviceMonitorSelectorNilUsesHelmValues: false = alle Labels erlaubt).
+  # Deliberately NO prometheusOperator.namespaces. The field is an allowlist
+  # that fails silently: a ServiceMonitor outside it is ignored, not rejected,
+  # and ArgoCD still shows the app green. Selection happens through
+  # serviceMonitorSelector above instead.

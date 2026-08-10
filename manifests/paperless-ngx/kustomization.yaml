@@ -4,10 +4,10 @@ namespace: paperless-ngx
 resources:
   - namespace.yaml
   - pvc.yaml
-  # PVs zu den aus dem NAS-Backup restaurierten Longhorn-Volumes.
-  # Warum sie ins git gehoeren, steht im Kopf von pv.yaml.
+  # PVs for the Longhorn volumes restored from the NAS backup; why they belong
+  # in git is explained in the header of pv.yaml.
   - pv.yaml
-  # Das CIFS-Consume-Verzeichnis, kein Longhorn-Volume.
+  # The CIFS consume directory, not a Longhorn volume.
   - smb-consume-pv.yaml
   - db-pvc.yaml
   - postgresql.yaml

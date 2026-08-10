@@ -1,29 +1,22 @@
-# Frische-Sonde ueber die Offsite-Backup-Buckets.
+# Freshness probe over the offsite backup buckets.
 #
-# Die Alerts der Gruppe "offsite-backup-jobs" belegen, dass ein Job durchgelaufen
-# ist. Sie belegen NICHT, dass etwas im Bucket angekommen ist. Genau dazwischen
-# liegen die Fehler, die sonst niemand sieht:
+# The "offsite-backup-jobs" alerts prove a job ran. They do NOT prove anything
+# arrived in the bucket, and that gap holds the failures nobody else sees:
 #
-#   - paperless: der Export laeuft als CronJob, der Upload aber im Sidecar auf
-#     eigenem Timer. Scheitert der Upload, schreibt der Sidecar "ERROR" ins Log
-#     und schlaeft weiter. Der Job bleibt gruen.
-#   - Home Assistant: es gibt gar keinen Job. HA laedt selbst hoch, und wenn das
-#     ausfaellt, faellt es still aus. Wechselt zum Beispiel beim Key-Tausch die
-#     Agenten-ID, geht das automatische Backup nur noch nach backup.local, und
-#     HA schreibt dazu genau eine WARNING-Zeile. In der UI sieht alles gesund
-#     aus, und der Sensor sensor.backup_last_successful_automatic_backup steht
-#     auf gruen, denn ein Backup ist ja entstanden.
-#   - teslamate: hier ist die Luecke am kleinsten (Dump und Upload sind derselbe
-#     Job), aber der Bucket ist trotzdem die einzige Stelle, an der man das
-#     Ergebnis sieht statt der Absicht.
-#   - etcd: hier zaehlt, dass JEDE Control-Plane einzeln geprueft wird. Den
-#     Upload machen eigene CronJobs je Node (manifests/etcd-backup/), einer
-#     davon kann still ausfallen, ohne dass die Summe im Bucket auffaellig
-#     aussieht.
+#   - paperless: the export is a CronJob but the upload runs in a sidecar on
+#     its own timer. A failed upload logs "ERROR" and sleeps on, job green.
+#   - Home Assistant: there is no job at all. HA uploads itself, and when that
+#     fails it fails silently: if the agent ID changes, the automatic backup
+#     goes to backup.local only, HA logs one WARNING line, and the sensor
+#     stays green because a backup was indeed created.
+#   - teslamate: the smallest gap (dump and upload are the same job), but the
+#     bucket is still the only place showing the result instead of the intent.
+#   - etcd: what matters is that EVERY control plane is checked separately.
+#     Each node uploads from its own CronJob and one can fail silently without
+#     the bucket as a whole looking odd.
 #
-# Der Job faellt mit exit 1 aus, sobald ein Bucket zu alt ist. Das Melden macht
-# die Alert-Regel OffsiteBackupFreshnessCheckFailing in
-# manifests/kube-prometheus-stack/prometheus-rules.yaml.
+# The job exits 1 as soon as a bucket is too old; the reporting is done by
+# OffsiteBackupFreshnessCheckFailing in prometheus-rules.yaml.
 apiVersion: batch/v1
 kind: CronJob
 metadata:
@@ -32,14 +25,13 @@ metadata:
   labels:
     app.kubernetes.io/name: offsite-backup-freshness
 spec:
-  # 06:00 UTC, also nach allem, was nachts sichert: teslamate 01:30, der
-  # paperless-Export 02:00 (der Sidecar synct innerhalb der folgenden Stunde),
-  # HAs eigener Lauf gegen 05:30 Ortszeit und das Monatsarchiv 04:00 am Ersten.
+  # 06:00 UTC, after everything that backs up at night: teslamate 01:30, the
+  # paperless export 02:00 (its sidecar syncs within the following hour), HA's
+  # own run around 05:30 local and the monthly archive at 04:00 on the 1st.
   #
-  # timeZone ist hier PFLICHT und nicht Kosmetik. Ohne das Feld laeuft ein
-  # CronJob in der Zeitzone der Node, die gerade den kube-controller-manager
-  # haelt, und die Nodes haben nicht alle dieselbe. Der Zeitplan wandert also
-  # mit dem Lease: "0 2 * * *" kann genauso gut um 00:00 UTC feuern.
+  # timeZone is mandatory: without it a CronJob runs in the timezone of
+  # whichever node currently holds the kube-controller-manager lease, and the
+  # nodes do not agree, so the schedule wanders with the lease.
   schedule: "0 6 * * *"
   timeZone: "Etc/UTC"
   successfulJobsHistoryLimit: 3
@@ -47,8 +39,8 @@ spec:
   concurrencyPolicy: Forbid
   jobTemplate:
     spec:
-      # Kein Retry. Ein zu alter Bucket wird beim zweiten Versuch nicht juenger,
-      # und der fehlgeschlagene Job IST das Signal fuer den Alert.
+      # No retry. A bucket that is too old does not get younger on a second
+      # attempt, and the failed job IS the signal for the alert.
       backoffLimit: 0
       template:
         metadata:
@@ -68,22 +60,21 @@ spec:
                   NOW=$(date -u +%s)
                   FAIL=0
 
-                  # Argumente: Bucket, Praefix (leer = ganzer Bucket), Grenze in
-                  # Stunden, Klartextname fuer die Ausgabe.
+                  # Arguments: bucket, prefix (empty = whole bucket), limit in
+                  # hours, display name for the output.
                   pruefe() {
                     BUCKET="$1"; PREFIX="$2"; MAX_H="$3"; LABEL="$4"
 
-                    # sort_by liefert das juengste Objekt. Bewusst ueber
-                    # LastModified und nicht ueber den Key: die Namen folgen in
-                    # den drei Buckets drei verschiedenen Schemata, der
-                    # Zeitstempel ist das einzig gemeinsame.
+                    # sort_by yields the newest object, by LastModified rather
+                    # than by key: the three buckets follow three different
+                    # naming schemes and the timestamp is the only thing they
+                    # share.
                     #
-                    # Das "Contents || `[]`" ist noetig, nicht huebsch: trifft
-                    # das Praefix nichts, fehlt Contents ganz, und sort_by(null)
-                    # bricht mit einem JMESPath-Typfehler ab statt mit einem
-                    # leeren Ergebnis. Der Fall tritt real auf, naemlich bevor
-                    # der paperless-Export seine erste last-export.txt
-                    # geschrieben hat.
+                    # The "Contents || `[]`" is required: if the prefix matches
+                    # nothing, Contents is absent entirely and sort_by(null)
+                    # aborts with a JMESPath type error instead of an empty
+                    # result. That happens for real before the paperless export
+                    # has written its first last-export.txt.
                     NEWEST=$(aws s3api list-objects-v2 \
                       --bucket "${BUCKET}" --region "${S3_REGION}" \
                       ${PREFIX:+--prefix "${PREFIX}"} \
@@ -104,15 +95,13 @@ spec:
                     KEY=$(echo "${NEWEST}" | cut -f2)
                     AGE_H=$(( (NOW - $(date -u -d "${STAMP}" +%s)) / 3600 ))
 
-                    # Der Key steht bewusst NICHT im Log: die Dateinamen des
-                    # paperless-Exports tragen Titel und Korrespondent. Nur die
-                    # Endung, die reicht zum Einordnen.
+                    # The key deliberately stays out of the log: paperless
+                    # export filenames carry document titles and
+                    # correspondents. The extension alone is enough.
                     #
-                    # Die case-Konstruktion ist Pflicht und keine Vorsicht:
-                    # "${KEY##*.}" liefert bei einem Key OHNE Punkt den
-                    # vollstaendigen Key zurueck. Genau das sind die
-                    # etcd-Snapshots ("etcd-snapshot-<node>-<ts>"), und damit
-                    # stuende die Regel oben nur noch auf dem Papier.
+                    # The case construct is required, not caution: for a key
+                    # WITHOUT a dot "${KEY##*.}" returns the whole key. That is
+                    # exactly what the etcd snapshots look like.
                     case "${KEY}" in
                       *.*) EXT=".${KEY##*.}" ;;
                       *)   EXT="(ohne Endung)" ;;
@@ -130,71 +119,50 @@ spec:
                   echo "Frische der Offsite-Backups, Stand $(date -u +%FT%TZ)"
                   echo
 
-                  # 36h wie bei den Job-Alerts: ein einzelner ausgefallener Lauf
-                  # soll nicht sofort melden. Weil der Check nur einmal taeglich
-                  # laeuft, heisst das in der Praxis: ein Ausfall meldet sich
-                  # spaetestens am uebernaechsten Morgen.
+                  # 36h as with the job alerts: one missed run stays quiet.
+                  # Since the check runs daily, a failure surfaces on the
+                  # morning after next at the latest.
                   pruefe "${TESLAMATE_BUCKET}" "daily/" 36 "teslamate (daily)"
 
-                  # HA laedt jeden Tar selbst hoch, hier zaehlt der ganze Bucket.
+                  # HA uploads every tar itself, so the whole bucket counts.
                   pruefe "${HOME_ASSISTANT_BUCKET}" "" 36 "home assistant"
 
-                  # Mealie wie teslamate: Erzeugen und Hochladen sind derselbe
-                  # Job, geprueft wird trotzdem der Bucket, weil er die einzige
-                  # Stelle ist, an der das Ankommen sichtbar wird.
+                  # Mealie like teslamate: creation and upload are the same
+                  # job, but the bucket is the only place where arrival shows.
                   pruefe "${MEALIE_BUCKET}" "daily/" 36 "mealie (daily)"
 
-                  # WICHTIG: hier wird gezielt die Heartbeat-Datei geprueft, nicht
-                  # das juengste Objekt im Bucket. Der Sidecar synct ohne
-                  # --delete und laedt nur hoch, was sich geaendert hat, und
-                  # "document_exporter" behaelt die alten mtimes der Medien-
-                  # Dateien bei. Aendert sich an den Dokumenten tagelang nichts,
-                  # wird auch tagelang nichts hochgeladen, und die aeltesten
-                  # Objekte im Bucket sind Monate alt. "Juengstes Objekt" waere
-                  # also ein Fehlalarm-Generator.
+                  # Deliberately the heartbeat file, not the newest object in
+                  # the bucket: the sidecar syncs without --delete and uploads
+                  # only what changed, and document_exporter keeps the old
+                  # mtimes of the media files. If the documents do not change
+                  # for days, nothing is uploaded for days, so "newest object"
+                  # would be a false-alarm generator.
                   #
-                  # last-export.txt schreibt der Export-CronJob nach jedem
-                  # erfolgreichen Lauf frisch, damit hat sie immer eine neue
-                  # mtime und wird immer synchronisiert. Ist SIE aktuell, sind
-                  # beide Haelften belegt: der Export lief UND der Sidecar hat
-                  # hochgeladen.
+                  # last-export.txt is rewritten after every successful export
+                  # run, always gets a fresh mtime and is therefore always
+                  # synced. If IT is current, both halves are proven: the
+                  # export ran AND the sidecar uploaded.
                   pruefe "${PAPERLESS_BUCKET}" "paperless-backup/last-export.txt" 36 "paperless (heartbeat)"
 
-                  # etcd: auf JEDER Control-Plane laeuft alle 12h ein eigener
-                  # Snapshot-CronJob, und geprueft wird JEDE Node einzeln.
+                  # Every control plane runs its own snapshot CronJob every
+                  # 12h, and every node is checked separately. A single check
+                  # over the whole bucket would go green as soon as ONE node
+                  # delivers, hiding that the other two stopped weeks ago.
                   #
-                  # Eine einzige Pruefung ueber den ganzen Bucket waere gruen,
-                  # sobald EINE Node liefert, und wuerde damit verdecken, dass
-                  # die anderen beiden seit Wochen nichts mehr hochladen. Ein
-                  # Bucket-Alter sagt nichts darueber, ob noch drei Erzeuger
-                  # leben.
+                  # The object name carries the node name
+                  # ("etcd-snapshot-<node>-<unix-ts>"), so the prefix hits
+                  # exactly that node's scheduled snapshots and deliberately
+                  # ignores manual runs.
                   #
-                  # Der Objektname traegt den Node-Namen
-                  # ("etcd-snapshot-<node>-<unix-ts>"), node-eigene Ordner
-                  # braucht es dafuer nicht. Das Praefix trifft damit genau die
-                  # geplanten Snapshots einer Node und laesst Laeufe von Hand
-                  # bewusst aussen vor: geprueft werden soll der automatische Weg.
+                  # This list must match the CronJobs in manifests/etcd-backup/
+                  # in BOTH directions: a node missing there does not back up,
+                  # a node missing here backs up unobserved. After a node
+                  # rebuild or rename this probe reports "no object at all",
+                  # which is the loud failure we want.
                   #
-                  # Die Node-Namen stehen hier fest. Nach einem Node-Neubau oder
-                  # Rename meldet sich diese Sonde mit "kein einziges Objekt" und
-                  # muss nachgezogen werden. Das ist der gewollte laute Ausgang,
-                  # ein stiller waere genau der Fehler von oben.
-                  #
-                  # Die Liste muss deshalb zu den CronJobs in
-                  # manifests/etcd-backup/ passen, in BEIDE Richtungen. Eine
-                  # Node, die dort fehlt, sichert nicht; eine Node, die hier
-                  # fehlt, sichert unbeobachtet. Beim Abbau einer Node gehoert
-                  # sie aus beiden Dateien raus, sonst meldet diese Zeile ab 26h
-                  # nach dem letzten Snapshot dauerhaft rot.
-                  #
-                  # 26h statt 18h: pro Node ist der Abstand 12h (die CronJobs in
-                  # manifests/etcd-backup/ laufen 00:00 und 12:00 UTC, gestaffelt
-                  # um 20 Minuten), und ein einzelner ausgefallener Lauf soll
-                  # nicht melden. Zwei in Folge sind 24h und damit ein echtes
-                  # Signal. Der Check selbst laeuft 06:00 UTC.
-                  #
-                  # Je CronJob eine Node, damit eine tote Node nur ihren eigenen
-                  # Lauf reisst und hier genau eine Zeile rot wird.
+                  # 26h rather than 18h: the per-node interval is 12h, so one
+                  # missed run stays quiet while two in a row are a real
+                  # signal.
                   for NODE in talos-cp-1 prodesk raspi5; do
                     pruefe "${ETCD_BUCKET}" "etcd-snapshot-${NODE}-" 26 "etcd ${NODE}"
                   done

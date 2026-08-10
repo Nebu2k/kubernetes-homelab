@@ -4,16 +4,9 @@ metadata:
   name: home-assistant
   namespace: home-assistant
   annotations:
-    # Hier hing die Middleware "real-ip", eine ipWhiteList auf 192.168.0.0/16
-    # und 10.42.0.0/16. Sie hat nie etwas eingeschraenkt: solange Traefik auf
-    # externalTrafficPolicy: Cluster lief, kam jeder Aufrufer als 10.42.6.1 an
-    # und lag damit im erlaubten Bereich. Was HA hinter dem Proxy funktionieren
-    # laesst, ist use_x_forwarded_for + trusted_proxies in der configmap, nicht
-    # diese Regel; nachgewiesen mit einem Probe-Pod, der HA direkt mit
-    # oeffentlicher IP im X-Forwarded-For aufgerufen hat (HTTP 200).
-    # Mit echten Client-IPs haette sie ab sofort tatsaechlich gegriffen und
-    # den externen Zugriff gesperrt, den homeassistant als public_host
-    # ausdruecklich haben soll. Deshalb raus statt aufgebohrt.
+    # Deliberately no IP whitelist middleware: homeassistant is meant to be
+    # reachable as public_host. What makes HA work behind the proxy is
+    # use_x_forwarded_for + trusted_proxies in the configmap.
     gethomepage.dev/enabled: "true"
     gethomepage.dev/name: "Home Assistant"
     gethomepage.dev/description: "Smart Home Hub"

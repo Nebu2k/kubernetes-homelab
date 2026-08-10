@@ -1,54 +1,52 @@
 #!/usr/bin/env bash
 #
-# Validiert alle Manifeste und Helm-Charts des Repos, ohne Cluster-Zugriff.
-# Laeuft lokal und in CI (.github/workflows/validate.yml) ueber denselben Code.
+# Validates every manifest and Helm chart in the repo without cluster access.
+# Runs locally and in CI (.github/workflows/validate.yml) from the same code.
 #
-#   .github/scripts/validate.sh            # alles
-#   .github/scripts/validate.sh manifests  # nur Kustomize-Teil
-#   .github/scripts/validate.sh helm       # nur Chart-Teil
-#   .github/scripts/validate.sh arch       # nur der arm64-Test der Images
+#   .github/scripts/validate.sh            # everything
+#   .github/scripts/validate.sh manifests  # kustomize part only
+#   .github/scripts/validate.sh helm       # chart part only
+#   .github/scripts/validate.sh arch       # only the arm64 test of the images
 #
-# Liegt unter .github/, weil es zur CI gehoert und nicht zum Cluster-Inhalt.
+# It lives under .github/ because it belongs to CI, not to the cluster content.
 #
-# Zweck: Gate fuer Renovate-Automerge. Faengt kaputte Manifeste ab, BEVOR sie
-# auf main landen, weil ArgoCD dort mit selfHeal + prune sofort ausrollt.
+# Purpose: the gate for Renovate automerge. It catches broken manifests BEFORE
+# they land on main, where ArgoCD rolls them out at once with selfHeal + prune.
 
 set -uo pipefail
 
 cd "$(git rev-parse --show-toplevel)"
 
-# Version des Clusters, gegen die validiert wird. Bei einem Talos-Upgrade
-# mitziehen: die Zielversion steht als kubernetesVersion in
-# talos/talconfig.yaml, dort haengt auch der Renovate-Anker.
+# The cluster version validated against. Bump it along with a Talos upgrade:
+# the target version is kubernetesVersion in talos/talconfig.yaml, which also
+# carries the Renovate anchor.
 KUBE_VERSION="1.36.3"
 
-# Helm-Charts, die Cluster-Capabilities abfragen, scheitern sonst beim Rendern.
-# traefik/templates/servicemonitor.yaml bricht z.B. hart ab ("You have to deploy
-# monitoring.coreos.com/v1 first"), weil helm template die CRDs des Clusters
-# nicht kennt. Hier die APIs nachreichen, die im Cluster tatsaechlich existieren.
+# Charts that query cluster capabilities fail to render otherwise: Traefik's
+# servicemonitor template aborts with "You have to deploy
+# monitoring.coreos.com/v1 first", because helm template does not know the
+# cluster's CRDs. Supply the APIs that actually exist in the cluster.
 API_VERSIONS="monitoring.coreos.com/v1"
 
-# Schemas fuer Custom Resources. Der datreeio-Katalog deckt ArgoCD, Traefik,
-# cert-manager, Longhorn, MetalLB und Prometheus-Operator ab.
+# Schemas for custom resources. The datreeio catalogue covers ArgoCD, Traefik,
+# cert-manager, Longhorn, MetalLB and the Prometheus operator.
 CRD_CATALOG='https://raw.githubusercontent.com/datreeio/CRDs-catalog/main/{{.Group}}/{{.ResourceKind}}_{{.ResourceAPIVersion}}.json'
 
-# RecurringJob wird uebersprungen: der datreeio-Katalog hinkt Longhorn hinterher
-# und kennt task "system-backup" noch nicht, das die live CRD von Longhorn 1.10
-# sehr wohl akzeptiert (geprueft am Cluster). Waere ein reiner Fehlalarm.
-# Beim naechsten Longhorn-Update pruefen, ob der Katalog aufgeholt hat.
+# RecurringJob is skipped: the datreeio catalogue trails Longhorn and does not
+# know the "system-backup" task, which the live CRD accepts. A pure false
+# alarm. Check on the next Longhorn update whether the catalogue caught up.
 SKIP_KINDS="RecurringJob"
 
 RED=$'\033[31m'; GREEN=$'\033[32m'; YELLOW=$'\033[33m'; RESET=$'\033[0m'
 failures=0
 
-# Alles gerenderte YAML landet hier, damit der arm64-Test der Images auf
-# demselben Durchlauf aufsetzt und nicht ein zweites Mal rendern muss. Er
-# braucht die gerenderten CHARTS: die Haelfte der Images des Clusters steht
-# nirgends im Repo, sondern kommt aus den Charts.
+# All rendered YAML collects here so the arm64 image test builds on the same
+# pass instead of rendering twice. It needs the rendered CHARTS: half the
+# cluster's images appear nowhere in the repo and come from the charts.
 RENDERED=$(mktemp)
 trap 'rm -f "$RENDERED"' EXIT
 
-# kustomize ist in CI installiert, lokal tut es das eingebaute kubectl kustomize.
+# kustomize is installed in CI, locally the built-in kubectl kustomize will do.
 if command -v kustomize >/dev/null 2>&1; then
   kbuild() { kustomize build "$1"; }
 elif command -v kubectl >/dev/null 2>&1; then
@@ -102,8 +100,8 @@ validate_manifests() {
 validate_helm() {
   echo "== Helm-Charts aus apps/ =="
 
-  # ArgoCD-Applications ausparsen. Interessant sind nur sources mit chart:,
-  # die zusaetzlichen Self-Referenzen aufs eigene Repo werden ignoriert.
+  # Parse the ArgoCD Applications. Only sources with chart: are of interest,
+  # the additional self-references to this repo are ignored.
   charts=$(python3 - <<'PY'
 import glob, json, yaml
 for f in sorted(glob.glob("apps/*.yaml")):
@@ -121,7 +119,7 @@ for f in sorted(glob.glob("apps/*.yaml")):
             "repo": src["repoURL"],
             "chart": src["chart"],
             "version": src["targetRevision"],
-            # $values/ zeigt auf die ref-source, also auf dieses Repo
+            # $values/ points at the ref source, i.e. at this repo
             "values": [v.replace("$values/", "") for v in vf],
             "valuesObject": helm.get("valuesObject"),
         }))
@@ -141,12 +139,12 @@ PY
     args=(template "$name" "val-$name/$chart" --version "$version"
           --kube-version "$KUBE_VERSION" --api-versions "$API_VERSIONS")
 
-    # valueFiles direkt durchreichen
+    # pass valueFiles straight through
     while IFS= read -r vf; do
       [ -n "$vf" ] && args+=(-f "$vf")
     done < <(printf '%s' "$line" | python3 -c 'import sys,json;[print(v) for v in json.load(sys.stdin)["values"]]')
 
-    # valuesObject (inline in der Application) in eine Temp-Datei schreiben
+    # write valuesObject (inline in the Application) to a temp file
     tmpvals=""
     if printf '%s' "$line" | python3 -c 'import sys,json;sys.exit(0 if json.load(sys.stdin).get("valuesObject") else 1)'; then
       tmpvals=$(mktemp)
@@ -175,14 +173,14 @@ PY
   done <<< "$charts"
 }
 
-# raspi5 ist arm64, die beiden anderen Nodes sind amd64, und alle drei tragen
-# das worker-Label. Ein Image ohne arm64 scheitert deshalb nicht zuverlaessig,
-# sondern nur dann, wenn der Scheduler den Pod zufaellig dorthin legt. Genau so
-# ein Fehler wuerde per Renovate-Automerge unbemerkt nach main wandern.
+# raspi5 is arm64, the other two nodes are amd64, and all three carry the
+# worker label. An image without arm64 therefore does not fail reliably, only
+# when the scheduler happens to place the pod there, and exactly that kind of
+# fault would slip onto main through Renovate automerge.
 #
-# Das Skript bekommt das gerenderte YAML im Ganzen, nicht nur die Image-Namen:
-# ob ein amd64-only-Image erlaubt ist, haengt am nodeSelector des Workloads,
-# und der steht nur dort.
+# The script receives the rendered YAML as a whole, not just the image names:
+# whether an amd64-only image is acceptable depends on the workload's
+# nodeSelector, which only appears there.
 validate_arch() {
   echo "== arm64-Faehigkeit der Images =="
 

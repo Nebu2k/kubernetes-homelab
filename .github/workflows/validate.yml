@@ -1,11 +1,11 @@
 name: Validate
 
-# Gate fuer Renovate-Automerge (Phase 3): erst wenn dieser Workflow gruen ist,
-# darf ein Update nach main. Grund: ArgoCD rollt main mit selfHeal + prune
-# sofort aus, ein kaputter Merge waere unmittelbar im Cluster.
+# The gate for Renovate automerge: an update may only reach main once this
+# workflow is green, because ArgoCD rolls main out at once with selfHeal +
+# prune and a broken merge would be in the cluster immediately.
 #
-# Die eigentliche Logik steht in .github/scripts/validate.sh, damit lokal und in CI
-# derselbe Code laeuft. Lokal: ./.github/scripts/validate.sh
+# The actual logic lives in .github/scripts/validate.sh so local runs and CI
+# use the same code.
 
 on:
   pull_request:

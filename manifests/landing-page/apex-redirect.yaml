@@ -1,7 +1,7 @@
 ---
-# Leitet die nackte Apex-Domain per 301 auf www um.
-# Das Wildcard-Cert deckt `elmstreet79.de` mit ab (dnsNames enthält den Apex),
-# TLS greift also über den TLSStore-Default.
+# Redirects the bare apex domain to www with a 301. The wildcard certificate
+# covers the apex as well (its dnsNames include it), so TLS works through the
+# TLSStore default.
 apiVersion: traefik.io/v1alpha1
 kind: Middleware
 metadata:
@@ -28,8 +28,8 @@ spec:
       middlewares:
         - name: apex-to-www
       services:
-        # Service ist im CRD Pflicht; die Redirect-Middleware greift davor,
-        # der Backend wird nie erreicht.
+        # The CRD requires a service; the redirect middleware runs before it
+        # and the backend is never reached.
         - name: landing-page
           port: 80
   tls: {}

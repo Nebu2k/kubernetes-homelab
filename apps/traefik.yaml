@@ -17,8 +17,8 @@ spec:
       helm:
         valueFiles:
           - $values/manifests/traefik/values.yaml
-    # Nur als Quelle fuer die valueFiles oben, kein eigener path: unter
-    # manifests/traefik/ liegt nichts, was ArgoCD anwenden soll.
+    # Only a source for the valueFiles above, no path of its own: there is
+    # nothing under manifests/traefik/ for ArgoCD to apply.
     - repoURL: https://github.com/Nebu2k/kubernetes-homelab
       targetRevision: main
       ref: values

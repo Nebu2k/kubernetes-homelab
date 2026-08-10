@@ -1,13 +1,13 @@
-# talhelper-Konfiguration des Talos-Clusters.
+# talhelper configuration of the Talos cluster.
 #
-# Einzige Quelle der Wahrheit fuer die machine configs. Generiert wird mit
-# "talhelper genconfig" nach ./clusterconfig/ (gitignored, enthaelt die CAs im
-# Klartext). Nie eine generierte Datei von Hand editieren, sie wird beim
-# naechsten genconfig ueberschrieben.
+# The single source of truth for the machine configs, generated with
+# "talhelper genconfig" into ./clusterconfig/ (gitignored, contains the CAs in
+# plaintext). Never edit a generated file by hand, the next genconfig
+# overwrites it.
 #
-# Drei Control-Plane-Nodes, alle schedulen Workloads. Zwei davon sind Blech,
-# nur talos-cp-1 ist eine VM auf pve: ein pve-Ausfall kostet damit weder das
-# etcd-Quorum noch alle Longhorn-Repliken.
+# Three control-plane nodes, all scheduling workloads. Two of them are bare
+# metal and only talos-cp-1 is a VM on pve, so a pve outage costs neither the
+# etcd quorum nor all Longhorn replicas.
 
 clusterName: homelab
 
@@ -16,35 +16,32 @@ talosVersion: v1.13.8
 # renovate: datasource=github-releases depName=kubernetes/kubernetes
 kubernetesVersion: v1.36.3
 
-# VIP des Clusters. Talos bringt ihn eingebaut mit, es braucht kein kube-vip.
+# The cluster VIP, built into Talos, no kube-vip needed.
 #
-# Die .29 und nicht eine Adresse aus dem MetalLB-Bereich: der VIP ist kein
-# Service, sondern gehoert zu den Nodes, und im Adressplan ist .20-.29 der
-# Node-Block (.29 als letzte darin ist die uebliche Stelle fuer einen VIP). Im
-# MetalLB-Bereich muesste der Pool sonst ein Loch haben, damit MetalLB die API
-# des Clusters nicht an einen Service vergibt. Vor allem aber erlaubt die
-# UniFi-Regel den Gast-VLANs den Zugriff auf .249-.254: die Kubernetes-API
-# dorthin zu legen haette sie aus den Gast-VLANs erreichbar gemacht.
+# .29 rather than an address from the MetalLB range: the VIP is not a service
+# but belongs to the nodes, and .20-.29 is the node block in the address plan.
+# Inside the MetalLB range the pool would need a hole so MetalLB cannot hand
+# the cluster API to a service, and above all the UniFi rule grants the guest
+# VLANs access to .249-.254, which would have exposed the API to them.
 endpoint: https://192.168.2.29:6443
 
-# Nicht die Talos-Defaults (10.244.0.0/16 / 10.96.0.0/12). Manifeste verlassen
-# sich auf diese Werte: home-assistant/configmap-configuration.yaml traegt
-# 10.42.0.0/16 als trusted_proxy, gatus/configmap.yaml prueft CoreDNS unter
-# 10.43.0.10.
+# Not the Talos defaults. Manifests rely on these values:
+# home-assistant/configmap-configuration.yaml carries 10.42.0.0/16 as a
+# trusted_proxy and gatus/configmap.yaml checks CoreDNS at 10.43.0.10.
 clusterPodNets:
   - 10.42.0.0/16
 clusterSvcNets:
   - 10.43.0.0/16
 
-# Keine Node im Cluster hat einen Taint, bei drei Nodes waere ein reservierter
-# Control-Plane-Satz reine Verschwendung. Bedingung sind ehrliche Requests und
-# Limits, sonst kippt eine hungrige Workload den etcd-Member mit.
+# No node carries a taint: with three nodes a reserved control-plane set would
+# be pure waste. The condition is honest requests and limits, or a hungry
+# workload takes the etcd member down with it.
 allowSchedulingOnControlPlanes: true
 
-# Der VIP und alle Node-IPs muessen im API-Server-Cert stehen, sonst schlaegt
-# jeder Zugriff ueber eine andere Adresse als den Endpoint fehl. Beide Listen
-# gelten cluster-weit und muessen deshalb auf JEDE Node appliziert werden, auch
-# auf die, an der sich sonst nichts geaendert hat (siehe README.md).
+# The VIP and every node IP must appear in the API server certificate, or any
+# access through an address other than the endpoint fails. Both lists are
+# cluster-wide and therefore have to be applied to EVERY node, including ones
+# that changed nothing else (see README.md).
 additionalApiServerCertSans:
   - 192.168.2.29
   - 192.168.2.20
@@ -57,9 +54,8 @@ additionalMachineCertSans:
   - 192.168.2.22
   - 192.168.2.23
 
-# Flannel ist der Talos-Default. Er bringt keinen NetworkPolicy-Controller mit,
-# den liefert kube-router im netpol-only-Modus nach (manifests/kube-router/).
-# Cilium steht als Vorhaben in der ROADMAP.
+# Flannel is the Talos default and brings no NetworkPolicy controller;
+# kube-router supplies one in netpol-only mode (manifests/kube-router/).
 cniConfig:
   name: flannel
 
@@ -68,29 +64,26 @@ nodes:
     ipAddress: 192.168.2.20
     controlPlane: true
     installDisk: /dev/sda
-    # Fehlerdomaene fuer Longhorn. Er ist die einzige Node in dieser Zone, das
-    # Label bleibt trotzdem noetig: es sagt, dass seine Disk in pve liegt. Kaeme
-    # eine zweite pve-VM dazu, waeren das fuer Longhorns Node-Anti-Affinity zwei
-    # verschiedene Nodes und damit in Ordnung, obwohl beide Repliken auf
-    # derselben NVMe laegen und zusammen sterben wuerden. Erst die Zone macht
-    # den Unterschied sichtbar.
+    # Failure domain for Longhorn. It is the only node in this zone, but the
+    # label still matters: it says its disk lives in pve. A second pve VM would
+    # be two different nodes to Longhorn's node anti-affinity and thus fine,
+    # although both replicas would sit on the same NVMe and die together. Only
+    # the zone makes that visible.
     #
-    # Gegenstueck ist replicaZoneSoftAntiAffinity: "false" in
-    # manifests/longhorn/values.yaml. Die beiden gehoeren zusammen: ohne
-    # Zonen-Label faellt alles in dieselbe leere Zone und Longhorn koennte nur
-    # noch eine einzige Replik je Volume unterbringen. Bei einer neuen Node also
-    # zuerst das Label setzen.
+    # The counterpart is replicaZoneSoftAntiAffinity: "false" in
+    # manifests/longhorn/values.yaml. Without a zone label everything falls
+    # into the same empty zone and Longhorn could place only one replica per
+    # volume, so set the label first when adding a node.
     nodeLabels:
       topology.kubernetes.io/zone: pve
-    # nocloud-installer, nicht installer: die VMs booten vom
-    # nocloud-Disk-Image, ein metal-Installer wuerde die Plattform beim ersten
-    # Upgrade umstellen. Die Schematic-ID ist dieselbe wie in
-    # homelab-terraform/proxmox/vm-talos.tf.
+    # nocloud-installer, not installer: the VMs boot from the nocloud disk
+    # image and a metal installer would switch the platform on the first
+    # upgrade. The schematic ID matches homelab-terraform/proxmox/vm-talos.tf.
     talosImageURL: factory.talos.dev/nocloud-installer/88d1f7a5c4f1d3aba7df787c448c1d3d008ed29cfb34af53fa0df4336a56040b
     networkInterfaces:
-      # deviceSelector statt festem Namen: Talos vergibt vorhersagbare
-      # Interface-Namen (enp0s18 o.ae.), die von der Proxmox-Maschinenklasse
-      # abhaengen. Der Treiber ist stabil, der Name nicht.
+      # deviceSelector rather than a fixed name: Talos assigns predictable
+      # interface names that depend on the Proxmox machine class. The driver
+      # is stable, the name is not.
       - deviceSelector:
           driver: virtio_net
         dhcp: false
@@ -102,35 +95,32 @@ nodes:
         vip:
           ip: 192.168.2.29
 
-  # prodesk: HP ProDesk 600 G4 DM, 31 GB RAM, und damit der groesste Teil der
-  # RAM-Decke des Clusters. Ohne ihn passt der kube-prometheus-stack nicht.
+  # prodesk: bare metal and the largest share of the cluster's RAM ceiling.
+  # Without it the kube-prometheus-stack does not fit.
   #
-  # Unterschiede zu der VM oben, beide sind Blech-bedingt:
+  # Two differences from the VM above, both because it is bare metal:
   #
-  #  - talosImageURL ist der metal-installer, nicht der nocloud-installer, und
-  #    eine eigene Schematic ohne siderolabs/qemu-guest-agent. Auf Blech gibt es
-  #    keinen virtio-Port, der Dienst haengt sonst dauerhaft in "Waiting" und
-  #    steht in jedem "talosctl services" und "talosctl health" im Weg. Beide
-  #    Schematics tragen iscsi-tools und util-linux-tools fuer Longhorn, der
-  #    Guest-Agent ist der einzige Unterschied.
-  #  - installDiskSelector statt installDisk. Der Gastname /dev/nvme0n1 ist
-  #    zwar stabil, aber im Maintenance-Mode haengen unter Umstaenden noch
-  #    iSCSI-Geraete von Longhorn mit dran und verschieben die Namen. Die
-  #    Seriennummer ist eindeutig.
+  #  - talosImageURL is the metal installer and a schematic without
+  #    siderolabs/qemu-guest-agent. Bare metal has no virtio port, so the
+  #    service would hang in "Waiting" forever and clutter every
+  #    "talosctl services" and "talosctl health". Both schematics carry
+  #    iscsi-tools and util-linux-tools for Longhorn.
+  #  - installDiskSelector rather than installDisk: /dev/nvme0n1 is stable in
+  #    the guest, but in maintenance mode Longhorn iSCSI devices may still be
+  #    attached and shift the names. The serial number is unambiguous.
   - hostname: prodesk
     ipAddress: 192.168.2.23
     controlPlane: true
     installDiskSelector:
       serial: 39MPA3T0PZXP
-    # Eigene Fehlerdomaene: eigenes Blech, eigene NVMe, eigenes Netzteil. Das
-    # ist eine der beiden Zonen, die bei einem pve-Ausfall stehen bleiben, und
-    # damit die Bedingung aus der Diversitaets-Regel.
+    # Its own failure domain: own hardware, own NVMe, own power supply. One of
+    # the two zones that survive a pve outage.
     nodeLabels:
       topology.kubernetes.io/zone: blech
     talosImageURL: factory.talos.dev/metal-installer/613e1592b2da41ae5e265e8789429f22e121aab91cb4deb6bc3c0b6262961245
     networkInterfaces:
-      # Auswahl ueber die MAC statt ueber virtio_net wie bei den VMs: hier gibt
-      # es genau eine physische NIC (eno1) und die Adresse ist unveraenderlich.
+      # Selected by MAC rather than by driver as on the VMs: there is exactly
+      # one physical NIC here and its address is immutable.
       - deviceSelector:
           hardwareAddr: c4:65:16:bb:4f:cb
         dhcp: false
@@ -142,48 +132,43 @@ nodes:
         vip:
           ip: 192.168.2.29
 
-  # raspi5: Raspberry Pi 5 mit NVMe, zweites Blech im Cluster. Zusammen mit
-  # prodesk sorgt er dafuer, dass die etcd-Mehrheit nicht auf pve liegt, siehe
-  # die Diversitaets-Regel in der ROADMAP.
+  # raspi5: Raspberry Pi 5 with NVMe, the second bare-metal node. Together with
+  # prodesk it keeps the etcd majority off pve.
   #
-  # Was an dieser Node anders ist:
+  # What differs on this node:
   #
-  #  - Die .22 aus dem Node-Block .20-.29. Die UniFi-Regel erlaubt den beiden
-  #    Gast-VLANs im Haus den Zugriff auf .2-.20: aus dem vorderen Bereich
-  #    waeren Talos-API und kubelet von dort erreichbar, aus dem Node-Block
-  #    nicht.
-  #  - Eigene Schematic mit dem rpi_5-Overlay (siderolabs/sbc-raspberrypi), der
-  #    Pi bringt keine UEFI-Firmware mit. Extensions sind dieselben zwei wie
-  #    ueberall, der Guest-Agent fehlt wie bei prodesk. metal-installer, nicht
-  #    nocloud.
-  #  - Die SD-Karte ist das Systemziel, die NVMe traegt nur EPHEMERAL. Das ist
-  #    keine Vorliebe, sondern die einzige Moeglichkeit, siehe unten.
-  #  - Eigene Fehlerdomaene, siehe nodeLabels unten.
+  #  - .22 from the node block .20-.29. The UniFi rule grants the two guest
+  #    VLANs access to .2-.20, so an address from the lower range would expose
+  #    the Talos API and the kubelet to them.
+  #  - Its own schematic with the rpi_5 overlay (siderolabs/sbc-raspberrypi),
+  #    the Pi ships no UEFI firmware. metal installer, not nocloud.
+  #  - The SD card is the system target and the NVMe only carries EPHEMERAL.
+  #    Not a preference but the only option, see below.
+  #  - Its own failure domain, see nodeLabels below.
   #
-  # WARUM SD UND NICHT NVMe: auf dem Pi 5 kann u-boot ausschliesslich von der
-  # SD-Karte booten. Weder USB noch NVMe, weil ihm der PCIe-Treiber fuer den
-  # RP1-Chip fehlt, an dem beim Pi 5 sowohl die USB-Ports als auch der M.2-Slot
-  # haengen. Der EEPROM-Bootloader der Firmware kann beides und laedt u-boot
-  # auch brav vom Stick; danach findet u-boot nichts mehr und bleibt mit seinem
-  # Logo stehen, ohne Fehlermeldung und ohne Netz.
+  # WHY SD AND NOT NVMe: on the Pi 5 u-boot can boot from the SD card only.
+  # Neither USB nor NVMe, because it lacks the PCIe driver for the RP1 chip
+  # that carries both the USB ports and the M.2 slot. The firmware's EEPROM
+  # bootloader can do both and happily loads u-boot from a stick; after that
+  # u-boot finds nothing and stops at its logo, without an error and without
+  # network.
   #
-  # Der SD-Verschleiss bleibt trotzdem beherrschbar: dort liegen nur EFI, BOOT,
-  # META und STATE, zusammen ein paar hundert MB, beschrieben praktisch nur bei
-  # Upgrades. Alles Schreibintensive steckt in EPHEMERAL (/var, also
-  # Container-Images, Logs und /var/lib/longhorn), und das zieht der
-  # VolumeConfig-Patch unten auf die NVMe.
+  # SD wear stays manageable: only EFI, BOOT, META and STATE live there, a few
+  # hundred MB written practically only during upgrades. Everything
+  # write-intensive sits in EPHEMERAL, which the VolumeConfig patch below
+  # moves to the NVMe.
   - hostname: raspi5
     ipAddress: 192.168.2.22
     controlPlane: true
-    # /dev/mmcblk0 ist der SD-Slot und beim Pi stabil benannt. Ein Selector auf
-    # type: sd waere gleichwertig.
+    # /dev/mmcblk0 is the SD slot and stably named on the Pi. A selector on
+    # type: sd would be equivalent.
     installDisk: /dev/mmcblk0
-    # EPHEMERAL auf die NVMe. Node-spezifisch und nicht global, weil prodesk
-    # ebenfalls eine NVMe hat und der Ausdruck dort genauso zutraefe.
+    # EPHEMERAL onto the NVMe. Node-specific rather than global, because
+    # prodesk has an NVMe too and the expression would match there as well.
     #
-    # Muss beim ERSTEN apply-config dabei sein: Talos wendet eine VolumeConfig
-    # nur an, solange das Volume noch nicht provisioniert ist. Nachtraeglich
-    # liegt EPHEMERAL auf der SD und bleibt dort.
+    # Must be part of the FIRST apply-config: Talos only applies a VolumeConfig
+    # while the volume is not yet provisioned. Added later, EPHEMERAL stays on
+    # the SD card.
     patches:
       - |-
         apiVersion: v1alpha1
@@ -193,31 +178,27 @@ nodes:
           diskSelector:
             match: disk.transport == 'nvme'
           grow: true
-    # Eigene Zone, NICHT "blech" zu prodesk dazu. Mit zwei Zonen und
-    # replicaZoneSoftAntiAffinity: "false" liegt bei zwei Repliken zwangslaeufig
-    # immer eine davon auf pve. Erst eine dritte Zone erlaubt Longhorn, beide
-    # Repliken auf Blech zu legen, und genau das fordert die Diversitaets-Regel
-    # in der ROADMAP ("mindestens eine Replik ausserhalb von pve").
+    # Its own zone, NOT joining prodesk in "blech". With two zones and
+    # replicaZoneSoftAntiAffinity: "false" one of two replicas would always end
+    # up on pve; only a third zone lets Longhorn put both on bare metal, which
+    # is what the diversity rule in the ROADMAP demands.
     #
-    # Dass "blech" ein Klassenname ist und "raspi5" ein Geraetename, ist kein
-    # Bruch: die Zone ist hier wie dort genau ein Geraet, "blech" meint faktisch
-    # prodesk. Gegenstueck ist manifests/longhorn/values.yaml.
+    # That "blech" is a class name and "raspi5" a device name is not a break:
+    # either zone is exactly one device. The counterpart is
+    # manifests/longhorn/values.yaml.
     nodeLabels:
       topology.kubernetes.io/zone: raspi5
-    # Dritte Schematic im Cluster, und die einzige mit einer Overlay-Option:
-    # configTxtAppend haengt "dtparam=cooling_fan=on" an die config.txt.
+    # Third schematic in the cluster and the only one with an overlay option:
+    # configTxtAppend adds "dtparam=cooling_fan=on" to config.txt.
     #
-    # Ohne das kennt der Kernel den Luefter des Active Cooler gar nicht: es gibt
-    # keinen pwm-fan in /sys/class/hwmon und null cooling_devices, also auch
-    # nichts zu regeln, und der Luefter laeuft dauerhaft auf voller Drehzahl.
-    # Bei 49 Grad CPU. Am Kernel liegt es nicht, CONFIG_SENSORS_PWM_FAN,
-    # CONFIG_PWM_BCM2835 und der step_wise-Governor sind alle gebaut, es fehlt
-    # allein der Device-Tree-Knoten.
+    # Without it the kernel does not know the Active Cooler's fan at all: no
+    # pwm-fan in /sys/class/hwmon, zero cooling_devices, nothing to control,
+    # and the fan runs at full speed permanently. The kernel is not at fault,
+    # only the device tree node is missing.
     talosImageURL: factory.talos.dev/metal-installer/5a66af048bde96b95010bf8bba792973932e5bb7359e77f2ef7d8edb9aacc2a6
     networkInterfaces:
-      # Auswahl ueber die MAC wie bei prodesk: eine physische NIC, unveraender-
-      # liche Adresse, und der Treibername des Pi-5-Ethernets muss so gar nicht
-      # erst geraten werden.
+      # Selected by MAC as on prodesk: one physical NIC with an immutable
+      # address, and no need to guess the Pi 5 ethernet driver's name.
       - deviceSelector:
           hardwareAddr: 2c:cf:67:4b:83:14
         dhcp: false
@@ -230,45 +211,43 @@ nodes:
           ip: 192.168.2.29
 
 patches:
-  # Rund 20 Manifeste selektieren auf node-role.kubernetes.io/worker, unter
-  # anderem die nodeSelector von MetalLB und cert-manager. Ohne das Label bleibt
-  # die halbe Plattform Pending, und zwar ohne Fehler: der Scheduler sagt nur
+  # Around 20 manifests select on node-role.kubernetes.io/worker, among them
+  # the nodeSelectors of MetalLB and cert-manager. Without the label half the
+  # platform stays Pending without an error, the scheduler only says
   # "0/3 nodes are available".
   #
-  # Dass Talos das setzen darf, ist nicht selbstverstaendlich: der Prefix
-  # node-role.kubernetes.io/ ist fuer das kubelet gesperrt (NodeRestriction).
-  # Talos legt Node-Labels aber nicht ueber das kubelet an, sondern ueber einen
-  # eigenen Controller.
+  # That Talos may set it is not obvious: the node-role.kubernetes.io/ prefix
+  # is blocked for the kubelet (NodeRestriction), but Talos creates node labels
+  # through a controller of its own rather than through the kubelet.
   #
-  # Alle drei Nodes bekommen es. "Worker" ist hier ein Label fuer "traegt
-  # Workloads", keine Rolle: alle Nodes des Clusters tun das.
+  # All three nodes get it. "Worker" here labels "carries workloads", it is not
+  # a role: every node in this cluster does.
   - |-
     machine:
       nodeLabels:
         node-role.kubernetes.io/worker: worker
 
-  # Die beiden Blocky-Instanzen. Feste v4-Adressen und ausdruecklich keine per
-  # Router-Advertisement gelernten v6-Resolver, die sonst je nach
-  # Prefix-Wechsel unbemerkt vorne einsortiert werden.
+  # The two Blocky instances. Fixed v4 addresses and explicitly no v6
+  # resolvers learned by router advertisement, which would otherwise be sorted
+  # to the front unnoticed on a prefix change.
   #
-  # Diese Liste versorgt ZWEI Verbraucher, und beide haben eigene Bedingungen:
+  # This list serves TWO consumers, each with its own condition:
   #
-  # 1. Die Node selbst, unter anderem fuer Image-Pulls. Deshalb steht die LXC
-  #    (.254) VORNE: sie laeuft ausserhalb des Clusters. Stuende hier nur die
-  #    Cluster-Instanz, braeuchte eine kalte Node DNS, um den Pod zu starten,
-  #    der das DNS liefert.
-  # 2. CoreDNS, das mit "forward . /etc/resolv.conf" genau diese Liste erbt.
-  #    CoreDNS waehlt seine Upstreams ZUFAELLIG, nicht der Reihe nach. Deshalb
-  #    muessen ALLE Eintraege denselben Split-Horizon kennen
-  #    (*.elmstreet79.de -> 192.168.2.250), sonst loest ein Teil der
-  #    Pod-Anfragen oeffentlich auf und laeuft ueber Hairpin-NAT.
+  # 1. The node itself, among other things for image pulls. Hence the LXC
+  #    (.254) comes FIRST: it runs outside the cluster. With only the cluster
+  #    instance here, a cold node would need DNS to start the pod that
+  #    provides DNS.
+  # 2. CoreDNS, which inherits exactly this list through
+  #    "forward . /etc/resolv.conf". CoreDNS picks its upstreams AT RANDOM, not
+  #    in order, so ALL entries must know the same split horizon; otherwise
+  #    part of the pod queries resolve publicly and run through hairpin NAT.
   #
-  # Aus 2. folgt, dass das UniFi-Gateway (192.168.2.1) hier NICHT stehen darf:
-  # es liefert fuer elmstreet79.de den oeffentlichen CNAME. Aus demselben Grund
-  # ist auch kein oeffentlicher Resolver als dritter Notnagel moeglich.
+  # From 2. it follows that the UniFi gateway must NOT appear here: it returns
+  # the public CNAME. For the same reason no public resolver can serve as a
+  # third fallback.
   #
-  # Der verbleibende Fall ist "pve aus UND Cluster kalt UND Image-Cache leer".
-  # Dann kommt keine Node an DNS. Ausweg von Hand:
+  # The remaining case is "pve off AND cluster cold AND image cache empty", in
+  # which no node reaches DNS. Manual way out:
   # talosctl patch mc -n <ip> -p '[{"op":"replace",
   #   "path":"/machine/network/nameservers","value":["9.9.9.9"]}]'
   - |-
@@ -278,10 +257,10 @@ patches:
           - 192.168.2.254
           - 192.168.2.253
 
-  # Longhorn braucht /var/lib/longhorn im kubelet-Mount-Namespace, sonst sieht
-  # der Manager die Replikate nicht. Die dafuer noetigen System Extensions
-  # (iscsi-tools, util-linux-tools) stecken in der Schematic-ID oben.
-  # Achtung: "talosctl reset" nimmt diese Daten mit.
+  # Longhorn needs /var/lib/longhorn in the kubelet mount namespace or the
+  # manager does not see the replicas. The required system extensions
+  # (iscsi-tools, util-linux-tools) are in the schematic ID above. Note that
+  # "talosctl reset" takes this data with it.
   - |-
     machine:
       kubelet:
@@ -296,48 +275,39 @@ patches:
 
 controlPlane:
   patches:
-    # etcd-Metriken im LAN erreichbar machen. Talos bindet sie per Default auf
-    # 127.0.0.1:2381, und Prometheus laeuft in einem Pod: ohne das hier sieht es
-    # kein einziges etcd-Target.
+    # Makes the etcd metrics reachable from the LAN. Talos binds them to
+    # 127.0.0.1:2381 by default and Prometheus runs in a pod, so without this
+    # it sees not a single etcd target.
     #
-    # Das ist keine Kuer. Die Regelgruppe etcd-homelab in
-    # manifests/kube-prometheus-stack/prometheus-rules.yaml enthaelt
-    # EtcdMetricsMissing mit einem absent()-Zweig, die feuert ohne Targets
-    # sofort und dauerhaft. Entweder die Metriken kommen, oder die Gruppe muesste
-    # raus, und eine abgeschaltete etcd-Ueberwachung ist im Homelab die
-    # schlechtere Haelfte des Tauschs.
+    # Not optional: the etcd-homelab group in prometheus-rules.yaml contains
+    # EtcdMetricsMissing with an absent() branch, which fires immediately and
+    # permanently without targets.
     #
-    # Port 2381 ist Klartext ohne Client-Zert und trotzdem vertretbar: nur im
-    # LAN erreichbar, und es liegen keine Schluessel darin. Der Client-Port 2379
-    # bleibt unangetastet.
+    # Port 2381 is plaintext without a client certificate and still acceptable:
+    # reachable only from the LAN and carrying no keys. The client port 2379 is
+    # untouched.
     - |-
       cluster:
         etcd:
           extraArgs:
             listen-metrics-urls: http://0.0.0.0:2381
 
-    # Talos-API aus dem Cluster heraus, ausschliesslich fuer etcd-Snapshots.
+    # Talos API from inside the cluster, exclusively for etcd snapshots.
     #
-    # Das ist die Vorbedingung fuer manifests/etcd-backup/: ein CronJob im
-    # Cluster laesst sich damit ein talosconfig ausstellen und ruft darueber
-    # "talosctl etcd snapshot" auf jeder Control-Plane auf. Ohne das gaebe es
-    # keinen Weg an die Talos-API, der nicht die Admin-Credentials vom Laptop
-    # in einem Secret ablegt.
+    # The precondition for manifests/etcd-backup/: a CronJob in the cluster can
+    # have a talosconfig issued and calls "talosctl etcd snapshot" on each
+    # control plane through it. Without this there would be no path to the
+    # Talos API that does not store the laptop's admin credentials in a secret.
     #
-    # Talos laedt Snapshots nicht selbst irgendwohin hoch, es schreibt sie nur
-    # auf Anforderung heraus. Der Upload ist deshalb Sache des Clusters und
-    # nicht der Node.
+    # Confined in both directions:
+    #   allowedRoles: ONLY os:etcd:backup, which permits exactly the
+    #     EtcdSnapshot call: no reading the machine config, no reboot, no
+    #     access to the node's secrets.
+    #   allowedKubernetesNamespaces: ONLY kube-system. A ServiceAccount CR in
+    #     another namespace gets no talosconfig, not even with the same roles.
     #
-    # Eng gehalten in beide Richtungen:
-    #   allowedRoles: NUR os:etcd:backup. Diese Rolle erlaubt genau den
-    #     EtcdSnapshot-Aufruf, kein Lesen der machine config, kein Reboot,
-    #     kein Zugriff auf Secrets der Node.
-    #   allowedKubernetesNamespaces: NUR kube-system. Ein ServiceAccount-CR in
-    #     einem anderen Namespace bekommt kein talosconfig, auch nicht mit
-    #     denselben Rollen.
-    #
-    # Wirkt ohne Reboot: die Einstellung betrifft nur trustd und den
-    # ServiceAccount-Controller.
+    # Takes effect without a reboot, it only concerns trustd and the
+    # ServiceAccount controller.
     - |-
       machine:
         features:
@@ -348,15 +318,14 @@ controlPlane:
             allowedKubernetesNamespaces:
               - kube-system
 
-    # Talos erzwingt PodSecurity "baseline", Longhorns CSI-Pods brauchen mehr.
-    # Nur der Zusatz steht hier: talhelper merged den Patch in die
-    # Talos-Defaults, ein ausgeschriebener Block traegt kube-system doppelt ein.
+    # Talos enforces PodSecurity "baseline" and Longhorn's CSI pods need more.
+    # Only the addition belongs here: talhelper merges the patch into the Talos
+    # defaults, and a fully written-out block would list kube-system twice.
     #
-    # Andere Workloads mit hostNetwork oder hostPath (Home Assistant,
-    # csi-driver-smb) bekommen ein Label am Namespace
-    # (pod-security.kubernetes.io/enforce: privileged) statt eines weiteren
-    # Eintrags hier: das ist GitOps und faellt beim Deployen auf, eine Aenderung
-    # hier rebootet die Control-Plane.
+    # Other workloads with hostNetwork or hostPath get a label on their
+    # namespace (pod-security.kubernetes.io/enforce: privileged) rather than
+    # another entry here: that is GitOps and shows up on deploy, while a change
+    # here reboots the control plane.
     - |-
       cluster:
         apiServer:

@@ -332,9 +332,9 @@ homelab/
 │       ├── unifi-config-sealed.yaml
 │       └── unifi-config-unsealed.yaml.example
 └── talos/
-    ├── README.md                  # Bedienung, Restore-Rezept, Fallen
-    ├── talconfig.yaml             # Quelle der machine configs (talhelper)
-    └── talsecret.sops.yaml        # Secrets-Bundle, SOPS-verschluesselt
+    ├── README.md                  # operation, restore recipe, pitfalls
+    ├── talconfig.yaml             # source of the machine configs (talhelper)
+    └── talsecret.sops.yaml        # secrets bundle, SOPS-encrypted
 ```
 
 ## 🚀 Fresh Installation

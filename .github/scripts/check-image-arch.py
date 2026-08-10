@@ -50,8 +50,8 @@ def split_ref(image):
     elif ":" in ref.rsplit("/", 1)[-1]:
         ref, tag = ref.rsplit(":", 1)
     head = ref.split("/")[0]
-    # Ein Punkt oder Doppelpunkt im ersten Segment heisst Registry-Host,
-    # sonst ist es Docker Hub. "localhost" ist der dokumentierte Sonderfall.
+    # A dot or colon in the first segment means a registry host, otherwise it
+    # is Docker Hub. "localhost" is the documented special case.
     if "." in head or ":" in head or head == "localhost":
         registry, repo = head, ref.split("/", 1)[1]
     else:
@@ -96,17 +96,17 @@ def architectures(image):
         return None, f"{type(exc).__name__}"
 
     if "manifests" not in doc:
-        # Einzelmanifest ohne Liste. Die Architektur steht dann nicht drin,
-        # ohne den Config-Blob nachzuladen. Als unbekannt behandeln statt
-        # zu raten.
+        # Single manifest without a list. The architecture is not in there
+        # without fetching the config blob, so treat it as unknown rather than
+        # guessing.
         return set(), None
 
     found = set()
     for entry in doc["manifests"]:
         platform = entry.get("platform") or {}
         arch = platform.get("architecture")
-        # attestation-Manifeste (buildkit) tragen architecture: unknown und
-        # wuerden die Auswertung sonst verwaessern.
+        # buildkit attestation manifests carry architecture: unknown and would
+        # otherwise dilute the result.
         if not arch or arch == "unknown":
             continue
         found.add(f"{platform.get('os', '?')}/{arch}")
@@ -123,7 +123,7 @@ def collect(node, arch, found):
     """
     if isinstance(node, dict):
         selector = node.get("nodeSelector")
-        # Longhorn-Volumes haben ein gleichnamiges Feld, das ein String ist.
+        # Longhorn volumes have a field of the same name holding a string.
         if isinstance(selector, dict) and selector.get(ARCH_LABEL):
             arch = str(selector[ARCH_LABEL])
         image = node.get("image")
@@ -179,8 +179,8 @@ def main():
 
     print()
     if unknown:
-        # Nicht hart failen: eine Registry, die gerade zickt, soll keinen
-        # Renovate-PR blockieren. Sichtbar bleibt es trotzdem.
+        # Do not fail hard: a registry having a bad moment should not block a
+        # Renovate PR. It stays visible regardless.
         print(f"{yellow}{len(unknown)} Image(s) nicht abfragbar, uebersprungen{reset}")
     if missing:
         print(f"{red}{len(missing)} Image(s) ohne arm64{reset}")

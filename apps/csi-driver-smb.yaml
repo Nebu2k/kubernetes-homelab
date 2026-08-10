@@ -5,8 +5,8 @@ metadata:
   name: csi-driver-smb
   namespace: argocd
   annotations:
-    # Storage-Schicht, nach longhorn (4).
-    # Muss vor paperless-ngx (9) stehen, das ein SMB-PV benutzt.
+    # Storage layer, after longhorn (4) and before paperless-ngx (9), which
+    # uses an SMB PV.
     argocd.argoproj.io/sync-wave: "5"
   finalizers:
     - resources-finalizer.argocd.argoproj.io
@@ -30,9 +30,9 @@ spec:
     automated:
       prune: true
       selfHeal: true
-    # Der Namespace entsteht aus CreateNamespace, deshalb reicht hier
-    # managedNamespaceMetadata; bei einem Dienst, der sein namespace.yaml selbst
-    # mitbringt, muesste das Label ans Manifest.
+    # The namespace comes from CreateNamespace, so managedNamespaceMetadata is
+    # enough here; a service shipping its own namespace.yaml needs the label on
+    # that manifest instead.
     managedNamespaceMetadata:
       labels:
         pod-security.kubernetes.io/enforce: privileged

@@ -1,8 +1,8 @@
-# App-of-Apps. Alles andere im Cluster haengt daran.
+# App of apps, everything else in the cluster hangs off it.
 #
-# Wird von Hand appliziert, genau einmal nach dem ArgoCD-Bootstrap aus
-# homelab-terraform/argocd-talos/. Das ist der einzige Handgriff, der nicht
-# ueber ArgoCD laeuft: ArgoCD verwaltet alles ausser sich selbst.
+# Applied by hand exactly once after the ArgoCD bootstrap from
+# homelab-terraform/argocd-talos/. This is the only step that does not run
+# through ArgoCD, which manages everything except itself.
 #
 #   KUBECONFIG=talos/clusterconfig/kubeconfig \
 #     kubectl apply -f bootstrap/root-app.yaml
@@ -20,21 +20,17 @@ spec:
   destination:
     server: https://kubernetes.default.svc
     namespace: argocd
-  # Ohne das steht "homelab" dauerhaft auf OutOfSync, und zwar wegen genau einer
+  # Without this "homelab" sits on OutOfSync permanently because of exactly one
   # Application: longhorn.
   #
-  # Der Longhorn-Chart bringt einen PreDelete-Hook mit (das Uninstall-Job).
-  # ArgoCD haengt der Application deshalb von sich aus zwei eigene Finalizer an,
-  # "pre-delete-finalizer.argocd.argoproj.io" und ".../cleanup", damit es den
-  # Hook vor dem Loeschen noch ausfuehren kann. In git steht nur
-  # "resources-finalizer.argocd.argoproj.io". Die Application selbst ist Synced
-  # und Healthy, ihre spec deckt sich mit git, der Diff besteht ausschliesslich
-  # aus diesen zwei Feldern.
+  # The Longhorn chart ships a PreDelete hook, so ArgoCD adds two finalizers of
+  # its own to be able to run it before deletion, while git only carries
+  # resources-finalizer.argocd.argoproj.io. The Application is Synced and
+  # Healthy and its spec matches git, the diff consists solely of those fields.
   #
-  # Bewusst auf longhorn eingegrenzt und nicht auf alle Applications. Bekaeme
-  # eine zweite App einen PreDelete-Hook, soll sie wieder auffallen, statt dass
-  # eine pauschale Regel auch ein echtes Entfernen von resources-finalizer
-  # stillstellt.
+  # Narrowed to longhorn on purpose: if a second app gained a PreDelete hook it
+  # should show up again, rather than a blanket rule also silencing a genuine
+  # removal of resources-finalizer.
   ignoreDifferences:
     - group: argoproj.io
       kind: Application

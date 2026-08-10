@@ -5,8 +5,8 @@ metadata:
   name: metrics-server
   namespace: argocd
   annotations:
-    # Frueh, aber nach sealed-secrets: die Kubernetes-Widgets der Homepage und
-    # jedes "kubectl top" haengen daran.
+    # Early, but after sealed-secrets: the homepage's Kubernetes widgets and
+    # every "kubectl top" depend on it.
     argocd.argoproj.io/sync-wave: "2"
   finalizers:
     - resources-finalizer.argocd.argoproj.io

@@ -12,15 +12,13 @@ spec:
       targetPort: 80
       protocol: TCP
       name: http
-    # Beast-Ausgang. Hier haengt fr24feed dran, und beliebig viele weitere
-    # Feeder koennen parallel dazukommen (adsb.fi, airplanes.live), ohne dass
-    # readsb etwas davon merkt.
+    # Beast output. fr24feed hangs off this, and any number of further feeders
+    # can join in parallel without readsb noticing.
     - port: 30005
       targetPort: 30005
       protocol: TCP
       name: beast
-    # Prometheus-Statistiken. Noch ohne ServiceMonitor: die CRD kommt erst mit
-    # kube-prometheus-stack.
+    # Prometheus statistics, still without a ServiceMonitor.
     - port: 9273
       targetPort: 9273
       protocol: TCP

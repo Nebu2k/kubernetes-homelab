@@ -4,106 +4,96 @@
   extends: [
     'config:recommended',
     ':dependencyDashboard',
-    // Haelt die per curl installierten Tool-Versionen in
-    // .github/workflows/validate.yml aktuell. Greift auf das Muster
-    // "# renovate: datasource=... depName=..." ueber einer *_VERSION-Zeile.
+    // Keeps the curl-installed tool versions in
+    // .github/workflows/validate.yml current. It matches the pattern
+    // "# renovate: datasource=... depName=..." above a *_VERSION line.
     'customManagers:githubActionsVersions',
   ],
 
   timezone: 'Europe/Berlin',
 
-  // Bewusst KEIN "schedule:" hier. Wann Renovate laeuft, steuert allein der Cron
-  // in .github/workflows/renovate.yml. Sonst wuerde ein manueller
-  // workflow_dispatch ausserhalb des Zeitfensters kommentarlos nichts tun.
+  // Deliberately NO "schedule:" here. When Renovate runs is decided solely by
+  // the cron in .github/workflows/renovate.yml; otherwise a manual
+  // workflow_dispatch outside the window would silently do nothing.
 
   semanticCommits: 'enabled',
 
-  // PR sofort oeffnen, nicht auf einen gruenen Branch-Status warten.
-  // config:recommended bringt prNotPending mit: Renovate wuerde erst den
-  // Branch pushen, auf dessen Status-Checks warten und den PR erst danach
-  // oeffnen. Unser validate.yml laeuft aber nur auf pull_request, nie auf
-  // Branch-Push. Die Branches warten damit auf einen Check, der nie kommt,
-  // und landen dauerhaft unter "Pending Status Checks" im Dashboard.
-  // Mit "immediate" entsteht der PR sofort und die CI laeuft an ihm.
+  // Open the PR at once instead of waiting for a green branch status.
+  // config:recommended brings prNotPending, which would push the branch, wait
+  // for its status checks and only then open the PR. But validate.yml runs on
+  // pull_request only, never on a branch push, so the branches would wait for
+  // a check that never comes and pile up under "Pending Status Checks".
   prCreation: 'immediate',
 
-  // Default bleibt "kein Automerge". Freigeschaltet wird ausschliesslich per
-  // packageRule (siehe "Phase 3" unten), nie global. Grund: ArgoCD laeuft mit
-  // selfHeal + prune, ein gemergter Fehler ist unmittelbar im Cluster.
+  // The default stays "no automerge". It is enabled per packageRule only,
+  // never globally, because ArgoCD runs with selfHeal + prune and a merged
+  // mistake is in the cluster immediately.
   automerge: false,
 
-  // Renovate merged SELBST per API, statt GitHubs Auto-Merge zu benutzen.
-  // Das ist hier kein Detail, sondern die Bedingung dafuer, dass das
-  // validate-Gate ueberhaupt wirkt:
+  // Renovate merges ITSELF through the API instead of using GitHub's
+  // auto-merge. That is the condition for the validate gate to have any effect
+  // at all: GitHub auto-merges as soon as all *required* status checks are
+  // green, but main is not branch-protected here, so there are no required
+  // checks and auto-merge would merge at once, bypassing validate.yml.
   //
-  // GitHubs Auto-Merge merged, sobald alle *required* Status-Checks gruen sind.
-  // Auf diesem Repo ist "main" aber nicht branch-protected, es gibt also gar
-  // keine required Checks. Auto-Merge wuerde damit sofort mergen und validate.yml
-  // komplett uebergehen: ein Gate, das auf dem Papier steht und praktisch nichts
-  // tut. (allow_auto_merge ist am Repo ohnehin false.)
-  //
-  // Renovate dagegen liest den Check-Status des Branches aktiv und merged nur
-  // bei gruen. Der Preis: gemerged wird nur WAEHREND eines Renovate-Laufs, nie
-  // dazwischen. Deshalb laeuft der Cron in renovate.yml taeglich statt
-  // woechentlich, sonst liegt ein fertiger PR bis zu sieben Tage herum.
+  // Renovate instead reads the branch's check status actively and merges only
+  // on green. The price is that merging happens only DURING a Renovate run,
+  // which is why the cron runs daily rather than weekly.
   platformAutomerge: false,
 
-  // Gehoert unmittelbar zu platformAutomerge: false und darf nicht ohne dieses
-  // wieder auf "auto" zurueck.
+  // Belongs directly to platformAutomerge: false and must not go back to
+  // "auto" without it.
   //
-  // Der Default "auto" bedeutet bei aktivem Automerge "behind-base-branch":
-  // Renovate rebased jeden automerge-faehigen Branch, sobald main sich bewegt
-  // hat. Hier bewegt sich main durch semantic-release mehrmals taeglich, der
-  // Rebase passiert also bei jedem Lauf. Er setzt die Status-Checks zurueck,
-  // die brauchen ~40s, der Renovate-Lauf ist nach ~80s vorbei. Da Renovate
-  // selbst merged (nur waehrend eines Laufs), sieht es den gruenen Stand nie:
-  // Lauf N rebased, die CI wird nach Lauf-Ende gruen, Lauf N+1 rebased erneut.
-  // Mit "conflicted" wird nur noch bei echtem Merge-Konflikt rebased. Der
-  // Branch bleibt gruen stehen und der naechste Lauf merged ihn, so wie es der
-  // Kommentar zum Cron in renovate.yml beschreibt. Preis: gemerged wird ein
-  // Branch, der gegen einen etwas aelteren main-Stand validiert wurde. Bei
-  // Image-Tag-Patches ist das ein Pod-Neustart, und einen echten Konflikt
-  // faengt Renovate weiterhin ab.
+  // With automerge enabled the default "auto" means "behind-base-branch":
+  // Renovate rebases every automerge-capable branch as soon as main moves,
+  // which semantic-release makes it do several times a day. The rebase resets
+  // the status checks, which take longer than the Renovate run itself, so
+  // Renovate never sees the green state: run N rebases, CI goes green after
+  // the run ends, run N+1 rebases again.
+  //
+  // With "conflicted" it rebases only on a real merge conflict. The branch
+  // stays green and the next run merges it. The price is merging a branch
+  // validated against a slightly older main; for image tag patches that is a
+  // pod restart, and Renovate still catches genuine conflicts.
   rebaseWhen: 'conflicted',
 
-  // Kein PR-Schwall beim ersten Lauf. Das Dependency Dashboard zeigt trotzdem
-  // alles auf einmal, es werden nur weniger PRs gleichzeitig offen gehalten.
+  // No flood of PRs on the first run. The dependency dashboard still shows
+  // everything, only fewer PRs are kept open at once.
   prConcurrentLimit: 5,
   prHourlyLimit: 2,
 
-  // Frische Tags drei Tage abhaengen lassen. Faengt zurueckgezogene und
-  // offensichtlich kaputte Releases ab, bevor sie im Cluster landen.
+  // Let fresh tags age three days. Catches withdrawn and obviously broken
+  // releases before they reach the cluster.
   minimumReleaseAge: '3 days',
 
-  // Beide brauchen explizite Pfade, keiner von beiden greift per Default.
-  // (Der github-actions-Manager dagegen findet .github/workflows/ von selbst.)
+  // Both need explicit paths, neither applies by default. (The github-actions
+  // manager, in contrast, finds .github/workflows/ on its own.)
 
-  // ArgoCD-Applications: Helm-Charts ueber chart: + targetRevision:
+  // ArgoCD Applications: Helm charts via chart: + targetRevision:
   argocd: {
     managerFilePatterns: ['apps/**/*.yaml'],
   },
 
-  // Kustomize-Manifeste: image:-Tags in Deployments/StatefulSets/CronJobs
+  // Kustomize manifests: image: tags in Deployments/StatefulSets/CronJobs
   kubernetes: {
     managerFilePatterns: ['manifests/**/*.yaml'],
   },
 
-  // Was in keinem image:-Feld und in keinem Chart steht, wird ueber eine
-  // "# renovate:"-Kommentarzeile darueber angebunden, genauso wie es das
-  // githubActionsVersions-Preset fuer die Workflows macht.
+  // Anything that appears neither in an image: field nor in a chart is wired
+  // up through a "# renovate:" comment line above it, the same way the
+  // githubActionsVersions preset does for the workflows.
   customManagers: [
-    // Talos- und Kubernetes-Version des neuen Clusters. Beide stehen in
-    // talos/talconfig.yaml, das kein Manager kennt: es ist weder ein Manifest
-    // noch ein Helm-Chart, sondern die Quelle, aus der talhelper die machine
-    // configs erzeugt.
+    // Talos and Kubernetes version of the cluster. Both live in
+    // talos/talconfig.yaml, which no manager knows: it is neither a manifest
+    // nor a Helm chart but the source talhelper generates the machine configs
+    // from.
     //
-    // Es ist eine Erinnerung und kein Rollout: der Merge aendert nichts am
-    // Cluster, das Upgrade bleibt "talhelper genconfig" plus "talosctl upgrade"
-    // Node fuer Node.
+    // A reminder, not a rollout: the merge changes nothing in the cluster, the
+    // upgrade remains "talhelper genconfig" plus "talosctl upgrade" node by
+    // node.
     //
-    // kubernetesVersion faellt hier mit rein und traegt die Skip-Level-Regel:
-    // immer nur EIN Minor am Stueck. Die Sperre dafuer steht unten bei den
-    // packageRules.
+    // kubernetesVersion comes along here and carries the skip-level rule: only
+    // ONE minor at a time. The lock for that is in the packageRules below.
     {
       customType: 'regex',
       managerFilePatterns: ['talos/talconfig.yaml'],
@@ -114,34 +104,33 @@
   ],
 
   packageRules: [
-    // Cluster-relevante Updates als "fix(deps): ...". Der angular-Preset in
-    // .releaserc.json macht daraus einen Patch-Release plus CHANGELOG-Eintrag,
-    // genau wie die bisherigen manuellen Update-Commits.
+    // Cluster-relevant updates as "fix(deps): ...". The angular preset in
+    // .releaserc.json turns that into a patch release plus a CHANGELOG entry.
     //
-    // Das MUSS eine packageRule sein und darf nicht als Top-Level
-    // semanticCommitType stehen: config:recommended zieht
-    // :semanticPrefixFixDepsChoreOthers mit rein, und das setzt den Typ per
-    // packageRule auf "chore". packageRules schlagen Top-Level-Config, ein
-    // Top-Level-Wert wuerde also still ueberschrieben.
+    // This MUST be a packageRule and must not sit as a top-level
+    // semanticCommitType: config:recommended pulls in
+    // :semanticPrefixFixDepsChoreOthers, which sets the type to "chore" via a
+    // packageRule, and packageRules beat top-level config, so a top-level
+    // value would be silently overridden.
     {
       matchManagers: ['argocd', 'kubernetes'],
       semanticCommitType: 'fix',
       semanticCommitScope: 'deps',
     },
 
-    // Workflow-Actions sind Repo-Tooling, kein Cluster-Zustand. Als chore
-    // committen, damit sie keinen Release ausloesen.
+    // Workflow actions are repo tooling, not cluster state. Committed as
+    // chore so they trigger no release.
     {
       matchManagers: ['github-actions'],
       semanticCommitType: 'chore',
       semanticCommitScope: 'ci',
     },
 
-    // WICHTIG: Die ArgoCD-Applications referenzieren dieses Repo selbst als
-    // zusaetzliche source (path:/ref: values, targetRevision: main). Renovate
-    // erkennt das als git-tags-Dependency und wuerde "main" durch den neuesten
-    // semantic-release-Tag ersetzen wollen (v4.27.1 o.ae.). Das wuerde ArgoCD
-    // auf einen festen Tag pinnen und das Tracking von main zerstoeren.
+    // The ArgoCD Applications reference this repo itself as an additional
+    // source (ref: values, targetRevision: main). Renovate sees that as a
+    // git-tags dependency and would replace "main" with the latest
+    // semantic-release tag, pinning ArgoCD to a fixed tag and destroying the
+    // tracking of main.
     {
       matchPackageNames: [
         'https://github.com/Nebu2k/kubernetes-homelab',
@@ -150,36 +139,34 @@
       enabled: false,
     },
 
-    // fr24 taggt mit einem monoton hochzaehlenden Build-Counter
-    // Kein Semver, aber
-    // eindeutig vergleichbar, sobald man Renovate sagt wo die Zahl steht.
-    // Nebeneffekt des Ankers: die parallelen Upstream-Schemata (1.0.30-1,
-    // latest_arm64, *_nohealthcheck) matchen nicht und fallen raus, wir bleiben
-    // also sicher in der latest-build-Linie.
-    // Achtung: die Zahl landet als "major", jedes Update ist damit formal ein
-    // Major-Bump und wuerde in Phase 3 nie automergen. Ist so gewollt.
+    // fr24 tags with a monotonically increasing build counter. Not semver,
+    // but unambiguously comparable once Renovate is told where the number is.
+    // Side effect of the anchor: the parallel upstream schemes (1.0.30-1,
+    // latest_arm64, *_nohealthcheck) do not match and drop out, keeping us on
+    // the latest-build line.
+    //
+    // Note that the number lands as "major", so every update is formally a
+    // major bump and never automerges. That is intended.
     {
       matchPackageNames: [
         'ghcr.io/sdr-enthusiasts/docker-flightradar24',
-        // Ultrafeeder taggt nach demselben Schema.
+        // Ultrafeeder tags by the same scheme.
         'ghcr.io/sdr-enthusiasts/docker-adsb-ultrafeeder',
       ],
       versioning: 'regex:^latest-build-(?<major>\\d+)$',
     },
 
-    // paperless-ngx und unpoller haben keine eigene Major-Sperre. Fuer
-    // paperless bleibt der Automerge trotzdem aus (Regel weiter unten): auch
-    // Patch-Releases koennen Migrationen mitbringen, und dort haengen
-    // persoenliche Dokumente.
+    // paperless-ngx and unpoller have no major lock of their own. Automerge
+    // still stays off for paperless (rule further down): even patch releases
+    // can carry migrations, and personal documents hang off it.
 
-    // Talos: dieselbe Bauart wie der ArgoCD-Anker. Der Merge rollt nichts aus,
-    // also "chore" ohne Release und ohne CHANGELOG-Eintrag, der ein Upgrade
-    // behauptet, das noch nicht gelaufen ist.
+    // Talos: same construction as the ArgoCD anchor. The merge rolls nothing
+    // out, so "chore" without a release and without a CHANGELOG entry claiming
+    // an upgrade that has not happened.
     //
-    // ghcr.io/siderolabs/talosctl gehoert MIT in diese Gruppe. Das Image faehrt
-    // die etcd-Snapshots in manifests/etcd-backup/ und muss zur Talos-Version
-    // der Nodes passen; zwei getrennte PRs wuerden die beiden auseinanderlaufen
-    // lassen, ohne dass es auffaellt.
+    // ghcr.io/siderolabs/talosctl belongs IN this group: the image takes the
+    // etcd snapshots in manifests/etcd-backup/ and must match the nodes' Talos
+    // version, and two separate PRs would let them drift apart unnoticed.
     {
       matchPackageNames: [
         'siderolabs/talos',
@@ -190,48 +177,44 @@
       semanticCommitScope: 'talos',
     },
 
-    // Die Kubernetes-Version aus talconfig.yaml: nur Patches automatisch
-    // anbieten. Grund ist die Skip-Level-Regel: es darf immer nur EIN Minor am
-    // Stueck gesprungen werden, und Renovate kennt diese Regel nicht. Der
-    // Sprung gehoert zusammen mit talosVersion gemacht, dazu KUBE_VERSION in
-    // .github/scripts/validate.sh.
+    // The Kubernetes version from talconfig.yaml: offer patches only. The
+    // skip-level rule allows only ONE minor at a time and Renovate does not
+    // know it. The jump belongs together with talosVersion, plus KUBE_VERSION
+    // in .github/scripts/validate.sh.
     {
       matchPackageNames: ['kubernetes/kubernetes'],
       matchUpdateTypes: ['minor', 'major'],
       enabled: false,
     },
 
-    // Ein Postgres-Update soll eine Entscheidung sein, nicht drei PRs.
-    // Betrifft teslamate und paperless (dort die -alpine-Variante).
+    // A Postgres update should be one decision, not three PRs. Affects
+    // teslamate and paperless (the -alpine variant there).
     {
       matchDatasources: ['docker'],
       matchPackageNames: ['postgres'],
       groupName: 'postgres',
     },
 
-    // teslamate und sein vorkonfiguriertes Grafana werden zusammen released.
+    // teslamate and its preconfigured Grafana are released together.
     {
       matchPackageNames: ['teslamate/teslamate', 'teslamate/grafana'],
       groupName: 'teslamate',
     },
 
-    // --- Phase 3: Automerge, bewusst eng zugeschnitten ---
+    // Automerge, deliberately narrow: ONLY container image patches, and only
+    // through the kubernetes manager, where the blast radius is a pod restart
+    // that ArgoCD rolls out immediately anyway.
     //
-    // NUR Container-Image-Patches, und nur ueber den kubernetes-Manager. Dort
-    // ist der Blast Radius ein Pod-Neustart, und ArgoCD rollt das ohnehin
-    // sofort aus.
+    // Helm charts (manager "argocd") are deliberately NOT included, regardless
+    // of the version jump. Green CI says nothing about upgrade paths and
+    // cluster schema for charts: a Longhorn jump across several minors renders
+    // cleanly and damages the storage layer, kube-prometheus-stack blocks
+    // ArgoCD with a ComparisonError when the CRDs do not run ahead, and
+    // MetalLB enabled FRR on every node in 0.16. All three would have passed
+    // green.
     //
-    // Helm-Charts (Manager "argocd") sind bewusst NICHT dabei, unabhaengig vom
-    // Versionssprung. Gruene CI sagt bei Charts nichts ueber Upgrade-Pfade und
-    // Cluster-Schema aus: ein Longhorn-Sprung ueber mehrere Minors rendert
-    // sauber und beschaedigt die Storage-Schicht, kube-prometheus-stack
-    // blockiert ArgoCD mit einem ComparisonError, wenn die CRDs nicht vorlaufen,
-    // und MetalLB hat mit 0.16 FRR auf allen Nodes eingeschaltet. Alles drei
-    // waere gruen durchgelaufen.
-    //
-    // Die customManager-Deps (siderolabs/talos, kubernetes/kubernetes) fallen
-    // hier schon durch matchManagers raus. Das ist Absicht: ein Talos-Upgrade
-    // rebootet Node fuer Node, das bleibt eine bewusste Handlung.
+    // The customManager deps drop out through matchManagers already, on
+    // purpose: a Talos upgrade reboots node by node and stays a deliberate act.
     {
       matchManagers: ['kubernetes'],
       matchUpdateTypes: ['patch'],
@@ -239,13 +222,12 @@
       automergeType: 'pr',
     },
 
-    // Ausnahmen vom Automerge. Stehen NACH der Regel oben, weil spaetere
-    // packageRules frueher gewinnen.
+    // Exceptions from automerge. They stand AFTER the rule above, because
+    // later packageRules win over earlier ones.
     //
-    // Datenbanken und der Dokumentenbestand: hier ist der Blast Radius nicht
-    // mehr "Pod startet neu", sondern ein Schema- oder Datenzustand. Bei
-    // paperless kommt dazu, dass es persoenliche Dokumente haelt und auch
-    // Patch-Releases Migrationen mitbringen koennen.
+    // Databases and the document store: here the blast radius is no longer a
+    // pod restart but a schema or data state, and paperless additionally holds
+    // personal documents while even patch releases can carry migrations.
     {
       matchPackageNames: [
         'postgres',

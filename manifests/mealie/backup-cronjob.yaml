@@ -1,20 +1,18 @@
-# Offsite-Backup der Mealie-Rezepte nach S3.
+# Offsite backup of the Mealie recipes to S3.
 #
-# Gesichert wird das ZIP aus Mealies eingebautem Backup, nicht ein pg_dump.
-# Grund: die Rezepte stecken zur Haelfte in der Datenbank und zur Haelfte im
-# Data-Verzeichnis (Bilder, Assets). Ein Dump allein waere eine halbe
-# Wiederherstellung. Das ZIP enthaelt beides und laesst sich ueber Mealies
-# eigenen Endpunkt POST /api/admin/backups/{file_name}/restore zurueckspielen,
-# ist also ein Backup-Weg mit dokumentiertem Rueckweg.
+# What is saved is the ZIP from Mealie's built-in backup, not a pg_dump: the
+# recipes live half in the database and half in the data directory (images,
+# assets), so a dump alone would be half a restore. The ZIP contains both and
+# can be replayed through Mealie's own restore endpoint.
 #
-# Ablage und Aufbewahrung stehen in homelab-terraform/aws/s3-mealie-backup.tf:
-#   daily/   30 Tage
-#   monthly/ 365 Tage (nur der Lauf am Monatsersten legt zusaetzlich hier ab)
-# Aendern sich die Praefixe hier, MUESSEN die Variablen dort mitgehen, sonst
-# raeumt niemand mehr auf.
+# Layout and retention live in homelab-terraform/aws/s3-mealie-backup.tf:
+#   daily/   30 days
+#   monthly/ 365 days (only the run on the 1st writes there as well)
+# Changing the prefixes here REQUIRES changing the variables there, or nothing
+# cleans up any more.
 #
-# Der IAM-User "homelab-mealie-backup" hat weder DeleteObject noch
-# DeleteObjectVersion. Dieser Job kann in S3 nichts loeschen, nur schreiben.
+# The IAM user has neither DeleteObject nor DeleteObjectVersion: this job can
+# only write to S3, never delete.
 apiVersion: batch/v1
 kind: CronJob
 metadata:
@@ -23,13 +21,12 @@ metadata:
   labels:
     app.kubernetes.io/name: mealie-backup
 spec:
-  # 02:30 UTC, in der Luecke zwischen dem Paperless-Export (02:00) und dem
-  # HA-Archiv (04:00), damit sich die naechtlichen Backup-Laeufe nicht
-  # ueberlappen. Die Frische-Sonde um 06:00 sieht das Ergebnis danach.
+  # 02:30 UTC, in the gap between the paperless export (02:00) and the HA
+  # archive (04:00) so the nightly runs do not overlap; the freshness probe at
+  # 06:00 sees the result afterwards.
   #
-  # timeZone ist Pflicht: ohne das Feld laeuft der Job in der Zeitzone der Node,
-  # die gerade den kube-controller-manager haelt, und der Zeitplan wandert mit
-  # dem Lease.
+  # timeZone is mandatory: without it the job runs in the timezone of whichever
+  # node holds the kube-controller-manager lease.
   schedule: "30 2 * * *"
   timeZone: "Etc/UTC"
   successfulJobsHistoryLimit: 3
@@ -46,15 +43,13 @@ spec:
           volumes:
             - name: backup
               emptyDir:
-                # Das ZIP liegt heute im einstelligen MB-Bereich, waechst aber
-                # mit jedem Rezeptbild. Ohne sizeLimit schreibt ein entgleister
-                # Lauf die Node-Disk voll und reisst mit, was sonst noch auf der
-                # Node laeuft.
+                # The ZIP grows with every recipe image. Without sizeLimit a
+                # derailed run fills the node disk and takes down whatever else
+                # runs there.
                 sizeLimit: 2Gi
 
-          # Zwei Schritte als initContainer + container, damit im Fehlerfall am
-          # Pod-Status ablesbar ist, ob das Backup oder der Upload gescheitert
-          # ist.
+          # Split into initContainer and container so the pod status shows
+          # whether the backup or the upload failed.
           initContainers:
             - name: create-and-fetch
               image: alpine:3.24
@@ -69,14 +64,12 @@ spec:
                   API="http://mealie:80/api"
                   AUTH="Authorization: Bearer ${MEALIE_API_TOKEN}"
 
-                  # Warten, bis der eigene Pod die NetworkPolicy passieren darf.
-                  # Der Namespace hat ein default-deny auf Ingress, und
-                  # kube-router traegt einen frisch gestarteten Pod erst mit
-                  # einigen Sekunden Verzug in seine ipsets ein: der erste
-                  # Versuch scheitert, der zweite rund 15 s spaeter liefert 200.
-                  # Ohne diese Schleife waere jeder Lauf ein
-                  # Muenzwurf, und zwar einer, der wie ein Mealie-Ausfall
-                  # aussieht.
+                  # Wait until this pod may pass the NetworkPolicy. The
+                  # namespace has a default-deny on ingress and kube-router
+                  # adds a freshly started pod to its ipsets with a few
+                  # seconds of delay, so the first attempt fails. Without the
+                  # loop every run would be a coin flip that looks like a
+                  # Mealie outage.
                   echo "Warte auf Erreichbarkeit von mealie..."
                   i=0
                   until curl -sf --max-time 5 "${API}/app/about" -o /dev/null; do
@@ -90,15 +83,14 @@ spec:
                   echo "  erreichbar nach ${i} Fehlversuchen."
 
                   echo "Erzeuge Backup..."
-                  # Mealie baut das ZIP synchron. Bei vielen Bildern dauert das,
-                  # deshalb ein grosszuegiges Timeout statt des curl-Defaults.
+                  # Mealie builds the ZIP synchronously, which takes a while
+                  # with many images, hence a generous timeout.
                   curl -sf --max-time 600 -X POST "${API}/admin/backups" \
                     -H "${AUTH}" -o /dev/null
 
-                  # POST liefert nur eine Meldung, nicht den Dateinamen. Den
-                  # juengsten Eintrag aus der Liste zu nehmen ist deshalb der
-                  # einzige Weg; concurrencyPolicy Forbid stellt sicher, dass
-                  # dabei kein zweiter Lauf dazwischenfunkt.
+                  # The POST returns a message, not the filename, so taking
+                  # the newest list entry is the only way. concurrencyPolicy
+                  # Forbid keeps a second run from interfering.
                   NAME=$(curl -sf --max-time 60 "${API}/admin/backups" -H "${AUTH}" \
                     | jq -r '.imports | max_by(.date) | .name')
 
@@ -108,11 +100,10 @@ spec:
                   fi
                   echo "Juengstes Backup: ${NAME}"
 
-                  # Zweistufig, und das ist keine Umstaendlichkeit: der Endpunkt
-                  # /admin/backups/{name} liefert NICHT die Datei, sondern einen
-                  # kurzlebigen fileToken. Erst /utils/download gibt das ZIP her,
-                  # und zwar ohne Bearer-Header, der Token selbst ist die
-                  # Berechtigung.
+                  # Two steps by necessity: /admin/backups/{name} does NOT
+                  # return the file but a short-lived fileToken. Only
+                  # /utils/download hands out the ZIP, and without a bearer
+                  # header, because the token itself is the authorisation.
                   TOKEN=$(curl -sf --max-time 60 "${API}/admin/backups/${NAME}" \
                     -H "${AUTH}" | jq -r '.fileToken')
 
@@ -124,17 +115,16 @@ spec:
                   curl -sf --max-time 600 -o /backup/mealie.zip \
                     "${API}/utils/download?token=${TOKEN}"
 
-                  # Gegenprobe vor dem Upload. Ein abgebrochener Download oder
-                  # eine als ZIP getarnte Fehlerseite faellt hier durch, statt
-                  # als scheinbar erfolgreiches Backup in S3 zu landen und erst
-                  # beim Restore aufzufliegen.
+                  # Counter-check before the upload: a truncated download or
+                  # an error page disguised as a ZIP fails here instead of
+                  # landing in S3 as an apparently successful backup.
                   if ! unzip -t /backup/mealie.zip >/dev/null 2>&1; then
                     echo "FEHLER: /backup/mealie.zip ist kein lesbares ZIP."
                     exit 1
                   fi
 
-                  # Der Name wandert zum Upload-Container, der ihn fuer den
-                  # S3-Key und fuer das Aufraeumen braucht.
+                  # The name travels to the upload container, which needs it
+                  # for the S3 key and for the cleanup.
                   printf '%s' "${NAME}" > /backup/name.txt
 
                   echo "Backup ok, $(stat -c %s /backup/mealie.zip) Bytes."
@@ -193,26 +183,25 @@ spec:
 
                   upload "daily/mealie_${DAY}.zip"
 
-                  # Am Monatsersten dasselbe ZIP ein zweites Mal unter dem
-                  # Praefix mit der langen Aufbewahrung. Bewusst ein zweiter
-                  # Upload statt copy-object innerhalb S3: die Datei liegt
-                  # ohnehin lokal, und das spart dem IAM-User jedes Kopier-Recht.
+                  # On the 1st the same ZIP goes up a second time under the
+                  # long-retention prefix. A second upload rather than a
+                  # copy-object: the file is local anyway and this saves the
+                  # IAM user any copy permission.
                   if [ "$(date -u +%d)" = "01" ]; then
                     upload "monthly/mealie_$(date -u +%Y-%m).zip"
                   fi
 
-                  # Erst jetzt aufraeumen, nach belegtem Upload. Mealie legt
-                  # jedes Backup dauerhaft im Data-Verzeichnis ab; taeglich eines
-                  # laeuft die 5-Gi-PVC sonst voll. Das juengste bleibt liegen,
-                  # damit ein Restore aus der UI ohne Umweg ueber S3 moeglich
-                  # ist.
+                  # Clean up only after a proven upload. Mealie keeps every
+                  # backup in its data directory permanently, which would fill
+                  # the PVC. The newest one stays so a restore from the UI
+                  # works without going through S3.
                   API="http://mealie:80/api"
                   AUTH="Authorization: Bearer ${MEALIE_API_TOKEN}"
 
-                  # Ab hier ist das Backup bereits belegt in S3. Nichts, was jetzt
-                  # noch schiefgeht, darf den Job rot faerben, sonst meldet die
-                  # Ueberwachung einen Backup-Fehler, den es nicht gibt. Deshalb
-                  # haengt an jedem Aufruf ein "|| true" bzw. eine Warnung.
+                  # From here the backup is proven to be in S3. Nothing that
+                  # still goes wrong may turn the job red, or the monitoring
+                  # reports a backup failure that did not happen. Hence the
+                  # "|| true" on each call.
                   if OLD_NAMES=$(curl -sf --max-time 60 "${API}/admin/backups" -H "${AUTH}" \
                        | jq -r --arg keep "${NAME}" '.imports[] | select(.name != $keep) | .name'); then
                     echo "${OLD_NAMES}" | while read -r OLD; do

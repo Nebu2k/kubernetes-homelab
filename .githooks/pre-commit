@@ -1,19 +1,18 @@
 #!/bin/bash
 
-# Pre-commit hook: README.md aus apps/ und manifests/ neu generieren.
+# Pre-commit hook: regenerate README.md from apps/ and manifests/.
 #
 # Seit Juli 2026 macht .github/workflows/docs.yml dasselbe nach jedem Push auf
-# main und ist die letzte Instanz. Der Hook bleibt trotzdem, weil er die
-# Arbeitsteilung sauber haelt: solange er lokal laeuft, stimmt die README schon
-# im eigenen Commit und die CI hat nichts nachzuschieben. Ohne ihn kaeme nach
-# jedem Commit ein Bot-Commit hinterher, der vor dem naechsten Push einen Rebase
-# erzwingt. Die CI greift damit nur noch bei Renovate-Merges, wo lokal niemand
+# main and is the last instance. The hook stays regardless, because it keeps
+# the division of labour clean: while it runs locally the README is already
+# correct in one's own commit and CI has nothing to add. Without it every
+# commit would be followed by a bot commit forcing a rebase before the next
+# push. CI therefore only steps in on Renovate merges, where nobody locally
 # ist.
 #
-# Frueher lief das ueber eine conda-Umgebung namens "jinja2". Fehlte die, brach
-# der Hook mit exit 1 ab und blockierte damit *jeden* Commit im Repo. Jetzt
-# reicht ein python3 mit den drei Paketen aus docs-generator/requirements.txt,
-# und wenn die fehlen, wird uebersprungen statt blockiert.
+# A plain python3 with the three packages from docs-generator/requirements.txt
+# is enough, and if they are missing the hook skips instead of blocking. It
+# must never exit 1 on a missing tool, that would block *every* commit.
 
 set -e
 
@@ -27,7 +26,7 @@ if ! "$PYTHON" -c "import yaml, jinja2, pathspec" 2>/dev/null; then
 fi
 
 echo "📝 Regenerating README.md (single point of truth)..."
-# Ueber make, damit Hook und CI denselben Einstiegspunkt nutzen.
+# Through make so the hook and CI share one entry point.
 PYTHON="$PYTHON" make --no-print-directory docs
 
 if git diff --name-only README.md | grep -q "README.md"; then

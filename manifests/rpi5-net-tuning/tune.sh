@@ -1,17 +1,16 @@
 #!/bin/sh
-# Gegenmassnahmen aus siderolabs/sbc-raspberrypi#91 fuer end0 auf raspi5.
+# Countermeasures from siderolabs/sbc-raspberrypi#91 for end0 on raspi5:
+# EEE off, TSO/GSO off, larger ring buffers. The reasoning is in the header of
+# daemonset.yaml.
 #
-# Setzt drei Dinge und haelt sie: EEE aus, TSO/GSO aus, groessere Ring-Buffer.
-# Warum, steht im Kopf von daemonset.yaml.
+# Two quirks explain the structure:
 #
-# Zwei Eigenheiten, die den Aufbau erklaeren:
-#
-# 1. Die Einstellungen ueberleben einen Link-Reset nicht. Deshalb die Schleife,
-#    nicht ein einmaliges Setzen beim Start.
-# 2. "ethtool -G" setzt den Link kurz zurueck. Deshalb wird VORHER verglichen
-#    und nur bei echter Abweichung geschrieben. Ohne diesen Vergleich wuerde die
-#    Schleife die Leitung im Minutentakt bouncen und genau das erzeugen, was sie
-#    verhindern soll.
+# 1. The settings do not survive a link reset, hence the loop rather than a
+#    one-off call at startup.
+# 2. "ethtool -G" briefly resets the link, so values are compared BEFORE
+#    writing and only written on a real difference. Without that comparison
+#    the loop would bounce the line every minute and cause exactly what it is
+#    meant to prevent.
 set -u
 
 IFACE="${IFACE:-end0}"
@@ -21,9 +20,9 @@ TX_WANT="${TX_WANT:-2048}"
 
 log() { echo "$(date -Iseconds) $*"; }
 
-# "Current hardware settings" ist der zweite Block in "ethtool -g", die
-# "Pre-set maximums" der erste. Ohne das Umschalten liest man das Maximum
-# statt des Ist-Werts und schreibt nie.
+# "Current hardware settings" is the second block in "ethtool -g", "Pre-set
+# maximums" the first. Without switching blocks one reads the maximum instead
+# of the current value and never writes.
 ring_now() {
   ethtool -g "$IFACE" 2>/dev/null | awk -v key="$1" '
     /Current hardware settings:/ { cur = 1; next }
@@ -74,8 +73,8 @@ while :; do
 
   rx_now=$(ring_now RX); tx_now=$(ring_now TX)
   rx_max=$(ring_max RX); tx_max=$(ring_max TX)
-  # Nie ueber das Hardware-Maximum hinaus anfordern, sonst lehnt ethtool den
-  # ganzen Aufruf ab und auch der gueltige zweite Wert wird nicht gesetzt.
+  # Never request beyond the hardware maximum, or ethtool rejects the whole
+  # call and the valid second value is not set either.
   rx_set=$RX_WANT; tx_set=$TX_WANT
   [ -n "${rx_max:-}" ] && [ "$rx_max" -lt "$rx_set" ] 2>/dev/null && rx_set=$rx_max
   [ -n "${tx_max:-}" ] && [ "$tx_max" -lt "$tx_set" ] 2>/dev/null && tx_set=$tx_max

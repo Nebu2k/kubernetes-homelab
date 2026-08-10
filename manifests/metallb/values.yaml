@@ -5,27 +5,25 @@ controller:
 speaker:
   nodeSelector:
     node-role.kubernetes.io/worker: "worker"
-  # FRR-Sidecar im Speaker, altes Schema. Bleibt aus.
+  # FRR sidecar in the speaker, the old scheme. Stays off.
   frr:
     enabled: false
 
-# FRR als eigenständiges DaemonSet, seit Chart 0.16 ein separater Schalter und
-# per Default AN. Das ist NICHT dasselbe wie speaker.frr oben: bleibt der hier
-# ungesetzt, laufen metallb-frr-k8s auf jeder Node plus ein
-# statuscleaner-Deployment, auch wenn speaker.frr.enabled false ist. Hier läuft
-# reines Layer2 und kein BGP, FRR ist nutzlos.
+# FRR as a standalone DaemonSet, a separate switch since chart 0.16 and ON by
+# default. NOT the same as speaker.frr above: left unset, metallb-frr-k8s runs
+# on every node plus a statuscleaner deployment even with speaker.frr.enabled
+# false. This is plain layer 2 without BGP, so FRR is useless.
 frrk8s:
   enabled: false
 
-# Kubernetes setzt auf Control-Plane-Nodes
-# node.kubernetes.io/exclude-from-external-load-balancers.
-# MetalLB respektiert das Label und kuendigt von solchen Nodes nichts an. Hier
-# sind alle Nodes Control-Plane, also kuendigt sonst NIEMAND an: der Service
-# bekommt seine IP, ArgoCD meldet Healthy, und trotzdem beantwortet kein Node
-# das ARP. Sichtbar nur an einem leeren "kubectl get servicel2status -A".
+# Kubernetes labels control-plane nodes with
+# node.kubernetes.io/exclude-from-external-load-balancers and MetalLB honours
+# it. Here every node is control plane, so without this NOBODY announces: the
+# service gets its address, ArgoCD reports Healthy, and still no node answers
+# the ARP. Visible only as an empty "kubectl get servicel2status -A".
 #
-# Das Label zu ignorieren ist richtiger, als es an den Nodes zu loeschen: Talos
-# setzt es beim naechsten Reconcile ohnehin wieder, und es passt nicht zu
-# allowSchedulingOnControlPlanes, denn diese Nodes SIND die Worker.
+# Ignoring the label beats deleting it on the nodes: Talos would set it again
+# on the next reconcile, and it does not fit allowSchedulingOnControlPlanes,
+# because these nodes ARE the workers.
 speaker:
   ignoreExcludeLB: true

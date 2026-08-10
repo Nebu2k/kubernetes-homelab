@@ -1,30 +1,24 @@
-# Monatliches Archiv der Home-Assistant-Backups ("Backup des Backups").
+# Monthly archive of the Home Assistant backups, a backup of the backup.
 #
-# HA haelt in S3 nur seine letzten N automatischen Backups, alles aeltere loescht
-# es selbst. Dieser Job hebt einmal im Monat einen Stand heraus, damit es einen
-# weit zurueckliegenden Wiederherstellungspunkt gibt. Aufgeraeumt wird der nicht
-# hier, sondern per S3-Lifecycle-Regel "expire-monthly-archive" (Praefix
-# "Monthly", 180 Tage) in homelab-terraform/aws/s3-backup-buckets.tf.
-# Praefix und Aufbewahrung haengen also zusammen: aendert sich hier das Praefix,
-# MUSS die Variable dort mitgehen, sonst raeumt niemand mehr auf.
+# HA keeps only its last N automatic backups in S3 and deletes older ones
+# itself. This job lifts one state out once a month so a far-back restore
+# point exists. Its cleanup happens through the S3 lifecycle rule
+# "expire-monthly-archive" in homelab-terraform/aws/s3-backup-buckets.tf, so
+# changing the prefix here REQUIRES changing the variable there.
 #
-# Warum ein Kopierjob und keine HA-Automation: HAs Service "backup.create"
-# schreibt fest verdrahtet nur zum lokalen Agenten (agent_ids aus
-# local_backup_agents, name=None) und erreicht S3 nie. "backup.create_automatic"
-# laedt zwar hoch, erzeugt aber ein automatisches Backup, das damit wieder unter
-# HAs Retention faellt. Einen benannten, S3-gerichteten, retention-freien Stand
-# gibt es nur ueber die WebSocket-API, und die ist aus einer Automation nicht
-# aufrufbar.
+# A copy job rather than an HA automation, because HA's backup.create only
+# ever writes to the local agent and never reaches S3, while
+# backup.create_automatic produces an automatic backup that falls under HA's
+# retention again. A named, S3-directed, retention-free state exists only
+# through the WebSocket API, which an automation cannot call.
 #
-# ENTSCHEIDEND: kopiert wird NUR das .tar, NICHT die zugehoerige
-# .metadata.json. HAs S3-Agent listet Backups ausschliesslich ueber die
-# Metadata-Dateien ("List backups from an S3 bucket by reading metadata files").
-# Ohne sie ist der Archivstand fuer HA unsichtbar und kann von keiner Retention
-# je angefasst werden. Wiederherstellung heisst dann: Tar aus S3 ziehen und in
-# der HA-UI hochladen.
+# Crucially, ONLY the .tar is copied, not its .metadata.json: HA's S3 agent
+# lists backups exclusively through the metadata files, so without one the
+# archived state is invisible to HA and no retention can ever touch it.
+# Restoring then means pulling the tar from S3 and uploading it in the HA UI.
 #
-# Der Kopiervorgang laeuft server-seitig innerhalb S3, es geht kein Byte durch
-# den Cluster und es entsteht keine lokale Kopie auf dem Longhorn-Volume.
+# The copy happens server-side inside S3: no byte passes through the cluster
+# and no local copy lands on the Longhorn volume.
 apiVersion: batch/v1
 kind: CronJob
 metadata:
@@ -33,13 +27,12 @@ metadata:
   labels:
     app.kubernetes.io/name: ha-backup-archive
 spec:
-  # 1. des Monats, 04:00 UTC. Das taegliche HA-Backup landet gegen 03:00 UTC im
-  # Bucket, der Job greift also einen frischen Stand ab.
+  # 1st of the month, 04:00 UTC. The daily HA backup lands in the bucket
+  # around 03:00 UTC, so this picks up a fresh state.
   #
-  # timeZone ist Pflicht: ohne das Feld laeuft der Job in der Zeitzone der Node,
-  # die gerade den kube-controller-manager haelt, und der Zeitplan wandert mit
-  # dem Lease. Faellt er dadurch vor das HA-Backup, archiviert er den
-  # Vortagsstand.
+  # timeZone is mandatory: without it the job runs in the timezone of whichever
+  # node holds the kube-controller-manager lease, and drifting ahead of the HA
+  # backup would archive the previous day's state.
   schedule: "0 4 1 * *"
   timeZone: "Etc/UTC"
   successfulJobsHistoryLimit: 3
@@ -64,9 +57,8 @@ spec:
 
                   YM=$(date -u +%Y-%m)
 
-                  # Idempotenz. restartPolicy OnFailure kann den Job wiederholen,
-                  # und ein Nachlauf soll keinen zweiten Stand fuer denselben
-                  # Monat anlegen.
+                  # Idempotence: restartPolicy OnFailure may repeat the job,
+                  # and a retry must not create a second state for the month.
                   EXISTING=$(aws s3api list-objects-v2 \
                     --bucket "${S3_BUCKET_NAME}" \
                     --region "${S3_REGION}" \
@@ -79,8 +71,8 @@ spec:
                     exit 0
                   fi
 
-                  # Juengstes automatisches Backup suchen. Nur .tar, die
-                  # .metadata.json bleibt bewusst liegen (siehe Kopf).
+                  # Find the newest automatic backup. Only the .tar, the
+                  # .metadata.json stays behind on purpose (see the header).
                   SRC=$(aws s3api list-objects-v2 \
                     --bucket "${S3_BUCKET_NAME}" \
                     --region "${S3_REGION}" \
@@ -98,22 +90,18 @@ spec:
                   echo "Archiviere ${SRC}"
                   echo "        -> ${DST}"
 
-                  # Bewusst die Low-Level-API und NICHT "aws s3 cp".
+                  # The low-level API rather than "aws s3 cp": the high-level
+                  # command reads the object tags to carry them over and needs
+                  # s3:GetObjectTagging, which this IAM key does not have.
                   #
-                  # Das High-Level-Kommando liest beim Kopieren die Objekt-Tags,
-                  # um sie mitzunehmen, und braucht dafuer s3:GetObjectTagging.
-                  # Der IAM-Key hat das nicht, "aws s3 cp" scheitert hier mit
-                  # AccessDenied.
+                  # copy-object copies server-side and gets by with GetObject
+                  # on the source and PutObject on the target.
+                  # --tagging-directive REPLACE without --tagging sets the
+                  # target explicitly to "no tags" and avoids any tagging
+                  # access; HA sets no tags anyway.
                   #
-                  # copy-object kopiert server-seitig und kommt mit GetObject auf
-                  # der Quelle und PutObject auf dem Ziel aus. --tagging-directive
-                  # REPLACE ohne --tagging setzt das Ziel explizit auf "keine
-                  # Tags" und vermeidet jeden Tagging-Zugriff. HA setzt ohnehin
-                  # keine Tags, es geht also nichts verloren.
-                  #
-                  # Grenze: copy-object schafft einen Durchgang bis 5 GB. Die
-                  # Tars liegen bei ~0,5 GB. Sollte HA je darueber wachsen,
-                  # braucht es hier einen Multipart-Copy.
+                  # Limit: copy-object handles up to 5 GB in one pass. Beyond
+                  # that this would need a multipart copy.
                   aws s3api copy-object \
                     --bucket "${S3_BUCKET_NAME}" \
                     --region "${S3_REGION}" \
@@ -123,9 +111,9 @@ spec:
                     --query 'CopyObjectResult.ETag' \
                     --output text
 
-                  # Gegenprobe: Zielobjekt muss existieren und exakt so gross
-                  # sein wie die Quelle. Ohne das meldet der Job Erfolg, sobald
-                  # der API-Call durchging, und niemand merkt einen Teilstand.
+                  # Counter-check: the target must exist and match the source
+                  # size exactly. Without it the job reports success as soon as
+                  # the API call returned and a partial copy goes unnoticed.
                   SRC_SIZE=$(aws s3api head-object --bucket "${S3_BUCKET_NAME}" \
                     --region "${S3_REGION}" --key "${SRC}" \
                     --query 'ContentLength' --output text)
