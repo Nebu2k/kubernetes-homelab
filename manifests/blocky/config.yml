@@ -62,14 +62,19 @@ conditional:
 blocking:
   denylists:
     ads:
-      # AdAway in hosts format. The AdGuard edition of the same list is
-      # adblock syntax and useless here: Blocky reads hosts format, bare
-      # domains, wildcards and regexes, nothing else.
+      # Three sources on three separate hosts, so no single list going away
+      # can leave the resolver unfiltered. Adblock syntax (||domain^) is not
+      # an option anywhere here: Blocky reads hosts format, bare domains,
+      # wildcards and regexes, nothing else.
+      #
+      # AdAway, hosts format, small and conservative.
       - https://adaway.org/hosts.txt
-      # Replaces the "AdGuard DNS filter", which fails for the same reason.
-      # HaGeZi Pro in wildcard format, considerably broader than the AdGuard
-      # list. On false positives, wildcard/light.txt is the smaller tier.
-      - https://raw.githubusercontent.com/hagezi/dns-blocklists/main/wildcard/pro.txt
+      # oisd big carries the bulk, roughly 250k wildcard entries, and comes
+      # from the maintainer's own domain rather than a code host.
+      - https://big.oisd.nl/domainswild
+      # 1Hosts Lite covers the German ad networks oisd misses: ioam.de,
+      # smartclip, adform, stroeerdigitalgroup.de.
+      - https://raw.githubusercontent.com/badmojr/1Hosts/master/Lite/domains.wildcards
       # iCloud Private Relay would otherwise bypass the house resolver and
       # with it split horizon and filtering.
       - |
