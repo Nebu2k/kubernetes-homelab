@@ -1,3 +1,10 @@
+# [5.6.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v5.5.0...v5.6.0) (2026-08-10)
+
+
+### Features
+
+* **monitoring:** Alertmanager publisht mit eigenem IAM-User ([1e7fb7a](https://github.com/Nebu2k/kubernetes-homelab/commit/1e7fb7a2e1ac9e049cf12f01cd8c0b16981e67b2))
+
 # [5.5.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v5.4.0...v5.5.0) (2026-08-10)
 
 
