@@ -1,3 +1,10 @@
+# [5.9.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v5.8.0...v5.9.0) (2026-08-10)
+
+
+### Features
+
+* **monitoring:** Alerts auf offene Systemupdates von pve ([022fb12](https://github.com/Nebu2k/kubernetes-homelab/commit/022fb12ec228fc4fced54dd270d6268e004b5fc0))
+
 # [5.8.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v5.7.1...v5.8.0) (2026-08-10)
 
 
