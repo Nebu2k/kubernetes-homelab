@@ -46,10 +46,10 @@
   //
   // With automerge enabled the default "auto" means "behind-base-branch":
   // Renovate rebases every automerge-capable branch as soon as main moves,
-  // which semantic-release makes it do several times a day. The rebase resets
-  // the status checks, which take longer than the Renovate run itself, so
-  // Renovate never sees the green state: run N rebases, CI goes green after
-  // the run ends, run N+1 rebases again.
+  // and main moves on every push plus every README commit from docs.yml. The
+  // rebase resets the status checks, which take longer than the Renovate run
+  // itself, so Renovate never sees the green state: run N rebases, CI goes
+  // green after the run ends, run N+1 rebases again.
   //
   // With "conflicted" it rebases only on a real merge conflict. The branch
   // stays green and the next run merges it. The price is merging a branch
@@ -104,8 +104,8 @@
   ],
 
   packageRules: [
-    // Cluster-relevant updates as "fix(deps): ...". The angular preset in
-    // .releaserc.json turns that into a patch release plus a CHANGELOG entry.
+    // Cluster-relevant updates as "fix(deps): ...", so a glance at the log
+    // separates them from repo tooling.
     //
     // This MUST be a packageRule and must not sit as a top-level
     // semanticCommitType: config:recommended pulls in
@@ -118,8 +118,7 @@
       semanticCommitScope: 'deps',
     },
 
-    // Workflow actions are repo tooling, not cluster state. Committed as
-    // chore so they trigger no release.
+    // Workflow actions are repo tooling, not cluster state.
     {
       matchManagers: ['github-actions'],
       semanticCommitType: 'chore',
@@ -128,9 +127,10 @@
 
     // The ArgoCD Applications reference this repo itself as an additional
     // source (ref: values, targetRevision: main). Renovate sees that as a
-    // git-tags dependency and would replace "main" with the latest
-    // semantic-release tag, pinning ArgoCD to a fixed tag and destroying the
-    // tracking of main.
+    // git-tags dependency and would replace "main" with the newest tag,
+    // pinning ArgoCD to a fixed tag and destroying the tracking of main. The
+    // repo carries no tags today, so nothing matches, but the guard stays:
+    // one tag would be enough to break it.
     {
       matchPackageNames: [
         'https://github.com/Nebu2k/kubernetes-homelab',
@@ -161,8 +161,8 @@
     // can carry migrations, and personal documents hang off it.
 
     // Talos: same construction as the ArgoCD anchor. The merge rolls nothing
-    // out, so "chore" without a release and without a CHANGELOG entry claiming
-    // an upgrade that has not happened.
+    // out, so "chore" rather than a "fix(deps)" claiming an upgrade that has
+    // not happened.
     //
     // ghcr.io/siderolabs/talosctl belongs IN this group: the image takes the
     // etcd snapshots in manifests/etcd-backup/ and must match the nodes' Talos

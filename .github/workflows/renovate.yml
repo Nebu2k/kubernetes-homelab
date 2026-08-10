@@ -53,8 +53,8 @@ jobs:
           # RENOVATE_TOKEN. Required permissions: Contents RW, Pull requests
           # RW, Issues RW (dependency dashboard), Workflows RW (action updates
           # block otherwise), Commit statuses RW. The default GITHUB_TOKEN is
-          # not enough: PRs it creates start no workflows, so semantic-release
-          # would never fire.
+          # not enough: PRs it creates start no workflows, so validate.yml
+          # would never run and the automerge-on-green would never trigger.
           token: ${{ secrets.RENOVATE_TOKEN }}
         env:
           # Both repos from one run, the PAT covers both. A GitHub secret
