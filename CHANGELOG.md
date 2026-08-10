@@ -1,3 +1,10 @@
+# [5.7.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v5.6.0...v5.7.0) (2026-08-10)
+
+
+### Features
+
+* **home-assistant:** WoL-Schalter kann den PC auch ausschalten ([444449c](https://github.com/Nebu2k/kubernetes-homelab/commit/444449c92eecdceacef562107d1746339892470c))
+
 # [5.6.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v5.5.0...v5.6.0) (2026-08-10)
 
 
