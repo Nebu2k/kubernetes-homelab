@@ -143,7 +143,8 @@ homelab/
 │   │   └── servicemonitor.yaml
 │   ├── home-assistant/
 │   │   ├── backup-archive-cronjob.yaml
-│   │   ├── configmap-configuration.yaml
+│   │   ├── configuration.yaml
+│   │   ├── dashboard-homelab.yaml
 │   │   ├── deployment.yaml
 │   │   ├── ingress.yaml
 │   │   ├── kustomization.yaml
