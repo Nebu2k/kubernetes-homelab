@@ -970,3 +970,47 @@ spec:
           annotations:
             summary: "Blocky-LXC holt die Konfiguration nicht mehr aus dem Repo"
             description: "Der Sync scheitert seit >1h. Die LXC laeuft mit einem aelteren Stand als die Cluster-Instanz. Von Hand anstossen und die Ausgabe lesen: pct exec 402 -- /etc/periodic/15min/blocky-config-sync"
+
+    # The cluster keeps itself current through Renovate. pve hangs on nothing
+    # and is only noticed when someone thinks of it, which is what these rules
+    # replace. They cover pve alone: the metrics come from the apt textfile
+    # collector, and the macmini runs macOS without one.
+    - name: host-updates
+      interval: 5m
+      rules:
+        # Security origins only. The full pending count is always non-zero on a
+        # Proxmox host and would make this rule permanent noise. Three days of
+        # grace so a freshly published update does not page on the same day.
+        - alert: AptSecurityUpdatesPending
+          expr: sum by (instance) (apt_upgrades_pending{origin=~".*security.*"}) > 0
+          for: 72h
+          labels:
+            severity: warning
+          annotations:
+            summary: "{{ $labels.instance }} hat seit drei Tagen {{ $value }} offene Security-Updates"
+            description: "Ansehen mit: ssh pve 'apt update && apt list --upgradable'. Auf pve liegen talos-cp-1 und der AdGuard-LXC, ein Reboot kostet also ein etcd-Member von dreien und fuer die Dauer den Resolver der Gast-VLANs."
+
+        # Set by /var/run/reboot-required, so it survives the upgrade itself and
+        # only clears on the actual reboot.
+        - alert: NodeRebootRequired
+          expr: node_reboot_required > 0
+          for: 24h
+          labels:
+            severity: warning
+          annotations:
+            summary: "{{ $labels.instance }} wartet seit einem Tag auf einen Reboot"
+            description: "Ein Paket hat /var/run/reboot-required gesetzt, meist der Kernel. Der Reboot ist eine Entscheidung, keine Nebenwirkung: erst pruefen, was gerade auf pve laeuft."
+
+        # Net below both rules above: if apt.prom stops being written they go
+        # quiet instead of firing, and nothing else would show it. absent()
+        # covers the file disappearing entirely, which takes the metric with it.
+        - alert: AptMetricsStale
+          expr: |
+            (time() - node_textfile_mtime_seconds{file=~".+/apt.prom"} > 172800)
+              or absent(node_textfile_mtime_seconds{file=~".+/apt.prom"})
+          for: 1h
+          labels:
+            severity: warning
+          annotations:
+            summary: "Der apt-Textfile-Collector auf pve liefert nichts Frisches mehr"
+            description: "apt.prom ist aelter als zwei Tage oder ganz weg. Solange das so ist, sind AptSecurityUpdatesPending und NodeRebootRequired blind. Nachsehen: ssh pve 'ls -l /var/lib/prometheus/node-exporter/ && systemctl list-timers | grep -i apt'"
