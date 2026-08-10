@@ -43,6 +43,65 @@ spec:
         runAsNonRoot: true
         seccompProfile:
           type: RuntimeDefault
+      # Native sidecar: started as an init container and kept running by
+      # restartPolicy Always, so Blocky's main container only starts once
+      # Unbound passes its startup probe. Started in parallel, Blocky's
+      # blocklist downloads raced the upstream and failed on every cold pod.
+      initContainers:
+        - name: unbound
+          restartPolicy: Always
+          image: madnuttah/unbound:1.26.0-0
+          imagePullPolicy: IfNotPresent
+          env:
+            # Without this the entrypoint starts as root to fix the image
+            # user's UID and GID and then trips over runAsNonRoot. The image
+            # already defaults to 1000:1000.
+            - name: DISABLE_SET_PERMS
+              value: "true"
+          ports:
+            - name: unbound-udp
+              containerPort: 5335
+              protocol: UDP
+            - name: unbound-tcp
+              containerPort: 5335
+              protocol: TCP
+          securityContext:
+            runAsUser: 1000
+            runAsGroup: 1000
+            allowPrivilegeEscalation: false
+            # Not read-only: unbound-anchor updates root.key at startup and
+            # unbound writes its pid file below /usr/local/unbound.
+            readOnlyRootFilesystem: false
+            capabilities:
+              drop: ["ALL"]
+          resources:
+            requests:
+              cpu: 25m
+              # The request models the cache under load, not the startup
+              # value: the configuration allows roughly 106 Mi in total
+              # (msg 32m, rrset 64m, key 8m, neg 2m).
+              memory: 96Mi
+            limits:
+              memory: 256Mi
+          # No tcpSocket probe: Unbound listens on 127.0.0.1 while kubelet
+          # dials the pod IP. The bundled script checks /proc/net from inside
+          # the container and resolves nothing.
+          startupProbe:
+            exec:
+              command: ["/usr/local/unbound/sbin/healthcheck.sh"]
+            periodSeconds: 5
+            failureThreshold: 24
+          livenessProbe:
+            exec:
+              command: ["/usr/local/unbound/sbin/healthcheck.sh"]
+            periodSeconds: 30
+            timeoutSeconds: 5
+            failureThreshold: 3
+          volumeMounts:
+            - name: config
+              mountPath: /usr/local/unbound/unbound.conf
+              subPath: unbound.conf
+              readOnly: true
       containers:
         - name: blocky
           image: ghcr.io/0xerr0r/blocky:v0.34.0
@@ -105,59 +164,6 @@ spec:
               readOnly: true
             - name: blocky-cache
               mountPath: /app/cache
-        - name: unbound
-          image: madnuttah/unbound:1.26.0-0
-          imagePullPolicy: IfNotPresent
-          env:
-            # Without this the entrypoint starts as root to fix the image
-            # user's UID and GID and then trips over runAsNonRoot. The image
-            # already defaults to 1000:1000.
-            - name: DISABLE_SET_PERMS
-              value: "true"
-          ports:
-            - name: unbound-udp
-              containerPort: 5335
-              protocol: UDP
-            - name: unbound-tcp
-              containerPort: 5335
-              protocol: TCP
-          securityContext:
-            runAsUser: 1000
-            runAsGroup: 1000
-            allowPrivilegeEscalation: false
-            # Not read-only: unbound-anchor updates root.key at startup and
-            # unbound writes its pid file below /usr/local/unbound.
-            readOnlyRootFilesystem: false
-            capabilities:
-              drop: ["ALL"]
-          resources:
-            requests:
-              cpu: 25m
-              # The request models the cache under load, not the startup
-              # value: the configuration allows roughly 106 Mi in total
-              # (msg 32m, rrset 64m, key 8m, neg 2m).
-              memory: 96Mi
-            limits:
-              memory: 256Mi
-          # No tcpSocket probe: Unbound listens on 127.0.0.1 while kubelet
-          # dials the pod IP. The bundled script checks /proc/net from inside
-          # the container and resolves nothing.
-          startupProbe:
-            exec:
-              command: ["/usr/local/unbound/sbin/healthcheck.sh"]
-            periodSeconds: 5
-            failureThreshold: 24
-          livenessProbe:
-            exec:
-              command: ["/usr/local/unbound/sbin/healthcheck.sh"]
-            periodSeconds: 30
-            timeoutSeconds: 5
-            failureThreshold: 3
-          volumeMounts:
-            - name: config
-              mountPath: /usr/local/unbound/unbound.conf
-              subPath: unbound.conf
-              readOnly: true
       volumes:
         - name: config
           configMap:

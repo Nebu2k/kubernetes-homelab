@@ -73,8 +73,10 @@ blocking:
       # from the maintainer's own domain rather than a code host.
       - https://big.oisd.nl/domainswild
       # 1Hosts Lite covers the German ad networks oisd misses: ioam.de,
-      # smartclip, adform, stroeerdigitalgroup.de.
-      - https://raw.githubusercontent.com/badmojr/1Hosts/master/Lite/domains.wildcards
+      # smartclip, adform, stroeerdigitalgroup.de. wildcards.txt, not
+      # domains.wildcards: the latter holds bare domains, and a bare entry
+      # matches only itself, so de.ioam.de would pass while ioam.de blocks.
+      - https://raw.githubusercontent.com/badmojr/1Hosts/master/Lite/wildcards.txt
       # iCloud Private Relay would otherwise bypass the house resolver and
       # with it split horizon and filtering.
       - |
