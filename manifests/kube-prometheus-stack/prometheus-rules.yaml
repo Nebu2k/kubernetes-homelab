@@ -289,7 +289,7 @@ spec:
             severity: warning
           annotations:
             summary: "Longhorn volume {{ $labels.volume }} soll gesichert werden, hat aber noch nie ein Backup gehabt"
-            description: "Das Volume traegt recurring-job-group.longhorn.io/backup=enabled und meldet trotzdem last_backup_at = 0, seit ueber 26h. Typischer Fall: per fromBackup restauriert und der erste 02:00-Lauf steht noch aus, oder ein RecurringJob greift nicht. Backup von Hand erzwingen: Snapshot-CR plus Backup-CR mit RecurringJob: backup-daily in spec.labels, Rezept in betrieb.md."
+            description: "Das Volume traegt recurring-job-group.longhorn.io/backup=enabled und meldet trotzdem last_backup_at = 0, seit ueber 26h. Typischer Fall: per fromBackup restauriert und der erste 02:00-Lauf steht noch aus, oder ein RecurringJob greift nicht. Backup von Hand erzwingen: Snapshot-CR plus Backup-CR mit RecurringJob: backup-daily in spec.labels, Rezept in operations.md."
 
         # Net below both rules above, which go quiet instead of firing when the
         # group metric disappears. TargetDown does not cover this: it needs an

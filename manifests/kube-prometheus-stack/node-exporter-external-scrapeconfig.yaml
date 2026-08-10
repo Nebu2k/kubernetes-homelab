@@ -38,7 +38,7 @@ spec:
         - 192.168.2.254:9100
     # macmini. node_exporter via brew as a LaunchAgent, same pattern as the
     # other macmini services. darwin has far fewer collectors than linux and
-    # partly different metric names, see betrieb.md.
+    # partly different metric names, see operations.md.
     - targets:
         - 192.168.2.4:9100
   relabelings:
