@@ -1,3 +1,10 @@
+# [5.4.0](https://github.com/Nebu2k/kubernetes-homelab/compare/v5.3.2...v5.4.0) (2026-08-10)
+
+
+### Features
+
+* **talos:** Node-Resolver von AdGuard auf die beiden Blocky-Instanzen ([f54822d](https://github.com/Nebu2k/kubernetes-homelab/commit/f54822daec0b0e89f29f6fdc1e65ff430de0df97))
+
 ## [5.3.2](https://github.com/Nebu2k/kubernetes-homelab/compare/v5.3.1...v5.3.2) (2026-08-10)
 
 
