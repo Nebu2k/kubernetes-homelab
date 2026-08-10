@@ -14,18 +14,18 @@ ROADMAP.md
 *.tmp
 *.log
 
-# Ignore agent skills: beschreiben Betriebsdetails und offene Lücken,
-# gehören nicht in ein öffentliches Repo. Lokal weiter voll nutzbar.
+# Agent skills describe operational details and open gaps, they do not belong
+# in a public repo. Still fully usable locally.
 .claude/
 
 # Ignore OS and editor files
 .DS_Store
 Thumbs.db
 
-# iCloud-Konfliktkopien. ~/Documents ist iCloud-synchronisiert, dabei entstehen
-# Dubletten der Form "pv 2.yaml" neben "pv.yaml". Sechs davon lagen bis zum
-# 2026-08-09 committed im Repo: inhaltsgleich, von keiner kustomization
-# referenziert, also folgenlos, aber genau deshalb faellt so etwas nie auf.
+# iCloud conflict copies. ~/Documents is iCloud-synced, which produces
+# duplicates of the form "pv 2.yaml" next to "pv.yaml". They are referenced by
+# no kustomization and therefore harmless, which is exactly why nobody notices
+# them.
 * [0-9].*
 .idea/
 *.code-workspace
@@ -59,10 +59,10 @@ coverage/
 # Ignore local kube configs
 .kube/
 
-# Talos: generierte machine configs und die talosconfig enthalten die etcd- und
-# Kubernetes-CAs im Klartext. Das Repo ist public, sie duerfen nie hinein.
-# Versioniert werden nur talconfig.yaml (Quelle) und talsecret.sops.yaml
-# (SOPS/age-verschluesselt).
+# Talos: the generated machine configs and the talosconfig contain the etcd and
+# Kubernetes CAs in plaintext. The repo is public, they must never go in. Only
+# talconfig.yaml (the source) and talsecret.sops.yaml (SOPS/age-encrypted) are
+# versioned.
 talos/clusterconfig/
 talos/talosconfig
 
