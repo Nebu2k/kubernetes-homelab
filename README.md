@@ -990,7 +990,7 @@ kubectl get secret -n monitoring grafana-admin-credentials \
 | Paperless Ngx | 3.0.5 | Paperless Ngx |
 | Proxmox Exporter | 1.0.8 | Proxmox Exporter |
 | Readsb | latest-build-845 | Readsb |
-| Reloader | 2.2.14 | Reloader |
+| Reloader | 2.2.15 | Reloader |
 | Ripe Atlas | 5120 | Ripe Atlas |
 | Sealed Secrets | 2.19.1 | Sealed Secrets |
 | Teslamate | 4.0.1 | Teslamate |
