@@ -193,13 +193,6 @@ data:
         conditions:
           - "[STATUS] == 200"
 
-      - name: code-server
-        group: Infrastruktur
-        url: "http://192.168.2.4:8080/"
-        interval: 5m
-        conditions:
-          - "[STATUS] == 200"
-
       - name: Dreambox
         group: Infrastruktur
         url: "https://192.168.2.11/"
