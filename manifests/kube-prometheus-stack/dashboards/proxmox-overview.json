@@ -419,49 +419,12 @@
       }
     },
     {
-      "id": 17,
-      "type": "stat",
-      "title": "Metrik-Alter",
-      "description": "Alter des aeltesten der beiden Textfiles apt.prom und needrestart.prom. Rot ab 48h, das ist die Schwelle von HostUpdateMetricsStale. Solange es rot ist, sind die Zahlen links Altbestand und die Update-Alerts blind.",
-      "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "gridPos": { "h": 4, "w": 3, "x": 15, "y": 4 },
-      "targets": [
-        {
-          "refId": "A",
-          "datasource": { "type": "prometheus", "uid": "prometheus" },
-          "expr": "time() - min(node_textfile_mtime_seconds{file=~\".+/(apt|needrestart).prom\"})",
-          "instant": true
-        }
-      ],
-      "fieldConfig": {
-        "defaults": {
-          "unit": "s",
-          "decimals": 0,
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              { "color": "green", "value": null },
-              { "color": "yellow", "value": 86400 },
-              { "color": "red", "value": 172800 }
-            ]
-          }
-        },
-        "overrides": []
-      },
-      "options": {
-        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
-        "colorMode": "value",
-        "graphMode": "none",
-        "textMode": "auto"
-      }
-    },
-    {
       "id": 18,
       "type": "timeseries",
       "title": "Verlauf offene Updates",
-      "description": "Zeigt, ob der Rueckstand waechst oder gerade gepatcht wurde. Der Absturz nach unten ist ein apt upgrade, ein flacher Anstieg sind neu veroeffentlichte Pakete.",
+      "description": "Zeigt, ob der Rueckstand waechst oder gerade gepatcht wurde. Der Absturz nach unten ist ein apt upgrade, ein flacher Anstieg sind neu veroeffentlichte Pakete. Hier mit der Aufteilung security gegen gesamt, die es nur auf pve gibt; das Alter der Textfiles und der Vergleich mit dem macmini stehen in Node Overview.",
       "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "gridPos": { "h": 4, "w": 6, "x": 18, "y": 4 },
+      "gridPos": { "h": 4, "w": 9, "x": 15, "y": 4 },
       "targets": [
         {
           "refId": "A",

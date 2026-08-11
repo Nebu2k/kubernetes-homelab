@@ -118,7 +118,6 @@ homelab/
 │   │   ├── adguardhome-sync-web-ingress.yaml
 │   │   ├── dreambox-service.yaml
 │   │   ├── external-ingressroutes.yaml
-│   │   ├── glances-macmini-service.yaml
 │   │   ├── kustomization.yaml
 │   │   ├── plex-service.yaml
 │   │   ├── proxmox-service.yaml
