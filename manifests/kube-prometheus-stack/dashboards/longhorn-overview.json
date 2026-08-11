@@ -183,7 +183,7 @@
     {
       "id": 4,
       "type": "stat",
-      "title": "Tatsächlich belegt",
+      "title": "Belegt auf Disk",
       "datasource": {
         "type": "prometheus",
         "uid": "prometheus"
@@ -227,7 +227,8 @@
         "colorMode": "none",
         "graphMode": "none",
         "textMode": "auto"
-      }
+      },
+      "description": "Was die Volumes wirklich auf einer Node belegen, je Replik und einschliesslich Snapshots. Nicht dasselbe wie die Fuellstaende der Dateisysteme in der Tabelle unten: geloeschte Dateien geben diesen Platz nicht zurueck."
     },
     {
       "id": 5,
@@ -748,7 +749,7 @@
       "id": 13,
       "type": "table",
       "title": "Volumes",
-      "description": "Ein Eintrag pro Volume. Belegt ist der Platz je Replik, im Cluster liegt er also doppelt. Backups stehen nicht hier, sondern auf dem Board Backups (Longhorn und Offsite).",
+      "description": "Ein Eintrag pro Volume. Belegung ist der Fuellstand des Dateisystems im Volume, dieselbe Groesse, auf der LonghornVolumeSpaceWarning (80 Prozent) und LonghornVolumeSpaceCritical (90 Prozent) sitzen. Auf Disk ist etwas anderes: der Platz, den Longhorn je Replik wirklich belegt, mit Snapshots und ohne Rueckgabe nach dem Loeschen von Dateien. Der Wert kann deutlich hoeher liegen als die Belegung und ist trotzdem kein Grund zur Sorge. Backups stehen auf dem Board Backups (Longhorn und Offsite).",
       "datasource": {
         "type": "prometheus",
         "uid": "prometheus"
@@ -776,7 +777,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "max by (volume) (longhorn_volume_actual_size_bytes)",
+          "expr": "max by (volume) (\n  label_replace(\n    kubelet_volume_stats_used_bytes\n      * on (namespace, persistentvolumeclaim) group_left(persistentvolume)\n        label_replace(\n          label_replace(\n            max by (claim_namespace, name, persistentvolume) (kube_persistentvolume_claim_ref),\n            \"namespace\", \"$1\", \"claim_namespace\", \"(.*)\"),\n          \"persistentvolumeclaim\", \"$1\", \"name\", \"(.*)\"),\n    \"volume\", \"$1\", \"persistentvolume\", \"(.*)\"))\nand on (volume) (max by (volume) (longhorn_volume_capacity_bytes))",
           "instant": true,
           "format": "table"
         },
@@ -786,7 +787,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "100 * max by (volume) (longhorn_volume_actual_size_bytes) / max by (volume) (longhorn_volume_capacity_bytes)",
+          "expr": "max by (volume) (\n  label_replace(\n    100 * kubelet_volume_stats_used_bytes / kubelet_volume_stats_capacity_bytes\n      * on (namespace, persistentvolumeclaim) group_left(persistentvolume)\n        label_replace(\n          label_replace(\n            max by (claim_namespace, name, persistentvolume) (kube_persistentvolume_claim_ref),\n            \"namespace\", \"$1\", \"claim_namespace\", \"(.*)\"),\n          \"persistentvolumeclaim\", \"$1\", \"name\", \"(.*)\"),\n    \"volume\", \"$1\", \"persistentvolume\", \"(.*)\"))\nand on (volume) (max by (volume) (longhorn_volume_capacity_bytes))",
           "instant": true,
           "format": "table"
         },
@@ -796,7 +797,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "count by (volume) (longhorn_engine_replica_mode{mode=\"RW\"})",
+          "expr": "max by (volume) (longhorn_volume_actual_size_bytes)",
           "instant": true,
           "format": "table"
         },
@@ -806,12 +807,22 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "max by (volume) (longhorn_volume_robustness{state=\"healthy\"})",
+          "expr": "count by (volume) (longhorn_engine_replica_mode{mode=\"RW\"})",
           "instant": true,
           "format": "table"
         },
         {
           "refId": "F",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "max by (volume) (longhorn_volume_robustness{state=\"healthy\"})",
+          "instant": true,
+          "format": "table"
+        },
+        {
+          "refId": "G",
           "datasource": {
             "type": "prometheus",
             "uid": "prometheus"
@@ -840,6 +851,7 @@
               "Time 4": true,
               "Time 5": true,
               "Time 6": true,
+              "Time 7": true,
               "volume": true
             },
             "renameByName": {
@@ -849,9 +861,10 @@
               "Value #A": "Kapazität",
               "Value #B": "Belegt",
               "Value #C": "Belegung",
-              "Value #D": "Repliken RW",
-              "Value #E": "Robustheit",
-              "Value #F": "Zustand"
+              "Value #D": "Auf Disk",
+              "Value #E": "Repliken RW",
+              "Value #F": "Robustheit",
+              "Value #G": "Zustand"
             },
             "indexByName": {
               "pvc_namespace": 0,
@@ -862,7 +875,8 @@
               "Value #C": 5,
               "Value #D": 6,
               "Value #E": 7,
-              "Value #F": 8
+              "Value #F": 8,
+              "Value #G": 9
             }
           }
         },
@@ -872,7 +886,7 @@
             "fields": {},
             "sort": [
               {
-                "field": "Belegt",
+                "field": "Belegung",
                 "desc": true
               }
             ]
@@ -894,7 +908,7 @@
           {
             "matcher": {
               "id": "byRegexp",
-              "options": "Kapazität|Belegt"
+              "options": "^(Kapazität|Belegt|Auf Disk)$"
             },
             "properties": [
               {
@@ -1242,7 +1256,7 @@
     {
       "id": 17,
       "type": "timeseries",
-      "title": "Belegter Platz je Volume",
+      "title": "Auf Disk je Volume",
       "datasource": {
         "type": "prometheus",
         "uid": "prometheus"
@@ -1297,7 +1311,7 @@
           "sort": "desc"
         }
       },
-      "description": "Je Replik. Der Verlauf zeigt, welches Volume waechst, bevor die Node-Belegung oben es tut."
+      "description": "Je Replik, mit Snapshots. Der Verlauf zeigt, welches Volume die Node-Belegung oben treibt, und er faellt nur, wenn Longhorn Snapshots aufraeumt."
     },
     {
       "id": 18,
@@ -1444,7 +1458,7 @@
       },
       "options": {
         "mode": "markdown",
-        "content": "Ob die Daten gesichert sind, beantwortet dieses Board nicht: Backup-Alter, Zahl der Backups je Volume und die Belegung des NAS-Ziels stehen auf **Backups (Longhorn und Offsite)** (`homelab-backups`).\n\nBelegt heisst hier immer: je Replik. Bei zwei Repliken kostet ein Volume auf den Nodes das Doppelte des Wertes in der Tabelle."
+        "content": "Ob die Daten gesichert sind, beantwortet dieses Board nicht: Backup-Alter, Zahl der Backups je Volume und die Belegung des NAS-Ziels stehen auf **Backups (Longhorn und Offsite)** (`homelab-backups`).\n\n**Belegung** ist der Fuellstand des Dateisystems, **Auf Disk** der Platz, den Longhorn dafuer je Replik belegt. Bei zwei Repliken kostet ein Volume die Nodes das Doppelte von Auf Disk, und dieser Wert sinkt beim Loeschen von Dateien nicht."
       }
     }
   ]
