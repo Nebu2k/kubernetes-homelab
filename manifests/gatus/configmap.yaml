@@ -200,13 +200,6 @@ data:
         conditions:
           - "[STATUS] == 200"
 
-      - name: Glances (macmini)
-        group: Infrastruktur
-        url: "http://192.168.2.4:61208/"
-        interval: 5m
-        conditions:
-          - "[STATUS] == 200"
-
       - name: Dreambox
         group: Infrastruktur
         url: "https://192.168.2.11/"

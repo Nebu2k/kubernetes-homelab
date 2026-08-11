@@ -83,15 +83,27 @@ data:
             password: {{HOMEPAGE_VAR_UNIFI_PASS}}
 
       - Mac Mini:
+          href: https://grafana.elmstreet79.de/d/homelab-node-overview
           description: Mac Mini Server
           icon: apple.png
           weight: 30
           ping: 192.168.2.4
+          # Prometheus instead of Glances, the macmini's node_exporter already
+          # holds the same numbers. The url-encoded query is:
+          #   round(100 * (1 - (node_memory_free_bytes + node_memory_inactive_bytes
+          #     + node_memory_purgeable_bytes) / node_memory_total_bytes))
+          # Darwin has no MemAvailable, hence the Mach page classes, same
+          # definition as NodeHighMemoryDarwin. round() in the query, otherwise
+          # the tile shows three decimals.
           widget:
-            type: glances
-            url: https://glances-macmini.elmstreet79.de
-            metric: memory
-            version: 4
+            type: customapi
+            url: http://kube-prometheus-stack-prometheus.monitoring.svc.cluster.local:9090/api/v1/query?query=round%28100%20%2A%20%281%20-%20%28node_memory_free_bytes%7Binstance%3D%22192.168.2.4%3A9100%22%7D%20%2B%20node_memory_inactive_bytes%7Binstance%3D%22192.168.2.4%3A9100%22%7D%20%2B%20node_memory_purgeable_bytes%7Binstance%3D%22192.168.2.4%3A9100%22%7D%29%20%2F%20node_memory_total_bytes%7Binstance%3D%22192.168.2.4%3A9100%22%7D%29%29
+            refreshInterval: 30000
+            mappings:
+              - field: data.result.0.value.1
+                label: RAM
+                format: number
+                suffix: "%"
 
       - AdGuard Home (Mac Mini):
           href: https://adguard-macmini.elmstreet79.de

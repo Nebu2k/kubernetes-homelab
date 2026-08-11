@@ -7,7 +7,6 @@ resources:
   - adguardhome-sync-service.yaml
   - adguardhome-sync-web-ingress.yaml
   - dreambox-service.yaml
-  - glances-macmini-service.yaml
   - plex-service.yaml
   - proxmox-service.yaml
   - unifi-service.yaml
