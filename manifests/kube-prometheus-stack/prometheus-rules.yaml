@@ -1014,10 +1014,10 @@ spec:
             summary: "Blocky-LXC holt die Konfiguration nicht mehr aus dem Repo"
             description: "Der Sync scheitert seit >1h. Die LXC laeuft mit einem aelteren Stand als die Cluster-Instanz. Von Hand anstossen und die Ausgabe lesen: pct exec 402 -- /etc/periodic/15min/blocky-config-sync"
 
-    # The cluster keeps itself current through Renovate. pve hangs on nothing
-    # and is only noticed when someone thinks of it, which is what these rules
-    # replace. They cover pve alone: the metrics come from the apt textfile
-    # collector, and the macmini runs macOS without one.
+    # The cluster keeps itself current through Renovate. pve and the macmini
+    # hang on nothing and are only noticed when someone thinks of them, which
+    # is what these rules replace. pve reports through the apt and needrestart
+    # textfile collectors, the macmini through its own softwareupdate one.
     - name: host-updates
       interval: 5m
       rules:
@@ -1063,21 +1063,39 @@ spec:
             summary: "{{ $labels.instance }} laeuft seit einem Tag auf einem alten Kernel"
             description: "Installiert ist {{ $labels.expected }}, laufen tut {{ $labels.current }}. Das schliesst nur ein Reboot. Auf pve liegen talos-cp-1 und der AdGuard-LXC, er kostet also ein etcd-Member von dreien und fuer die Dauer den Resolver der Gast-VLANs."
 
+        # macOS has no apt, so the collector behind this is a hand-written
+        # LaunchAgent on the macmini that parses "softwareupdate --list", see
+        # operations.md. Only the recommended ones alert; Apple also lists
+        # optional items that nobody intends to install.
+        #
+        # Restarting the macmini is the expensive part, not the update: Plex,
+        # code-server, AdGuard-Replica, Glances and the Actions-Runner all come
+        # back through LaunchAgents at auto-login, but not before.
+        - alert: MacosUpdatesPending
+          expr: softwareupdate_pending_recommended > 0
+          for: 72h
+          labels:
+            severity: warning
+          annotations:
+            summary: "macmini hat seit drei Tagen {{ $value }} offene macOS-Updates"
+            description: "Ansehen mit: ssh macmini 'softwareupdate --list'. Einspielen von Hand, weil ein Neustart alle vier Dienste des macmini mitnimmt."
+
         # Net below all rules above: if a textfile stops being written they go
-        # quiet instead of firing, and nothing else would show it. Both files
-        # need their own absent(), a combined one would only fire once BOTH are
-        # gone.
+        # quiet instead of firing, and nothing else would show it. Every file
+        # needs its own absent(), a combined one would only fire once ALL of
+        # them are gone.
         - alert: HostUpdateMetricsStale
           expr: |
-            (time() - node_textfile_mtime_seconds{file=~".+/(apt|needrestart).prom"} > 172800)
+            (time() - node_textfile_mtime_seconds{file=~".+/(apt|needrestart|softwareupdate).prom"} > 172800)
               or absent(node_textfile_mtime_seconds{file=~".+/apt.prom"})
               or absent(node_textfile_mtime_seconds{file=~".+/needrestart.prom"})
+              or absent(node_textfile_mtime_seconds{file=~".+/softwareupdate.prom"})
           for: 1h
           labels:
             severity: warning
           annotations:
-            summary: "Ein Update-Textfile-Collector auf pve liefert nichts Frisches mehr"
-            description: "apt.prom oder needrestart.prom ist aelter als zwei Tage oder ganz weg. Solange das so ist, sind die Update-Alerts blind. Nachsehen: ssh pve 'ls -l /var/lib/prometheus/node-exporter/ && systemctl list-timers | grep -E \"apt|needrestart\"'"
+            summary: "Ein Update-Textfile-Collector liefert nichts Frisches mehr"
+            description: "apt.prom, needrestart.prom oder softwareupdate.prom ist aelter als zwei Tage oder ganz weg. Solange das so ist, sind die Update-Alerts blind. Nachsehen: ssh pve 'ls -l /var/lib/prometheus/node-exporter/ && systemctl list-timers | grep -E \"apt|needrestart\"' bzw. ssh macmini 'ls -l /usr/local/var/lib/node_exporter/textfile_collector/ && launchctl print gui/501/com.speters.softwareupdate-collector'"
 
     # ArgoCD is the one component nothing else watches: it rolls out every
     # other app, but a sync that keeps failing is only visible in its own UI.
