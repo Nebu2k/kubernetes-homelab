@@ -9,5 +9,9 @@ redis:
   # Load-bearing: with required: true a redis that is down would keep Blocky
   # from starting, and the house resolver must not hang off the switch.
   required: false
-  connectionAttempts: 3
-  connectionCooldown: 3s
+  # Roughly 30s of retrying, because the fallback above is one-way: Blocky
+  # connects once at startup and a pod that fails there runs unsynced until it
+  # is restarted, with nothing but a WARN in its log to show for it. The
+  # default 3 attempts missed a redis that went ready five seconds later.
+  connectionAttempts: 15
+  connectionCooldown: 2s
