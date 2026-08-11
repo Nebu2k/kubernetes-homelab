@@ -170,6 +170,92 @@ rest:
           {{ value_json.data.result | selectattr('metric.probe', 'eq', 'argocd_apps_unhealthy')
              | map(attribute='value.1') | first | default(0) | int }}
 
+  # Blocking state of the two Blocky instances, feeding the switch below. Two
+  # sensors because the state is per instance: the two cluster replicas share
+  # it through redis, the LXC on pve is its own process and does not take part.
+  #
+  # Port 4000 is a ClusterIP with no way in from the LAN, which does not matter
+  # here: this pod runs in the cluster and resolves .svc names through CoreDNS.
+  - resource: "http://blocky-metrics.blocky.svc.cluster.local:4000/api/blocking/status"
+    scan_interval: 30
+    timeout: 5
+    sensor:
+      - name: "Werbefilter Cluster"
+        unique_id: blocky_blocking_cluster
+        icon: mdi:shield-check
+        value_template: "{{ 'an' if value_json.enabled else 'aus' }}"
+        # Only present while blocking is off, and it counts down: the switch
+        # falls back on its own once it reaches zero.
+        json_attributes:
+          - autoEnableInSec
+          - disabledGroups
+  - resource: "http://192.168.2.254:4000/api/blocking/status"
+    scan_interval: 30
+    timeout: 5
+    sensor:
+      - name: "Werbefilter LXC"
+        unique_id: blocky_blocking_lxc
+        icon: mdi:shield-check
+        value_template: "{{ 'an' if value_json.enabled else 'aus' }}"
+        json_attributes:
+          - autoEnableInSec
+          - disabledGroups
+
+# GET, not POST: Blocky's API answers 405 on POST. The host is passed in by the
+# switch below, which calls each command once per instance.
+#
+# The duration is deliberate. Blocky re-enables itself when it expires and the
+# state lives in memory only, so a forgotten disable heals either way, at the
+# latest on the next pod restart.
+rest_command:
+  blocky_disable:
+    url: "http://{{ host }}:4000/api/blocking/disable?duration=15m&groups=ads"
+    method: get
+    timeout: 5
+  blocky_enable:
+    url: "http://{{ host }}:4000/api/blocking/enable"
+    method: get
+    timeout: 5
+
+template:
+  - switch:
+      - name: "Werbefilter"
+        unique_id: blocky_blocking
+        icon: mdi:shield-check
+        # On as soon as ONE instance still filters. .253 and .254 are both
+        # handed out by DHCP, so a client falling back to the second one would
+        # otherwise still see blocks while the switch claims everything is off.
+        # An unreachable instance reads as off, which is what it is.
+        state: >-
+          {{ is_state('sensor.werbefilter_cluster', 'an')
+             or is_state('sensor.werbefilter_lxc', 'an') }}
+        # update_entity right after, otherwise the switch would snap back for
+        # up to a scan_interval before the new state arrives.
+        turn_on:
+          - action: rest_command.blocky_enable
+            data:
+              host: blocky-metrics.blocky.svc.cluster.local
+          - action: rest_command.blocky_enable
+            data:
+              host: 192.168.2.254
+          - action: homeassistant.update_entity
+            target:
+              entity_id:
+                - sensor.werbefilter_cluster
+                - sensor.werbefilter_lxc
+        turn_off:
+          - action: rest_command.blocky_disable
+            data:
+              host: blocky-metrics.blocky.svc.cluster.local
+          - action: rest_command.blocky_disable
+            data:
+              host: 192.168.2.254
+          - action: homeassistant.update_entity
+            target:
+              entity_id:
+                - sensor.werbefilter_cluster
+                - sensor.werbefilter_lxc
+
 # Shutting down the PC. Its counterpart is the Windows OpenSSH server; the
 # key is a secret mounted at /ssh-wol and deliberately not on the config
 # volume, which is archived to S3 monthly.

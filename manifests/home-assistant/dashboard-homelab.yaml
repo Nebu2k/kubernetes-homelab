@@ -455,6 +455,21 @@ views:
       - type: grid
         cards:
           - type: heading
+            heading: DNS
+            heading_style: title
+            icon: mdi:dns
+          # Turning it off disables both resolvers for 15 minutes, after which
+          # Blocky switches itself back on.
+          - type: tile
+            entity: switch.werbefilter
+            name: Werbefilter
+            color: green
+            features:
+              - type: toggle
+
+      - type: grid
+        cards:
+          - type: heading
             heading: GitOps
             heading_style: title
             icon: mdi:source-branch

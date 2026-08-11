@@ -89,6 +89,7 @@ homelab/
 │   │   ├── kustomization.yaml
 │   │   ├── namespace.yaml
 │   │   ├── poddisruptionbudget.yaml
+│   │   ├── redis.yaml
 │   │   ├── service.yaml
 │   │   └── servicemonitor.yaml
 │   ├── cert-manager/

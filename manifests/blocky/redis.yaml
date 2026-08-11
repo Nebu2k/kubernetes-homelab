@@ -1,0 +1,106 @@
+# Carries Blocky's blocking state between the two replicas. Without it a
+# disable lands on whichever pod the service picks and the other keeps
+# filtering, so the switch in Home Assistant would only ever hit half the
+# queries. Blocky publishes the state on the "blocky_sync_enabled" channel and
+# syncs its DNS cache along the same connection.
+#
+# Deliberately no PVC and no persistence: the blocking state is meant to be
+# volatile, a forgotten disable should heal on a restart. Losing the shared
+# cache costs a few upstream lookups, nothing more.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: redis
+  namespace: blocky
+  labels:
+    app.kubernetes.io/name: redis
+    app.kubernetes.io/instance: blocky
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: redis
+      app.kubernetes.io/instance: blocky
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: redis
+        app.kubernetes.io/instance: blocky
+    spec:
+      nodeSelector:
+        node-role.kubernetes.io/worker: "worker"
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: redis
+          image: redis:8.10.0-alpine
+          imagePullPolicy: IfNotPresent
+          # maxmemory bounds what is otherwise an unbounded DNS cache, so the
+          # container cannot grow into its limit and be OOMKilled.
+          command:
+            - redis-server
+            - --save
+            - ""
+            - --appendonly
+            - "no"
+            - --maxmemory
+            - 64mb
+            - --maxmemory-policy
+            - allkeys-lru
+          ports:
+            - name: redis
+              containerPort: 6379
+              protocol: TCP
+          securityContext:
+            runAsUser: 999
+            runAsGroup: 1000
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+          resources:
+            requests:
+              cpu: 10m
+              memory: 32Mi
+            limits:
+              # No CPU limit on purpose, see references/operations.md.
+              memory: 128Mi
+          livenessProbe:
+            exec:
+              command: ["redis-cli", "ping"]
+            periodSeconds: 30
+            timeoutSeconds: 5
+          readinessProbe:
+            exec:
+              command: ["redis-cli", "ping"]
+            periodSeconds: 10
+            timeoutSeconds: 3
+          volumeMounts:
+            - name: data
+              mountPath: /data
+      volumes:
+        - name: data
+          emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis
+  namespace: blocky
+  labels:
+    app.kubernetes.io/name: redis
+    app.kubernetes.io/instance: blocky
+spec:
+  type: ClusterIP
+  ports:
+    - name: redis
+      port: 6379
+      targetPort: redis
+      protocol: TCP
+  selector:
+    app.kubernetes.io/name: redis
+    app.kubernetes.io/instance: blocky

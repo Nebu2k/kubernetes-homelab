@@ -1,0 +1,13 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/0xERR0R/blocky/main/docs/config.schema.json
+#
+# Cluster-only, which is why it is not in config.yml: that file is the shared
+# truth for the LXC on pve as well, and the LXC cannot resolve this address.
+# Blocky is started with "--config /app/conf" and merges every file in that
+# directory, so a key must not appear in both files or the load fails.
+redis:
+  address: redis.blocky.svc.cluster.local:6379
+  # Load-bearing: with required: true a redis that is down would keep Blocky
+  # from starting, and the house resolver must not hang off the switch.
+  required: false
+  connectionAttempts: 3
+  connectionCooldown: 3s

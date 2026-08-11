@@ -5,6 +5,7 @@ namespace: blocky
 resources:
   - namespace.yaml
   - deployment.yaml
+  - redis.yaml
   - service.yaml
   - poddisruptionbudget.yaml
   - servicemonitor.yaml
@@ -14,9 +15,11 @@ resources:
 # would sync but the running pods would keep the old copy until something
 # restarted them. With the suffix the name changes and the deployment rolls.
 #
-# config.yml is also the source for the LXC instance on pve, see its header.
+# config.yml is also the source for the LXC instance on pve, see its header;
+# config-redis.yml is the cluster-only half and stays out of it.
 configMapGenerator:
   - name: blocky-config
     files:
       - config.yml
+      - config-redis.yml
       - unbound.conf

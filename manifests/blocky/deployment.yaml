@@ -106,7 +106,9 @@ spec:
         - name: blocky
           image: ghcr.io/0xerr0r/blocky:v0.34.0
           imagePullPolicy: IfNotPresent
-          args: ["--config", "/app/config.yml"]
+          # A directory, not a file: Blocky joins every YAML in it, which keeps
+          # the cluster-only redis block out of the config.yml the LXC shares.
+          args: ["--config", "/app/conf"]
           ports:
             - name: dns-udp
               containerPort: 53
@@ -157,10 +159,18 @@ spec:
             periodSeconds: 30
             timeoutSeconds: 5
             failureThreshold: 3
+          # Both files individually via subPath, not the ConfigMap mounted as a
+          # directory: that would put its ..data symlink layer in there too,
+          # and Blocky descends into it and loads every file a second time.
+          # Mounting the whole ConfigMap would also hand it unbound.conf.
           volumeMounts:
             - name: config
-              mountPath: /app/config.yml
+              mountPath: /app/conf/config.yml
               subPath: config.yml
+              readOnly: true
+            - name: config
+              mountPath: /app/conf/config-redis.yml
+              subPath: config-redis.yml
               readOnly: true
             - name: blocky-cache
               mountPath: /app/cache
