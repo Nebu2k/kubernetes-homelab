@@ -163,6 +163,11 @@ grafana:
     limits:
       memory: 512Mi
   
+  # Downloaded on container start into the persistent volume. Required by the
+  # "Now" panel of the UniFi UAP board (gnetId 11314).
+  plugins:
+    - grafana-clock-panel
+
   dashboardProviders:
     dashboardproviders.yaml:
       apiVersion: 1
