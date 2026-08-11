@@ -47,7 +47,7 @@
         {
           "refId": "A",
           "datasource": { "type": "prometheus", "uid": "prometheus" },
-          "expr": "count(max by (volume) (longhorn_volume_last_backup_at) == 0) or vector(0)",
+          "expr": "count((max by (volume) (longhorn_volume_last_backup_at) == 0) and on (volume) homelab_longhorn_volume_recurring_job_group_info{backup_group=\"enabled\"}) or vector(0)",
           "instant": true
         }
       ],
@@ -201,35 +201,35 @@
         {
           "refId": "A",
           "datasource": { "type": "prometheus", "uid": "prometheus" },
-          "expr": "max by (volume, pvc, pvc_namespace) (longhorn_volume_last_backup_at)",
+          "expr": "max by (volume, pvc, pvc_namespace) (longhorn_volume_last_backup_at) and on (volume) homelab_longhorn_volume_recurring_job_group_info{backup_group=\"enabled\"}",
           "format": "table",
           "instant": true
         },
         {
           "refId": "B",
           "datasource": { "type": "prometheus", "uid": "prometheus" },
-          "expr": "time() - max by (volume) (longhorn_volume_last_backup_at > 0)",
+          "expr": "time() - max by (volume) (longhorn_volume_last_backup_at > 0) and on (volume) homelab_longhorn_volume_recurring_job_group_info{backup_group=\"enabled\"}",
           "format": "table",
           "instant": true
         },
         {
           "refId": "C",
           "datasource": { "type": "prometheus", "uid": "prometheus" },
-          "expr": "count by (volume) (longhorn_backup_state)",
+          "expr": "count by (volume) (longhorn_backup_state) and on (volume) homelab_longhorn_volume_recurring_job_group_info{backup_group=\"enabled\"}",
           "format": "table",
           "instant": true
         },
         {
           "refId": "D",
           "datasource": { "type": "prometheus", "uid": "prometheus" },
-          "expr": "sum by (volume) (longhorn_backup_actual_size_bytes)",
+          "expr": "sum by (volume) (longhorn_backup_actual_size_bytes) and on (volume) homelab_longhorn_volume_recurring_job_group_info{backup_group=\"enabled\"}",
           "format": "table",
           "instant": true
         },
         {
           "refId": "E",
           "datasource": { "type": "prometheus", "uid": "prometheus" },
-          "expr": "max by (volume) (longhorn_volume_capacity_bytes)",
+          "expr": "max by (volume) (longhorn_volume_capacity_bytes) and on (volume) homelab_longhorn_volume_recurring_job_group_info{backup_group=\"enabled\"}",
           "format": "table",
           "instant": true
         }

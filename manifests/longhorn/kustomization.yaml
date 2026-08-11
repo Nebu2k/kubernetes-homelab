@@ -4,6 +4,7 @@ namespace: longhorn-system
 resources:
   - nas-cifs-secret-sealed.yaml
   - recurring-backup-jobs.yaml
+  - storageclass-nobackup.yaml
   - ingress.yaml
   - servicemonitor.yaml
   - node-config.yaml

@@ -221,6 +221,7 @@ homelab/
 │   │   ├── node-config.yaml
 │   │   ├── recurring-backup-jobs.yaml
 │   │   ├── servicemonitor.yaml
+│   │   ├── storageclass-nobackup.yaml
 │   │   └── values.yaml
 │   ├── mealie/
 │   │   ├── backup-cronjob.yaml

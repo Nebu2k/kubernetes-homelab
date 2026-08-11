@@ -112,12 +112,12 @@ prometheus:
     #     recurring-job-group.longhorn.io/backup-
     storageSpec:
       volumeClaimTemplate:
-        metadata:
-          labels:
-            recurring-job-group.longhorn.io/snapshot: enabled
-            recurring-job-group.longhorn.io/maintenance: enabled
         spec:
-          storageClassName: longhorn
+          # Not "longhorn": that class hands out the backup group to everything
+          # it creates. This volume stays out of the backups on purpose, and the
+          # class is the only thing that survives a recreation. See
+          # manifests/longhorn/storageclass-nobackup.yaml.
+          storageClassName: longhorn-nobackup
           accessModes: ["ReadWriteOnce"]
           resources:
             requests:
