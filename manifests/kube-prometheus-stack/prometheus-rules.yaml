@@ -140,6 +140,43 @@ spec:
             summary: "Longhorn node storage usage is critical"
             description: "Node {{ $labels.node }} storage is {{ $value | humanizePercentage }} full (threshold: 90%)."
 
+        # Longhorn's own view of a node, which is not the kubelet's: these
+        # conditions go false while the node stays Ready for Kubernetes, over a
+        # kernel module missing after an upgrade, broken mount propagation, a
+        # disk it can no longer write. A node that is really gone takes its
+        # longhorn-manager and with it these series along, so the metric never
+        # reaches 0 in that case: NodeNotReady covers it, not this rule.
+        - alert: LonghornNodeNotReady
+          expr: longhorn_node_status{condition="ready"} == 0
+          for: 10m
+          labels:
+            severity: warning
+          annotations:
+            summary: "Longhorn haelt eine Node fuer nicht bereit"
+            description: >-
+              Node {{ $labels.node }} meldet sich bei Longhorn als nicht bereit,
+              obwohl ihr longhorn-manager laeuft. Ihre Repliken zaehlen damit
+              nicht mehr, Longhorn baut sie nach einer Wartezeit auf den
+              uebrigen Nodes neu auf. Die betroffenen Volumes laufen bis dahin
+              degraded auf einer einzigen Replik.
+
+        # allowScheduling stays out of this on purpose: that is the manual
+        # switch in the UI, false is intended there.
+        - alert: LonghornDiskUnschedulable
+          expr: |
+            longhorn_disk_status{condition="schedulable"} == 0
+            unless on (node) (longhorn_node_status{condition="ready"} == 0)
+          for: 15m
+          labels:
+            severity: warning
+          annotations:
+            summary: "Longhorn plant auf einer Disk nichts mehr ein"
+            description: >-
+              Disk {{ $labels.disk }} auf Node {{ $labels.node }} nimmt keine
+              neuen Repliken mehr an, obwohl die Node selbst bereit ist. Anders
+              als bei LonghornNodeSchedulingBudgetLow ist das kein knapper
+              Platz, sondern eine Absage von Longhorn selbst.
+
     # Scheduling budget, not actual usage. The alerts above measure what is on
     # disk; Longhorn schedules by REQUESTED volume size, and a disk can stop
     # accepting replicas long before it looks full (80% budget at 16% usage is
