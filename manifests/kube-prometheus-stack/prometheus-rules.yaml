@@ -1034,7 +1034,9 @@ spec:
             description: "Ansehen mit: ssh pve 'apt update && apt list --upgradable'. Auf pve liegen talos-cp-1 und der AdGuard-LXC, ein Reboot kostet also ein etcd-Member von dreien und fuer die Dauer den Resolver der Gast-VLANs."
 
         # Set by /var/run/reboot-required, so it survives the upgrade itself and
-        # only clears on the actual reboot.
+        # only clears on the actual reboot. On pve that is practically only
+        # dbus: nothing installs update-notifier-common, and the Proxmox kernel
+        # does not write the flag. The kernel case is HostKernelOutdated below.
         - alert: NodeRebootRequired
           expr: node_reboot_required > 0
           for: 24h
@@ -1042,18 +1044,37 @@ spec:
             severity: warning
           annotations:
             summary: "{{ $labels.instance }} wartet seit einem Tag auf einen Reboot"
-            description: "Ein Paket hat /var/run/reboot-required gesetzt, meist der Kernel. Der Reboot ist eine Entscheidung, keine Nebenwirkung: erst pruefen, was gerade auf pve laeuft."
+            description: "Ein Paket hat /var/run/reboot-required gesetzt. Der Reboot ist eine Entscheidung, keine Nebenwirkung: erst pruefen, was gerade auf pve laeuft."
 
-        # Net below both rules above: if apt.prom stops being written they go
-        # quiet instead of firing, and nothing else would show it. absent()
-        # covers the file disappearing entirely, which takes the metric with it.
-        - alert: AptMetricsStale
+        # needrestart_kernel_status_info: 1 current, 2 ABI upgrade, 3 version
+        # upgrade. This is the only working kernel signal on a Proxmox host,
+        # see NodeRebootRequired above.
+        #
+        # needrestart_services_total deliberately has NO rule. Every security
+        # update leaves processes on replaced libraries and nothing clears that
+        # before the next restart, so it would fire permanently. It is a
+        # dashboard tile instead.
+        - alert: HostKernelOutdated
+          expr: needrestart_kernel_status_info > 1
+          for: 24h
+          labels:
+            severity: warning
+          annotations:
+            summary: "{{ $labels.instance }} laeuft seit einem Tag auf einem alten Kernel"
+            description: "Installiert ist {{ $labels.expected }}, laufen tut {{ $labels.current }}. Das schliesst nur ein Reboot. Auf pve liegen talos-cp-1 und der AdGuard-LXC, er kostet also ein etcd-Member von dreien und fuer die Dauer den Resolver der Gast-VLANs."
+
+        # Net below all rules above: if a textfile stops being written they go
+        # quiet instead of firing, and nothing else would show it. Both files
+        # need their own absent(), a combined one would only fire once BOTH are
+        # gone.
+        - alert: HostUpdateMetricsStale
           expr: |
-            (time() - node_textfile_mtime_seconds{file=~".+/apt.prom"} > 172800)
+            (time() - node_textfile_mtime_seconds{file=~".+/(apt|needrestart).prom"} > 172800)
               or absent(node_textfile_mtime_seconds{file=~".+/apt.prom"})
+              or absent(node_textfile_mtime_seconds{file=~".+/needrestart.prom"})
           for: 1h
           labels:
             severity: warning
           annotations:
-            summary: "Der apt-Textfile-Collector auf pve liefert nichts Frisches mehr"
-            description: "apt.prom ist aelter als zwei Tage oder ganz weg. Solange das so ist, sind AptSecurityUpdatesPending und NodeRebootRequired blind. Nachsehen: ssh pve 'ls -l /var/lib/prometheus/node-exporter/ && systemctl list-timers | grep -i apt'"
+            summary: "Ein Update-Textfile-Collector auf pve liefert nichts Frisches mehr"
+            description: "apt.prom oder needrestart.prom ist aelter als zwei Tage oder ganz weg. Solange das so ist, sind die Update-Alerts blind. Nachsehen: ssh pve 'ls -l /var/lib/prometheus/node-exporter/ && systemctl list-timers | grep -E \"apt|needrestart\"'"

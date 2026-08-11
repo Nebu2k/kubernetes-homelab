@@ -258,7 +258,7 @@
       "title": "Security-Updates",
       "description": "Offene Pakete aus einer Security-Origin. AptSecurityUpdatesPending meldet sich, wenn der Wert 72h am Stueck ueber 0 steht. Der Wert ist nach arch aufgeteilt, deshalb die Summe. Nur pve hat einen apt-Textfile-Collector, der macmini und die Talos-Nodes tauchen hier nicht auf.",
       "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "gridPos": { "h": 4, "w": 4, "x": 0, "y": 4 },
+      "gridPos": { "h": 4, "w": 3, "x": 0, "y": 4 },
       "targets": [
         {
           "refId": "A",
@@ -294,7 +294,7 @@
       "title": "Updates gesamt",
       "description": "Alle Origins zusammen, inklusive Proxmox. Auf einem pve-Host praktisch immer groesser 0 und deshalb ohne Schwelle und ohne Alert. Steht hier als Kontext zur Zahl links.",
       "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "gridPos": { "h": 4, "w": 4, "x": 4, "y": 4 },
+      "gridPos": { "h": 4, "w": 3, "x": 3, "y": 4 },
       "targets": [
         {
           "refId": "A",
@@ -318,9 +318,9 @@
       "id": 16,
       "type": "stat",
       "title": "Reboot nötig",
-      "description": "Kommt aus /var/run/reboot-required, meist nach einem Kernel-Update. Springt erst nach dem Upgrade auf 1 und faellt nur durch den Reboot selbst zurueck. Auf pve liegen talos-cp-1 und der AdGuard-LXC, der Reboot kostet also ein etcd-Member von dreien.",
+      "description": "Kommt aus /var/run/reboot-required und faellt nur durch den Reboot selbst zurueck. Auf pve schreibt das praktisch nur dbus: der Proxmox-Kernel setzt es nicht, dafuer ist die Kachel rechts zustaendig. Auf pve liegen talos-cp-1 und der AdGuard-LXC, der Reboot kostet also ein etcd-Member von dreien.",
       "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "gridPos": { "h": 4, "w": 4, "x": 8, "y": 4 },
+      "gridPos": { "h": 4, "w": 3, "x": 6, "y": 4 },
       "targets": [
         {
           "refId": "A",
@@ -348,17 +348,88 @@
       }
     },
     {
-      "id": 17,
+      "id": 19,
       "type": "stat",
-      "title": "apt.prom Alter",
-      "description": "Alter des Textfiles, aus dem die drei Panels links kommen. Rot ab 48h, das ist die Schwelle von AptMetricsStale. Solange es rot ist, sind die Zahlen links Altbestand und die beiden Update-Alerts blind.",
+      "title": "Kernel",
+      "description": "Vergleicht den laufenden Kernel mit dem installierten (needrestart). Das ist auf pve das einzige belastbare Reboot-Signal, weil der Proxmox-Kernel kein /var/run/reboot-required schreibt. HostKernelOutdated meldet sich, wenn der Wert 24h ueber 1 steht.",
       "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "gridPos": { "h": 4, "w": 4, "x": 12, "y": 4 },
+      "gridPos": { "h": 4, "w": 3, "x": 9, "y": 4 },
       "targets": [
         {
           "refId": "A",
           "datasource": { "type": "prometheus", "uid": "prometheus" },
-          "expr": "time() - max(node_textfile_mtime_seconds{file=~\".+/apt.prom\"})",
+          "expr": "max(needrestart_kernel_status_info)",
+          "instant": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "decimals": 0,
+          "mappings": [
+            { "type": "value", "options": { "0": { "text": "unbekannt", "color": "yellow", "index": 0 } } },
+            { "type": "value", "options": { "1": { "text": "aktuell", "color": "green", "index": 1 } } },
+            { "type": "value", "options": { "2": { "text": "ABI alt", "color": "red", "index": 2 } } },
+            { "type": "value", "options": { "3": { "text": "Version alt", "color": "red", "index": 3 } } }
+          ]
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "colorMode": "background",
+        "graphMode": "none",
+        "textMode": "auto"
+      }
+    },
+    {
+      "id": 20,
+      "type": "stat",
+      "title": "Dienste-Neustart",
+      "description": "Prozesse, die noch gegen ersetzte Bibliotheken laufen (needrestart). Bewusst ohne Alert: nach jedem Security-Update steht hier etwas, und es faellt erst durch den Neustart der Dienste oder den Reboot zurueck. Welche es sind, zeigt: ssh pve 'needrestart -b'",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 4, "w": 3, "x": 12, "y": 4 },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "max(needrestart_services_total)",
+          "instant": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "decimals": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 1 }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "colorMode": "value",
+        "graphMode": "none",
+        "textMode": "auto"
+      }
+    },
+    {
+      "id": 17,
+      "type": "stat",
+      "title": "Metrik-Alter",
+      "description": "Alter des aeltesten der beiden Textfiles apt.prom und needrestart.prom. Rot ab 48h, das ist die Schwelle von HostUpdateMetricsStale. Solange es rot ist, sind die Zahlen links Altbestand und die Update-Alerts blind.",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 4, "w": 3, "x": 15, "y": 4 },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "time() - min(node_textfile_mtime_seconds{file=~\".+/(apt|needrestart).prom\"})",
           "instant": true
         }
       ],
@@ -390,7 +461,7 @@
       "title": "Verlauf offene Updates",
       "description": "Zeigt, ob der Rueckstand waechst oder gerade gepatcht wurde. Der Absturz nach unten ist ein apt upgrade, ein flacher Anstieg sind neu veroeffentlichte Pakete.",
       "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "gridPos": { "h": 4, "w": 8, "x": 16, "y": 4 },
+      "gridPos": { "h": 4, "w": 6, "x": 18, "y": 4 },
       "targets": [
         {
           "refId": "A",
