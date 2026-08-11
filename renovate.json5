@@ -238,7 +238,25 @@
       automergeType: 'pr',
     },
 
-    // Exceptions from automerge. They stand AFTER the rule above, because
+    // Chart patches for three add-ons whose failure takes neither state nor
+    // reachability with it: reloader only restarts pods, metrics-server only
+    // feeds "kubectl top" and HPAs, sealed-secrets only decrypts NEW secrets
+    // while everything already applied keeps running.
+    //
+    // Named one by one, never as matchManagers: ['argocd']. The list IS the
+    // decision: storage (longhorn, csi-driver-smb), ingress (traefik), TLS
+    // (cert-manager), network (metallb) and kube-prometheus-stack stay manual
+    // for the reasons above.
+    {
+      matchManagers: ['argocd'],
+      matchDatasources: ['helm'],
+      matchPackageNames: ['reloader', 'metrics-server', 'sealed-secrets'],
+      matchUpdateTypes: ['patch'],
+      automerge: true,
+      automergeType: 'pr',
+    },
+
+    // Exceptions from automerge. They stand AFTER the rules above, because
     // later packageRules win over earlier ones.
     //
     // Databases and the document store: here the blast radius is no longer a
