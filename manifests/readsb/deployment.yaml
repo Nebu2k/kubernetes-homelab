@@ -88,6 +88,10 @@ spec:
             # pushes its own results into on port 31004.
             - name: ULTRAFEEDER_CONFIG
               value: "adsb,feed.airplanes.live,30004,beast_reduce_plus_out;mlat,feed.airplanes.live,31090"
+            # The name mlat-client registers under. Without it the client
+            # invents a random number on every start.
+            - name: MLAT_USER
+              value: "elmstreet79"
             # Identifies the receiver at the aggregators independently of the
             # public IP, which rotates.
             - name: UUID
