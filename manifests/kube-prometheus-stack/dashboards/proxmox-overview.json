@@ -318,7 +318,7 @@
       "id": 16,
       "type": "stat",
       "title": "Reboot nötig",
-      "description": "Kommt aus /var/run/reboot-required und faellt nur durch den Reboot selbst zurueck. Auf pve schreibt das praktisch nur dbus: der Proxmox-Kernel setzt es nicht, dafuer ist die Kachel rechts zustaendig. Auf pve liegen talos-cp-1 und der AdGuard-LXC, der Reboot kostet also ein etcd-Member von dreien.",
+      "description": "Kommt aus /var/run/reboot-required und faellt nur durch den Reboot selbst zurueck. Auf pve schreibt das praktisch nur dbus: der Proxmox-Kernel setzt es nicht, dafuer ist die Kachel rechts zustaendig. Auf pve liegen talos-cp-1 und der Blocky-LXC, der Reboot kostet also ein etcd-Member von dreien.",
       "datasource": { "type": "prometheus", "uid": "prometheus" },
       "gridPos": { "h": 4, "w": 3, "x": 6, "y": 4 },
       "targets": [

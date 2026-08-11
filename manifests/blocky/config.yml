@@ -86,7 +86,7 @@ blocking:
   clientGroupsBlock:
     default:
       - ads
-  # Answer 0.0.0.0, like AdGuard's blocking_mode "default".
+  # Answer 0.0.0.0 instead of NXDOMAIN.
   blockType: zeroIp
   loading:
     refreshPeriod: 24h

@@ -146,12 +146,6 @@ data:
         conditions:
           - "[STATUS] == 200"
 
-      - name: AdGuard Sync
-        group: Cluster
-        url: "https://adguardhome-sync-web.elmstreet79.de"
-        interval: 60s
-        conditions:
-          - "[STATUS] == 200"
       # Infrastructure outside the cluster, addressed by IP rather than by
       # name on purpose: if Traefik fails, every cluster check above goes red
       # while these stay green, which tells at a glance whether the reverse
@@ -211,26 +205,9 @@ data:
           # failure, hence an exact match instead of "< 500".
           - "[STATUS] == 401"
 
-      - name: AdGuard (LXC pve)
-        group: Infrastruktur
-        url: "http://192.168.2.16/"
-        interval: 2m
-        conditions:
-          - "[STATUS] == 200"
-
-      - name: AdGuard (macmini)
-        group: Infrastruktur
-        url: "http://192.168.2.4/"
-        interval: 2m
-        conditions:
-          - "[STATUS] == 200"
       # DNS. Checks not just that a resolver is alive but that the
       # split-horizon rewrite actually answers, whose silent failure hits only
       # a subset of the clients.
-      #
-      # AdGuard is not checked, although it still answers for devices that
-      # have not renewed their lease: its query log is what counts them, and a
-      # check every 60s would keep that log from ever going quiet.
       - name: CoreDNS (Cluster)
         group: DNS
         url: "10.43.0.10"

@@ -110,13 +110,6 @@ homelab/
 │   │   ├── s3-credentials-unsealed.yaml.example
 │   │   └── talos-service-account.yaml
 │   ├── external-services/
-│   │   ├── adguard-macmini-service.yaml
-│   │   ├── adguard-pve-service.yaml
-│   │   ├── adguardhome-sync-config.yaml
-│   │   ├── adguardhome-sync-credentials-sealed.yaml
-│   │   ├── adguardhome-sync-deployment.yaml
-│   │   ├── adguardhome-sync-service.yaml
-│   │   ├── adguardhome-sync-web-ingress.yaml
 │   │   ├── dreambox-service.yaml
 │   │   ├── external-ingressroutes.yaml
 │   │   ├── kustomization.yaml
@@ -159,8 +152,6 @@ homelab/
 │   │   ├── wol-ssh-key-sealed.yaml
 │   │   └── wol-ssh-key-unsealed.yaml.example
 │   ├── homepage/
-│   │   ├── adguard-credentials-sealed.yaml
-│   │   ├── adguard-credentials-unsealed.yaml.example
 │   │   ├── argocd-token-secret-sealed.yaml
 │   │   ├── argocd-token-secret-unsealed.yaml.example
 │   │   ├── clusterrole.yaml
@@ -690,20 +681,7 @@ kubectl get applications -n argocd -w
 
 ```bash
 
-# 1. Adguard Credentials
-cp manifests/homepage/adguard-credentials-unsealed.yaml.example \
-   manifests/homepage/adguard-credentials-unsealed.yaml
-
-# Edit the file and replace placeholder values with your actual credentials
-vim manifests/homepage/adguard-credentials-unsealed.yaml
-
-# Seal the secret
-kubeseal --format=yaml --controller-namespace=kube-system \
-  < manifests/homepage/adguard-credentials-unsealed.yaml \
-  > manifests/homepage/adguard-credentials-sealed.yaml
-
-
-# 2. Argocd Token Secret
+# 1. Argocd Token Secret
 cp manifests/homepage/argocd-token-secret-unsealed.yaml.example \
    manifests/homepage/argocd-token-secret-unsealed.yaml
 
@@ -716,7 +694,7 @@ kubeseal --format=yaml --controller-namespace=kube-system \
   > manifests/homepage/argocd-token-secret-sealed.yaml
 
 
-# 3. Grafana Credentials
+# 2. Grafana Credentials
 cp manifests/homepage/grafana-credentials-unsealed.yaml.example \
    manifests/homepage/grafana-credentials-unsealed.yaml
 
@@ -729,7 +707,7 @@ kubeseal --format=yaml --controller-namespace=kube-system \
   > manifests/homepage/grafana-credentials-sealed.yaml
 
 
-# 4. Plex Token
+# 3. Plex Token
 cp manifests/homepage/plex-token-unsealed.yaml.example \
    manifests/homepage/plex-token-unsealed.yaml
 
@@ -742,7 +720,7 @@ kubeseal --format=yaml --controller-namespace=kube-system \
   > manifests/homepage/plex-token-sealed.yaml
 
 
-# 5. Proxmox Secret
+# 4. Proxmox Secret
 cp manifests/homepage/proxmox-secret-unsealed.yaml.example \
    manifests/homepage/proxmox-secret-unsealed.yaml
 
@@ -755,7 +733,7 @@ kubeseal --format=yaml --controller-namespace=kube-system \
   > manifests/homepage/proxmox-secret-sealed.yaml
 
 
-# 6. Unifi Token
+# 5. Unifi Token
 cp manifests/homepage/unifi-token-unsealed.yaml.example \
    manifests/homepage/unifi-token-unsealed.yaml
 
@@ -848,7 +826,7 @@ URL: https://status.elmstreet79.de
 Everything goes through Traefik (single reverse proxy) with the wildcard TLS default cert. A service is **public exactly when it has a Cloudflare record**. There is no wildcard A-record.
 
 - **Public** (Cloudflare CNAME → `nebu2k.ipv64.net`, managed in the `homelab-terraform` Cloudflare stack): `www`, `homeassistant`, `teslamate`, `plex`, `dreambox`. Apex `elmstreet79.de` 301-redirects to `www`. Plex additionally has a direct `32400` port-forward for native apps.
-- **Internal/VPN-only** (no Cloudflare record): everything else, e.g. `argocd`, `grafana`, `prometheus`, `alertmanager`, `longhorn`, `status`, `home`, `paperless`, plus the external hosts (`unifi`, `pve`, `nas`, `adguard`, …).
+- **Internal/VPN-only** (no Cloudflare record): everything else, e.g. `argocd`, `grafana`, `prometheus`, `alertmanager`, `longhorn`, `status`, `home`, `paperless`, plus the external hosts (`unifi`, `pve`, `nas`, `dreambox`, …).
 
 To make a service public: add its host to `public_hosts` in `homelab-terraform/cloudflare/` and `terraform apply`. Nothing else needed, the single port-forward covers all.
 

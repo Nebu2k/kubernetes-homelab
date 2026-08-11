@@ -1068,7 +1068,7 @@ spec:
             severity: warning
           annotations:
             summary: "{{ $labels.instance }} hat seit drei Tagen {{ $value }} offene Security-Updates"
-            description: "Ansehen mit: ssh pve 'apt update && apt list --upgradable'. Auf pve liegen talos-cp-1 und der AdGuard-LXC, ein Reboot kostet also ein etcd-Member von dreien und fuer die Dauer den Resolver der Gast-VLANs."
+            description: "Ansehen mit: ssh pve 'apt update && apt list --upgradable'. Auf pve liegen talos-cp-1 und der Blocky-LXC, ein Reboot kostet also ein etcd-Member von dreien und fuer die Dauer den zweiten Resolver."
 
         # Set by /var/run/reboot-required, so it survives the upgrade itself and
         # only clears on the actual reboot. On pve that is practically only
@@ -1098,7 +1098,7 @@ spec:
             severity: warning
           annotations:
             summary: "{{ $labels.instance }} laeuft seit einem Tag auf einem alten Kernel"
-            description: "Installiert ist {{ $labels.expected }}, laufen tut {{ $labels.current }}. Das schliesst nur ein Reboot. Auf pve liegen talos-cp-1 und der AdGuard-LXC, er kostet also ein etcd-Member von dreien und fuer die Dauer den Resolver der Gast-VLANs."
+            description: "Installiert ist {{ $labels.expected }}, laufen tut {{ $labels.current }}. Das schliesst nur ein Reboot. Auf pve liegen talos-cp-1 und der Blocky-LXC, er kostet also ein etcd-Member von dreien und fuer die Dauer den zweiten Resolver."
 
         # macOS has no apt, so the collector behind this is a hand-written
         # LaunchAgent on the macmini that parses "softwareupdate --list", see
@@ -1106,8 +1106,8 @@ spec:
         # optional items that nobody intends to install.
         #
         # Restarting the macmini is the expensive part, not the update: Plex,
-        # AdGuard-Replica, node_exporter and the Actions-Runner all come back
-        # through LaunchAgents at auto-login, but not before.
+        # node_exporter and the Actions-Runner all come back through
+        # LaunchAgents at auto-login, but not before.
         - alert: MacosUpdatesPending
           expr: softwareupdate_pending_recommended > 0
           for: 72h

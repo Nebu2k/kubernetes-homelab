@@ -375,7 +375,7 @@ def get_sealed_secrets():
 
     for example_file in sorted(MANIFESTS_DIR.glob("*/*-unsealed.yaml.example")):
         component = example_file.parent.name
-        # "adguard-credentials-unsealed.yaml.example" -> "adguard-credentials"
+        # "unifi-token-unsealed.yaml.example" -> "unifi-token"
         base_name = example_file.name.replace("-unsealed.yaml.example", "")
 
         secrets.append({

@@ -72,16 +72,6 @@ spec:
             secretKeyRef:
               name: argocd-homepage-token
               key: token
-        - name: HOMEPAGE_VAR_ADGUARD_USER
-          valueFrom:
-            secretKeyRef:
-              name: homepage-adguard
-              key: username
-        - name: HOMEPAGE_VAR_ADGUARD_PASS
-          valueFrom:
-            secretKeyRef:
-              name: homepage-adguard
-              key: password
         - name: HOMEPAGE_VAR_UNIFI_USER
           valueFrom:
             secretKeyRef:
