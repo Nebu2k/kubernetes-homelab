@@ -8,14 +8,41 @@ crds:
     enabled: true
     forceConflicts: true
 
+# The chart splits its defaults across one PrometheusRule per set, which is
+# also one file per set in Prometheus. Switching a set off is the only way to
+# shorten that list; the sets below are the ones that cost something and
+# deliver nothing here.
+#
+# There is no kubeScheduler key, the scheduler sets are kubeSchedulerAlerting
+# and kubeSchedulerRecording. Both are already off through kubeScheduler.enabled
+# below, which gates the templates on top of these switches.
 defaultRules:
   create: true
   rules:
     alertmanager: true
     etcd: true
-    kubeScheduler: false
     kubeControllerManager: false
     kubeProxy: false  # kube-router statt kube-proxy
+
+    # The four KubeAPIErrorBudgetBurn alerts and the burnrate1d/3d recording
+    # rules they need. Measured on 2026-08-11: the burnrate set alone took
+    # 2.07s of the 2.65s that all 48 rule groups together spend, every 30s.
+    #
+    # A 30-day error budget on the API server answers a question this cluster
+    # does not have: there is one cluster, no tenants and no SLO. An API server
+    # in trouble shows up in KubeAPIDown, in the node alerts and in Gatus long
+    # before a budget burns.
+    #
+    # kubeApiserverAvailability and kubeApiserverHistogram stay ON: they cost
+    # 0.16s and 0.06s, and the apiserver dashboard reads three of their
+    # recording rules. The burnrate set has no dashboard consumer.
+    kubeApiserverBurnrate: false
+    kubeApiserverSlos: false
+
+    # A single recording rule over container_memory_swap, which cAdvisor never
+    # reports here. The three k8s-resources dashboards read it and have been
+    # showing an empty panel all along, with or without this switch.
+    k8sContainerMemorySwap: false
 
 # No metrics endpoint reachable from inside the cluster.
 kubeScheduler:
@@ -315,6 +342,14 @@ nodeExporter:
 kube-state-metrics:
   nodeSelector:
     node-role.kubernetes.io/worker: "worker"
+
+  # Off by default, which left the four kube-state-metrics alerts permanently
+  # blind: they read kube_state_metrics_*, and those live on the second port
+  # that only this switch exposes. Worth having because of customResourceState
+  # below, a watch on longhorn.io/volumes that would otherwise fail silently
+  # and take the two Longhorn backup alerts with it.
+  selfMonitor:
+    enabled: true
 
   # Read access to the Longhorn volumes, solely for customResourceState below.
   rbac:
