@@ -105,6 +105,48 @@ data:
                 format: number
                 suffix: "%"
 
+      - Blocky:
+          href: https://grafana.elmstreet79.de/d/homelab-dns
+          description: DNS Resolver & Werbefilter
+          icon: mdi-dns
+          weight: 41
+          # Blocky has no UI of its own, the numbers come from Prometheus. One
+          # widget per query, the API answers a single value each time:
+          #   round(sum(increase(blocky_query_total[24h])))
+          #   round(100 * sum(increase(blocky_response_total{response_type="BLOCKED"}[24h]))
+          #     / sum(increase(blocky_query_total[24h])))
+          #   max(blocky_blocking_enabled)
+          # The last one is the state of switch.werbefilter in Home Assistant,
+          # max() because both replicas report it.
+          widgets:
+            - type: customapi
+              url: http://kube-prometheus-stack-prometheus.monitoring.svc.cluster.local:9090/api/v1/query?query=round%28sum%28increase%28blocky_query_total%5B24h%5D%29%29%29
+              refreshInterval: 60000
+              mappings:
+                - field: data.result.0.value.1
+                  label: Anfragen 24h
+                  format: number
+            - type: customapi
+              url: http://kube-prometheus-stack-prometheus.monitoring.svc.cluster.local:9090/api/v1/query?query=round%28100%20%2A%20sum%28increase%28blocky_response_total%7Bresponse_type%3D%22BLOCKED%22%7D%5B24h%5D%29%29%20%2F%20sum%28increase%28blocky_query_total%5B24h%5D%29%29%29
+              refreshInterval: 60000
+              mappings:
+                - field: data.result.0.value.1
+                  label: Geblockt
+                  format: number
+                  suffix: "%"
+            - type: customapi
+              url: http://kube-prometheus-stack-prometheus.monitoring.svc.cluster.local:9090/api/v1/query?query=max%28blocky_blocking_enabled%29
+              refreshInterval: 60000
+              mappings:
+                - field: data.result.0.value.1
+                  label: Filter
+                  format: text
+                  remap:
+                    - value: "1"
+                      to: an
+                    - value: "0"
+                      to: aus
+
       - Traefik Dashboard:
           href: https://traefik.elmstreet79.de
           description: Reverse Proxy & Load Balancer
