@@ -77,7 +77,8 @@ homelab/
 │   │   ├── argocd-cm-patch.yaml
 │   │   ├── argocd-rbac-cm-patch.yaml
 │   │   ├── ingress.yaml
-│   │   └── kustomization.yaml
+│   │   ├── kustomization.yaml
+│   │   └── servicemonitor.yaml
 │   ├── backup-monitor/
 │   │   ├── freshness-cronjob.yaml
 │   │   ├── kustomization.yaml

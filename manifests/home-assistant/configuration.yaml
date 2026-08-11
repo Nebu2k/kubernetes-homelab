@@ -64,9 +64,6 @@ lovelace:
 # that label. The "or vector(0)" on each is what makes a probe report zero
 # instead of vanishing, because an empty count() returns no series at all
 # and the sensor would go unavailable exactly when the news is good.
-#
-# argocd is missing on purpose: this install exposes no metrics services,
-# so there is nothing to scrape and no sync status to show.
 rest:
   - resource: "http://kube-prometheus-stack-prometheus.monitoring.svc.cluster.local:9090/api/v1/query"
     method: POST
@@ -89,6 +86,10 @@ rest:
       or label_replace(max(time() - (longhorn_volume_last_backup_at > 0) and on (volume)
       homelab_longhorn_volume_recurring_job_group_info{backup_group="enabled"})
       or vector(0), "probe", "backup_age_seconds", "", "")
+      or label_replace(count(argocd_app_info{sync_status!="Synced"}) or vector(0),
+      "probe", "argocd_apps_out_of_sync", "", "")
+      or label_replace(count(argocd_app_info{health_status!="Healthy"}) or vector(0),
+      "probe", "argocd_apps_unhealthy", "", "")
     sensor:
       - name: "Cluster Nodes bereit"
         unique_id: cluster_nodes_ready
@@ -151,6 +152,23 @@ rest:
         value_template: >-
           {{ (value_json.data.result | selectattr('metric.probe', 'eq', 'backup_age_seconds')
              | map(attribute='value.1') | first | default(0) | float / 3600) | round(1) }}
+      - name: "ArgoCD Apps out of sync"
+        unique_id: cluster_argocd_apps_out_of_sync
+        icon: mdi:sync-alert
+        state_class: measurement
+        # argocd_app_info comes from the application-controller. Both counts
+        # move during a rollout and settle again on their own; only a value
+        # that stays put means something went wrong.
+        value_template: >-
+          {{ value_json.data.result | selectattr('metric.probe', 'eq', 'argocd_apps_out_of_sync')
+             | map(attribute='value.1') | first | default(0) | int }}
+      - name: "ArgoCD Apps ungesund"
+        unique_id: cluster_argocd_apps_unhealthy
+        icon: mdi:heart-broken
+        state_class: measurement
+        value_template: >-
+          {{ value_json.data.result | selectattr('metric.probe', 'eq', 'argocd_apps_unhealthy')
+             | map(attribute='value.1') | first | default(0) | int }}
 
 # Shutting down the PC. Its counterpart is the Windows OpenSSH server; the
 # key is a secret mounted at /ssh-wol and deliberately not on the config

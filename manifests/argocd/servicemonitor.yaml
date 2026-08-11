@@ -1,0 +1,56 @@
+# The three metrics Services come from the Helm release in
+# homelab-terraform/argocd-talos/, the ServiceMonitors from here: the
+# ServiceMonitor CRD ships with kube-prometheus-stack, which ArgoCD rolls out
+# itself, so it does not exist yet while the chart is being installed.
+#
+# The selectors carry app.kubernetes.io/component on purpose. The
+# application-controller, applicationset-controller and notifications-controller
+# metrics Services all share the name label "argocd-metrics", so a selector on
+# name alone would scrape whichever of them exists as a single target set.
+#
+# argocd_app_info, the per-application sync and health status the HA tiles
+# count, comes from the application-controller alone.
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: argocd-application-controller
+  namespace: argocd
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: argocd-metrics
+      app.kubernetes.io/instance: argocd
+      app.kubernetes.io/component: application-controller
+  endpoints:
+    - port: http-metrics
+      interval: 30s
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: argocd-repo-server
+  namespace: argocd
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: argocd-repo-server-metrics
+      app.kubernetes.io/instance: argocd
+      app.kubernetes.io/component: repo-server
+  endpoints:
+    - port: http-metrics
+      interval: 30s
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: argocd-server
+  namespace: argocd
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: argocd-server-metrics
+      app.kubernetes.io/instance: argocd
+      app.kubernetes.io/component: server
+  endpoints:
+    - port: http-metrics
+      interval: 30s

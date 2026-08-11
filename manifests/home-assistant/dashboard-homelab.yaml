@@ -455,6 +455,21 @@ views:
       - type: grid
         cards:
           - type: heading
+            heading: GitOps
+            heading_style: title
+            icon: mdi:source-branch
+          - type: tile
+            entity: sensor.argocd_apps_out_of_sync
+            name: Apps out of sync
+            color: orange
+          - type: tile
+            entity: sensor.argocd_apps_ungesund
+            name: Apps ungesund
+            color: red
+
+      - type: grid
+        cards:
+          - type: heading
             heading: Longhorn
             heading_style: title
             icon: mdi:database
@@ -491,8 +506,8 @@ views:
               - [Alertmanager](https://alertmanager.elmstreet79.de): was
               gerade feuert
 
-              - [ArgoCD](https://argocd.elmstreet79.de): Sync-Status, hier
-              nicht als Kachel, der Install liefert keine Metriken
+              - [ArgoCD](https://argocd.elmstreet79.de): welche App out of
+              sync ist, die Kachel zählt nur
 
               - [Longhorn](https://longhorn.elmstreet79.de): Volumes und
               Backups
