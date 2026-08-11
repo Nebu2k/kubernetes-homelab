@@ -237,12 +237,17 @@ alertmanager:
       group_wait: 10s
       group_interval: 5m
       repeat_interval: 4h
-      receiver: 'sns-receiver'
+      receiver: 'alerts'
       routes:
-        # Always firing by design, nothing to notify about.
+        # Fires permanently by design, so it is not a notification but the
+        # heartbeat of the alert path itself. Every other channel hangs behind
+        # this Alertmanager and stays silent when the cluster is gone; this one
+        # alarms from outside as soon as the pings stop arriving.
         - match:
             alertname: Watchdog
-          receiver: 'null'
+          receiver: 'deadmansswitch'
+          group_wait: 0s
+          repeat_interval: 5m
         # Meta-alert for info-level inhibition.
         - match:
             alertname: InfoInhibitor
@@ -250,16 +255,16 @@ alertmanager:
         - match:
             alertname: TargetDown
             job: proxmox-exporter
-          receiver: 'sns-receiver'
+          receiver: 'alerts'
           mute_time_intervals:
             - proxmox-backup-window
         - match:
             severity: critical
-          receiver: 'sns-receiver'
+          receiver: 'alerts'
           continue: true
         - match:
             severity: warning
-          receiver: 'sns-receiver'
+          receiver: 'alerts'
           group_wait: 30s
 
     time_intervals:
@@ -271,8 +276,12 @@ alertmanager:
             location: 'Europe/Berlin'
     
     receivers:
-      - name: 'null'  # No notifications (for Watchdog)
-      - name: 'sns-receiver'
+      - name: 'null'  # No notifications (for InfoInhibitor)
+
+      # One receiver with two integrations rather than two receivers behind
+      # continue: true, so both channels always carry the same alerts and the
+      # routing above stays untouched.
+      - name: 'alerts'
         sns_configs:
           # Topic, mail subscription and the publishing IAM user live in
           # homelab-terraform/aws/sns-alerts.tf.
@@ -293,10 +302,38 @@ alertmanager:
             attributes:
               severity: '{{ .GroupLabels.severity }}'
               alertname: '{{ .GroupLabels.alertname }}'
-    
+        telegram_configs:
+          # Own short template: Telegram rejects anything over 4096 characters,
+          # which the label listing of the SNS message above would hit on a
+          # group of several alerts.
+          - bot_token_file: '/etc/alertmanager/secrets/alertmanager-notifications/telegram-bot-token'
+            # Not secret without the token, and there is no chat_id_file.
+            chat_id: 6529131790
+            # No parse_mode on purpose. Several summaries read "laeuft in
+            # <14 Tagen ab", and in HTML mode Telegram rejects exactly those
+            # messages as an unclosed tag.
+            parse_mode: ''
+            message: |-
+              {{ .Status | toUpper }} {{ .GroupLabels.alertname }} ({{ .GroupLabels.severity }})
+              {{ range .Alerts }}{{ .Annotations.summary }}
+              {{ end }}
+
+      # Ping URL of the healthchecks.io check. It alarms when nothing arrives,
+      # so send_resolved would be pointless: Watchdog never resolves.
+      - name: 'deadmansswitch'
+        webhook_configs:
+          - url_file: '/etc/alertmanager/secrets/alertmanager-notifications/healthchecks-ping-url'
+            send_resolved: false
+
     templates: []
   
   alertmanagerSpec:
+    # Mounted at /etc/alertmanager/secrets/<name>/<key>. Files rather than env
+    # vars, because the Alertmanager expands no environment variables in its
+    # config; only the AWS SDK below reads them.
+    secrets:
+      - alertmanager-notifications
+
     containers:
       - name: alertmanager
         env:

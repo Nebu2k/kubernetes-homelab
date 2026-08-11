@@ -1,0 +1,22 @@
+# The two secrets of the alert path besides SNS. Both go in as files because
+# the Alertmanager config expands no environment variables.
+#
+# telegram-bot-token: from BotFather, "/newbot". The numeric chat_id belongs in
+#   values.yaml, it is useless without this token.
+# healthchecks-ping-url: ping URL of the check that watches the Watchdog alert.
+#   Whoever knows it can keep the dead man's switch alive from outside, which
+#   is why it is not in the repo in plaintext.
+#
+# kubeseal --format=yaml --controller-namespace=kube-system \
+#   < manifests/kube-prometheus-stack/alertmanager-notifications-unsealed.yaml \
+#   > manifests/kube-prometheus-stack/alertmanager-notifications-sealed.yaml
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: alertmanager-notifications
+  namespace: monitoring
+type: Opaque
+stringData:
+  telegram-bot-token: "123456789:AAExampleExampleExampleExampleExampleEx"
+  healthchecks-ping-url: "https://hc-ping.com/YOUR-CHECK-UUID-HERE"

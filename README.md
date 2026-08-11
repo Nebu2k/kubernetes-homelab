@@ -181,6 +181,8 @@ homelab/
 │   │   └── unifi-token-unsealed.yaml.example
 │   ├── kube-prometheus-stack/
 │   │   ├── alertmanager-ingress.yaml
+│   │   ├── alertmanager-notifications-sealed.yaml
+│   │   ├── alertmanager-notifications-unsealed.yaml.example
 │   │   ├── aws-credentials-sealed.yaml
 │   │   ├── aws-credentials-unsealed.yaml.example
 │   │   ├── blocky-lxc-scrapeconfig.yaml
@@ -438,6 +440,8 @@ cd kubernetes-homelab
       manifests/home-assistant/s3-archive-credentials-unsealed.yaml
    cp manifests/home-assistant/wol-ssh-key-unsealed.yaml.example \
       manifests/home-assistant/wol-ssh-key-unsealed.yaml
+   cp manifests/kube-prometheus-stack/alertmanager-notifications-unsealed.yaml.example \
+      manifests/kube-prometheus-stack/alertmanager-notifications-unsealed.yaml
    cp manifests/kube-prometheus-stack/aws-credentials-unsealed.yaml.example \
       manifests/kube-prometheus-stack/aws-credentials-unsealed.yaml
    cp manifests/kube-prometheus-stack/grafana-admin-unsealed.yaml.example \
@@ -552,77 +556,82 @@ kubeseal --format=yaml --controller-namespace=kube-system \
   < manifests/home-assistant/wol-ssh-key-unsealed.yaml \
   > manifests/home-assistant/wol-ssh-key-sealed.yaml
 
-# 7. kube-prometheus-stack: aws credentials
+# 7. kube-prometheus-stack: alertmanager notifications
+kubeseal --format=yaml --controller-namespace=kube-system \
+  < manifests/kube-prometheus-stack/alertmanager-notifications-unsealed.yaml \
+  > manifests/kube-prometheus-stack/alertmanager-notifications-sealed.yaml
+
+# 8. kube-prometheus-stack: aws credentials
 kubeseal --format=yaml --controller-namespace=kube-system \
   < manifests/kube-prometheus-stack/aws-credentials-unsealed.yaml \
   > manifests/kube-prometheus-stack/aws-credentials-sealed.yaml
 
-# 8. kube-prometheus-stack: grafana admin
+# 9. kube-prometheus-stack: grafana admin
 kubeseal --format=yaml --controller-namespace=kube-system \
   < manifests/kube-prometheus-stack/grafana-admin-unsealed.yaml \
   > manifests/kube-prometheus-stack/grafana-admin-sealed.yaml
 
-# 9. kube-prometheus-stack: home assistant token
+# 10. kube-prometheus-stack: home assistant token
 kubeseal --format=yaml --controller-namespace=kube-system \
   < manifests/kube-prometheus-stack/home-assistant-token-unsealed.yaml \
   > manifests/kube-prometheus-stack/home-assistant-token-sealed.yaml
 
-# 10. longhorn: nas cifs secret
+# 11. longhorn: nas cifs secret
 kubeseal --format=yaml --controller-namespace=kube-system \
   < manifests/longhorn/nas-cifs-secret-unsealed.yaml \
   > manifests/longhorn/nas-cifs-secret-sealed.yaml
 
-# 11. mealie: mealie backup token
+# 12. mealie: mealie backup token
 kubeseal --format=yaml --controller-namespace=kube-system \
   < manifests/mealie/mealie-backup-token-unsealed.yaml \
   > manifests/mealie/mealie-backup-token-sealed.yaml
 
-# 12. mealie: mealie secrets
+# 13. mealie: mealie secrets
 kubeseal --format=yaml --controller-namespace=kube-system \
   < manifests/mealie/mealie-secrets-unsealed.yaml \
   > manifests/mealie/mealie-secrets-sealed.yaml
 
-# 13. mealie: s3 mealie backup credentials
+# 14. mealie: s3 mealie backup credentials
 kubeseal --format=yaml --controller-namespace=kube-system \
   < manifests/mealie/s3-mealie-backup-credentials-unsealed.yaml \
   > manifests/mealie/s3-mealie-backup-credentials-sealed.yaml
 
-# 14. paperless-ngx: paperless secrets
+# 15. paperless-ngx: paperless secrets
 kubeseal --format=yaml --controller-namespace=kube-system \
   < manifests/paperless-ngx/paperless-secrets-unsealed.yaml \
   > manifests/paperless-ngx/paperless-secrets-sealed.yaml
 
-# 15. paperless-ngx: s3 backup credentials
+# 16. paperless-ngx: s3 backup credentials
 kubeseal --format=yaml --controller-namespace=kube-system \
   < manifests/paperless-ngx/s3-backup-credentials-unsealed.yaml \
   > manifests/paperless-ngx/s3-backup-credentials-sealed.yaml
 
-# 16. paperless-ngx: smb credentials
+# 17. paperless-ngx: smb credentials
 kubeseal --format=yaml --controller-namespace=kube-system \
   < manifests/paperless-ngx/smb-credentials-unsealed.yaml \
   > manifests/paperless-ngx/smb-credentials-sealed.yaml
 
-# 17. proxmox-exporter: pve api credentials
+# 18. proxmox-exporter: pve api credentials
 kubeseal --format=yaml --controller-namespace=kube-system \
   < manifests/proxmox-exporter/pve-api-credentials-unsealed.yaml \
   > manifests/proxmox-exporter/pve-api-credentials-sealed.yaml
 
-# 18. readsb: readsb secret
+# 19. readsb: readsb secret
 kubeseal --format=yaml --controller-namespace=kube-system \
   < manifests/readsb/readsb-secret-unsealed.yaml \
   > manifests/readsb/readsb-secret-sealed.yaml
 
-# 19. teslamate: s3 backup credentials
+# 20. teslamate: s3 backup credentials
 kubeseal --format=yaml --controller-namespace=kube-system \
   < manifests/teslamate/s3-backup-credentials-unsealed.yaml \
   > manifests/teslamate/s3-backup-credentials-sealed.yaml
 
-# 20. teslamate: teslamate secret
+# 21. teslamate: teslamate secret
 kubeseal --format=yaml --controller-namespace=kube-system \
   < manifests/teslamate/teslamate-secret-unsealed.yaml \
   > manifests/teslamate/teslamate-secret-sealed.yaml
 
-# 21. unifi-poller: unifi config
+# 22. unifi-poller: unifi config
 kubeseal --format=yaml --controller-namespace=kube-system \
   < manifests/unifi-poller/unifi-config-unsealed.yaml \
   > manifests/unifi-poller/unifi-config-sealed.yaml

@@ -15,6 +15,7 @@ resources:
   - home-assistant-scrapeconfig.yaml
   - blocky-lxc-scrapeconfig.yaml
   - aws-credentials-sealed.yaml
+  - alertmanager-notifications-sealed.yaml
   - grafana-admin-sealed.yaml
   - home-assistant-token-sealed.yaml
 
