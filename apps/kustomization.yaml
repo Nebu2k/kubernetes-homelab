@@ -50,3 +50,4 @@ resources:
   - ripe-atlas.yaml
   - readsb.yaml
   - fr24.yaml
+  - piaware.yaml

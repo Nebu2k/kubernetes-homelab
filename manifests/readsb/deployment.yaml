@@ -81,6 +81,20 @@ spec:
                 secretKeyRef:
                   name: readsb-secret
                   key: alt
+            # airplanes.live takes ADS-B and MLAT straight from Ultrafeeder,
+            # no feeder container of its own. The MLAT results come back on
+            # the same connection and land on the local tar1090 map. The mlat
+            # entry is also what starts the built-in MLAT hub, which piaware
+            # pushes its own results into on port 31004.
+            - name: ULTRAFEEDER_CONFIG
+              value: "adsb,feed.airplanes.live,30004,beast_reduce_plus_out;mlat,feed.airplanes.live,31090"
+            # Identifies the receiver at the aggregators independently of the
+            # public IP, which rotates.
+            - name: UUID
+              valueFrom:
+                secretKeyRef:
+                  name: feeder-uuid-secret
+                  key: uuid
             # tar1090 keeps traces and heatmap under /var/globe_history, which
             # grows without bound and sits on an emptyDir, i.e. on the node's
             # EPHEMERAL partition.

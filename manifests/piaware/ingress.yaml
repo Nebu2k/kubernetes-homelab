@@ -1,0 +1,27 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: piaware
+  namespace: piaware
+  annotations:
+    gethomepage.dev/enabled: "true"
+    gethomepage.dev/name: "FlightAware"
+    gethomepage.dev/description: "PiAware Feeder-Status"
+    gethomepage.dev/group: "Applications"
+    gethomepage.dev/icon: "mdi-airplane-takeoff"
+    gethomepage.dev/href: "https://piaware.elmstreet79.de"
+    gethomepage.dev/weight: "22"
+    gethomepage.dev/pod-selector: "app=piaware"
+spec:
+  ingressClassName: traefik
+  rules:
+    - host: piaware.elmstreet79.de
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: piaware
+                port:
+                  number: 80

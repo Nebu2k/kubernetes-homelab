@@ -32,7 +32,7 @@ Talos Linux cluster managed via GitOps using the ArgoCD App-of-Apps pattern.
 | 11 | Backup Monitor, Proxmox Exporter, Rpi5 Fan |
 | 12 | Argocd Config |
 | 14 | Readsb |
-| 15 | Fr24 |
+| 15 | Fr24, Piaware |
 | 16 | External Services |
 
 ## 📁 Repository Structure
@@ -71,6 +71,7 @@ homelab/
 │   ├── argocd-config.yaml             # Wave 12
 │   ├── readsb.yaml                    # Wave 14
 │   ├── fr24.yaml                      # Wave 15
+│   ├── piaware.yaml                   # Wave 15
 │   └── external-services.yaml         # Wave 16
 ├── manifests/
 │   ├── argocd/
@@ -266,6 +267,14 @@ homelab/
 │   │   ├── smb-consume-pv.yaml
 │   │   ├── smb-credentials-sealed.yaml
 │   │   └── smb-credentials-unsealed.yaml.example
+│   ├── piaware/
+│   │   ├── deployment.yaml
+│   │   ├── ingress.yaml
+│   │   ├── kustomization.yaml
+│   │   ├── namespace.yaml
+│   │   ├── piaware-secret-sealed.yaml
+│   │   ├── piaware-secret-unsealed.yaml.example
+│   │   └── service.yaml
 │   ├── proxmox-exporter/
 │   │   ├── deployment.yaml
 │   │   ├── kustomization.yaml
@@ -275,6 +284,8 @@ homelab/
 │   │   └── servicemonitor.yaml
 │   ├── readsb/
 │   │   ├── deployment.yaml
+│   │   ├── feeder-uuid-secret-sealed.yaml
+│   │   ├── feeder-uuid-secret-unsealed.yaml.example
 │   │   ├── ingress.yaml
 │   │   ├── kustomization.yaml
 │   │   ├── namespace.yaml
@@ -463,8 +474,12 @@ cd kubernetes-homelab
       manifests/paperless-ngx/s3-backup-credentials-unsealed.yaml
    cp manifests/paperless-ngx/smb-credentials-unsealed.yaml.example \
       manifests/paperless-ngx/smb-credentials-unsealed.yaml
+   cp manifests/piaware/piaware-secret-unsealed.yaml.example \
+      manifests/piaware/piaware-secret-unsealed.yaml
    cp manifests/proxmox-exporter/pve-api-credentials-unsealed.yaml.example \
       manifests/proxmox-exporter/pve-api-credentials-unsealed.yaml
+   cp manifests/readsb/feeder-uuid-secret-unsealed.yaml.example \
+      manifests/readsb/feeder-uuid-secret-unsealed.yaml
    cp manifests/readsb/readsb-secret-unsealed.yaml.example \
       manifests/readsb/readsb-secret-unsealed.yaml
    cp manifests/teslamate/s3-backup-credentials-unsealed.yaml.example \
@@ -612,27 +627,37 @@ kubeseal --format=yaml --controller-namespace=kube-system \
   < manifests/paperless-ngx/smb-credentials-unsealed.yaml \
   > manifests/paperless-ngx/smb-credentials-sealed.yaml
 
-# 18. proxmox-exporter: pve api credentials
+# 18. piaware: piaware secret
+kubeseal --format=yaml --controller-namespace=kube-system \
+  < manifests/piaware/piaware-secret-unsealed.yaml \
+  > manifests/piaware/piaware-secret-sealed.yaml
+
+# 19. proxmox-exporter: pve api credentials
 kubeseal --format=yaml --controller-namespace=kube-system \
   < manifests/proxmox-exporter/pve-api-credentials-unsealed.yaml \
   > manifests/proxmox-exporter/pve-api-credentials-sealed.yaml
 
-# 19. readsb: readsb secret
+# 20. readsb: feeder uuid secret
+kubeseal --format=yaml --controller-namespace=kube-system \
+  < manifests/readsb/feeder-uuid-secret-unsealed.yaml \
+  > manifests/readsb/feeder-uuid-secret-sealed.yaml
+
+# 21. readsb: readsb secret
 kubeseal --format=yaml --controller-namespace=kube-system \
   < manifests/readsb/readsb-secret-unsealed.yaml \
   > manifests/readsb/readsb-secret-sealed.yaml
 
-# 20. teslamate: s3 backup credentials
+# 22. teslamate: s3 backup credentials
 kubeseal --format=yaml --controller-namespace=kube-system \
   < manifests/teslamate/s3-backup-credentials-unsealed.yaml \
   > manifests/teslamate/s3-backup-credentials-sealed.yaml
 
-# 21. teslamate: teslamate secret
+# 23. teslamate: teslamate secret
 kubeseal --format=yaml --controller-namespace=kube-system \
   < manifests/teslamate/teslamate-secret-unsealed.yaml \
   > manifests/teslamate/teslamate-secret-sealed.yaml
 
-# 22. unifi-poller: unifi config
+# 24. unifi-poller: unifi config
 kubeseal --format=yaml --controller-namespace=kube-system \
   < manifests/unifi-poller/unifi-config-unsealed.yaml \
   > manifests/unifi-poller/unifi-config-sealed.yaml
@@ -997,6 +1022,7 @@ kubectl get secret -n monitoring grafana-admin-credentials \
 | Metallb | 0.16.1 | Metallb |
 | Metrics Server | 3.13.1 | Metrics Server |
 | Paperless Ngx | 3.0.5 | Paperless Ngx |
+| Piaware | latest-build-666 | Piaware |
 | Proxmox Exporter | 1.0.8 | Proxmox Exporter |
 | Readsb | latest-build-845 | Readsb |
 | Reloader | 2.2.15 | Reloader |

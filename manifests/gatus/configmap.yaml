@@ -139,6 +139,13 @@ data:
         conditions:
           - "[STATUS] == 200"
 
+      - name: PiAware Feeder
+        group: Cluster
+        url: "https://piaware.elmstreet79.de"
+        interval: 60s
+        conditions:
+          - "[STATUS] == 200"
+
       - name: AdGuard Sync
         group: Cluster
         url: "https://adguardhome-sync-web.elmstreet79.de"

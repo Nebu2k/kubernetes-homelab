@@ -1,0 +1,95 @@
+# FlightAware feeder. Needs a container of its own because piaware speaks
+# FlightAware's own protocol, unlike the aggregators readsb feeds directly.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: piaware
+  namespace: piaware
+  labels:
+    app: piaware
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: piaware
+  template:
+    metadata:
+      labels:
+        app: piaware
+      annotations:
+        reloader.stakater.com/auto: "true"
+    spec:
+      nodeSelector:
+        node-role.kubernetes.io/worker: "worker"
+      containers:
+        - name: piaware
+          image: ghcr.io/sdr-enthusiasts/docker-piaware:latest-build-666
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 80
+              name: http
+              protocol: TCP
+          env:
+            - name: TZ
+              value: "Europe/Berlin"
+            # relay: no SDR of its own, the data comes from readsb's Beast
+            # output. Without this the container looks for a dongle and
+            # restarts dump1090 in a loop.
+            - name: RECEIVER_TYPE
+              value: "relay"
+            - name: BEASTHOST
+              value: "readsb.adsb.svc.cluster.local"
+            - name: BEASTPORT
+              value: "30005"
+            # MLAT results go back into Ultrafeeder's MLAT hub, so the
+            # positions FlightAware computes show up on the local tar1090 map
+            # too. Port 31004 is the hub's Beast input, not readsb's.
+            - name: MLAT_RESULTS_BEASTHOST
+              value: "readsb.adsb.svc.cluster.local"
+            - name: MLAT_RESULTS_BEASTPORT
+              value: "31004"
+            # Without a fixed ID piaware requests a new one on every start and
+            # the site history at FlightAware breaks apart.
+            - name: FEEDER_ID
+              valueFrom:
+                secretKeyRef:
+                  name: piaware-secret
+                  key: feeder-id
+          volumeMounts:
+            - name: run
+              mountPath: /run
+            - name: log
+              mountPath: /var/log
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              memory: 512Mi
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 80
+            initialDelaySeconds: 30
+            periodSeconds: 15
+            timeoutSeconds: 5
+            failureThreshold: 6
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 80
+            initialDelaySeconds: 90
+            periodSeconds: 30
+            timeoutSeconds: 5
+            failureThreshold: 6
+      volumes:
+        # The image expects both paths to be writable tmpfs, matching the
+        # tmpfs entries in the upstream compose file.
+        - name: run
+          emptyDir:
+            medium: Memory
+            sizeLimit: 64Mi
+        - name: log
+          emptyDir:
+            medium: Memory
+            sizeLimit: 64Mi

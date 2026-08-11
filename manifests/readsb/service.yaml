@@ -18,6 +18,12 @@ spec:
       targetPort: 30005
       protocol: TCP
       name: beast
+    # Beast input of the built-in MLAT hub. piaware sends the MLAT positions
+    # FlightAware computes back in here, which puts them on the local map.
+    - port: 31004
+      targetPort: 31004
+      protocol: TCP
+      name: mlathub
     # Prometheus statistics, still without a ServiceMonitor.
     - port: 9273
       targetPort: 9273
