@@ -247,6 +247,10 @@ alertmanager:
             alertname: Watchdog
           receiver: 'deadmansswitch'
           group_wait: 0s
+          # Pings arrive every 10 minutes, not every 5: repeat_interval is only
+          # checked at the group_interval ticks, so an equal value always slips
+          # to the next one. Lowering it changes nothing without a smaller
+          # group_interval. The check tolerates 30 minutes.
           repeat_interval: 5m
         # Meta-alert for info-level inhibition.
         - match:
