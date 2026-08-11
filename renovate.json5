@@ -66,6 +66,22 @@
   // releases before they reach the cluster.
   minimumReleaseAge: '3 days',
 
+  // Mandatory alongside it, and NOT a weakening of the buffer.
+  //
+  // The docker datasource only knows a release timestamp on Docker Hub
+  // ("tag_last_pushed"); ghcr.io, quay.io and every other registry return a
+  // bare tag list. Renovate's default 'timestamp-required' counts a missing
+  // timestamp as "not old enough yet", which never becomes true: the update
+  // stays in the dashboard under "Pending Status Checks" forever, without a PR.
+  // That silently swallowed every ghcr.io image here (home-assistant,
+  // paperless, unpoller, homepage, talosctl, the two sdr-enthusiasts ones)
+  // while the Docker Hub ones kept flowing.
+  //
+  // 'timestamp-optional' restores the intent: where a timestamp exists it is
+  // enforced, where none exists the update proceeds. Renovate warns once per
+  // run about it, which is the point.
+  minimumReleaseAgeBehaviour: 'timestamp-optional',
+
   // Both need explicit paths, neither applies by default. (The github-actions
   // manager, in contrast, finds .github/workflows/ on its own.)
 
