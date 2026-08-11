@@ -27,6 +27,9 @@ spec:
       annotations:
         reloader.stakater.com/auto: "true"
     spec:
+      # The default 30s is enough for the RRD writeback, but it runs at the end
+      # of the collectd teardown, behind the rest of the s6 shutdown.
+      terminationGracePeriodSeconds: 60
       # The dongle is physically attached to talos-cp-1, so the pod can run
       # nowhere else, which makes that node a pet. Moving the dongle means
       # changing the hostname here and the usb block in
@@ -104,11 +107,25 @@ spec:
             # EPHEMERAL partition.
             - name: MAX_GLOBE_HISTORY
               value: "3"
+            # Keeps the graphs1090 RRDs in the /run tmpfs and writes them to the
+            # PVC as one tarball, on shutdown and every flush interval. Without
+            # this the RRD set is rewritten in place every minute, the write
+            # pattern that bloats a Longhorn volume.
+            - name: GRAPHS1090_REDUCE_IO
+              value: "true"
+            # Default is 1d. An unclean pod kill loses everything since the last
+            # flush, and an hour of receiver history is the acceptable loss.
+            - name: GRAPHS1090_REDUCE_IO_FLUSH_IVAL
+              value: "1h"
           volumeMounts:
             - name: usb
               mountPath: /dev/bus/usb
             - name: globe-history
               mountPath: /var/globe_history
+            - name: run
+              mountPath: /run
+            - name: collectd
+              mountPath: /var/lib/collectd
           resources:
             requests:
               cpu: 200m
@@ -140,3 +157,13 @@ spec:
         # A restart costs three days of flight history, not the feed.
         - name: globe-history
           emptyDir: {}
+        # Carries the live RRDs on top of the usual s6 and readsb runtime state,
+        # roughly 40 Mi in total. Size matches the upstream compose file, and
+        # what is used is charged against the memory limit above.
+        - name: run
+          emptyDir:
+            medium: Memory
+            sizeLimit: 256Mi
+        - name: collectd
+          persistentVolumeClaim:
+            claimName: readsb-collectd

@@ -280,6 +280,7 @@ homelab/
 │   │   ├── ingress.yaml
 │   │   ├── kustomization.yaml
 │   │   ├── namespace.yaml
+│   │   ├── pvc.yaml
 │   │   ├── readsb-secret-sealed.yaml
 │   │   ├── readsb-secret-unsealed.yaml.example
 │   │   └── service.yaml

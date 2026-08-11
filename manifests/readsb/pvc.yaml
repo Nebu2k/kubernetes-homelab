@@ -1,0 +1,17 @@
+# Holds only the graphs1090 RRD archive, a tarball of a few MB. The volume sees
+# one write per hour instead of the constant in-place RRD rewrites, see
+# GRAPHS1090_REDUCE_IO in deployment.yaml.
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: readsb-collectd
+  namespace: adsb
+spec:
+  accessModes:
+    - ReadWriteOnce
+  # Not "longhorn": receiver history is nice to have and does not belong in the
+  # nightly backup. See manifests/longhorn/storageclass-nobackup.yaml.
+  storageClassName: longhorn-nobackup
+  resources:
+    requests:
+      storage: 256Mi
