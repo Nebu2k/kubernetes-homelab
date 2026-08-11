@@ -1078,3 +1078,51 @@ spec:
           annotations:
             summary: "Ein Update-Textfile-Collector auf pve liefert nichts Frisches mehr"
             description: "apt.prom oder needrestart.prom ist aelter als zwei Tage oder ganz weg. Solange das so ist, sind die Update-Alerts blind. Nachsehen: ssh pve 'ls -l /var/lib/prometheus/node-exporter/ && systemctl list-timers | grep -E \"apt|needrestart\"'"
+
+    # ArgoCD is the one component nothing else watches: it rolls out every
+    # other app, but a sync that keeps failing is only visible in its own UI.
+    #
+    # argocd_app_info carries one series per Application, labelled with the
+    # current sync_status (Synced, OutOfSync, Unknown) and health_status
+    # (Healthy, Progressing, Degraded, Suspended, Missing, Unknown). Both
+    # labels change during any rollout, hence the long "for" on both rules:
+    # the alert is about a state that stays, not about one being reached.
+    - name: argocd
+      interval: 60s
+      rules:
+        # Every app in this repo syncs automatically, so OutOfSync resolves
+        # itself within a reconciliation cycle (30s). Half an hour of it means
+        # the sync is failing, and the reason is in the app's own history.
+        - alert: ArgoCDAppOutOfSync
+          expr: argocd_app_info{sync_status!="Synced"}
+          for: 30m
+          labels:
+            severity: warning
+          annotations:
+            summary: "ArgoCD: {{ $labels.name }} steht seit 30 Minuten auf {{ $labels.sync_status }}"
+            description: "Der Selfheal kommt nicht durch. Grund steht unter https://argocd.elmstreet79.de/applications/{{ $labels.name }} unter History and Rollback, oder per kubectl -n argocd get app {{ $labels.name }} -o jsonpath='{.status.operationState.message}'. Haeufig ist es ein Manifest, das der API-Server ablehnt, oder eine CRD, die noch fehlt."
+
+        # Suspended is excluded: it is the state of a deliberately paused app,
+        # not a fault. Progressing stays in on purpose, past half an hour it
+        # means a rollout is stuck rather than running.
+        - alert: ArgoCDAppUnhealthy
+          expr: argocd_app_info{health_status!~"Healthy|Suspended"}
+          for: 30m
+          labels:
+            severity: warning
+          annotations:
+            summary: "ArgoCD: {{ $labels.name }} ist seit 30 Minuten {{ $labels.health_status }}"
+            description: "Die Ressourcen der App sind nicht gesund: Degraded oder Missing zeigt auf die App selbst, ein haengendes Progressing meist auf einen Pod, der nicht ready wird. Details unter https://argocd.elmstreet79.de/applications/{{ $labels.name }}."
+
+        # Safety net: the metric only exists while the application-controller
+        # is scraped, and both rules above go silent without it. That is the
+        # blind spot that existed permanently until the metrics services were
+        # deployed.
+        - alert: ArgoCDMetricsMissing
+          expr: absent(argocd_app_info)
+          for: 15m
+          labels:
+            severity: warning
+          annotations:
+            summary: "ArgoCD liefert keine Metriken mehr"
+            description: "argocd_app_info fehlt seit >15m, die ArgoCD-Alerts und die HA-Kacheln sind damit blind. Der StatefulSet argocd/argocd-application-controller, der Service argocd-application-controller-metrics und der gleichnamige ServiceMonitor gehoeren geprueft. Der Service kommt aus homelab-terraform/argocd-talos/, nicht aus diesem Repo."
