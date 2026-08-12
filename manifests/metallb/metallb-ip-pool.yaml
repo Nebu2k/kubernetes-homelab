@@ -21,6 +21,14 @@ spec:
     # order, so new services land at the front and only explicit requests end
     # up here.
     - 192.168.2.240-192.168.2.253
+    # The v6 half, same numbering. Both families have to sit in ONE pool:
+    # MetalLB takes both addresses of a dual-stack service from the same pool
+    # and skips a service whose pool carries only one family.
+    #
+    # Out of the manual ULA, never the ISP prefix: it rotates. The nodes reach
+    # the range over SLAAC on the same /64, so the L2Advertisement below answers
+    # the neighbour solicitations for it.
+    - fd2e:9a71:c3b5::240-fd2e:9a71:c3b5::253
 ---
 apiVersion: metallb.io/v1beta1
 kind: L2Advertisement
