@@ -65,11 +65,12 @@ spec:
                   AUTH="Authorization: Bearer ${MEALIE_API_TOKEN}"
 
                   # Wait until this pod may pass the NetworkPolicy. The
-                  # namespace has a default-deny on ingress and kube-router
-                  # adds a freshly started pod to its ipsets with a few
-                  # seconds of delay, so the first attempt fails. Without the
-                  # loop every run would be a coin flip that looks like a
-                  # Mealie outage.
+                  # namespace has a default-deny on ingress and the enforcer
+                  # picks a freshly started pod up with a delay, so the first
+                  # attempt fails. Measured around 400 ms under
+                  # kube-network-policies, it was 15s under kube-router.
+                  # Without the loop every run would be a coin flip that looks
+                  # like a Mealie outage.
                   echo "Warte auf Erreichbarkeit von mealie..."
                   i=0
                   until curl -sf --max-time 5 "${API}/app/about" -o /dev/null; do
