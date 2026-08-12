@@ -40,10 +40,43 @@ Repliken darueber, Gegenstueck ist `replicaZoneSoftAntiAffinity: "false"` in
 `manifests/longhorn/values.yaml`. Eine neue Node braucht deshalb zuerst ihr
 Zonen-Label.
 
-Pod- und Service-CIDR sind `10.42.0.0/16` und `10.43.0.0/16`, nicht die
-Talos-Defaults. Manifeste verlassen sich darauf:
-`home-assistant/configuration.yaml` traegt `10.42.0.0/16` als
-trusted_proxy, `gatus/configmap.yaml` prueft CoreDNS unter `10.43.0.10`.
+## Dual-Stack
+
+Das Cluster faehrt seit 2026-08-12 v4 und v6, **v4 ist die primaere Familie**.
+
+| Zweck             | v4               | v6                                |
+| ----------------- | ---------------- | --------------------------------- |
+| Pod-CIDR          | `10.42.0.0/16`   | `fd00:10:42::/56`                 |
+| Service-CIDR      | `10.43.0.0/16`   | `fd00:10:43::/112`                |
+| CoreDNS           | `10.43.0.10`     | `fd00:10:43::a`                   |
+| Node-Adressen     | `192.168.2.20-23`| `fd2e:9a71:c3b5::/64` per SLAAC   |
+| MetalLB-Pool      | `.240-.253`      | `fd2e:9a71:c3b5::240` bis `::253` |
+
+Die beiden Cluster-Bereiche sind ULAs, die nie geroutet werden und mit dem LAN
+nichts zu tun haben. Die Node-Adressen und der MetalLB-Pool dagegen liegen im
+LAN, und dort ist die manuelle ULA die einzig stabile Grundlage: der
+ISP-Praefix rotiert. Kubernetes laesst fuer den v6-Service-Bereich nichts
+Groesseres als `/108` zu.
+
+Manifeste verlassen sich auf die v4-Werte: `home-assistant/configuration.yaml`
+traegt `10.42.0.0/16` als trusted_proxy, `gatus/configmap.yaml` prueft CoreDNS
+unter `10.43.0.10`.
+
+**Ein Service wird nicht von allein dual.** Er bleibt `SingleStack` auf v4, bis
+er einzeln auf `ipFamilyPolicy: PreferDualStack` gehoben wird. Bisher ist das
+genau einer: `blocky-dns`. Traefik ist bewusst v4.
+
+**`machine.kubelet.nodeIP.validSubnets` ist Pflicht.** Jede NIC traegt DREI
+v6-/64: den rotierenden ISP-Praefix, die manuelle ULA `fd2e:9a71:c3b5::/64` und
+eine zweite ULA, die UniFi selbst erzeugt. Ohne Auswahl kann Talos den
+ISP-Praefix nehmen, und dann wechselt die InternalIP jeder Node bei jeder
+Rotation. Die Reihenfolge ist v4 zuerst und auf allen Nodes gleich: Longhorn
+vertraegt Dual-Stack nur bei einheitlicher Familienreihenfolge.
+
+**Flannel waehlt sein `public-ipv6` selbst** und haelt sich nicht an
+`validSubnets`. Auf talos-cp-1 ist das die zweite, von UniFi erzeugte ULA statt
+`fd2e:...`. Das traegt, weil beide Praefixe on-link sind, ist aber eine
+Inkonsistenz: verschwindet die UniFi-ULA, muss flannel dort einmal neu starten.
 
 ## Image
 
@@ -365,6 +398,28 @@ nicht ungeprueft ausgerollt.
   die projizierten Token turnusmaessig erneuert (rund eine Stunde), und nur bei
   Clients, die die Token-Datei neu lesen. Der Endpoint ist nichts, was man
   wegen einer Kleinigkeit anfasst.
+
+- **Eine Node bekommt ihr Pod-CIDR nur beim Join.** Kubernetes vergibt es genau
+  einmal, es gibt keinen Controller, der eine bestehende Node nachtraeglich
+  umtraegt. Wer die Pod-Netze aendert, muss deshalb jedes Node-Objekt neu
+  entstehen lassen (`kubectl delete node` plus Reboot); ein `apply-config`
+  allein aendert an der laufenden Node nichts.
+
+  **Waehrend so einer Umstellung ist das Flannel-Mesh kaputt, und zwar
+  asymmetrisch.** Eine schon umgestellte Node erwartet von jedem Peer
+  v6-Lease-Daten (`flannel.alpha.coreos.com/public-ipv6`). Fehlen die, verwirft
+  sie dessen Lease komplett, **inklusive der v4-Route**. Die alte Node kennt
+  umgekehrt die neue weiterhin. Ergebnis: Verbindungen aus Pods der neuen Node
+  laufen in Timeouts, waehrend die Gegenrichtung geht, und das sieht nach einem
+  kaputten Dienst aus statt nach Routing (hier: longhorn-manager mit
+  "admission webhook service is not accessible"). Das loest sich erst auf, wenn
+  ALLE Nodes umgestellt sind, also die Runde ohne Pause durchziehen.
+
+- **Bootstrap-Manifeste werden bei einer Config-Aenderung nicht ausgerollt.**
+  Talos rendert sie neu, sichtbar an der hochgezaehlten Version in
+  `talosctl get manifests`, wendet sie aber nicht an. Das erledigt
+  `talosctl upgrade-k8s --to <laufende version>`, mit `--dry-run` vorher als
+  Diff. Betrifft flannel, kube-proxy und den kube-dns-Service.
 
 - **Immer nur ein Restore auf einmal.** Zwei gleichzeitig laufende Restores
   mounten das CIFS-Share aus zwei Replica-Prozessen zugleich, einer von beiden
