@@ -21,7 +21,7 @@ Talos Linux cluster managed via GitOps using the ArgoCD App-of-Apps pattern.
 |------|-----------|
 | 0 | Sealed Secrets |
 | 1 | Metallb, Reloader |
-| 2 | Etcd Backup, Kube Router, Metrics Server, Rpi5 Net Tuning |
+| 2 | Etcd Backup, Metrics Server, Rpi5 Net Tuning |
 | 3 | Traefik |
 | 4 | Cert Manager, Longhorn |
 | 5 | Csi Driver Smb, Landing Page, Teslamate |
@@ -47,7 +47,6 @@ homelab/
 │   ├── metallb.yaml                   # Wave 1
 │   ├── reloader.yaml                  # Wave 1
 │   ├── etcd-backup.yaml               # Wave 2
-│   ├── kube-router.yaml               # Wave 2
 │   ├── metrics-server.yaml            # Wave 2
 │   ├── rpi5-net-tuning.yaml           # Wave 2
 │   ├── traefik.yaml                   # Wave 3
@@ -190,12 +189,6 @@ homelab/
 │   │   ├── prometheus-ingress.yaml
 │   │   ├── prometheus-rules.yaml
 │   │   └── values.yaml
-│   ├── kube-router/
-│   │   ├── daemonset.yaml
-│   │   ├── kustomization.yaml
-│   │   ├── rbac.yaml
-│   │   ├── service.yaml
-│   │   └── servicemonitor.yaml
 │   ├── landing-page/
 │   │   ├── apex-redirect.yaml
 │   │   ├── configmap.yaml

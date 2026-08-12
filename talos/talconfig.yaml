@@ -64,10 +64,18 @@ additionalMachineCertSans:
   - 192.168.2.22
   - 192.168.2.23
 
-# Flannel is the Talos default and brings no NetworkPolicy controller;
-# kube-router supplies one in netpol-only mode (manifests/kube-router/).
+# Flannel is the Talos default and enforces no NetworkPolicy on its own. Talos
+# deploys kube-network-policies as a second container in the flannel DaemonSet,
+# which replaced the hand-written kube-router DaemonSet: same job, maintained
+# upstream, and dual-stack without a flag of its own. kube-router had to be told
+# --enable-ipv6 explicitly or it would have passed every v6 packet.
+#
+# This is a bootstrap manifest, so apply-config alone does not roll it out, see
+# README.md.
 cniConfig:
   name: flannel
+  flannel:
+    kubeNetworkPoliciesEnabled: true
 
 nodes:
   - hostname: talos-cp-1

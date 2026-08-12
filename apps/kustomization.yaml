@@ -8,7 +8,6 @@ resources:
   - sealed-secrets.yaml
   - metallb.yaml
   # Enforces the NetworkPolicies, which Flannel alone does not.
-  - kube-router.yaml
   # kubectl top and the homepage's Kubernetes widgets.
   - metrics-server.yaml
   # etcd snapshots to S3. Talos only writes them out on request, so the upload

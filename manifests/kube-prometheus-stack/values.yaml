@@ -22,7 +22,9 @@ defaultRules:
     alertmanager: true
     etcd: true
     kubeControllerManager: false
-    kubeProxy: false  # kube-router statt kube-proxy
+    # kube-proxy runs, it is just not scraped (kubeProxy.enabled below), and
+    # rules without a target fire on absent().
+    kubeProxy: false
 
     # The four KubeAPIErrorBudgetBurn alerts and the burnrate1d/3d recording
     # rules they need. Measured on 2026-08-11: the burnrate set alone took

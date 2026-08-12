@@ -401,7 +401,7 @@ nicht ungeprueft ausgerollt.
 
   ```bash
   # Netzwerkschicht zuerst, DaemonSets rollen ohnehin Node fuer Node
-  kubectl -n kube-system rollout restart ds/kube-proxy ds/kube-flannel ds/kube-router
+  kubectl -n kube-system rollout restart ds/kube-proxy ds/kube-flannel
   kubectl -n kube-system rollout restart deploy/coredns
   # danach alles Uebrige
   for ns in $(kubectl get ns -o name | cut -d/ -f2); do
