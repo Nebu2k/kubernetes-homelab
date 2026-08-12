@@ -59,6 +59,13 @@ spec:
             - --run-router=false
             - --run-service-proxy=false
             - --run-loadbalancer=false
+            # v4 is on by default, v6 is NOT. Without this the default-deny
+            # policies of mealie, paperless-ngx and teslamate are enforced on
+            # v4 only and pass every v6 packet, silently. Requires a v6 pod
+            # CIDR on the node, so it must not be set before the nodes carry
+            # one.
+            - --enable-ipv4=true
+            - --enable-ipv6=true
             # See the header: without this kube-router writes a CNI config.
             - --enable-cni=false
             - --health-port=20244
