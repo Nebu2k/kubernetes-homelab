@@ -17,9 +17,21 @@ metadata:
     app.kubernetes.io/name: blocky
     app.kubernetes.io/instance: blocky
   annotations:
-    metallb.io/loadBalancerIPs: "192.168.2.253"
+    # Both addresses in one annotation. spec.loadBalancerIP holds a single
+    # address and cannot express a dual-stack service.
+    metallb.io/loadBalancerIPs: "192.168.2.253,fd2e:9a71:c3b5::253"
 spec:
   type: LoadBalancer
+  # The reason the cluster runs dual-stack at all: without a v6 address here
+  # the LXC on .254 is the only v6 resolver in the house.
+  #
+  # Prefer, not Require: a broken v6 half would otherwise take the v4 resolver
+  # down with it. v4 stays primary, matching the order of the cluster's
+  # service CIDRs.
+  ipFamilyPolicy: PreferDualStack
+  ipFamilies:
+    - IPv4
+    - IPv6
   # Load-bearing: Blocky groups clients by IP. Without Local, kube-proxy SNATs
   # every packet to the node's CNI gateway, Blocky would see a single client
   # address and every client rule would be silently ineffective. The same goes
