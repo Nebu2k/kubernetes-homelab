@@ -128,7 +128,6 @@ homelab/
 │   ├── gatus/
 │   │   ├── configmap.yaml
 │   │   ├── deployment.yaml
-│   │   ├── dns-v6-relay.yaml
 │   │   ├── ingress.yaml
 │   │   ├── kustomization.yaml
 │   │   ├── namespace.yaml

@@ -7,7 +7,6 @@ resources:
   - namespace.yaml
   - pvc.yaml
   - configmap.yaml
-  - dns-v6-relay.yaml
   - deployment.yaml
   - service.yaml
   - ingress.yaml
