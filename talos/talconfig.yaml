@@ -28,10 +28,20 @@ endpoint: https://192.168.2.29:6443
 # Not the Talos defaults. Manifests rely on these values:
 # home-assistant/configuration.yaml carries 10.42.0.0/16 as a
 # trusted_proxy and gatus/configmap.yaml checks CoreDNS at 10.43.0.10.
+#
+# Dual-stack, and v4 stays FIRST and therefore primary: every existing ClusterIP
+# keeps its address, kube-dns keeps 10.43.0.10, and services stay SingleStack
+# until raised to PreferDualStack one by one.
+#
+# The v6 ranges are cluster-internal ULAs that are never routed and have nothing
+# to do with the LAN prefixes; the LAN side lives in fd2e:9a71:c3b5::/64.
+# Kubernetes allows nothing larger than /108 for the v6 service range.
 clusterPodNets:
   - 10.42.0.0/16
+  - fd00:10:42::/56
 clusterSvcNets:
   - 10.43.0.0/16
+  - fd00:10:43::/112
 
 # No node carries a taint: with three nodes a reserved control-plane set would
 # be pure waste. The condition is honest requests and limits, or a hungry
@@ -227,6 +237,22 @@ patches:
       nodeLabels:
         node-role.kubernetes.io/worker: worker
 
+  # Which addresses the kubelet registers as node IPs. Mandatory with
+  # dual-stack: every NIC here carries THREE v6 /64s, the rotating ISP prefix,
+  # this manual ULA and a second ULA UniFi generates on its own. Without a
+  # selection Talos may take the ISP prefix, and then the InternalIP of every
+  # node changes with each prefix rotation.
+  #
+  # v4 first and identical on all three nodes: Longhorn 1.12 supports dual-stack
+  # only when every node lists its families in the same order.
+  - |-
+    machine:
+      kubelet:
+        nodeIP:
+          validSubnets:
+            - 192.168.2.0/24
+            - fd2e:9a71:c3b5::/64
+
   # The two Blocky instances. Fixed v4 addresses and explicitly no v6
   # resolvers learned by router advertisement, which would otherwise be sorted
   # to the front unnoticed on a prefix change.
@@ -291,6 +317,15 @@ patches:
 
 controlPlane:
   patches:
+    # etcd stays on v4. Unset, Talos picks "the first routable address", which
+    # is v4 today and would be free to move once the nodes carry v6 node
+    # addresses. listenSubnets follows advertisedSubnets, so both are pinned.
+    - |-
+      cluster:
+        etcd:
+          advertisedSubnets:
+            - 192.168.2.0/24
+
     # Makes the etcd metrics reachable from the LAN. Talos binds them to
     # 127.0.0.1:2381 by default and Prometheus runs in a pod, so without this
     # it sees not a single etcd target.
