@@ -1051,6 +1051,42 @@ spec:
             summary: "Blocky-LXC holt die Konfiguration nicht mehr aus dem Repo"
             description: "Der Sync scheitert seit >1h. Die LXC laeuft mit einem aelteren Stand als die Cluster-Instanz. Von Hand anstossen und die Ausgabe lesen: pct exec 402 -- /etc/periodic/15min/blocky-config-sync"
 
+    # Tado is the one integration that dies quietly. Its OAuth refresh token
+    # rotates roughly every 10 minutes and only the newest one is usable; after
+    # a hard kill or a longer outage the stored one can come back rejected with
+    # a 400, and then every start ends in a reauth prompt that has to be
+    # clicked in the UI. Measured in August 2026: twice unnoticed for 5h41 and
+    # 3h03, both times after HA was gone for 7 minutes.
+    #
+    # The 400 itself cannot be alerted on. PyTado builds its logger with
+    # Logger(__name__) instead of logging.getLogger(), so it has no parent and
+    # its own handler: the error reaches the container's stderr and never HA's
+    # log, where only the consequence ("Device login flow status is PENDING")
+    # shows up.
+    - name: home-assistant
+      interval: 60s
+      rules:
+        # absent(), not == 0: the prometheus integration drops the labelset of
+        # an entity that turns unavailable instead of reporting zero, so the
+        # series disappears entirely. All nine tado_mode sensors go at once
+        # because they hang off one coordinator, which is why a single rule
+        # covers the whole set and one dead valve stays quiet. The up{} guard
+        # keeps this about Tado, a dead HA is covered by pod-health and Gatus.
+        #
+        # Tado's own API also has short outages that heal by themselves, 5 and
+        # 30 minutes in the same period, so a firing alert can resolve without
+        # anyone doing anything.
+        - alert: HomeAssistantTadoUnavailable
+          expr: |
+            absent(hass_entity_available{job="home-assistant", entity=~"sensor\\..*_tado_mode"})
+              and on() up{job="home-assistant"} == 1
+          for: 15m
+          labels:
+            severity: warning
+          annotations:
+            summary: "Tado liefert Home Assistant seit >15m keine Daten"
+            description: "Die Heizungssteuerung ist weg, HA laeuft. Meist ist der Refresh-Token abgelehnt worden und HA wartet auf eine Neuanmeldung: Einstellungen, Geraete und Dienste, Tado. Der Grund steht nicht im HA-Log, sondern nur im Container-stderr: kubectl -n home-assistant logs deploy/home-assistant -c home-assistant | grep PyTado"
+
     # The cluster keeps itself current through Renovate. pve and the macmini
     # hang on nothing and are only noticed when someone thinks of them, which
     # is what these rules replace. pve reports through the apt and needrestart

@@ -32,6 +32,11 @@ default_config:
 # a language switch in HA left a second, stale set of friendly_name series.
 # The USW-16 PoE values are left out on purpose, unpoller already provides
 # them as unpoller_device_port_poe_watts.
+#
+# The tado_mode sensors measure nothing, they are exported for their
+# hass_entity_available series alone: Tado is the one integration that stops
+# working silently when its refresh token is rejected (alert
+# HomeAssistantTadoUnavailable).
 prometheus:
   namespace: hass
   filter:
@@ -40,6 +45,7 @@ prometheus:
       - sensor.tibber_pulse_*
       - sensor.inverter_*
       - sensor.tesla_wall_connector_*
+      - sensor.*_tado_mode
 
 # The deliberate dashboard, in yaml so it lives in git like everything else.
 # The storage-mode dashboards (Home, Bereiche, Map, Roborock) are untouched

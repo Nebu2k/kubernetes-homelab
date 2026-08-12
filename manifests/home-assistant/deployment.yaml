@@ -24,6 +24,12 @@ spec:
       # network.
       hostNetwork: true
       dnsPolicy: ClusterFirstWithHostNet
+      # HA does not finish stopping within the 30s default, so every shutdown
+      # used to be a SIGKILL: the recorder database came up "not shutdown
+      # cleanly" on every start, and HA never reached its FINAL_WRITE, which is
+      # what flushes pending .storage writes such as Tado's rotating refresh
+      # token.
+      terminationGracePeriodSeconds: 120
       # No nodeAffinity: BLE runs through the Shelly proxies rather than a
       # local adapter, and the Gen1 Shellys push CoIoT via multicast
       # (coiot_peer=mcast) rather than unicast to one node, so the pod may
