@@ -49,7 +49,7 @@ Das Cluster faehrt seit 2026-08-12 v4 und v6, **v4 ist die primaere Familie**.
 | Pod-CIDR          | `10.42.0.0/16`   | `fd00:10:42::/56`                 |
 | Service-CIDR      | `10.43.0.0/16`   | `fd00:10:43::/112`                |
 | CoreDNS           | `10.43.0.10`     | `fd00:10:43::a`                   |
-| Node-Adressen     | `192.168.2.20-23`| `fd2e:9a71:c3b5::/64` per SLAAC   |
+| Node-Adressen     | `192.168.2.20-23`| `fd2e:9a71:c3b5::20/22/23`, fest  |
 | MetalLB-Pool      | `.240-.253`      | `fd2e:9a71:c3b5::240` bis `::253` |
 
 Die beiden Cluster-Bereiche sind ULAs, die nie geroutet werden und mit dem LAN
@@ -66,17 +66,34 @@ unter `10.43.0.10`.
 er einzeln auf `ipFamilyPolicy: PreferDualStack` gehoben wird. Bisher ist das
 genau einer: `blocky-dns`. Traefik ist bewusst v4.
 
-**`machine.kubelet.nodeIP.validSubnets` ist Pflicht.** Jede NIC traegt DREI
-v6-/64: den rotierenden ISP-Praefix, die manuelle ULA `fd2e:9a71:c3b5::/64` und
-eine zweite ULA, die UniFi selbst erzeugt. Ohne Auswahl kann Talos den
-ISP-Praefix nehmen, und dann wechselt die InternalIP jeder Node bei jeder
-Rotation. Die Reihenfolge ist v4 zuerst und auf allen Nodes gleich: Longhorn
-vertraegt Dual-Stack nur bei einheitlicher Familienreihenfolge.
+### Die v6-Adresse der Nodes ist fest, RAs sind aus
 
-**Flannel waehlt sein `public-ipv6` selbst** und haelt sich nicht an
-`validSubnets`. Auf talos-cp-1 ist das die zweite, von UniFi erzeugte ULA statt
-`fd2e:...`. Das traegt, weil beide Praefixe on-link sind, ist aber eine
-Inkonsistenz: verschwindet die UniFi-ULA, muss flannel dort einmal neu starten.
+Ins LAN announcen **drei** Router Praefixe: UniFi den rotierenden ISP-Praefix
+und die manuelle ULA, dazu ein Apple-Thread-Border-Router eine eigene ULA mit
+1800 s Lifetime (gemessen per `ndp -pn`, MAC `40:cb:c0:b0:29:bd`). Per SLAAC
+haette jede Node also drei v6-Adressen, und **flannel nimmt schlicht die erste
+am Interface**, entschieden von der Boot-Reihenfolge. Auf einer Node fiel die
+Wahl auf das Thread-Praefix, das mit dessen Border-Router verschwinden kann.
+
+Deshalb je Node eine **feste** Adresse aus `fd2e:9a71:c3b5::/64` und
+`accept_ra=0`. Damit ist die Auswahl eindeutig, fuer flannel wie fuer das
+kubelet. Drei Dinge haengen daran:
+
+- **Der Sysctl gilt pro Interface**, und die Namen sind je Node verschieden
+  (`eth0`, `end0`, `eno1`). `net.ipv6.conf.all.accept_ra` greift **nicht**
+  durch (gemessen: `all` stand auf 1, das Interface auf 2), und `default` wirkt
+  nur auf spaeter entstehende Interfaces. Wird eine NIC umbenannt, bekommt sie
+  ihre RAs stillschweigend zurueck.
+- **Die v6-Default-Route muss von Hand mit.** Siehe Fallen unten, ohne sie
+  startet flannel nicht.
+- **`machine.kubelet.nodeIP.validSubnets`** bleibt trotzdem gesetzt: v4 zuerst
+  und auf allen Nodes gleich, Longhorn vertraegt Dual-Stack nur bei
+  einheitlicher Familienreihenfolge.
+
+Die Nodes haben damit **keinen Weg ins v6-Internet** mehr, und das ist Absicht:
+DNS, Image-Pulls und beide Resolver-Upstreams sind v4, Blocky verbindet
+ausgehend mit `connectIPVersion: v4`. v6 dient hier der LAN-Erreichbarkeit von
+Diensten und dem Pod-Netz, nicht dem Transit.
 
 ## Image
 
@@ -398,6 +415,21 @@ nicht ungeprueft ausgerollt.
   die projizierten Token turnusmaessig erneuert (rund eine Stunde), und nur bei
   Clients, die die Token-Datei neu lesen. Der Endpoint ist nichts, was man
   wegen einer Kleinigkeit anfasst.
+
+- **flanneld braucht je Adressfamilie eine Default-Route, sonst startet es
+  nicht.** Es bestimmt sein Interface ueber die Default-Route und bricht sonst
+  mit `Failed to find any valid interface to use: failed to get default v6
+  interface: unable to find default v6 route` ab. Das ist kein Erreichbarkeits-
+  thema: die Route zeigt hier auf die UniFi-ULA `fd2e:9a71:c3b5::1`, und eine
+  ULA als Quelle kommt im v6-Internet ohnehin nicht weit. Sie steht nur da,
+  damit die Interface-Suche etwas findet.
+
+  **Der Ausfall sieht nicht nach flannel aus.** Ohne `/run/flannel/subnet.env`
+  bekommt auf der Node kein einziger Pod mehr ein Netz, der kubelet meldet
+  `FailedCreatePodSandBox`, und was auffaellt sind die Folgeschaeden:
+  longhorn-manager tot, Node in Longhorn `down`, Volumes degraded. Wer die
+  v6-Konfiguration einer Node anfasst, prueft danach als Erstes den
+  flannel-Pod dort.
 
 - **Eine Node bekommt ihr Pod-CIDR nur beim Join.** Kubernetes vergibt es genau
   einmal, es gibt keinen Controller, der eine bestehende Node nachtraeglich
