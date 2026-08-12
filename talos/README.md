@@ -66,34 +66,64 @@ unter `10.43.0.10`.
 er einzeln auf `ipFamilyPolicy: PreferDualStack` gehoben wird. Bisher ist das
 genau einer: `blocky-dns`. Traefik ist bewusst v4.
 
-### Die v6-Adresse der Nodes ist fest, RAs sind aus
+### Die v6-Adresse der Nodes ist fest, aus RAs kommen nur Routen
 
-Ins LAN announcen **drei** Router Praefixe: UniFi den rotierenden ISP-Praefix
-und die manuelle ULA, dazu ein Apple-Thread-Border-Router eine eigene ULA mit
-1800 s Lifetime (gemessen per `ndp -pn`, MAC `40:cb:c0:b0:29:bd`). Per SLAAC
-haette jede Node also drei v6-Adressen, und **flannel nimmt schlicht die erste
-am Interface**, entschieden von der Boot-Reihenfolge. Auf einer Node fiel die
-Wahl auf das Thread-Praefix, das mit dessen Border-Router verschwinden kann.
+Ins LAN announcen **vier** Router Praefixe: UniFi den rotierenden ISP-Praefix
+und die manuelle ULA, dazu ein Apple- und ein eero-Thread-Border-Router je eine
+eigene ULA mit 1800 s Lifetime (`ndp -pn`). Per SLAAC haette jede Node also
+mehrere v6-Adressen, und **flannel nimmt schlicht die erste am Interface**,
+entschieden von der Boot-Reihenfolge. Auf einer Node fiel die Wahl auf ein
+Thread-Praefix, das mit dessen Border-Router verschwinden kann.
 
 Deshalb je Node eine **feste** Adresse aus `fd2e:9a71:c3b5::/64` und
-`accept_ra=0`. Damit ist die Auswahl eindeutig, fuer flannel wie fuer das
-kubelet. Drei Dinge haengen daran:
+`autoconf=0`. Damit ist die Auswahl eindeutig, fuer flannel wie fuer das
+kubelet. Die RAs selbst werden aber verarbeitet, sonst erreicht kein Pod ein
+Thread-Geraet:
 
-- **Der Sysctl gilt pro Interface**, und die Namen sind je Node verschieden
+| Sysctl je Interface          | Wert | Wofuer                                      |
+| ---------------------------- | ---- | ------------------------------------------- |
+| `autoconf`                   | `0`  | keine SLAAC-Adressen, nur die feste bleibt  |
+| `accept_ra`                  | `2`  | 1 wird ignoriert, sobald die Node forwardet |
+| `accept_ra_defrtr`           | `0`  | die statische v6-Default-Route bleibt Chef  |
+| `accept_ra_rt_info_max_plen` | `64` | Default 0 verwirft **jede** RIO             |
+
+Drei Dinge haengen daran:
+
+- **Die Sysctls gelten pro Interface**, und die Namen sind je Node verschieden
   (`eth0`, `end0`, `eno1`). `net.ipv6.conf.all.accept_ra` greift **nicht**
   durch (gemessen: `all` stand auf 1, das Interface auf 2), und `default` wirkt
-  nur auf spaeter entstehende Interfaces. Wird eine NIC umbenannt, bekommt sie
-  ihre RAs stillschweigend zurueck.
+  nur auf spaeter entstehende Interfaces. Wird eine NIC umbenannt, faellt sie
+  stillschweigend auf die Defaults zurueck.
 - **Die v6-Default-Route muss von Hand mit.** Siehe Fallen unten, ohne sie
   startet flannel nicht.
 - **`machine.kubelet.nodeIP.validSubnets`** bleibt trotzdem gesetzt: v4 zuerst
   und auf allen Nodes gleich, Longhorn vertraegt Dual-Stack nur bei
   einheitlicher Familienreihenfolge.
 
-Die Nodes haben damit **keinen Weg ins v6-Internet** mehr, und das ist Absicht:
+Nach jeder Aenderung daran gehoert geprueft, dass keine Adresse dazugekommen
+ist, `talosctl get addresses` darf je Node genau eine globale v6 zeigen.
+
+Die Nodes haben damit **keinen Weg ins v6-Internet**, und das ist Absicht:
 DNS, Image-Pulls und beide Resolver-Upstreams sind v4, Blocky verbindet
 ausgehend mit `connectIPVersion: v4`. v6 dient hier der LAN-Erreichbarkeit von
 Diensten und dem Pod-Netz, nicht dem Transit.
+
+### Thread-Geraete erreicht nur, wer die RIOs auswertet
+
+Beide Thread-Netze (Apple `MyHome...` mit sieben Border-Routern, eero
+`eero-thread-d94e` mit einem) haengen an einem eigenen, **dynamisch vergebenen**
+OMR-Praefix und sind ausschliesslich ueber ihren Border-Router erreichbar. Das
+UniFi routet sie nicht: Pakete dorthin sterben still am Gateway, ohne
+`unreachable`. Angekuendigt werden sie per Route Information Option, die Linux
+per Default wegwirft. Ein Matter-Geraet im Thread-Netz wird deshalb per mDNS
+gefunden (Multicast, Layer 2) und ist per Unicast trotzdem tot, was im
+`matter-server` als `Unable to establish CASE session` erscheint.
+
+Statische Routen waeren hier die falsche Antwort: es braucht eine pro
+Thread-Netz, und beide Praefixe wechseln bei einem Rebuild des Mesh. Deshalb
+`accept_ra_rt_info_max_plen`, damit die Nodes den Praefixwechseln folgen.
+`talosctl get routes` zeigt die gelernten Routen mit dem Link-Local des
+jeweiligen Border-Routers als Gateway.
 
 ## Image
 

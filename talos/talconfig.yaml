@@ -116,7 +116,7 @@ nodes:
           # NOT optional, and not about reachability: flanneld determines its
           # interface from the default route of each family and refuses to
           # start without a v6 one ("failed to get default v6 interface"). With
-          # accept_ra off nothing else installs it. The gateway is the UniFi
+          # accept_ra_defrtr off nothing else installs it. The gateway is the UniFi
           # ULA address; a ULA source address gets nowhere on the v6 internet,
           # which is intended, the route exists for the interface lookup.
           - network: "::/0"
@@ -124,30 +124,41 @@ nodes:
         vip:
           ip: 192.168.2.29
     patches:
-      # No router advertisements on this interface. Three routers announce
-      # prefixes into this LAN: UniFi with the ISP prefix and the manual ULA,
-      # and an Apple Thread border router with a ULA of its own on a 30 minute
-      # lifetime. Flannel takes the FIRST v6 address of the interface, and
-      # which one that is comes down to boot order, so it ended up on the
-      # Thread prefix here. When that border router goes away, the address goes
-      # with it and v6 pod traffic through this node stops.
+      # Router advertisements: routes yes, addresses no.
       #
-      # Turned off, the static address above is the only v6 the interface has,
-      # for flannel as well as for the kubelet.
+      # Several routers announce into this LAN: UniFi with the ISP prefix and
+      # the manual ULA, plus an Apple and an eero Thread border router, each
+      # with a ULA of its own on a 30 minute lifetime. Flannel takes the FIRST
+      # v6 address of the interface and which one that is comes down to boot
+      # order, so SLAAC must not produce any. With autoconf off the static
+      # address above is the only v6 the interface has, for flannel as well as
+      # for the kubelet.
+      #
+      # The route information options are what the node needs from those RAs.
+      # Each Thread network is reachable only through its border router and
+      # UniFi does not route those prefixes, so without
+      # accept_ra_rt_info_max_plen, whose default of 0 drops every RIO, no pod
+      # reaches a Thread device. The prefixes are assigned dynamically, hence
+      # learned rather than pinned.
+      #
+      # accept_ra has to be 2: this node forwards, and a forwarding host
+      # ignores RAs at 1. accept_ra_defrtr keeps the static default route above
+      # in charge, so there is still no v6 transit, and none is needed: DNS,
+      # image pulls and both resolver upstreams are v4, and Blocky connects
+      # outbound with connectIPVersion v4.
       #
       # The interface name is load-bearing: "all" does not reach accept_ra
       # (measured, all=1 while the interface stood at 2), and "default" only
       # applies to interfaces created afterwards. A renamed interface silently
       # gets its RAs back.
-      #
-      # The price is the v6 default route. Nothing needs it: DNS, image pulls
-      # and both resolver upstreams are v4, and Blocky connects outbound with
-      # connectIPVersion v4.
       - |-
         machine:
           sysctls:
             net.ipv6.conf.default.accept_ra: "0"
-            net.ipv6.conf.eth0.accept_ra: "0"
+            net.ipv6.conf.eth0.accept_ra: "2"
+            net.ipv6.conf.eth0.accept_ra_defrtr: "0"
+            net.ipv6.conf.eth0.accept_ra_rt_info_max_plen: "64"
+            net.ipv6.conf.eth0.autoconf: "0"
 
   # prodesk: bare metal and the largest share of the cluster's RAM ceiling.
   # Without it the kube-prometheus-stack does not fit.
@@ -196,7 +207,10 @@ nodes:
         machine:
           sysctls:
             net.ipv6.conf.default.accept_ra: "0"
-            net.ipv6.conf.eno1.accept_ra: "0"
+            net.ipv6.conf.eno1.accept_ra: "2"
+            net.ipv6.conf.eno1.accept_ra_defrtr: "0"
+            net.ipv6.conf.eno1.accept_ra_rt_info_max_plen: "64"
+            net.ipv6.conf.eno1.autoconf: "0"
 
   # raspi5: Raspberry Pi 5 with NVMe, the second bare-metal node. Together with
   # prodesk it keeps the etcd majority off pve.
@@ -249,7 +263,10 @@ nodes:
         machine:
           sysctls:
             net.ipv6.conf.default.accept_ra: "0"
-            net.ipv6.conf.end0.accept_ra: "0"
+            net.ipv6.conf.end0.accept_ra: "2"
+            net.ipv6.conf.end0.accept_ra_defrtr: "0"
+            net.ipv6.conf.end0.accept_ra_rt_info_max_plen: "64"
+            net.ipv6.conf.end0.autoconf: "0"
     # Its own zone, NOT joining prodesk in "blech". With two zones and
     # replicaZoneSoftAntiAffinity: "false" one of two replicas would always end
     # up on pve; only a third zone lets Longhorn put both on bare metal, which
