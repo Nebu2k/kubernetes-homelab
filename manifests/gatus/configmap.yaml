@@ -241,14 +241,27 @@ data:
           - "[DNS_RCODE] == NOERROR"
           - "[BODY] == 192.168.2.250"
 
-      # Through the relay (dns-v6-relay.yaml), because the pod network is
-      # v4-only. The house's v6 DNS hangs off this one address: the cluster
-      # instance cannot offer a v6 address while the cluster is single-stack.
-      # If the ULA disappears everything else stays green and only v6 clients
-      # are dead, and this check is the only one that sees it.
+      # The v6 side, queried straight from the pod: the pod network is
+      # dual-stack, so the ULA is reachable without the relay this used to need.
+      # Both instances get their own check, because a v6 failure is invisible
+      # everywhere else: the v4 endpoints above stay green while only clients
+      # with a v6 resolver are dead.
+      #
+      # Brackets and an explicit port are required, the address is a literal.
+      - name: Blocky Cluster (IPv6)
+        group: DNS
+        url: "[fd2e:9a71:c3b5::253]:53"
+        interval: 60s
+        dns:
+          query-name: "argocd.elmstreet79.de"
+          query-type: "A"
+        conditions:
+          - "[DNS_RCODE] == NOERROR"
+          - "[BODY] == 192.168.2.250"
+
       - name: Blocky LXC (IPv6)
         group: DNS
-        url: "dns-v6-relay.gatus.svc.cluster.local:5355"
+        url: "[fd2e:9a71:c3b5::254]:53"
         interval: 60s
         dns:
           query-name: "argocd.elmstreet79.de"
