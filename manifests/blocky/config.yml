@@ -41,14 +41,23 @@ bootstrapDns:
 connectIPVersion: v4
 
 # Split horizon, covering the apex and every subdomain; Traefik 301s the apex
-# to www (manifests/landing-page/apex-redirect.yaml). filterUnmappedTypes stays
-# on so AAAA and everything but A is answered empty instead of forwarded to
-# Unbound: otherwise elmstreet79.de sometimes resolves to the public address.
+# to www (manifests/external-services/apex-redirect.yaml). filterUnmappedTypes
+# stays on so AAAA and everything but A is answered empty instead of forwarded
+# to Unbound: otherwise elmstreet79.de sometimes resolves to the public address.
+#
+# www is the exception: the landing page is a Cloudflare Worker, so it has to
+# leave the house. A zone entry beats the mapping of the parent domain and
+# blocky resolves the CNAME target along with it, A and AAAA both.
+# NEVER put an @ entry next to it. A CNAME at the zone apex drags the whole
+# zone with it, and teslamate and home would resolve to Cloudflare too.
 customDNS:
   customTTL: 1h
   filterUnmappedTypes: true
   mapping:
     elmstreet79.de: 192.168.2.250
+  zone: |
+    $ORIGIN elmstreet79.de.
+    www 3600 IN CNAME elmstreet79-de.y8m7g2fj9p.workers.dev.
 
 # Reverse lookups for the three house subnets go to their UniFi gateway.
 # Unbound cannot answer them, private ranges have no delegation in the root.
