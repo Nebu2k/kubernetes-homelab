@@ -1170,6 +1170,159 @@ spec:
             summary: "Ein Update-Textfile-Collector liefert nichts Frisches mehr"
             description: "apt.prom, needrestart.prom oder softwareupdate.prom ist aelter als zwei Tage oder ganz weg. Solange das so ist, sind die Update-Alerts blind. Nachsehen: ssh pve 'ls -l /var/lib/prometheus/node-exporter/ && systemctl list-timers | grep -E \"apt|needrestart\"' bzw. ssh macmini 'ls -l /usr/local/var/lib/node_exporter/textfile_collector/ && launchctl print gui/501/com.speters.softwareupdate-collector'"
 
+    # pve is scraped twice and the split decides which metric an alert may
+    # use: node-exporter on 192.168.2.8 delivers the OS view (CPU, RAM, /,
+    # updates) and is already covered by the node-* rules above; pve-exporter
+    # delivers the API view, which nothing else sees. Only the second one is
+    # in here.
+    #
+    # No CPU or memory rule: NodeHighCPU and NodeHighMemory already match this
+    # host, and pve_node_cpus_total is 0, so pve_node_cpu_load cannot be
+    # normalised anyway.
+    - name: proxmox-host
+      # The ServiceMonitor scrapes every 120s, a shorter evaluation would only
+      # re-read the same sample.
+      interval: 120s
+      rules:
+        # This is why the group exists. Debian's node-exporter carries "mnt" in
+        # its default mount-points-exclude, so /mnt/nvme-2tb (1.8TB, holds the
+        # disk of talos-cp-1) and /mnt/pve/nas-nfs have no NodeFilesystemSpace*
+        # alert, without an error and without a gap in any dashboard. local-lvm
+        # is a thin pool rather than a filesystem and node-exporter could never
+        # see it. Covering this here keeps the fix in git instead of in an ARGS
+        # line on the host.
+        - alert: ProxmoxStorageSpaceWarning
+          expr: pve_storage_used_bytes / (pve_storage_total_bytes > 0) > 0.85
+          for: 30m
+          labels:
+            severity: warning
+          annotations:
+            summary: "Proxmox-Storage {{ $labels.storage }} ist zu {{ $value | humanizePercentage }} belegt"
+            description: "Schwelle 85%. Fuer nvme-2tb, nas-nfs und local-lvm ist das der einzige Alarmweg, node-exporter sieht diese drei nicht. Auf nvme-2tb waechst die qcow2 von talos-cp-1 auch ohne neue Daten, wenn discard=on an der VM fehlt; nas-nfs ist das vzdump-Ziel und traegt zusaetzlich die Longhorn-Backups. Ansehen: ssh pve 'pvesm status'"
+
+        - alert: ProxmoxStorageSpaceCritical
+          expr: pve_storage_used_bytes / (pve_storage_total_bytes > 0) > 0.95
+          for: 15m
+          labels:
+            severity: critical
+          annotations:
+            summary: "Proxmox-Storage {{ $labels.storage }} ist zu {{ $value | humanizePercentage }} belegt"
+            description: "Schwelle 95%. Laeuft nvme-2tb voll, friert talos-cp-1 ein und das Cluster verliert eines von drei etcd-Membern samt einer Longhorn-Replik. Auf nas-nfs treffen vzdump und die Longhorn-Backups zusammen, dort scheitern beide still. Ansehen: ssh pve 'pvesm status'"
+
+        # On pve there are exactly two guests, and both are load-bearing. The
+        # cluster reports the same outage one level up (NodeNotReady,
+        # BlockyTargetDown); this one names the cause on the pve side and
+        # separates "guest is stopped" from "network or metrics are gone".
+        #
+        # 10m so that a reboot of the LXC stays quiet. A guest reboot of the VM
+        # does not show up here at all, qm keeps it as running.
+        - alert: ProxmoxGuestStopped
+          expr: pve_vm_status == 0 or pve_lxc_status == 0
+          for: 10m
+          labels:
+            severity: critical
+          annotations:
+            summary: "Gast {{ $labels.name }} ({{ $labels.vmid }}) laeuft nicht mehr auf pve"
+            description: "Die VM talos-cp-1 ist ein etcd-Member von dreien und traegt eine Longhorn-Replik, der LXC blocky ist der zweite Resolver auf 192.168.2.254. Status: ssh pve 'qm list && pct list'"
+
+        # Net below both rules above: without it a dead exporter, an expired
+        # API token or a switched-off pve just make them go quiet.
+        - alert: ProxmoxMetricsMissing
+          expr: absent(pve_node_up) or pve_node_up == 0
+          for: 15m
+          labels:
+            severity: warning
+          annotations:
+            summary: "pve-exporter liefert keine Proxmox-Metriken mehr"
+            description: "pve_node_up fehlt oder steht auf 0, damit sind die Storage- und Gast-Alerts blind. Ursachen der Reihe nach: Deployment monitoring/proxmox-exporter, das API-Token im Secret pve-api-credentials, pve selbst. Pruefen: kubectl -n monitoring logs deploy/proxmox-exporter --tail=-1"
+
+    # SMART for pve's two NVMes, and NOT from pve-exporter: the Proxmox API
+    # knows nothing about disk health. The values come from nvme.prom, a
+    # textfile collector of the prometheus-node-exporter-collectors package
+    # that runs every 15 minutes. nvme0n1 carries pve-root and local-lvm,
+    # nvme1n1 carries /mnt/nvme-2tb and with it talos-cp-1.
+    #
+    # smartmon.prom deliberately gets no rule. Its timer has
+    # ConditionPathExistsGlob=/dev/sd* and pve has only NVMe, so the file never
+    # gets rewritten and reports smartmon_device_smart_healthy=1 forever. It
+    # reads like a health signal and is a snapshot of a single old run.
+    #
+    # nvme_num_err_log_entries_total gets no rule either: the log also counts
+    # harmless entries, an aborted identify by nvme-cli included.
+    - name: proxmox-disks
+      interval: 60s
+      rules:
+        # The device's own summary judgement, a bitmap: spare below threshold,
+        # temperature outside spec, reliability degraded, media switched to
+        # read-only, volatile memory backup failed. Any bit is a reason to have
+        # a replacement in the house.
+        - alert: NvmeCriticalWarning
+          expr: nvme_critical_warning > 0
+          for: 5m
+          labels:
+            severity: critical
+          annotations:
+            summary: "NVMe {{ $labels.device }} auf {{ $labels.instance }} meldet einen SMART-Kritikalfehler"
+            description: "critical_warning ist {{ $value }} (Bitmap: 1 Spare unter Schwelle, 2 Temperatur ausser Spezifikation, 4 Zuverlaessigkeit degradiert, 8 nur noch lesbar, 16 Backup des fluechtigen Speichers gescheitert). Vollstaendig: ssh pve 'nvme smart-log /dev/{{ $labels.device }}'. Liegt es an nvme1n1, haengt talos-cp-1 daran: erst pruefen, ob eine Longhorn-Replik dieser Node woanders vollstaendig ist."
+
+        # Media errors are irreversible, so the counter alone would fire
+        # forever. The window asks for NEW errors, the second condition keeps
+        # it from firing on a counter reset after a reboot.
+        - alert: NvmeMediaErrors
+          expr: increase(nvme_media_errors_total[24h]) > 0 and nvme_media_errors_total > 0
+          for: 30m
+          labels:
+            severity: critical
+          annotations:
+            summary: "NVMe {{ $labels.device }} auf {{ $labels.instance }} hat neue Medienfehler"
+            description: "{{ $value | printf \"%.0f\" }} neue nicht korrigierbare Datenfehler in 24h. Das sind verlorene Bloecke, keine Warnung: Backups pruefen und die Platte einplanen. ssh pve 'nvme smart-log /dev/{{ $labels.device }}'"
+
+        # Early warning before bit 0 of critical_warning trips. The devices
+        # report their own threshold at 0.1, this sits deliberately ahead of
+        # it.
+        - alert: NvmeSpareLow
+          expr: nvme_available_spare_ratio < 0.2
+          for: 1h
+          labels:
+            severity: warning
+          annotations:
+            summary: "NVMe {{ $labels.device }} auf {{ $labels.instance }} hat nur noch {{ $value | humanizePercentage }} Reserve-Bloecke"
+            description: "Die eigene Schwelle des Geraets liegt bei 10%, darunter meldet es einen Kritikalfehler. Bis dahin ist Zeit fuer einen geplanten Tausch."
+
+        - alert: NvmeWearHigh
+          expr: nvme_percentage_used_ratio > 0.8
+          for: 1h
+          labels:
+            severity: warning
+          annotations:
+            summary: "NVMe {{ $labels.device }} auf {{ $labels.instance }} hat {{ $value | humanizePercentage }} ihrer Schreiblast erreicht"
+            description: "Der Hersteller rechnet ab 100% mit Ausfaellen, die Platte laeuft danach weiter. Ein Wert, der sich planen laesst: Verlauf im Node-Exporter-Dashboard ansehen und den Tausch terminieren."
+
+        # 70 instead of the ~80 at which these devices throttle: the alert is
+        # meant to arrive before the performance drop, not with it.
+        - alert: NvmeTooHot
+          expr: nvme_temperature_celsius > 70
+          for: 15m
+          labels:
+            severity: warning
+          annotations:
+            summary: "NVMe {{ $labels.device }} auf {{ $labels.instance }} ist {{ $value }} Grad heiss"
+            description: "Im Leerlauf liegen die beiden Platten bei 33 und 40 Grad. Ab rund 80 Grad drosseln sie, was auf nvme1n1 die IO von talos-cp-1 trifft. Meist steht der Luefter oder der Kuehlkoerper sitzt lose."
+
+        # Net below every rule above. The file is rewritten every 15 minutes;
+        # when that stops the values simply freeze and nothing fires, exactly
+        # the failure mode of smartmon.prom described at the top of this group.
+        - alert: NvmeSmartMetricsStale
+          expr: |
+            (time() - node_textfile_mtime_seconds{file=~".+/nvme.prom"} > 3600)
+              or absent(node_textfile_mtime_seconds{file=~".+/nvme.prom"})
+          for: 1h
+          labels:
+            severity: warning
+          annotations:
+            summary: "Die SMART-Werte von pve sind nicht mehr frisch"
+            description: "nvme.prom ist aelter als eine Stunde oder ganz weg, obwohl der Timer alle 15 Minuten laeuft. Solange das so ist, sind alle Nvme*-Alerts blind und ein Plattenfehler faellt nur noch smartd auf. Pruefen: ssh pve 'systemctl list-timers prometheus-node-exporter-nvme.timer && ls -l /var/lib/prometheus/node-exporter/'"
+
     # ArgoCD is the one component nothing else watches: it rolls out every
     # other app, but a sync that keeps failing is only visible in its own UI.
     #
