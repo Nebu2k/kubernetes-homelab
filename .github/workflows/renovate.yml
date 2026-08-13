@@ -71,4 +71,9 @@ jobs:
           RENOVATE_REPOSITORIES: Nebu2k/kubernetes-homelab,Nebu2k/homelab-terraform
           # The action expects the string "null" for "off", not an empty value.
           RENOVATE_DRY_RUN: ${{ inputs.dryRun == true && 'full' || 'null' }}
+          # Without this Renovate commits as renovate@whitesourcesoftware.com
+          # and warns on every run. The noreply address rather than the real
+          # one: the account's primary address is set to private, and GitHub
+          # still attributes the commits through the id.
+          RENOVATE_GIT_AUTHOR: 'Nebu2k <64439522+Nebu2k@users.noreply.github.com>'
           LOG_LEVEL: ${{ inputs.logLevel || 'info' }}
