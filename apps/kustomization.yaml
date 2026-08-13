@@ -38,7 +38,6 @@ resources:
   - rpi5-net-tuning.yaml
 
   # Applications
-  - landing-page.yaml
   - homepage.yaml
   - gatus.yaml
   - external-services.yaml

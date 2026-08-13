@@ -24,7 +24,7 @@ Talos Linux cluster managed via GitOps using the ArgoCD App-of-Apps pattern.
 | 2 | Etcd Backup, Metrics Server, Rpi5 Net Tuning |
 | 3 | Traefik |
 | 4 | Cert Manager, Longhorn |
-| 5 | Csi Driver Smb, Landing Page, Teslamate |
+| 5 | Csi Driver Smb, Teslamate |
 | 6 | Kube Prometheus Stack |
 | 7 | Blocky, Home Assistant, Unifi Poller |
 | 8 | Gatus, Ripe Atlas |
@@ -53,7 +53,6 @@ homelab/
 │   ├── cert-manager.yaml              # Wave 4
 │   ├── longhorn.yaml                  # Wave 4
 │   ├── csi-driver-smb.yaml            # Wave 5
-│   ├── landing-page.yaml              # Wave 5
 │   ├── teslamate.yaml                 # Wave 5
 │   ├── kube-prometheus-stack.yaml     # Wave 6
 │   ├── blocky.yaml                    # Wave 7
@@ -190,14 +189,6 @@ homelab/
 │   │   ├── prometheus-ingress.yaml
 │   │   ├── prometheus-rules.yaml
 │   │   └── values.yaml
-│   ├── landing-page/
-│   │   ├── apex-redirect.yaml
-│   │   ├── configmap.yaml
-│   │   ├── deployment.yaml
-│   │   ├── ingress.yaml
-│   │   ├── kustomization.yaml
-│   │   ├── namespace.yaml
-│   │   └── service.yaml
 │   ├── longhorn/
 │   │   ├── ingress.yaml
 │   │   ├── kustomization.yaml
@@ -988,7 +979,6 @@ kubectl get secret -n monitoring grafana-admin-credentials \
 | Home Assistant | 2026.7.4 | Home Assistant |
 | Homepage | v1.13.2 | Homepage |
 | Kube Prometheus Stack | 88.1.5 | Kube Prometheus Stack |
-| Landing Page | 1.31.3-alpine | Landing Page |
 | Longhorn | 1.12.0 | Longhorn |
 | Mealie | v3.22.0 | Mealie |
 | Metallb | 0.16.1 | Metallb |
@@ -1016,7 +1006,6 @@ kubectl get secret -n monitoring grafana-admin-credentials \
 - [Home Assistant](https://www.home-assistant.io/docs/)
 - [Homepage](https://gethomepage.dev/latest/)
 - [Kube Prometheus Stack](https://prometheus-community.github.io/helm-charts)
-- [Landing Page](https://github.com/nginx/nginx)
 - [Longhorn](https://charts.longhorn.io)
 - [Metallb](https://metallb.github.io/metallb)
 - [Metrics Server](https://kubernetes-sigs.github.io/metrics-server/)

@@ -50,13 +50,25 @@ data:
           # Canary for the wildcard cert that ALL hosts here share.
           - "[CERTIFICATE_EXPIRATION] > 240h"
 
+      # Nicht mehr im Cluster, sondern ein Cloudflare Worker. Der Check bleibt,
+      # weil er den kompletten Weg abdeckt: Blocky loest www ueber den
+      # zone-Eintrag nach draussen auf, ein Fehler dort faellt hier auf.
       - name: Landing Page
-        group: Cluster
+        group: Internet
         url: "https://www.elmstreet79.de"
         interval: 60s
         conditions:
           - "[STATUS] == 200"
           - "[RESPONSE_TIME] < 2000"
+
+      # Der Apex bleibt Traefiks Aufgabe und schickt intern auf www
+      # (manifests/external-services/apex-redirect.yaml).
+      - name: Apex-Redirect
+        group: Cluster
+        url: "https://elmstreet79.de"
+        interval: 60s
+        conditions:
+          - "[STATUS] == 301"
 
       - name: ArgoCD
         group: Cluster
@@ -298,12 +310,14 @@ data:
 
       # Counter-check from outside: does the public name still resolve (CNAME
       # to nebu2k.ipv64.net)? The address is dynamic, so only the RCODE.
+      # Deliberately homeassistant and not www: www is a Cloudflare Worker and
+      # would stay green even if DynDNS were long dead.
       - name: Cloudflare (oeffentlicher Record)
         group: DNS
         url: "1.1.1.1"
         interval: 5m
         dns:
-          query-name: "www.elmstreet79.de"
+          query-name: "homeassistant.elmstreet79.de"
           query-type: "A"
         conditions:
           - "[DNS_RCODE] == NOERROR"
