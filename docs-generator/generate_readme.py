@@ -17,12 +17,28 @@ MANIFESTS_DIR = REPO_ROOT / "manifests"
 TEMPLATE_DIR = Path(__file__).parent / "templates"
 OUTPUT_FILE = REPO_ROOT / "README.md"
 
-# Special cases for title casing
-SPECIAL_CASES = {}
+# Spellings that neither title case nor the acronym list get right
+SPECIAL_CASES = {
+    'metallb': 'MetalLB',
+    'argocd': 'ArgoCD',
+    'teslamate': 'TeslaMate',
+    'piaware': 'PiAware',
+    'readsb': 'readsb',
+    'unifi': 'UniFi',
+    'ngx': 'ngx',
+    'rpi5': 'RPi5',
+    'etcd': 'etcd',
+    'talhelper': 'talhelper',
+    # Full names that are spelled lowercase upstream
+    'kube-prometheus-stack': 'kube-prometheus-stack',
+    'paperless-ngx': 'paperless-ngx',
+    'csi-driver-smb': 'csi-driver-smb',
+}
 
 # Common acronyms that should stay uppercase
 ACRONYMS = {'nfs', 's3', 'api', 'dns', 'tls', 'ssl', 'http', 'https',
-            'k8s', 'cpu', 'ram', 'gpu', 'io', 'ip', 'vpn', 'ssh'}
+            'k8s', 'cpu', 'ram', 'gpu', 'io', 'ip', 'vpn', 'ssh',
+            'csi', 'smb', 'cifs', 'fr24', 'ripe', 'pve'}
 
 
 def get_sync_waves():
@@ -111,6 +127,7 @@ def get_component_versions():
             # Use app version if available, otherwise use Helm chart version
             versions[app_name] = {
                 'chart': chart,
+                'display': smart_title_case(app_name),
                 'version': app_version if app_version else chart_version
             }
 
@@ -164,6 +181,7 @@ def get_component_versions():
             if app_version:
                 versions[app_name] = {
                     'chart': app_name,  # Use app name as chart name
+                    'display': smart_title_case(app_name),
                     'version': app_version
                 }
 
@@ -172,6 +190,9 @@ def get_component_versions():
 
 def smart_title_case(text):
     """Convert text to title case while preserving known acronyms in uppercase."""
+    if text.lower() in SPECIAL_CASES:
+        return SPECIAL_CASES[text.lower()]
+
     words = text.replace('-', ' ').split()
     result = []
     
@@ -197,9 +218,7 @@ def get_documentation_links():
         'home-assistant': 'https://www.home-assistant.io/docs/',
         'homepage': 'https://gethomepage.dev/latest/',
         'gatus': 'https://github.com/TwiN/gatus',
-        'minio': 'https://min.io/docs/minio/kubernetes/upstream/',
         'teslamate': 'https://docs.teslamate.org/',
-        'landing-page': 'https://github.com/nginx/nginx',
         'proxmox-exporter': 'https://github.com/prometheus-pve/prometheus-pve-exporter',
         'unifi-poller': 'https://unpoller.com/',
     }
@@ -278,81 +297,62 @@ def is_ignored(path, gitignore_spec):
 
 
 def generate_tree_fallback():
-    """Generate tree structure manually if tree command not available."""
-    lines = ["homelab/"]
-    
-    # Load gitignore spec
+    """Generate the repository structure, directories only.
+
+    Listing every single manifest file blew the tree up to a few hundred lines
+    that nobody reads and that changes on every commit. One line per component
+    is enough to find one's way around; what is inside a component directory is
+    obvious once you are in it.
+    """
     gitignore_spec = load_gitignore_patterns()
-    
-    # Bootstrap directory
-    lines.append("├── bootstrap/")
-    lines.append("│   └── root-app.yaml              # App-of-Apps (deploys everything)")
-    
-    # Apps directory with sync-waves
-    lines.append("├── apps/")
-    apps_files = sorted((REPO_ROOT / "apps").glob("*.yaml"))
-    sync_waves_map = {}
-    
-    for app_file in apps_files:
-        if app_file.name == "kustomization.yaml":
-            continue
-        with open(app_file, 'r') as f:
-            try:
-                app = yaml.safe_load(f)
-                if app and app.get('kind') == 'Application':
-                    wave = app['metadata'].get('annotations', {}).get('argocd.argoproj.io/sync-wave', '0')
-                    sync_waves_map[app_file.name] = wave
-            except:
-                pass
-    
-    # Add kustomization first
-    lines.append("│   ├── kustomization.yaml         # List of all apps")
-    
-    # Add apps with wave annotations
-    sorted_apps = sorted([f for f in apps_files if f.name != "kustomization.yaml"], 
-                        key=lambda x: (int(sync_waves_map.get(x.name, '999')), x.name))
-    
-    for i, app_file in enumerate(sorted_apps):
-        wave = sync_waves_map.get(app_file.name, '')
-        wave_comment = f"# Wave {wave}" if wave else ""
-        is_last = i == len(sorted_apps) - 1
-        prefix = "│   └── " if is_last else "│   ├── "
-        lines.append(f"{prefix}{app_file.name:<30} {wave_comment}")
-    
-    # Manifests directory
-    lines.append("├── manifests/")
-    manifest_dirs = sorted([d for d in (REPO_ROOT / "manifests").iterdir() 
-                          if d.is_dir() and not d.name.startswith('.') and not is_ignored(d, gitignore_spec)])
-    
-    # manifests/ is not the last top-level block, talos/ follows it.
-    # Deshalb haengt alles darunter an einem durchlaufenden "│".
+
+    app_count = len([f for f in (REPO_ROOT / "apps").glob("*.yaml")
+                     if f.name != "kustomization.yaml"])
+
+    lines = [
+        "kubernetes-homelab/",
+        "├── bootstrap/root-app.yaml    # App-of-Apps, the only thing applied by hand",
+        f"├── apps/                      # {app_count} ArgoCD Applications, one per component (waves above)",
+        "├── manifests/                 # what those Applications point at",
+    ]
+
+    manifest_dirs = sorted([d for d in MANIFESTS_DIR.iterdir()
+                            if d.is_dir() and not d.name.startswith('.')
+                            and not is_ignored(d, gitignore_spec)])
+
     for i, manifest_dir in enumerate(manifest_dirs):
-        is_last_dir = i == len(manifest_dirs) - 1
-        dir_prefix = "│   └── " if is_last_dir else "│   ├── "
-        lines.append(f"{dir_prefix}{manifest_dir.name}/")
-
-        # Add files in manifest - filter using gitignore spec
-        all_files = sorted([f for f in manifest_dir.glob("*.yaml*")
-                          if not f.name.startswith('.') and not is_ignored(f, gitignore_spec)])
-        # Additional filter: exclude unsealed.yaml files that don't have .example extension
-        manifest_files = [f for f in all_files
-                         if not (f.name.endswith('-unsealed.yaml') and not f.name.endswith('.example'))]
-
-        for j, manifest_file in enumerate(manifest_files):
-            is_last_file = j == len(manifest_files) - 1
-            indent = "│       " if is_last_dir else "│   │   "
-            file_prefix = f"{indent}└── " if is_last_file else f"{indent}├── "
-
-            lines.append(f"{file_prefix}{manifest_file.name}")
+        is_last = i == len(manifest_dirs) - 1
+        lines.append(f"│   {'└──' if is_last else '├──'} {manifest_dir.name}/")
 
     # The Talos layer. Not GitOps: talconfig.yaml is the source talhelper
     # generates the machine configs from, and those sit next to it encrypted.
-    lines.append("└── talos/")
-    lines.append("    ├── README.md                  # operation, restore recipe, pitfalls")
-    lines.append("    ├── talconfig.yaml             # source of the machine configs (talhelper)")
-    lines.append("    └── talsecret.sops.yaml        # secrets bundle, SOPS-encrypted")
+    lines += [
+        "├── talos/                     # machine configs (talhelper), see talos/README.md",
+        "├── docs-generator/            # renders this README from templates/README.md.j2",
+        "└── reseal-all-secrets.sh      # reseals every *-unsealed.yaml under manifests/",
+    ]
 
     return "\n".join(lines)
+
+
+def get_cluster_versions():
+    """Read Talos and Kubernetes version from talos/talconfig.yaml.
+
+    Hardcoding them in the template means they survive every Talos upgrade
+    untouched and quietly turn into a lie.
+    """
+    talconfig = REPO_ROOT / "talos" / "talconfig.yaml"
+
+    if not talconfig.exists():
+        return {}
+
+    with open(talconfig, 'r') as f:
+        config = yaml.safe_load(f)
+
+    return {
+        'talos': config.get('talosVersion', ''),
+        'kubernetes': config.get('kubernetesVersion', ''),
+    }
 
 
 def get_sealed_secrets():
@@ -418,11 +418,14 @@ def main():
     print("  📚 Extracting documentation links...")
     documentation_links = get_documentation_links()
     print(f"      Found {len(documentation_links)} documentation sources")
-    
+
+    cluster = get_cluster_versions()
+
     # Prepare template data
     data = {
         'sync_waves': sync_waves,
         'versions': versions,
+        'cluster': cluster,
         'repo_structure': repo_structure,
         'sealed_secrets': sealed_secrets,
         'bootstrap_secrets': bootstrap_secrets,

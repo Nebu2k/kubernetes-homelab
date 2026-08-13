@@ -20,7 +20,7 @@ Talos Linux cluster managed via GitOps using the ArgoCD App-of-Apps pattern.
 | Wave | Component |
 |------|-----------|
 {% for wave, components in sync_waves.items() -%}
-| {{ wave }} | {{ components | join(', ') | title | replace('-', ' ') }} |
+| {{ wave }} | {{ components | join(', ') }} |
 {% endfor %}
 ## 📁 Repository Structure
 
@@ -75,402 +75,214 @@ terraform init && terraform apply
 Terraform always sends the full value set and knows no `--reuse-values`, which
 is what makes a chart major upgrade predictable.
 
-### Step 3: Fork & Configure Repository (**on your laptop**)
+### Step 3: Fork & configure the repository (**on your laptop**)
 
 ```bash
 # Fork https://github.com/Nebu2k/kubernetes-homelab
 git clone https://github.com/YOUR_USERNAME/kubernetes-homelab
 cd kubernetes-homelab
 
-# Install Git hooks (enables auto-README regeneration on commit)
+# Install Git hooks (regenerates the README on commit)
 .githooks/install.sh
 ```
 
-**⚙️ Configure for your environment:**
+> ⚠️ The repository is pre-configured for `elmstreet79.de` and `192.168.2.0/24`.
+> For your own environment adjust the MetalLB pool in
+> `manifests/metallb/metallb-ip-pool.yaml` and the domain in
+> `manifests/traefik/values.yaml` plus the ingress annotations.
 
-> ⚠️ **Warning:** The repository is pre-configured for `elmstreet79.de`. If using your own domain, update:
-
-1. **MetalLB IP Pool** (adjust to your network):
-
-   ```bash
-   vim manifests/metallb/metallb-ip-pool.yaml
-   # Change: 192.168.2.250-192.168.2.253
-   ```
-
-2. **Cloudflare API Token** (required, for cert-manager DNS-01):
-
-   ```bash
-   # Create from example
-   cp manifests/cert-manager/cloudflare-api-token-unsealed.yaml.example \
-      manifests/cert-manager/cloudflare-api-token-unsealed.yaml
-
-   # Add your Cloudflare API token (Zone:DNS:Edit on your zone)
-   vim manifests/cert-manager/cloudflare-api-token-unsealed.yaml
-
-   # Note: Sealing happens AFTER cluster bootstrap (Step 4.5)
-   # For now, keep it unsealed locally (gitignored)
-   ```
-
-3. **All other secrets** (each optional, depending on which apps you keep):
-
-   Every component that needs credentials ships a `.example` template. Copy the
-   ones you need, fill them in, and leave them unsealed for now. Each file's
-   header comment explains what belongs in it.
-
-   ```bash
-{%- for secret in bootstrap_secrets %}
-{%- if secret.component != 'cert-manager' %}
-   cp {{ secret.example_path }} \
-      {{ secret.unsealed_path }}
-{%- endif %}
-{%- endfor %}
-
-   # Then edit each copy and replace the placeholder values.
-   # Sealing happens AFTER cluster bootstrap (Step 4.5).
-   ```
-
-   ⚠️ **Note:** `*-unsealed.yaml` files are gitignored for security. Only `.example` templates are committed. They are also the only reseal source you will ever have, since SealedSecrets cannot be decrypted back.
-
-4. **Traefik Dashboard Domain** (required if using different domain):
-
-   The Traefik dashboard is configured in the Helm values file:
-
-   ```bash
-   vim manifests/traefik/values.yaml
-   # Update line 45: matchRule: Host(`traefik.your-domain.com`)
-   # Update annotations with your domain
-   ```
-
-**Commit and push:**
+**Prepare the secrets.** Every component that needs credentials ships a
+`*-unsealed.yaml.example` template whose header comment explains what belongs in
+it. Copy them all, then fill in the ones you actually need:
 
 ```bash
-git add -A
-git commit -m "Configure for my environment"
-git push
+for f in manifests/*/*-unsealed.yaml.example; do cp -n "$f" "${f%.example}"; done
+```
+
+{% for component, secrets in bootstrap_secrets | groupby('component') -%}
+- **{{ component }}**: {{ secrets | map(attribute='base_name') | join(', ') }}
+{% endfor %}
+Sealing happens after the cluster runs (Step 5), so leave them unsealed for now.
+
+⚠️ `*-unsealed.yaml` files are gitignored, and they are the only reseal source
+you will ever have: a SealedSecret cannot be decrypted back. Keep them.
+
+```bash
+git add -A && git commit -m "Configure for my environment" && git push
 ```
 
 ### Step 4: Bootstrap GitOps (**on your laptop**)
 
 ```bash
-# Deploy App-of-Apps
 kubectl apply -f bootstrap/root-app.yaml
-
-# Watch ArgoCD deploy everything (~5-10 minutes)
-kubectl get applications -n argocd -w
+kubectl get applications -n argocd -w   # ~5-10 minutes
 ```
 
-**What happens:**
+Sealed Secrets installs first (Wave 0), the rest follows in wave order. Apps
+whose secrets are still missing stay "Progressing" until the next step.
 
-- Sealed Secrets Controller installs first (Sync-Wave 0)
-- MetalLB, Traefik, cert-manager, etc. follow in order
-- Some apps will stay "Progressing" until secrets are sealed (next step)
-
-### Step 4.5: Seal Secrets (**on your laptop** - AFTER Step 4)
-
-⚠️ **Wait until Sealed Secrets Controller is ready:**
+### Step 5: Seal the secrets (**on your laptop**, after Step 4)
 
 ```bash
-# Check if controller is running
 kubectl wait --for=condition=available --timeout=300s \
   deployment/sealed-secrets-controller -n kube-system
+
+./reseal-all-secrets.sh
 ```
 
-**Seal every secret you created in Step 3** (requires cluster access):
+The script walks every `*-unsealed.yaml` under `manifests/` and seals it against
+the running controller. It is the same command for the initial seal and for
+every later rotation, so there is no list of per-secret commands to keep in sync.
 
 ```bash
-{%- for secret in bootstrap_secrets %}
-# {{ loop.index }}. {{ secret.component }}: {{ secret.base_name | replace('-', ' ') }}
-kubeseal --format=yaml --controller-namespace=kube-system \
-  < {{ secret.unsealed_path }} \
-  > {{ secret.sealed_path }}
-{% endfor %}
-```
-
-Or reseal all of them at once with `./reseal-all-secrets.sh`, which walks every
-`*-unsealed.yaml` under `manifests/` and does exactly the above.
-
-**Commit and deploy:**
-
-```bash
-# Commit and push
-git add manifests/*/kustomization.yaml
 git add manifests/*/*-sealed.yaml
-git commit -m "🔐 Add sealed secrets"
-git push
-
-# ArgoCD will auto-sync and apply the secrets
-kubectl get applications -n argocd -w
+git commit -m "🔐 Add sealed secrets" && git push
 ```
 
-ℹ️ **Why no offline certificate?** `kubeseal` can also seal against a public certificate file fetched with `kubeseal --fetch-cert`, which works without cluster access. This repo deliberately does not keep one: the controller rotates its sealing key every 30 days, a checked-out certificate silently goes stale, and sealing against a months-old key still succeeds without any error. Always seal against the live controller.
+ℹ️ **Why no offline certificate?** `kubeseal` can also seal against a public
+certificate fetched with `kubeseal --fetch-cert`, which works without cluster
+access. This repo deliberately does not keep one: the controller rotates its
+sealing key every 30 days, a checked-out certificate silently goes stale, and
+sealing against a months-old key still succeeds without any error. Always seal
+against the live controller.
 
-### Step 4.6: Configure Homepage Widgets (**on your laptop** - AFTER Grafana is ready)
+### Step 6: Homepage widgets (**on your laptop**, after the services are up)
 
-**Create sealed secrets for Homepage widgets:**
-
-⚠️ **Important:** For each widget secret, copy the example file, edit with your credentials, then seal it.
+The Homepage widget secrets are the exception to Step 5: they hold tokens that
+only exist once the services they talk to are running (Grafana admin password,
+ArgoCD token, Proxmox and UniFi API tokens, Plex token).
 
 ```bash
-{% for secret in homepage_secrets %}
-# {{ loop.index }}. {{ secret.base_name | replace('-', ' ') | title }}
-cp manifests/homepage/{{ secret.example_file }} \
-   manifests/homepage/{{ secret.unsealed_file }}
-
-# Edit the file and replace placeholder values with your actual credentials
+{% for secret in homepage_secrets -%}
 vim manifests/homepage/{{ secret.unsealed_file }}
-
-# Seal the secret
-kubeseal --format=yaml --controller-namespace=kube-system \
-  < {{ secret.unsealed_path }} \
-  > {{ secret.sealed_path }}
-
 {% endfor %}
-# Commit and push
+./reseal-all-secrets.sh
+
 git add manifests/homepage/*-sealed.yaml
-git commit -m "Add Homepage widget credentials"
-git push
+git commit -m "Add Homepage widget credentials" && git push
 ```
 
-⚠️ **Note:** If you rebuild the cluster, passwords may change (e.g., Grafana admin password), so you'll need to recreate the affected sealed secrets.
+⚠️ If you rebuild the cluster, these credentials change and have to be resealed.
 
-### Step 5: Verify Deployment (**on your laptop**)
+### Step 7: Verify
 
 ```bash
-# All apps should be Synced + Healthy
-kubectl get applications -n argocd
-
-# MetalLB assigned LoadBalancer IP
-kubectl get svc -n traefik
-# EXTERNAL-IP should show 192.168.2.250
-
-# Ingresses configured
+kubectl get applications -n argocd        # all Synced + Healthy
+kubectl get svc -n traefik                # EXTERNAL-IP 192.168.2.250
 kubectl get ingress -A
 ```
 
-### Step 6: Access UIs (**from your laptop browser**)
+### Step 8: Access the UIs
 
 ℹ️ **Exposure model**: Traefik (MetalLB LoadBalancer `192.168.2.250`) is the single ingress for cluster and external hosts, routing by SNI/Host. TLS is one wildcard cert `*.elmstreet79.de` from cert-manager (Let's Encrypt DNS-01 via Cloudflare), served as the Traefik default.
 
 - **Public**: host has a Cloudflare CNAME → `nebu2k.ipv64.net`, managed in Terraform. One router port-forward (80+443 → `192.168.2.250`) covers all public hosts.
 - **Internal/VPN-only**: no Cloudflare record. Reached via split-horizon DNS (wildcard rewrite `*.elmstreet79.de → 192.168.2.250`) over LAN/WireGuard.
 
-**ArgoCD:**
-
-```text
-URL: https://argocd.elmstreet79.de
-User: admin
-```
-
-The initial password is generated by ArgoCD:
+| Service | URL | Notes |
+|---------|-----|-------|
+| ArgoCD | `https://argocd.elmstreet79.de` | user `admin`, initial password below |
+| Homepage | `https://home.elmstreet79.de` | dashboard, ingress auto-discovery, service widgets |
+| Gatus | `https://status.elmstreet79.de` | blackbox checks from `manifests/gatus/configmap.yaml` |
+| Longhorn | `https://longhorn.elmstreet79.de` | storage, backups |
+| Grafana | `https://grafana.elmstreet79.de` | dashboards for everything below |
 
 ```bash
 kubectl -n argocd get secret argocd-initial-admin-secret \
   -o jsonpath='{.data.password}' | base64 -d && echo
 ```
 
-⚠️ **Change password immediately!**
+⚠️ Change it (User Info → Update Password), then
+`kubectl -n argocd delete secret argocd-initial-admin-secret`.
 
-1. User Info → Update Password
-2. Then delete initial secret:
+Gatus does **not** alert by itself: it exports Prometheus metrics, the rules live
+in the `gatus` group of `manifests/kube-prometheus-stack/prometheus-rules.yaml`.
 
-```bash
-kubectl -n argocd delete secret argocd-initial-admin-secret
-```
-
-**Longhorn:**
-
-```text
-URL: https://longhorn.elmstreet79.de
-(internal-only)
-```
-
-**Homepage (Homelab Dashboard):**
-
-```text
-URL: https://home.elmstreet79.de
-```
-
-🏠 **Features:** Unified dashboard with links to all services, real-time Kubernetes cluster metrics, auto-discovery of ingresses, dark theme, widgets for Proxmox/ArgoCD/Grafana
-
-**Gatus (Status Page / Uptime Monitoring):**
-
-```text
-URL: https://status.elmstreet79.de
-```
-
-📈 **Features:** Blackbox checks (HTTP/TCP/DNS) grouped by failure domain, certificate and domain expiration, uptime history in SQLite. Every check is declared in `manifests/gatus/configmap.yaml`, there is no UI-side state. Alerting does **not** run through Gatus itself: it exports Prometheus metrics and the rules live in the `gatus` group of `manifests/kube-prometheus-stack/prometheus-rules.yaml`.
-
-**Service Access Architecture:**
-
-Everything goes through Traefik (single reverse proxy) with the wildcard TLS default cert. A service is **public exactly when it has a Cloudflare record**. There is no wildcard A-record.
-
-- **Public** (Cloudflare CNAME → `nebu2k.ipv64.net`, managed in the `homelab-terraform` Cloudflare stack): `www`, `homeassistant`, `teslamate`, `plex`, `dreambox`. Apex `elmstreet79.de` 301-redirects to `www`. Plex additionally has a direct `32400` port-forward for native apps.
-- **Internal/VPN-only** (no Cloudflare record): everything else, e.g. `argocd`, `grafana`, `prometheus`, `alertmanager`, `longhorn`, `status`, `home`, `paperless`, plus the external hosts (`unifi`, `pve`, `nas`, `dreambox`, …).
-
-To make a service public: add its host to `public_hosts` in `homelab-terraform/cloudflare/` and `terraform apply`. Nothing else needed, the single port-forward covers all.
+**Which services are public:** a service is public exactly when it has a
+Cloudflare record, there is no wildcard A-record. Today that is `www`,
+`homeassistant`, `teslamate`, `plex` and `dreambox`; the apex 301-redirects to
+`www`, and Plex additionally has a direct `32400` port-forward for native apps.
+Everything else (ArgoCD, Grafana, Prometheus, Alertmanager, Longhorn, Gatus,
+Homepage, Paperless, plus external hosts like `unifi`, `pve`, `nas`) is
+internal. To publish a service, add its host to `public_hosts` in
+`homelab-terraform/cloudflare/` and `terraform apply`. Nothing else, the single
+port-forward covers all.
 
 ## 🔧 Management
 
-### View Application Status
+### Update a component
+
+Chart and image versions are updated by Renovate, which opens a PR per component;
+merging it is the normal path. For a manual change edit the values file, commit,
+and ArgoCD picks it up:
 
 ```bash
-kubectl get applications -n argocd
-kubectl describe application <app-name> -n argocd
-```
-
-### Update Component
-
-```bash
-# Check for latest Helm chart version
-helm repo update
-helm search repo <chart-name> --versions | head -n 5
-
-# Example: Check traefik latest version
-helm search repo traefik/traefik --versions | head -n 5
-
-# Edit Helm values
 vim manifests/traefik/values.yaml
-
-# Commit and push - ArgoCD auto-syncs
-git add manifests/traefik/values.yaml
-git commit -m "Update Traefik to 2 replicas"
-git push
-
-# Watch sync
+git commit -am "Traefik: 2 replicas" && git push
 kubectl get application traefik -n argocd -w
 ```
 
-### Update Secrets
+### Rotate a secret
 
 ```bash
-# 1. Edit unsealed secret (example: Cloudflare API token)
 vim manifests/cert-manager/cloudflare-api-token-unsealed.yaml
-
-# 2. Re-seal against the live controller
-kubeseal --format=yaml --controller-namespace=kube-system \
-  < manifests/cert-manager/cloudflare-api-token-unsealed.yaml \
-  > manifests/cert-manager/cloudflare-api-token-sealed.yaml
-
-# 3. Commit and push
-git add manifests/cert-manager/cloudflare-api-token-sealed.yaml
-git commit -m "Rotate Cloudflare API token"
-git push
+./reseal-all-secrets.sh
+git commit -am "Rotate Cloudflare API token" && git push
 ```
 
-### Force Sync Application
+Reloader restarts the workloads whose Secret or ConfigMap changed, so no manual
+rollout is needed.
+
+### Sync and refresh
 
 ```bash
-# Via kubectl
-kubectl patch application <app-name> -n argocd --type merge \
-  -p '{"operation":{"initiatedBy":{"username":"manual"}}}'
+kubectl get applications -n argocd
+kubectl describe application <app> -n argocd
 
-# Via ArgoCD CLI
-argocd app sync <app-name>
+argocd app sync <app>
+
+# Stuck diff or a CRD ArgoCD refuses to re-read: force a hard refresh,
+# this re-renders the manifests instead of using the cached ones
+kubectl annotate application <app> -n argocd \
+  argocd.argoproj.io/refresh=hard --overwrite
 ```
-
-### Hard Refresh Application
-
-Sometimes ArgoCD needs a complete reset (e.g., stuck state, CRD issues):
-
-```bash
-# Delete and re-create the ArgoCD Application (doesn't delete K8s resources)
-kubectl delete application <app-name> -n argocd && sleep 2 && \
-  kubectl apply -f apps/<app-name>.yaml
-
-# Example: Hard refresh Longhorn
-kubectl delete application longhorn -n argocd && sleep 2 && \
-  kubectl apply -f apps/longhorn.yaml
-```
-
-**Note:** This only resets the ArgoCD Application object, not the actual Kubernetes resources. Useful for clearing stuck sync states or comparison errors.
 
 ## 🐛 Troubleshooting
 
-### MetalLB Not Assigning IPs
-
-**Check:**
+### MetalLB assigns no IP
 
 ```bash
-kubectl logs -n metallb-system -l app.kubernetes.io/component=speaker
+kubectl logs -n metallb-system -l app.kubernetes.io/component=speaker --tail=-1
 ```
 
-**Should NOT show:**
+`"error":"assigned IP not allowed by config"` means the L2Advertisement or the
+pool in `manifests/metallb/metallb-ip-pool.yaml` does not cover the requested
+address.
 
-```text
-"error":"assigned IP not allowed by config"
-```
+### A widget or workload rejects its credentials
 
-**Fix:** Ensure L2Advertisement exists in `manifests/metallb/metallb-ip-pool.yaml`
-
-### ArgoCD App OutOfSync
-
-**Check:**
+The sealed secret decrypts into a normal Secret, so read the value the workload
+actually sees and compare it against the source:
 
 ```bash
-kubectl describe application <app-name> -n argocd
-kubectl logs -n argocd deployment/argocd-application-controller
+kubectl get secret <name> -n <namespace> \
+  -o jsonpath='{.data.<key>}' | base64 -d && echo
 ```
 
-**Force refresh:**
-
-```bash
-argocd app sync <app-name> --force
-```
-
-### Grafana Widget Not Showing on Homepage
-
-**Check:**
-
-```bash
-# 1. Verify Homepage has the environment variables
-kubectl get deployment homepage -n homepage -o yaml | grep -E "GRAFANA_(USERNAME|PASSWORD)"
-
-# 2. Check if secret exists and has correct fields
-kubectl get secret homepage-grafana -n homepage -o yaml
-
-# 3. Check Homepage logs
-kubectl logs -n homepage deployment/homepage
-
-# 4. Verify credentials are set correctly
-kubectl get secret homepage-grafana -n homepage -o yaml
-```
-
-**Fix if credentials are invalid:**
-
-Re-create the sealed secret as described in Step 4.6.
-
-### Unseal a Sealed Secret (for debugging)
-
-If you need to view the decrypted content of a sealed secret:
-
-```bash
-# Get the sealed secret from the cluster
-kubectl get sealedsecret <sealed-secret-name> -n <namespace> -o yaml > sealed.yaml
-
-# The sealed secret will be automatically decrypted by the controller and stored as a regular Secret
-# View the decrypted secret
-kubectl get secret <secret-name> -n <namespace> -o yaml
-
-# Decode a specific field (e.g., password)
-kubectl get secret <secret-name> -n <namespace> -o jsonpath='{.data.password}' | base64 -d
-
-# Example: View Grafana admin password
-kubectl get secret -n monitoring grafana-admin-credentials \
-  -o jsonpath="{.data.admin-password}" | base64 -d && echo
-```
-
-⚠️ **Note:** You cannot "unseal" the encrypted data in the SealedSecret YAML file without access to the cluster's private key. The Sealed Secrets controller automatically decrypts SealedSecrets into regular Secrets when applied to the cluster.
+If it is wrong, fix the `*-unsealed.yaml` and reseal (see above). If the Secret
+does not exist at all, the SealedSecret was sealed against a different cluster
+or an expired key, the controller logs say which.
 
 ## 📚 Components
 
-| Component | Version | Purpose |
-|-----------|---------|---------|
+| Component | Version |
+|-----------|---------|
 {% for name, info in versions.items() -%}
-| {{ info.chart | title | replace('-', ' ') }} | {{ info.version }} | {{ name | replace('-', ' ') | title }} |
+| {{ info.display }} | {{ info.version }} |
 {% endfor -%}
-| Talos Linux | v1.13.8 | Immutable node OS, no SSH, no package manager |
-| Kubernetes | v1.36.3 | Shipped and managed by Talos |
-| ArgoCD | v3.5.0 | Continuous Delivery (installed via Terraform) |
+| Talos Linux | {{ cluster.talos }} |
+| Kubernetes | {{ cluster.kubernetes }} |
+| ArgoCD | v3.5.0 (via Terraform) |
 
 ## 📖 Documentation
 
@@ -483,7 +295,6 @@ MIT
 
 ---
 
-> 🤖 **This README is auto-generated** using `docs-generator/generate_readme.py`  
-> To regenerate manually: `make docs`  
-> Auto-generation on commit: Enabled via `.githooks/pre-commit` (run `.githooks/install.sh` after clone)
-
+> 🤖 **This README is auto-generated** from `docs-generator/templates/README.md.j2`.
+> Regenerate with `make docs`; the `.githooks/pre-commit` hook does it on commit
+> (run `.githooks/install.sh` after cloning).
