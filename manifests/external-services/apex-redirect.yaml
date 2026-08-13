@@ -17,6 +17,9 @@ spec:
     replacement: 'https://www.elmstreet79.de/${1}'
     permanent: true
 ---
+# Two routes on purpose. A single one carrying both entryPoints plus tls makes
+# the plain-HTTP router TLS-terminating as well, and port 80 then answers 404.
+# The old manifest in landing-page/ had exactly that bug.
 apiVersion: traefik.io/v1alpha1
 kind: IngressRoute
 metadata:
@@ -24,7 +27,6 @@ metadata:
   namespace: external-services
 spec:
   entryPoints:
-    - web
     - websecure
   routes:
     - match: Host(`elmstreet79.de`)
@@ -37,3 +39,20 @@ spec:
         - name: noop@internal
           kind: TraefikService
   tls: {}
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: apex-redirect-http
+  namespace: external-services
+spec:
+  entryPoints:
+    - web
+  routes:
+    - match: Host(`elmstreet79.de`)
+      kind: Rule
+      middlewares:
+        - name: apex-to-www
+      services:
+        - name: noop@internal
+          kind: TraefikService
