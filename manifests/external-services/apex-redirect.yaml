@@ -1,11 +1,7 @@
 ---
-# Inside the house the apex still resolves to Traefik, because blocky's mapping
-# covers it and only www is carved out. Traefik 301s it to www, which then
-# leaves for the Cloudflare Worker. Publicly a Cloudflare redirect rule does the
-# same thing, so both sides behave alike.
-#
-# Lives here rather than in landing-page/, which is gone: the page is no longer
-# a cluster service, but the apex still needs an answer from Traefik.
+# Inside the house the apex resolves to Traefik, because blocky's mapping covers
+# it and only www is carved out. Traefik 301s it to www, which then leaves for
+# the Cloudflare Worker. Publicly a Cloudflare redirect rule does the same.
 apiVersion: traefik.io/v1alpha1
 kind: Middleware
 metadata:
@@ -17,9 +13,8 @@ spec:
     replacement: 'https://www.elmstreet79.de/${1}'
     permanent: true
 ---
-# Two routes on purpose. A single one carrying both entryPoints plus tls makes
+# Two routes on purpose: a single one carrying both entryPoints plus tls makes
 # the plain-HTTP router TLS-terminating as well, and port 80 then answers 404.
-# The old manifest in landing-page/ had exactly that bug.
 apiVersion: traefik.io/v1alpha1
 kind: IngressRoute
 metadata:

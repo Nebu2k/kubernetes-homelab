@@ -50,9 +50,8 @@ data:
           # Canary for the wildcard cert that ALL hosts here share.
           - "[CERTIFICATE_EXPIRATION] > 240h"
 
-      # Nicht mehr im Cluster, sondern ein Cloudflare Worker. Der Check bleibt,
-      # weil er den kompletten Weg abdeckt: Blocky loest www ueber den
-      # zone-Eintrag nach draussen auf, ein Fehler dort faellt hier auf.
+      # Cloudflare Worker, nicht im Cluster. Der Check deckt den ganzen Weg ab:
+      # Blocky loest www ueber den zone-Eintrag nach draussen auf.
       - name: Landing Page
         group: Internet
         url: "https://www.elmstreet79.de"
@@ -314,8 +313,8 @@ data:
 
       # Counter-check from outside: does the public name still resolve (CNAME
       # to nebu2k.ipv64.net)? The address is dynamic, so only the RCODE.
-      # Deliberately homeassistant and not www: www is a Cloudflare Worker and
-      # would stay green even if DynDNS were long dead.
+      # Bewusst homeassistant und nicht www: www ist ein Cloudflare Worker und
+      # bliebe gruen, auch wenn DynDNS laengst tot waere.
       - name: Cloudflare (oeffentlicher Record)
         group: DNS
         url: "1.1.1.1"
