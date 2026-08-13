@@ -8,3 +8,4 @@ resources:
   - unifi-service.yaml
   - unifi-nas-service.yaml
   - external-ingressroutes.yaml
+  - apex-redirect.yaml

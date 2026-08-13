@@ -109,6 +109,7 @@ homelab/
 │   │   ├── s3-credentials-unsealed.yaml.example
 │   │   └── talos-service-account.yaml
 │   ├── external-services/
+│   │   ├── apex-redirect.yaml
 │   │   ├── dreambox-service.yaml
 │   │   ├── external-ingressroutes.yaml
 │   │   ├── kustomization.yaml

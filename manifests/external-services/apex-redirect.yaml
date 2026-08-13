@@ -1,0 +1,39 @@
+---
+# Inside the house the apex still resolves to Traefik, because blocky's mapping
+# covers it and only www is carved out. Traefik 301s it to www, which then
+# leaves for the Cloudflare Worker. Publicly a Cloudflare redirect rule does the
+# same thing, so both sides behave alike.
+#
+# Lives here rather than in landing-page/, which is gone: the page is no longer
+# a cluster service, but the apex still needs an answer from Traefik.
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: apex-to-www
+  namespace: external-services
+spec:
+  redirectRegex:
+    regex: '^https?://elmstreet79\.de/(.*)'
+    replacement: 'https://www.elmstreet79.de/${1}'
+    permanent: true
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: apex-redirect
+  namespace: external-services
+spec:
+  entryPoints:
+    - web
+    - websecure
+  routes:
+    - match: Host(`elmstreet79.de`)
+      kind: Rule
+      middlewares:
+        - name: apex-to-www
+      services:
+        # The CRD demands a service; the middleware answers before it, so this
+        # one is never reached. noop@internal is Traefik's own dead end.
+        - name: noop@internal
+          kind: TraefikService
+  tls: {}
