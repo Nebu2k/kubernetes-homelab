@@ -37,9 +37,20 @@ now=$(date -u +%s)
 failed=0
 
 for url in "${URLS[@]}"; do
-  body=$(curl -fsSL --max-time 20 "$url" 2>/dev/null)
+  # Status and body in one request. Without the status a WAF or bot challenge
+  # is indistinguishable from a network problem, and the two need opposite
+  # fixes.
+  response=$(curl -sSL --max-time 20 -w '\n%{http_code}' "$url" 2>/dev/null)
+  status=${response##*$'\n'}
+  body=${response%$'\n'*}
+
+  if [[ "$status" != "200" ]]; then
+    echo "FAIL  $url: HTTP $status"
+    failed=1
+    continue
+  fi
   if [[ -z "$body" ]]; then
-    echo "FAIL  $url: not reachable or empty"
+    echo "FAIL  $url: empty body"
     failed=1
     continue
   fi
