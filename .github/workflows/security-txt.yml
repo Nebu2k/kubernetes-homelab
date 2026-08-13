@@ -1,0 +1,25 @@
+name: security.txt
+
+# Backstop for the security.txt files of the five websites. Their Expires date
+# is set at build time and only moves on a deploy; this checks that it actually
+# does. Background and the reason it lives in this repo are in
+# .github/scripts/check-security-txt.sh.
+
+on:
+  schedule:
+    # Monthly, a few hours after the websites run their own deploy cron on the
+    # 1st at 03:00 UTC, so a fresh date is already published when this looks.
+    - cron: '0 9 1 * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    name: Check expiry
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - run: .github/scripts/check-security-txt.sh
