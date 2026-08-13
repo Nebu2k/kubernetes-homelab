@@ -67,6 +67,10 @@ data:
         group: Cluster
         url: "https://elmstreet79.de"
         interval: 60s
+        # Ohne ignore-redirect folgt Gatus dem 301 und prueft am Ende www,
+        # nicht den Redirect.
+        client:
+          ignore-redirect: true
         conditions:
           - "[STATUS] == 301"
 
