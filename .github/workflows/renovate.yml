@@ -57,16 +57,18 @@ jobs:
           # would never run and the automerge-on-green would never trigger.
           token: ${{ secrets.RENOVATE_TOKEN }}
         env:
-          # All repos from one run, the PAT covers them all. A GitHub secret
-          # cannot be read back, so storing it in a second repo would mean
+          # Both repos from one run, the PAT covers both. A GitHub secret
+          # cannot be read back, so storing it in the second repo would mean
           # issuing a new token.
           #
+          # The five website repos deliberately do NOT ride along: they have
+          # their own PAT and their own run, in elmstreet79-de. One token per
+          # domain of work, so revoking one does not stop the other.
+          #
           # Renovate reads each repo's configuration from the repo itself, so
-          # every renovate.json5 stays separate and differently scoped (no
-          # automerge in homelab-terraform, because nothing rolls out by
-          # itself; the websites automerge patches behind their build gate).
-          RENOVATE_REPOSITORIES: >-
-            Nebu2k/kubernetes-homelab,Nebu2k/homelab-terraform,Nebu2k/elmstreet79-de,Nebu2k/seb-it-com,Nebu2k/homeworx-solutions,Nebu2k/haushelden-service,Nebu2k/peters.club
+          # the two renovate.json5 stay separate and differently scoped (no
+          # automerge over there, because nothing rolls out by itself).
+          RENOVATE_REPOSITORIES: Nebu2k/kubernetes-homelab,Nebu2k/homelab-terraform
           # The action expects the string "null" for "off", not an empty value.
           RENOVATE_DRY_RUN: ${{ inputs.dryRun == true && 'full' || 'null' }}
           LOG_LEVEL: ${{ inputs.logLevel || 'info' }}
