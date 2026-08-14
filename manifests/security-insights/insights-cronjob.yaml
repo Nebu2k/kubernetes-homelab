@@ -41,6 +41,9 @@ spec:
             app.kubernetes.io/name: cloudflare-security-insights
         spec:
           restartPolicy: Never
+          securityContext:
+            seccompProfile:
+              type: RuntimeDefault
           containers:
             - name: check
               image: python:3.13-alpine
