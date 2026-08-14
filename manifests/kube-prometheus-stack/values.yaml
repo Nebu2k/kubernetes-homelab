@@ -46,6 +46,13 @@ defaultRules:
     # showing an empty panel all along, with or without this switch.
     k8sContainerMemorySwap: false
 
+  # NodeSystemSaturation is rebuilt in prometheus-rules.yaml, once for every
+  # other host and once for the macmini: its CI runner boots iOS simulators,
+  # which drives load1 far past the upstream threshold of 2 per core on every
+  # build. Switching the alert off per host is not possible any other way.
+  disabled:
+    NodeSystemSaturation: true
+
 # No metrics endpoint reachable from inside the cluster.
 kubeScheduler:
   enabled: false
@@ -319,9 +326,14 @@ alertmanager:
             # <14 Tagen ab", and in HTML mode Telegram rejects exactly those
             # messages as an unclosed tag.
             parse_mode: ''
+            # instance is appended because the summaries name no host and the
+            # description, which does, is not part of this template. Addresses
+            # out of the pod and service CIDRs are skipped: for alerts off
+            # kube-state-metrics, ArgoCD or Gatus the label carries the
+            # exporter's own pod IP, which says nothing and changes on restart.
             message: |-
               {{ .Status | toUpper }} {{ .GroupLabels.alertname }} ({{ .GroupLabels.severity }})
-              {{ range .Alerts }}{{ .Annotations.summary }}
+              {{ range .Alerts }}{{ .Annotations.summary }}{{ with .Labels.instance }}{{ if not (match "^10\\.4[23]\\." .) }} [{{ . }}]{{ end }}{{ end }}
               {{ end }}
 
       # Ping URL of the healthchecks.io check. It alarms when nothing arrives,

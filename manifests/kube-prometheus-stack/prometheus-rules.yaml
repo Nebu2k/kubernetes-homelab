@@ -647,6 +647,39 @@ spec:
             summary: "Node memory usage is high (macOS)"
             description: "Node {{ $labels.instance }} memory usage is {{ $value | humanizePercentage }} (threshold: 85%)."
 
+        # Upstream's NodeSystemSaturation, disabled in values.yaml and rebuilt
+        # as this pair because the threshold cannot be set per host otherwise.
+        # This one carries the upstream expression minus the macmini.
+        - alert: NodeSystemSaturation
+          expr: |
+            node_load1{job="node-exporter", instance!="192.168.2.4:9100"}
+            / count without (cpu, mode) (
+              node_cpu_seconds_total{job="node-exporter", instance!="192.168.2.4:9100", mode="idle"}
+            ) > 2
+          for: 15m
+          labels:
+            severity: warning
+          annotations:
+            runbook_url: https://runbooks.prometheus-operator.dev/runbooks/node/nodesystemsaturation
+            summary: "Node ist gesättigt, Load pro Kern ist sehr hoch"
+            description: "Load pro Kern auf {{ $labels.instance }} liegt seit 15 Minuten über 2, aktuell bei {{ printf \"%.2f\" $value }}. Die Node kann dadurch unbedienbar werden."
+
+        # The macmini runs the CI runner, whose iOS simulator jobs saturate all
+        # six cores for the length of a build. Threshold and duration are set so
+        # that a running build stays quiet and only a stuck runner alerts.
+        - alert: NodeSystemSaturationMacmini
+          expr: |
+            node_load1{job="node-exporter", instance="192.168.2.4:9100"}
+            / count without (cpu, mode) (
+              node_cpu_seconds_total{job="node-exporter", instance="192.168.2.4:9100", mode="idle"}
+            ) > 8
+          for: 30m
+          labels:
+            severity: warning
+          annotations:
+            summary: "macmini hängt seit 30 Minuten unter Volllast"
+            description: "Load pro Kern liegt bei {{ printf \"%.2f\" $value }} (Schwelle 8). Ein normaler CI-Lauf hält das nicht so lange durch, das sieht nach einem hängenden Runner oder verwaisten Simulatoren aus. Nachsehen mit: ssh macmini 'uptime; xcrun simctl list devices booted'. Aufräumen mit: ssh macmini 'xcrun simctl shutdown all'."
+
     - name: teslamate
       interval: 60s
       rules:
