@@ -21,6 +21,9 @@ resources:
   - kube-prometheus-stack.yaml
   - argocd-config.yaml
   - backup-monitor.yaml
+  # Pulls the Cloudflare Security Center findings, which Cloudflare itself
+  # notifies about nowhere.
+  - security-insights.yaml
   # House resolver, cluster instance on 192.168.2.253. The second instance is
   # an LXC on pve (.254) defined in homelab-terraform, so neither a cluster nor
   # a pve outage can take both down at once.
