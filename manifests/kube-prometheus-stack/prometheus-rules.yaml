@@ -1242,10 +1242,10 @@ spec:
     # that runs every 15 minutes. nvme0n1 carries pve-root and local-lvm,
     # nvme1n1 carries /mnt/nvme-2tb and with it talos-cp-1.
     #
-    # smartmon.prom deliberately gets no rule. Its timer has
-    # ConditionPathExistsGlob=/dev/sd* and pve has only NVMe, so the file never
-    # gets rewritten and reports smartmon_device_smart_healthy=1 forever. It
-    # reads like a health signal and is a snapshot of a single old run.
+    # smartmon.prom is gone (2026-08-14), file and timer both: its condition
+    # ConditionPathExistsGlob=/dev/sd* never matched on an NVMe-only host, so
+    # the file froze at smartmon_device_smart_healthy=1 and read like a health
+    # signal while being a snapshot of a single old run.
     #
     # nvme_num_err_log_entries_total gets no rule either: the log also counts
     # harmless entries, an aborted identify by nvme-cli included.
@@ -1310,8 +1310,8 @@ spec:
             description: "Im Leerlauf liegen die beiden Platten bei 33 und 40 Grad. Ab rund 80 Grad drosseln sie, was auf nvme1n1 die IO von talos-cp-1 trifft. Meist steht der Luefter oder der Kuehlkoerper sitzt lose."
 
         # Net below every rule above. The file is rewritten every 15 minutes;
-        # when that stops the values simply freeze and nothing fires, exactly
-        # the failure mode of smartmon.prom described at the top of this group.
+        # when that stops the values simply freeze and nothing fires, which is
+        # what smartmon.prom did until it was removed.
         - alert: NvmeSmartMetricsStale
           expr: |
             (time() - node_textfile_mtime_seconds{file=~".+/nvme.prom"} > 3600)

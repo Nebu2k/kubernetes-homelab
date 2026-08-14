@@ -25,9 +25,8 @@ spec:
   metricsPath: /metrics
   staticConfigs:
     # Proxmox host, Debian's prometheus-node-exporter plus the package's
-    # textfile collectors. smartmon.prom stays empty on purpose: its timer has
-    # ConditionPathExistsGlob=/dev/sd*, pve has only NVMe and nvme.prom covers
-    # those SMART values.
+    # textfile collectors apt.prom, needrestart.prom and nvme.prom. The SMART
+    # values come from nvme.prom, smartmon.prom and its timer are gone.
     - targets:
         - 192.168.2.8:9100
     # The Blocky LXC on pve. node_exporter runs there for its textfile
