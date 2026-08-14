@@ -390,9 +390,12 @@ spec:
     # 2. The metric only lives while the job object does
     #    (successfulJobsHistoryLimit: 3). Shrinking that history breaks this.
     #
-    # Trigger such a job once by hand after its first deployment
-    # (kubectl create job --from=cronjob/<name>), otherwise the absent branch
-    # fires rightfully until the first scheduled run.
+    # Each absent() branch is guarded by the age of its CronJob, with the same
+    # threshold the staleness branch above it uses: a freshly rolled out
+    # CronJob has not run yet, and unguarded the branch alerts right away
+    # instead of after the first scheduled run. "unless" rather than "and"
+    # keeps point 1 intact, because a deleted CronJob has no
+    # kube_cronjob_created either.
     #
     # NOT covered: whether the object actually arrived in S3. That needs an S3
     # metric source, see ROADMAP.
@@ -407,7 +410,11 @@ spec:
               time() - max(kube_job_status_completion_time{namespace="teslamate", job_name=~"teslamate-db-backup.*"}) > 129600
             )
             or
-            absent(kube_job_status_completion_time{namespace="teslamate", job_name=~"teslamate-db-backup.*"})
+            (
+              absent(kube_job_status_completion_time{namespace="teslamate", job_name=~"teslamate-db-backup.*"})
+              unless on()
+              (time() - max(kube_cronjob_created{namespace="teslamate", cronjob="teslamate-db-backup"}) < 129600)
+            )
           for: 1h
           labels:
             severity: warning
@@ -424,7 +431,11 @@ spec:
               time() - max(kube_job_status_completion_time{namespace="home-assistant", job_name=~"ha-backup-archive.*"}) > 3024000
             )
             or
-            absent(kube_job_status_completion_time{namespace="home-assistant", job_name=~"ha-backup-archive.*"})
+            (
+              absent(kube_job_status_completion_time{namespace="home-assistant", job_name=~"ha-backup-archive.*"})
+              unless on()
+              (time() - max(kube_cronjob_created{namespace="home-assistant", cronjob="ha-backup-archive"}) < 3024000)
+            )
           for: 1h
           labels:
             severity: warning
@@ -441,7 +452,11 @@ spec:
               time() - max(kube_job_status_completion_time{namespace="paperless-ngx", job_name=~"paperless-backup-trigger.*"}) > 129600
             )
             or
-            absent(kube_job_status_completion_time{namespace="paperless-ngx", job_name=~"paperless-backup-trigger.*"})
+            (
+              absent(kube_job_status_completion_time{namespace="paperless-ngx", job_name=~"paperless-backup-trigger.*"})
+              unless on()
+              (time() - max(kube_cronjob_created{namespace="paperless-ngx", cronjob="paperless-backup-trigger"}) < 129600)
+            )
           for: 1h
           labels:
             severity: warning
@@ -474,7 +489,11 @@ spec:
               time() - max(kube_job_status_completion_time{namespace="monitoring", job_name=~"offsite-backup-freshness.*"}) > 172800
             )
             or
-            absent(kube_job_status_completion_time{namespace="monitoring", job_name=~"offsite-backup-freshness.*"})
+            (
+              absent(kube_job_status_completion_time{namespace="monitoring", job_name=~"offsite-backup-freshness.*"})
+              unless on()
+              (time() - max(kube_cronjob_created{namespace="monitoring", cronjob="offsite-backup-freshness"}) < 172800)
+            )
           labels:
             severity: warning
           annotations:
@@ -492,6 +511,10 @@ spec:
         # Same shape as OffsiteBackupNotArriving: the age condition is needed
         # because failedJobsHistoryLimit keeps failed jobs around, and a bare
         # "> 0" would keep firing after the next run went green.
+        #
+        # The absent() branch is guarded by the age of the CronJob, same as in
+        # offsite-backup-jobs above: right after a rollout no job has run yet,
+        # and unguarded the branch reports a finding that does not exist.
         - alert: CloudflareSecurityInsightsFinding
           expr: |
             (
@@ -506,7 +529,11 @@ spec:
               time() - max(kube_job_status_completion_time{namespace="monitoring", job_name=~"cloudflare-security-insights.*"}) > 172800
             )
             or
-            absent(kube_job_status_completion_time{namespace="monitoring", job_name=~"cloudflare-security-insights.*"})
+            (
+              absent(kube_job_status_completion_time{namespace="monitoring", job_name=~"cloudflare-security-insights.*"})
+              unless on()
+              (time() - max(kube_cronjob_created{namespace="monitoring", cronjob="cloudflare-security-insights"}) < 172800)
+            )
           labels:
             severity: warning
           annotations:
