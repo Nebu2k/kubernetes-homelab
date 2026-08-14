@@ -1,0 +1,29 @@
+# Token of the Cloudflare Security Center probe.
+#
+# Create it in the Cloudflare dashboard under My Profile > API Tokens with a
+# single permission, so a leaked cluster secret can read findings and nothing
+# else:
+#
+#   Account | Account Security Center Insights | Read
+#
+# Read, not Edit: archiving is a deliberate decision and stays in the browser.
+# The Terraform token from homelab-terraform/websites/ does NOT belong here, it
+# may edit DNS and redirects of every zone.
+#
+# Then seal it:
+#   kubeseal --format=yaml --controller-namespace=kube-system \
+#     < manifests/security-insights/cloudflare-insights-token-unsealed.yaml \
+#     > manifests/security-insights/cloudflare-insights-token-sealed.yaml
+#
+# The *-unsealed.yaml is gitignored and stays on disk: SealedSecrets cannot be
+# decrypted again, so without it there is no source left to reseal from.
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: cloudflare-insights-token
+  namespace: monitoring
+type: Opaque
+stringData:
+  CF_API_TOKEN: "..."
+  CF_ACCOUNT_ID: "e1bc8622ac9f06895f23ab30446a6527"

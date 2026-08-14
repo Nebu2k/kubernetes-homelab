@@ -1,0 +1,104 @@
+# Cloudflare Security Center insights, pulled once a day.
+#
+# Cloudflare itself notifies about nothing here: the insights only exist in the
+# dashboard, and their scan runs on its own schedule.
+#
+# Archiving in the dashboard is the acknowledgement. The job asks for
+# dismissed=false only, so an accepted finding disappears from it without a
+# list of exceptions in this repo that would have to be kept in sync. Four
+# findings are archived on purpose and must stay that way, see
+# security_txt_not_enabled and no_turnstile_enabled in the account.
+#
+# The job exits 1 as soon as anything unarchived is left; the reporting is done
+# by CloudflareSecurityInsightsFinding in prometheus-rules.yaml.
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: cloudflare-security-insights
+  namespace: monitoring
+  labels:
+    app.kubernetes.io/name: cloudflare-security-insights
+spec:
+  # 07:00 UTC, an hour after offsite-backup-freshness so a bad morning does not
+  # arrive as one block of alerts.
+  #
+  # timeZone is mandatory: without it a CronJob runs in the timezone of
+  # whichever node currently holds the kube-controller-manager lease, and the
+  # nodes do not agree, so the schedule wanders with the lease.
+  schedule: "0 7 * * *"
+  timeZone: "Etc/UTC"
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  concurrencyPolicy: Forbid
+  jobTemplate:
+    spec:
+      # No retry. A finding does not go away on a second attempt, and the
+      # failed job IS the signal for the alert.
+      backoffLimit: 0
+      template:
+        metadata:
+          labels:
+            app.kubernetes.io/name: cloudflare-security-insights
+        spec:
+          restartPolicy: Never
+          containers:
+            - name: check
+              image: python:3.13-alpine
+              command:
+                - python3
+                - -c
+                - |
+                  import json, os, sys, urllib.error, urllib.request
+
+                  account = os.environ["CF_ACCOUNT_ID"]
+                  url = (
+                      f"https://api.cloudflare.com/client/v4/accounts/{account}"
+                      "/intel/attack-surface-report/issues"
+                      "?per_page=100&dismissed=false"
+                  )
+                  request = urllib.request.Request(
+                      url,
+                      headers={"Authorization": "Bearer " + os.environ["CF_API_TOKEN"]},
+                  )
+
+                  # Two different failures, and HTTPError subclasses URLError,
+                  # so it has to be caught first or a rejected token reads as a
+                  # network outage. A revoked one answers 400 with the reason in
+                  # the body, a token that only lost this permission answers 200
+                  # with success=false further down.
+                  try:
+                      with urllib.request.urlopen(request, timeout=30) as response:
+                          payload = json.load(response)
+                  except urllib.error.HTTPError as error:
+                      sys.exit(f"Cloudflare API rejected the token: {error.code} {error.read().decode(errors='replace')}")
+                  except urllib.error.URLError as error:
+                      sys.exit(f"Cloudflare API unreachable: {error}")
+
+                  if not payload.get("success"):
+                      sys.exit(f"Cloudflare API refused the request: {payload.get('errors')}")
+
+                  issues = payload["result"].get("issues") or []
+                  if not issues:
+                      print("No unarchived Security Center insights.")
+                      sys.exit(0)
+
+                  for issue in issues:
+                      print(
+                          f"{issue.get('severity'):10} {issue.get('issue_class'):28}"
+                          f" {issue.get('subject')}  since={issue.get('since')}"
+                      )
+                  sys.exit(f"{len(issues)} unarchived insight(s)")
+              envFrom:
+                - secretRef:
+                    name: cloudflare-insights-token
+              resources:
+                requests:
+                  cpu: 10m
+                  memory: 32Mi
+              securityContext:
+                allowPrivilegeEscalation: false
+                readOnlyRootFilesystem: true
+                runAsNonRoot: true
+                runAsUser: 65534
+                capabilities:
+                  drop: ["ALL"]

@@ -29,7 +29,7 @@ Talos Linux cluster managed via GitOps using the ArgoCD App-of-Apps pattern.
 | 7 | blocky, home-assistant, unifi-poller |
 | 8 | gatus, ripe-atlas |
 | 9 | homepage, mealie, paperless-ngx |
-| 11 | backup-monitor, proxmox-exporter, rpi5-fan |
+| 11 | backup-monitor, proxmox-exporter, rpi5-fan, security-insights |
 | 12 | argocd-config |
 | 14 | readsb |
 | 15 | fr24, piaware |
@@ -40,7 +40,7 @@ Talos Linux cluster managed via GitOps using the ArgoCD App-of-Apps pattern.
 ```text
 kubernetes-homelab/
 ├── bootstrap/root-app.yaml    # App-of-Apps, the only thing applied by hand
-├── apps/                      # 28 ArgoCD Applications, one per component (waves above)
+├── apps/                      # 29 ArgoCD Applications, one per component (waves above)
 ├── manifests/                 # what those Applications point at
 │   ├── argocd/
 │   ├── backup-monitor/
@@ -66,6 +66,7 @@ kubernetes-homelab/
 │   ├── ripe-atlas/
 │   ├── rpi5-fan/
 │   ├── rpi5-net-tuning/
+│   ├── security-insights/
 │   ├── teslamate/
 │   ├── traefik/
 │   └── unifi-poller/
@@ -157,6 +158,7 @@ for f in manifests/*/*-unsealed.yaml.example; do cp -n "$f" "${f%.example}"; don
 - **piaware**: piaware-secret
 - **proxmox-exporter**: pve-api-credentials
 - **readsb**: feeder-uuid-secret, readsb-secret
+- **security-insights**: cloudflare-insights-token
 - **teslamate**: s3-backup-credentials, teslamate-secret
 - **unifi-poller**: unifi-config
 

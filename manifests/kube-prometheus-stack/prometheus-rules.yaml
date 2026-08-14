@@ -481,6 +481,38 @@ spec:
             summary: "An offsite backup bucket has stopped receiving objects"
             description: "The daily offsite-backup-freshness check failed, or has not succeeded for over 48h. At least one of the six checks (teslamate, home assistant, paperless heartbeat, and one per etcd server node) has received nothing new for longer than its threshold, which the per-job alerts above cannot see. Run `kubectl -n monitoring logs job/<last offsite-backup-freshness job>` for the individual ages."
 
+    - name: cloudflare
+      interval: 60s
+      rules:
+        # Cloudflare notifies about Security Center findings nowhere, they only
+        # sit in the dashboard. The CronJob cloudflare-security-insights
+        # (manifests/security-insights/) asks daily at 07:00 UTC for everything
+        # not archived and exits 1 if anything is left.
+        #
+        # Same shape as OffsiteBackupNotArriving: the age condition is needed
+        # because failedJobsHistoryLimit keeps failed jobs around, and a bare
+        # "> 0" would keep firing after the next run went green.
+        - alert: CloudflareSecurityInsightsFinding
+          expr: |
+            (
+              max(
+                kube_job_status_failed{namespace="monitoring", job_name=~"cloudflare-security-insights.*"} > 0
+                and on(job_name)
+                (time() - kube_job_created{namespace="monitoring", job_name=~"cloudflare-security-insights.*"} < 90000)
+              ) > 0
+            )
+            or
+            (
+              time() - max(kube_job_status_completion_time{namespace="monitoring", job_name=~"cloudflare-security-insights.*"}) > 172800
+            )
+            or
+            absent(kube_job_status_completion_time{namespace="monitoring", job_name=~"cloudflare-security-insights.*"})
+          labels:
+            severity: warning
+          annotations:
+            summary: "Cloudflare Security Center has an unarchived finding"
+            description: "The daily cloudflare-security-insights check failed, or has not succeeded for over 48h. Either an insight is sitting unarchived in the Security Center, or the token lost its permission. Run `kubectl -n monitoring logs job/<last cloudflare-security-insights job>` to see which. Archive findings you accept in the dashboard and they disappear here too."
+
     - name: pod-health
       interval: 30s
       rules:
