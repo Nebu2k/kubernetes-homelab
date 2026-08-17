@@ -1,17 +1,7 @@
-http:
-  use_x_forwarded_for: true
-  trusted_proxies:
-    # Traefik pods and LAN.
-    - 10.42.0.0/16
-    - 172.16.0.0/12
-    - 192.168.0.0/16
-    # The v6 pod net, so this keeps working the day a service in front of HA
-    # is raised to dual-stack. Traefik is v4 today, so nothing reaches HA over
-    # v6 yet. Cluster-internal and never routed, unlike the ISP GUA, which
-    # rotates and has no business in a trust list.
-    - fd00:10:42::/56
-  ip_ban_enabled: true
-  login_attempts_threshold: 5
+# Deliberately no `http:` block: that key is gone in 2027.2.0. The proxy
+# trust (use_x_forwarded_for, trusted_proxies incl. fd00:10:42::/56) and the
+# login limits live in .storage/http and are edited under
+# Settings > System > Network.
 
 default_config:
 

@@ -6,7 +6,7 @@ metadata:
   annotations:
     # Deliberately no IP whitelist middleware: homeassistant is meant to be
     # reachable as public_host. What makes HA work behind the proxy is
-    # use_x_forwarded_for + trusted_proxies in the configmap.
+    # use_x_forwarded_for + trusted_proxies, held in HA's own .storage/http.
     gethomepage.dev/enabled: "true"
     gethomepage.dev/name: "Home Assistant"
     gethomepage.dev/description: "Smart Home Hub"
