@@ -89,7 +89,10 @@ blocking:
       # smartclip, adform, stroeerdigitalgroup.de. wildcards.txt, not
       # domains.wildcards: the latter holds bare domains, and a bare entry
       # matches only itself, so de.ioam.de would pass while ioam.de blocks.
-      - https://raw.githubusercontent.com/badmojr/1Hosts/master/Lite/wildcards.txt
+      #
+      # Via the jsDelivr CDN, not raw.githubusercontent.com: raw rate limits
+      # per source IP, and the LXC config sync already spends that budget.
+      - https://cdn.jsdelivr.net/gh/badmojr/1Hosts@master/Lite/wildcards.txt
       # iCloud Private Relay would otherwise bypass the house resolver and
       # with it split horizon and filtering.
       - |
@@ -106,7 +109,10 @@ blocking:
     downloads:
       timeout: 60s
       attempts: 5
-      cooldown: 10s
+      # 15m, so the five attempts span an hour instead of a minute. With a
+      # 24h refreshPeriod a short retry window means one bad moment costs a
+      # full day of list.
+      cooldown: 15m
     # fast, not failOnError: a resolver that refuses to answer because a
     # blocklist is unreachable is worse than one answering unfiltered briefly.
     strategy: fast
