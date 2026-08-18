@@ -1066,7 +1066,7 @@ spec:
         # 256k that remain when 1Hosts drops out, so losing either of the two
         # big lists trips it, with room for the lists to shrink.
         - alert: BlockyDenylistTooSmall
-          expr: blocky_denylist_cache_entries < 1000000
+          expr: blocky_denylist_cache_entries < 300000
           for: 15m
           labels:
             severity: warning

@@ -75,28 +75,24 @@ conditional:
 blocking:
   denylists:
     ads:
-      # Five sources on three separate hosts, so no single list going away
+      # Three sources on three separate hosts, so no single list going away
       # can leave the resolver unfiltered. Adblock syntax (||domain^) is not
       # an option anywhere here: Blocky reads hosts format, bare domains,
       # wildcards and regexes, nothing else.
       #
       # AdAway, hosts format, small and conservative.
       - https://adaway.org/hosts.txt
-      # oisd big, roughly 270k wildcard entries, from the maintainer's own
-      # domain rather than a code host.
+      # oisd big carries the bulk, roughly 250k wildcard entries, and comes
+      # from the maintainer's own domain rather than a code host.
       - https://big.oisd.nl/domainswild
-      # 1Hosts Xtra carries the bulk at 787k. wildcards.txt, not
+      # 1Hosts Lite covers the German ad networks oisd misses: ioam.de,
+      # smartclip, adform, stroeerdigitalgroup.de. wildcards.txt, not
       # domains.wildcards: the latter holds bare domains, and a bare entry
       # matches only itself, so de.ioam.de would pass while ioam.de blocks.
       #
-      # Everything below comes through the jsDelivr CDN, not
-      # raw.githubusercontent.com: raw rate limits per source IP, and the LXC
-      # config sync already spends that budget.
-      - https://cdn.jsdelivr.net/gh/badmojr/1Hosts@master/Xtra/wildcards.txt
-      # Lite is not a subset of Xtra, it holds 10803 entries Xtra lacks.
+      # Via the jsDelivr CDN, not raw.githubusercontent.com: raw rate limits
+      # per source IP, and the LXC config sync already spends that budget.
       - https://cdn.jsdelivr.net/gh/badmojr/1Hosts@master/Lite/wildcards.txt
-      # HaGeZi Pro++, 245k entries, of which 121k no other list here covers.
-      - https://cdn.jsdelivr.net/gh/hagezi/dns-blocklists@main/wildcard/pro.plus.txt
       # iCloud Private Relay would otherwise bypass the house resolver and
       # with it split horizon and filtering.
       - |
