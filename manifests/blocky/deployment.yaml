@@ -136,8 +136,9 @@ spec:
               cpu: 50m
               # Deliberately above the measured peak: under memory pressure
               # kubelet evicts by usage ABOVE the request, and the house
-              # resolver should not be the first to go.
-              memory: 128Mi
+              # resolver should not be the first to go. 1.3M list entries
+              # measure 208Mi.
+              memory: 256Mi
             limits:
               # No CPU limit on purpose, see references/operations.md.
               memory: 512Mi
