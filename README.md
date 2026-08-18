@@ -356,7 +356,7 @@ or an expired key, the controller logs say which.
 | PiAware | latest-build-666 |
 | Proxmox Exporter | 1.0.8 |
 | readsb | latest-build-845 |
-| Reloader | 2.2.15 |
+| Reloader | 2.2.16 |
 | RIPE Atlas | 5120 |
 | Sealed Secrets | 2.19.1 |
 | TeslaMate | 4.0.1 |
