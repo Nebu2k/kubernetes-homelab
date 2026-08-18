@@ -38,7 +38,7 @@ spec:
         kubernetes.io/hostname: talos-cp-1
       containers:
         - name: ultrafeeder
-          image: ghcr.io/sdr-enthusiasts/docker-adsb-ultrafeeder:latest-build-845
+          image: ghcr.io/sdr-enthusiasts/docker-adsb-ultrafeeder:latest-build-954
           imagePullPolicy: IfNotPresent
           securityContext:
             # privileged instead of the upstream compose's
