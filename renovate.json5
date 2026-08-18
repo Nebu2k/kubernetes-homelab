@@ -65,9 +65,9 @@
   rebaseWhen: 'conflicted',
 
   // Wide enough that a backlog actually drains. The hourly limit counts PRs
-  // created in the last hour across runs, so it must stay above the number of
-  // updates a single run opens, or the second cron run of the day silently
-  // creates nothing.
+  // created in the last hour ACROSS runs, so with runs every two hours it
+  // caps PR creation at 6 per run. Lowering it below the number of updates a
+  // run finds makes later runs silently create nothing.
   prConcurrentLimit: 12,
   prHourlyLimit: 6,
 
@@ -251,16 +251,6 @@
       matchPackageNames: ['ghcr.io/paperless-ngx/paperless-ngx'],
       separateMinorPatch: true,
       separateMultipleMajor: true,
-    },
-
-    // kube-prometheus-stack needs its CRDs to run ahead of the chart, or
-    // ArgoCD blocks the sync with a ComparisonError. That is handled inside
-    // the app (crds.upgradeJob + forceConflicts), so the merge itself is safe,
-    // but the ArgoCD sync still has to be kicked off by hand afterwards.
-    // Minors arrive one at a time so a stuck sync cannot pile up.
-    {
-      matchPackageNames: ['kube-prometheus-stack'],
-      separateMultipleMinor: true,
     },
   ],
 }
