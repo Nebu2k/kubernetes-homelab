@@ -25,10 +25,17 @@
   // a check that never comes and pile up under "Pending Status Checks".
   prCreation: 'immediate',
 
-  // The default stays "no automerge". It is enabled per packageRule only,
-  // never globally, because ArgoCD runs with selfHeal + prune and a merged
-  // mistake is in the cluster immediately.
-  automerge: false,
+  // Automerge is the DEFAULT here, and the exceptions are named below. Only
+  // Talos and the Kubernetes version stay manual, because those two are the
+  // ones a merge does not roll out: they need talhelper genconfig plus a
+  // node-by-node talosctl upgrade by hand.
+  //
+  // Everything else lands unattended, so the guard rails are elsewhere:
+  // validate.yml has to be green, minimumReleaseAge holds fresh releases for
+  // three days, and separateMultiple* below keeps any update from skipping a
+  // version.
+  automerge: true,
+  automergeType: 'pr',
 
   // Renovate merges ITSELF through the API instead of using GitHub's
   // auto-merge. That is the condition for the validate gate to have any effect
@@ -136,15 +143,11 @@
       semanticCommitScope: 'deps',
     },
 
-    // Workflow actions are repo tooling, not cluster state. Nothing here
-    // reaches the cluster, so automerge covers every update type; a broken
-    // action shows up as a red workflow, not as a broken pod.
+    // Workflow actions are repo tooling, not cluster state.
     {
       matchManagers: ['github-actions'],
       semanticCommitType: 'chore',
       semanticCommitScope: 'ci',
-      automerge: true,
-      automergeType: 'pr',
     },
 
     // The ArgoCD Applications reference this repo itself as an additional
@@ -167,8 +170,9 @@
     // latest_arm64, *_nohealthcheck) do not match and drop out, keeping us on
     // the latest-build line.
     //
-    // Note that the number lands as "major", so every update is formally a
-    // major bump and never automerges. That is intended.
+    // The number lands as "major", so every bump is formally a major one. That
+    // is cosmetic here: the tags are ADS-B feeder builds with no upgrade path
+    // of their own, and they automerge like everything else.
     {
       matchPackageNames: [
         'ghcr.io/sdr-enthusiasts/docker-flightradar24',
@@ -178,10 +182,6 @@
       ],
       versioning: 'regex:^latest-build-(?<major>\\d+)$',
     },
-
-    // paperless-ngx and unpoller have no major lock of their own. Automerge
-    // still stays off for paperless (rule further down): even patch releases
-    // can carry migrations, and personal documents hang off it.
 
     // Talos: same construction as the ArgoCD anchor. The merge rolls nothing
     // out, so "chore" rather than a "fix(deps)" claiming an upgrade that has
@@ -198,16 +198,26 @@
       groupName: 'talos',
       semanticCommitType: 'chore',
       semanticCommitScope: 'talos',
+      // The one thing that stays manual. A merge rolls nothing out; the
+      // upgrade is talhelper genconfig plus talosctl upgrade node by node.
+      automerge: false,
     },
 
     // The Kubernetes version from talconfig.yaml: offer patches only. The
     // skip-level rule allows only ONE minor at a time and Renovate does not
     // know it. The jump belongs together with talosVersion, plus KUBE_VERSION
-    // in .github/scripts/validate.sh.
+    // in .github/scripts/validate.sh, and is therefore a deliberate act.
     {
       matchPackageNames: ['kubernetes/kubernetes'],
       matchUpdateTypes: ['minor', 'major'],
       enabled: false,
+    },
+
+    // The remaining patches stay manual for the same reason as talos: the
+    // merge changes talconfig.yaml, the cluster follows only by hand.
+    {
+      matchPackageNames: ['kubernetes/kubernetes'],
+      automerge: false,
     },
 
     // A Postgres update should be one decision, not three PRs. Affects
@@ -224,81 +234,33 @@
       groupName: 'teslamate',
     },
 
-    // Automerge for container image patches and minors, and only through the
-    // kubernetes manager, where the blast radius is a pod restart that ArgoCD
-    // rolls out immediately anyway. Minor is in because upstreams like Home
-    // Assistant ship their monthly release as a minor; the packages where a
-    // minor means schema or data state are excluded further down.
+    // No update may skip a version, which is what makes unattended merging
+    // safe for these two. Renovate proposes the newest release by default, so
+    // a 1.12 -> 1.14 jump would arrive as one PR, render green and only then
+    // break: Longhorn allows exactly ONE minor step at a time, and
+    // paperless-ngx only upgrades from its immediate predecessor.
     //
-    // Helm charts (manager "argocd") are deliberately NOT included, regardless
-    // of the version jump. Green CI says nothing about upgrade paths and
-    // cluster schema for charts: a Longhorn jump across several minors renders
-    // cleanly and damages the storage layer, kube-prometheus-stack blocks
-    // ArgoCD with a ComparisonError when the CRDs do not run ahead, and
-    // MetalLB enabled FRR on every node in 0.16. All three would have passed
-    // green.
-    //
-    // The customManager deps drop out through matchManagers already, on
-    // purpose: a Talos upgrade reboots node by node and stays a deliberate act.
+    // Scoped by name on purpose. Globally this would be ruinous for the
+    // sdr-enthusiasts images, whose build counter is mapped to "major" above:
+    // one PR per build number, over a hundred of them.
     {
-      matchManagers: ['kubernetes'],
-      matchUpdateTypes: ['patch', 'minor'],
-      automerge: true,
-      automergeType: 'pr',
+      matchPackageNames: ['longhorn'],
+      separateMultipleMinor: true,
+    },
+    {
+      matchPackageNames: ['ghcr.io/paperless-ngx/paperless-ngx'],
+      separateMinorPatch: true,
+      separateMultipleMajor: true,
     },
 
-    // Chart PATCHES only, and only for charts named one by one. A patch here
-    // is a bugfix release of the same app version: reloader only restarts
-    // pods, metrics-server only feeds "kubectl top" and HPAs, sealed-secrets
-    // only decrypts NEW secrets, and traefik and cert-manager sit on the
-    // request path but do not carry state, so a bad patch is a rollback and
-    // not a data loss.
-    //
-    // Never as matchManagers: ['argocd']. The list IS the decision: storage
-    // (longhorn, csi-driver-smb), network (metallb) and kube-prometheus-stack
-    // stay manual for the reasons above, and every minor stays manual for all
-    // of them including the five here.
+    // kube-prometheus-stack needs its CRDs to run ahead of the chart, or
+    // ArgoCD blocks the sync with a ComparisonError. That is handled inside
+    // the app (crds.upgradeJob + forceConflicts), so the merge itself is safe,
+    // but the ArgoCD sync still has to be kicked off by hand afterwards.
+    // Minors arrive one at a time so a stuck sync cannot pile up.
     {
-      matchManagers: ['argocd'],
-      matchDatasources: ['helm'],
-      matchPackageNames: [
-        'reloader',
-        'metrics-server',
-        'sealed-secrets',
-        'traefik',
-        'cert-manager',
-      ],
-      matchUpdateTypes: ['patch'],
-      automerge: true,
-      automergeType: 'pr',
+      matchPackageNames: ['kube-prometheus-stack'],
+      separateMultipleMinor: true,
     },
-
-    // State-carrying apps, minor only: a patch stays a pod restart, but a
-    // minor runs database migrations on startup that no CI check here covers.
-    {
-      matchPackageNames: [
-        'teslamate/teslamate',
-        'teslamate/grafana',
-        'ghcr.io/mealie-recipes/mealie',
-      ],
-      matchUpdateTypes: ['minor'],
-      automerge: false,
-    },
-
-    // Exceptions from automerge. They stand AFTER the rules above, because
-    // later packageRules win over earlier ones.
-    //
-    // Databases and the document store: here the blast radius is no longer a
-    // pod restart but a schema or data state, and paperless additionally holds
-    // personal documents while even patch releases can carry migrations.
-    {
-      matchPackageNames: [
-        'postgres',
-        'redis',
-        'ghcr.io/paperless-ngx/paperless-ngx',
-      ],
-      automerge: false,
-    },
-
   ],
 }
