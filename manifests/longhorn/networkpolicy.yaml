@@ -1,0 +1,24 @@
+# Longhorn 1.12.1 renders its internal NetworkPolicies from
+# networkPolicies.restrictInternalTraffic, which defaults to true and ignores
+# networkPolicies.enabled. Its longhorn-manager policy admits Longhorn's own
+# pods only, so the Prometheus scrape times out. Policies are additive: this
+# reopens 9500 for monitoring and leaves the rest of the isolation in place.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-prometheus-scrape
+  namespace: longhorn-system
+spec:
+  podSelector:
+    matchLabels:
+      app: longhorn-manager
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: monitoring
+      ports:
+        - protocol: TCP
+          port: 9500

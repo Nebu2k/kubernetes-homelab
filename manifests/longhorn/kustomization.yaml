@@ -7,4 +7,5 @@ resources:
   - storageclass-nobackup.yaml
   - ingress.yaml
   - servicemonitor.yaml
+  - networkpolicy.yaml
   - node-config.yaml

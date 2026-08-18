@@ -318,6 +318,10 @@ spec:
         # timer lives in memory and restarts with Prometheus. The offset reads
         # stored data and survives. It also stays quiet for 26h after rollout,
         # until the metric has that much history.
+        #
+        # The count() guard keeps this quiet while the Longhorn exporter is
+        # down: last_backup_at is then missing for every volume and each one
+        # would fire. TargetDown names that case precisely.
         - alert: LonghornBackupNeverRan
           expr: |
             (
@@ -326,6 +330,7 @@ spec:
               homelab_longhorn_volume_recurring_job_group_info{backup_group="enabled"} offset 26h
             )
             unless on (volume) (longhorn_volume_last_backup_at > 0)
+            and on () (count(longhorn_volume_last_backup_at) > 0)
           for: 30m
           labels:
             severity: warning
