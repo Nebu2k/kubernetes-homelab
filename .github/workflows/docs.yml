@@ -1,9 +1,9 @@
 name: Docs
 
-# Keeps README.md current. The file is generated from apps/ and manifests/ by
-# docs-generator/generate_readme.py. The local pre-commit hook alone is not
-# enough: Renovate merges on GitHub, and with automerge there are no local
-# commits left to trigger it.
+# Keeps README.md current, and is the ONLY thing that does. The file is
+# generated from apps/ and manifests/ by docs-generator/generate_readme.py.
+# There was a local pre-commit hook doing the same, dropped because nearly
+# every commit here is a Renovate merge on GitHub where no hook ever runs.
 #
 # No commit loop: by GitHub's design, pushes with GITHUB_TOKEN trigger no
 # further workflows, and the [skip ci] in the commit is the belt on top.
@@ -42,8 +42,7 @@ jobs:
         run: python3 -m pip install --quiet -r docs-generator/requirements.txt
 
       - name: Generate README
-        # Through make so CI and the local pre-commit hook share one entry
-        # point and cannot drift apart.
+        # Through make so a local run cannot drift apart from CI.
         run: make docs
 
       - name: Commit if changed
