@@ -347,7 +347,7 @@ or an expired key, the controller logs say which.
 | Gatus | v5.36.0 |
 | Home Assistant | 2026.8.2 |
 | Homepage | v1.13.2 |
-| kube-prometheus-stack | 88.2.0 |
+| kube-prometheus-stack | 88.3.0 |
 | Longhorn | 1.12.1 |
 | Mealie | v3.22.0 |
 | MetalLB | 0.16.1 |
@@ -360,7 +360,7 @@ or an expired key, the controller logs say which.
 | RIPE Atlas | 5120 |
 | Sealed Secrets | 2.19.1 |
 | TeslaMate | 4.0.1 |
-| Traefik | 41.1.1 |
+| Traefik | 41.2.0 |
 | UniFi Poller | v3.4.1 |
 | Talos Linux | v1.13.8 |
 | Kubernetes | v1.36.3 |
