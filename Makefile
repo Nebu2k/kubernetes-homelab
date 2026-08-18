@@ -1,8 +1,7 @@
 .PHONY: docs help
 
-# The single entry point for the README generation. The pre-commit hook and
-# .github/workflows/docs.yml both call this target so local runs and CI do
-# exactly the same thing.
+# The single entry point for the README generation. .github/workflows/docs.yml
+# calls this target, so a local run does exactly what CI does.
 #
 # Plain python3 rather than a local conda environment, which a CI runner does
 # not have; the three dependencies in docs-generator/requirements.txt suffice.
