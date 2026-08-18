@@ -252,15 +252,5 @@
       separateMinorPatch: true,
       separateMultipleMajor: true,
     },
-
-    // kube-prometheus-stack needs its CRDs to run ahead of the chart, or
-    // ArgoCD blocks the sync with a ComparisonError. That is handled inside
-    // the app (crds.upgradeJob + forceConflicts), so the merge itself is safe,
-    // but the ArgoCD sync still has to be kicked off by hand afterwards.
-    // Minors arrive one at a time so a stuck sync cannot pile up.
-    {
-      matchPackageNames: ['kube-prometheus-stack'],
-      separateMultipleMinor: true,
-    },
   ],
 }
