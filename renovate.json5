@@ -37,31 +37,33 @@
   automerge: true,
   automergeType: 'pr',
 
-  // Renovate merges ITSELF through the API instead of using GitHub's
-  // auto-merge. That is the condition for the validate gate to have any effect
-  // at all: GitHub auto-merges as soon as all *required* status checks are
-  // green, but main is not branch-protected here, so there are no required
-  // checks and auto-merge would merge at once, bypassing validate.yml.
+  // GitHub's own auto-merge does the merging. It merges as soon as all
+  // *required* status checks are green, so this is only safe because main
+  // carries a ruleset that requires the "Manifests and charts" check from
+  // validate.yml. Without that ruleset there would be no required checks and
+  // auto-merge would merge instantly, bypassing the gate entirely: if the
+  // ruleset is ever removed, this must go back to false.
   //
-  // Renovate instead reads the branch's check status actively and merges only
-  // on green. The price is that merging happens only DURING a Renovate run,
-  // which is why the cron runs daily rather than weekly.
-  platformAutomerge: false,
+  // What it buys: merging no longer needs a Renovate run. Renovate merging
+  // itself is capped at TWO PRs per run, because after the first automerge it
+  // restarts the repository job exactly once (the recursive call gets
+  // canRetry=false). Two runs a day therefore meant four merges a day. GitHub
+  // has no such cap and merges within seconds of CI going green.
+  platformAutomerge: true,
 
-  // Belongs directly to platformAutomerge: false and must not go back to
-  // "auto" without it.
+  // Stays "conflicted" although platformAutomerge no longer forces it.
   //
-  // With automerge enabled the default "auto" means "behind-base-branch":
-  // Renovate rebases every automerge-capable branch as soon as main moves,
-  // and main moves on every push plus every README commit from docs.yml. The
-  // rebase resets the status checks, which take longer than the Renovate run
-  // itself, so Renovate never sees the green state: run N rebases, CI goes
-  // green after the run ends, run N+1 rebases again.
+  // The default "auto" means "behind-base-branch": Renovate rebases every
+  // automerge-capable branch as soon as main moves, and main moves on every
+  // merge plus every README commit from docs.yml. Each rebase resets the
+  // status checks and costs a full CI round, which with automerge on all
+  // packages would be near-constant churn.
   //
-  // With "conflicted" it rebases only on a real merge conflict. The branch
-  // stays green and the next run merges it. The price is merging a branch
-  // validated against a slightly older main; for image tag patches that is a
-  // pod restart, and Renovate still catches genuine conflicts.
+  // "conflicted" rebases only on a real merge conflict. The price is merging a
+  // branch validated against a slightly older main, which is also why the
+  // ruleset deliberately leaves strict_required_status_checks_policy off: with
+  // strict on, GitHub would demand every branch be current and produce exactly
+  // the rebase storm this avoids.
   rebaseWhen: 'conflicted',
 
   // Wide enough that a backlog actually drains. The hourly limit counts PRs
