@@ -37,21 +37,33 @@
   automerge: true,
   automergeType: 'pr',
 
-  // GitHub's own auto-merge does the merging. It merges as soon as all
-  // *required* status checks are green, so this is only safe because main
-  // carries a ruleset that requires the "Manifests and charts" check from
-  // validate.yml. Without that ruleset there would be no required checks and
-  // auto-merge would merge instantly, bypassing the gate entirely: if the
-  // ruleset is ever removed, this must go back to false.
+  // Renovate merges ITSELF through the API instead of using GitHub's
+  // auto-merge, and that is the condition for validate.yml to gate anything:
+  // GitHub auto-merges as soon as all *required* status checks are green, and
+  // main has no required checks, so auto-merge would merge at once.
   //
-  // What it buys: merging no longer needs a Renovate run. Renovate merging
-  // itself is capped at TWO PRs per run, because after the first automerge it
-  // restarts the repository job exactly once (the recursive call gets
-  // canRetry=false). Two runs a day therefore meant four merges a day. GitHub
-  // has no such cap and merges within seconds of CI going green.
-  platformAutomerge: true,
+  // Requiring a check on main was tried on 2026-08-18 and reverted. Ruleset
+  // required_status_checks apply to direct pushes too, not just to pull
+  // requests, so docs.yml could no longer push the regenerated README:
+  //
+  //   remote: error: GH013: Repository rule violations found for refs/heads/main
+  //   remote: - Required status check "Manifests and charts" is expected
+  //
+  // Its commits carry [skip ci], so validate.yml never runs on them and the
+  // check can never be satisfied. Exempting it needs a bypass actor, and the
+  // GitHub Actions integration cannot be one on a personal repository:
+  // "Actor GitHub Actions integration must be part of the ruleset source or
+  // owner organization". A deploy key CAN be a bypass actor and would work,
+  // at the price of another secret and an SSH push in docs.yml.
+  //
+  // The price of merging ourselves: it happens only DURING a run, and a run
+  // automerges at most TWO PRs (after the first it restarts the repository job
+  // once, and the recursive call gets canRetry=false). The cron therefore runs
+  // every two hours rather than twice a day.
+  platformAutomerge: false,
 
-  // Stays "conflicted" although platformAutomerge no longer forces it.
+  // Belongs directly to platformAutomerge: false and must not go back to
+  // "auto" without it.
   //
   // The default "auto" means "behind-base-branch": Renovate rebases every
   // automerge-capable branch as soon as main moves, and main moves on every
@@ -59,11 +71,10 @@
   // status checks and costs a full CI round, which with automerge on all
   // packages would be near-constant churn.
   //
-  // "conflicted" rebases only on a real merge conflict. The price is merging a
-  // branch validated against a slightly older main, which is also why the
-  // ruleset deliberately leaves strict_required_status_checks_policy off: with
-  // strict on, GitHub would demand every branch be current and produce exactly
-  // the rebase storm this avoids.
+  // "conflicted" rebases only on a real merge conflict. The branch stays green
+  // and the next run merges it. The price is merging a branch validated
+  // against a slightly older main; for image tag patches that is a pod
+  // restart, and Renovate still catches genuine conflicts.
   rebaseWhen: 'conflicted',
 
   // Wide enough that a backlog actually drains. The hourly limit counts PRs
