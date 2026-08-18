@@ -18,8 +18,12 @@ on:
     # With a dependency that releases daily that hits every run. The first run
     # lifts the branch onto the new version instead of merging yesterday's, and
     # the second finds it green and unchanged and merges it.
+    #
+    # The two runs must fall in DIFFERENT hours. prHourlyLimit counts PRs
+    # created in the last hour, so back-to-back runs let the second one merge
+    # but not open anything, capping the repo at the hourly limit per day.
     - cron: '0 4 * * *'
-    - cron: '30 4 * * *'
+    - cron: '30 5 * * *'
   workflow_dispatch:
     inputs:
       dryRun:

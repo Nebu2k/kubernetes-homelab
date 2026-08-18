@@ -57,10 +57,12 @@
   // pod restart, and Renovate still catches genuine conflicts.
   rebaseWhen: 'conflicted',
 
-  // No flood of PRs on the first run. The dependency dashboard still shows
-  // everything, only fewer PRs are kept open at once.
-  prConcurrentLimit: 5,
-  prHourlyLimit: 2,
+  // Wide enough that a backlog actually drains. The hourly limit counts PRs
+  // created in the last hour across runs, so it must stay above the number of
+  // updates a single run opens, or the second cron run of the day silently
+  // creates nothing.
+  prConcurrentLimit: 12,
+  prHourlyLimit: 6,
 
   // Let fresh tags age three days. Catches withdrawn and obviously broken
   // releases before they reach the cluster.
@@ -134,11 +136,15 @@
       semanticCommitScope: 'deps',
     },
 
-    // Workflow actions are repo tooling, not cluster state.
+    // Workflow actions are repo tooling, not cluster state. Nothing here
+    // reaches the cluster, so automerge covers every update type; a broken
+    // action shows up as a red workflow, not as a broken pod.
     {
       matchManagers: ['github-actions'],
       semanticCommitType: 'chore',
       semanticCommitScope: 'ci',
+      automerge: true,
+      automergeType: 'pr',
     },
 
     // The ArgoCD Applications reference this repo itself as an additional
@@ -218,9 +224,11 @@
       groupName: 'teslamate',
     },
 
-    // Automerge, deliberately narrow: ONLY container image patches, and only
-    // through the kubernetes manager, where the blast radius is a pod restart
-    // that ArgoCD rolls out immediately anyway.
+    // Automerge for container image patches and minors, and only through the
+    // kubernetes manager, where the blast radius is a pod restart that ArgoCD
+    // rolls out immediately anyway. Minor is in because upstreams like Home
+    // Assistant ship their monthly release as a minor; the packages where a
+    // minor means schema or data state are excluded further down.
     //
     // Helm charts (manager "argocd") are deliberately NOT included, regardless
     // of the version jump. Green CI says nothing about upgrade paths and
@@ -234,7 +242,7 @@
     // purpose: a Talos upgrade reboots node by node and stays a deliberate act.
     {
       matchManagers: ['kubernetes'],
-      matchUpdateTypes: ['patch'],
+      matchUpdateTypes: ['patch', 'minor'],
       automerge: true,
       automergeType: 'pr',
     },
@@ -255,6 +263,18 @@
       matchUpdateTypes: ['patch'],
       automerge: true,
       automergeType: 'pr',
+    },
+
+    // State-carrying apps, minor only: a patch stays a pod restart, but a
+    // minor runs database migrations on startup that no CI check here covers.
+    {
+      matchPackageNames: [
+        'teslamate/teslamate',
+        'teslamate/grafana',
+        'ghcr.io/mealie-recipes/mealie',
+      ],
+      matchUpdateTypes: ['minor'],
+      automerge: false,
     },
 
     // Exceptions from automerge. They stand AFTER the rules above, because
