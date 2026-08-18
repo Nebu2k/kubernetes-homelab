@@ -5,21 +5,17 @@ on:
     # The only schedule; the Renovate config deliberately carries no
     # "schedule:" of its own.
     #
-    # The frequency IS the merge throughput. Renovate merges itself rather than
-    # using GitHub's auto-merge (see platformAutomerge in renovate.json5), so a
-    # merge can only happen while a run is in progress, and a run automerges at
-    # most TWO PRs: after the first it restarts the repository job once, and
-    # the recursive call is passed canRetry=false, which ends it. Two runs a
-    # day therefore capped the repo at four merges a day no matter what the
-    # rate limits said.
+    # Only PR CREATION hangs off this now. Merging is GitHub's auto-merge (see
+    # platformAutomerge in renovate.json5) and happens seconds after CI goes
+    # green, whether or not a run is in progress.
     #
-    # Every two hours gives 24 merges a day of headroom. The buffer against
-    # freshly broken releases is minimumReleaseAge, not the cron.
+    # Every two hours all the same, for two reasons. It bounds how long a fresh
+    # release waits to even be proposed, and it keeps the fallback quick: when
+    # auto-merge cannot be enabled on a PR, Renovate merges it itself on a
+    # later run, and that path is capped at two merges per run.
     #
-    # Running often is also what lets automerge work at all. A run that touches
-    # a branch (new version, rebase on conflict) resets the status checks,
-    # which take longer than the run itself, so that run never sees the green
-    # state. The next one finds the branch green and unchanged and merges it.
+    # The buffer against freshly broken releases is minimumReleaseAge, not the
+    # cron.
     - cron: '0 */2 * * *'
   workflow_dispatch:
     inputs:
