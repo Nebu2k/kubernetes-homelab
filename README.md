@@ -128,9 +128,6 @@ is what makes a chart major upgrade predictable.
 # Fork https://github.com/Nebu2k/kubernetes-homelab
 git clone https://github.com/YOUR_USERNAME/kubernetes-homelab
 cd kubernetes-homelab
-
-# Install Git hooks (regenerates the README on commit)
-.githooks/install.sh
 ```
 
 > ⚠️ The repository is pre-configured for `elmstreet79.de` and `192.168.2.0/24`.
@@ -394,5 +391,5 @@ MIT
 ---
 
 > 🤖 **This README is auto-generated** from `docs-generator/templates/README.md.j2`.
-> Regenerate with `make docs`; the `.githooks/pre-commit` hook does it on commit
-> (run `.githooks/install.sh` after cloning).
+> Regenerate with `make docs`. Editing it directly is pointless:
+> `.github/workflows/docs.yml` overwrites it on every push to main.
