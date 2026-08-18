@@ -343,7 +343,7 @@ or an expired key, the controller logs say which.
 | FR24 | latest-build-858 |
 | Gatus | v5.36.0 |
 | Home Assistant | 2026.8.2 |
-| Homepage | v1.13.2 |
+| Homepage | v2.0.0 |
 | kube-prometheus-stack | 88.3.0 |
 | Longhorn | 1.12.1 |
 | Mealie | v3.22.0 |
