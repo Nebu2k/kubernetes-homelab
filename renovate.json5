@@ -65,9 +65,9 @@
   rebaseWhen: 'conflicted',
 
   // Wide enough that a backlog actually drains. The hourly limit counts PRs
-  // created in the last hour across runs, so it must stay above the number of
-  // updates a single run opens, or the second cron run of the day silently
-  // creates nothing.
+  // created in the last hour ACROSS runs, so with runs every two hours it
+  // caps PR creation at 6 per run. Lowering it below the number of updates a
+  // run finds makes later runs silently create nothing.
   prConcurrentLimit: 12,
   prHourlyLimit: 6,
 
