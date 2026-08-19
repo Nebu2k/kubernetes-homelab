@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: rpi5-net-tuning
+  namespace: rpi5-net-tuning
+  labels:
+    app: rpi5-net-tuning
+spec:
+  selector:
+    app: rpi5-net-tuning
+  ports:
+    - name: metrics
+      port: 9102
+      targetPort: metrics

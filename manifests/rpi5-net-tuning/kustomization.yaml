@@ -5,11 +5,17 @@ namespace: rpi5-net-tuning
 resources:
   - namespace.yaml
   - daemonset.yaml
+  - service.yaml
+  - servicemonitor.yaml
 
 # As with rpi5-fan the script lives in its own file rather than as a YAML
 # block, so it stays readable and can be checked on its own. The hash in the
 # name restarts the pod on a change without anyone having to remember.
+#
+# Both files share one ConfigMap and one mount point. A change to either
+# restarts the pod, which is the same pod for both anyway.
 configMapGenerator:
   - name: rpi5-net-tuning-script
     files:
       - tune.sh
+      - stalls.py

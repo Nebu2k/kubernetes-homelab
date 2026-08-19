@@ -1,0 +1,18 @@
+# The pod runs with hostNetwork, so the endpoint behind this is raspi5's node
+# IP on 9102, not a pod IP. That is why the port number matters: it has to stay
+# free on the node itself.
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: rpi5-net-tuning
+  namespace: rpi5-net-tuning
+  labels:
+    app: rpi5-net-tuning
+    release: kube-prometheus-stack
+spec:
+  selector:
+    matchLabels:
+      app: rpi5-net-tuning
+  endpoints:
+    - port: metrics
+      interval: 30s

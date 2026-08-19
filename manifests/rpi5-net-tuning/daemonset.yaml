@@ -23,10 +23,17 @@
 # All three, although the macb TX fix has landed in Talos and trigger 1 counts
 # as reduced rather than fixed upstream. They cost nothing but a little TX
 # efficiency and are reversible at any time; trigger 1 cannot even be checked
-# here, "ethtool --show-eee end0" answers "netlink error: Not supported".
+# here, "ethtool --show-eee end0" answers "netlink error: Not supported", and
+# the write is refused as well, so it has to be handled at the switch port.
 #
 # The settings do not survive a link reset, hence a DaemonSet that holds them
 # instead of a one-off call.
+#
+# The second container counts what is left over. Talos carries the macb patch
+# that catches a stalled TX ring, so a stall no longer kills the line, it costs
+# a moment and leaves one line in the kernel ring and nothing else: no ethtool
+# counter, no error statistic. Without that count the tuning above cannot be
+# judged, and a rising rate stays invisible until etcd trips over it.
 apiVersion: apps/v1
 kind: DaemonSet
 metadata:
@@ -72,7 +79,47 @@ spec:
               memory: 16Mi
             limits:
               memory: 64Mi
+        - name: stalls
+          # The same image as rpi5-fan, so it is already on the node; the
+          # exporter needs nothing beyond the standard library.
+          image: python:3.14-slim
+          command:
+            - python3
+            - -u
+            - /opt/tune/stalls.py
+          ports:
+            - name: metrics
+              containerPort: 9102
+          securityContext:
+            # privileged rather than CAP_SYSLOG: kernel.dmesg_restrict is 1 on
+            # the node, and although the capability does arrive in CapEff,
+            # opening /dev/kmsg still fails with EPERM.
+            privileged: true
+          volumeMounts:
+            - name: script
+              mountPath: /opt/tune
+            - name: kmsg
+              mountPath: /dev/kmsg
+          # Tests the reader, not just the process: the metrics endpoint
+          # answers from its own thread while the loop over /dev/kmsg could be
+          # stuck. The alert on the poll timestamp covers the rest.
+          livenessProbe:
+            httpGet:
+              path: /metrics
+              port: metrics
+            initialDelaySeconds: 10
+            periodSeconds: 30
+          resources:
+            requests:
+              cpu: 10m
+              memory: 32Mi
+            limits:
+              memory: 64Mi
       volumes:
         - name: script
           configMap:
             name: rpi5-net-tuning-script
+        - name: kmsg
+          hostPath:
+            path: /dev/kmsg
+            type: CharDevice

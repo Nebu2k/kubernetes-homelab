@@ -1044,6 +1044,47 @@ spec:
             summary: "raspi5 ist seit 10 Minuten ueber 80 Grad ({{ $value }} C)"
             description: "Ab 80 Grad drosselt der Pi 5 seinen Takt. Entweder reicht die Kennlinie in manifests/rpi5-fan/fan.py nicht, oder der Luefter dreht trotz Ansteuerung nicht."
 
+    # end0 on raspi5, see manifests/rpi5-net-tuning/.
+    - name: rpi5-net
+      interval: 60s
+      rules:
+        # A stalled TX ring no longer kills the line: the Talos kernel catches
+        # the lost TSTART write and restarts the queue. What remains is a
+        # hardware defect that nothing counts, so this alert watches the RATE,
+        # not the occurrence. Single stalls are the normal state here.
+        #
+        # The threshold matches EtcdMemberLosesLeader on purpose, because that
+        # is the point where it stops being cosmetic: below it a stall costs a
+        # moment of latency, above it raspi5 starts dropping out of the etcd
+        # quorum. Quorum itself is never at risk, the other two members carry
+        # it, which is why nothing else reports this.
+        #
+        # For reference, measured over the ring's tail counters: one stall per
+        # 23 million TX packets was the quiet week, one per 2.4 million the
+        # loud night after the switch reboot.
+        - alert: Rpi5TxStallsRising
+          expr: increase(rpi5_net_tx_stalls_total[1h]) > 6
+          for: 15m
+          labels:
+            severity: warning
+          annotations:
+            summary: "end0 auf raspi5 hat {{ $value | printf \"%.0f\" }} TX-Stalls in einer Stunde"
+            description: "Der Kernel faengt jeden einzelnen ab, bei dieser Rate faengt raspi5 aber an, aus dem etcd-Quorum zu fallen; dann feuert auch EtcdMemberLosesLeader. Zuerst pruefen, ob sich am Link etwas geaendert hat (Switch-Firmware, Port, Aushandlung), denn die Rate springt nach einer Neuaushandlung. Die Gegenmassnahmen aus siderolabs/sbc-raspberrypi#91 stehen in manifests/rpi5-net-tuning/, EEE laesst sich davon nur am Switch-Port setzen. Zeilen ansehen mit: kubectl -n rpi5-net-tuning logs ds/rpi5-net-tuning -c stalls"
+
+        # Covers both the exporter and the tuning: they share a pod, so a
+        # missing metric also means nobody is holding tso/gso and the ring
+        # sizes any more, and those do not survive a link reset.
+        - alert: Rpi5NetTuningDown
+          expr: |
+            absent(rpi5_net_reader_last_poll_timestamp_seconds)
+            or time() - rpi5_net_reader_last_poll_timestamp_seconds > 120
+          for: 15m
+          labels:
+            severity: warning
+          annotations:
+            summary: "Das Netzwerk-Tuning auf raspi5 meldet sich nicht mehr"
+            description: "Entweder ist der Pod weg oder die Schleife ueber /dev/kmsg steht. Damit werden TX-Stalls nicht mehr gezaehlt, und nach dem naechsten Link-Reset fallen auch tso/gso und die Ring-Groessen auf ihre Defaults zurueck. Nachsehen mit: kubectl -n rpi5-net-tuning logs ds/rpi5-net-tuning"
+
 
 
     # Availability is measured by Gatus from outside (group DNS, including a
