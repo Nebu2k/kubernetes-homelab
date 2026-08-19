@@ -1225,6 +1225,58 @@ spec:
             summary: "Tado liefert Home Assistant seit >15m keine Daten"
             description: "Die Heizungssteuerung ist weg, HA laeuft. Meist ist der Refresh-Token abgelehnt worden und HA wartet auf eine Neuanmeldung: Einstellungen, Geraete und Dienste, Tado. Der Grund steht nicht im HA-Log, sondern nur im Container-stderr: kubectl -n home-assistant logs deploy/home-assistant -c home-assistant | grep PyTado"
 
+        # Zwei getrennte Pulse an zwei Zaehlern, jeder mit eigener Verbindung,
+        # deshalb je eine Regel statt einer gemeinsamen absent()-Abfrage wie
+        # bei Tado. Die Leistungssensoren sind die Kanarienvoegel: sie haengen
+        # am Realtime-Stream und aktualisieren im Sekundentakt, waehrend die
+        # kumulierten Werte aus der Tibber-Cloud kommen und auch dann noch
+        # weiterlaufen, wenn der Pulse selbst schon lange schweigt.
+        #
+        # Beobachteter Ausfall ist nicht das Verschwinden der Serie, sondern
+        # ein eingefrorener Wert: die Entitaet bleibt verfuegbar und meldet
+        # stundenlang dieselbe Leistung. Deshalb zaehlt hier das Alter des
+        # letzten Updates, nicht absent(). 30 Minuten sind bei einem Sensor,
+        # der alle paar Sekunden liefert, eindeutig kaputt.
+        - alert: TibberPulseStale
+          expr: |
+            (
+              time() - hass_last_updated_time_seconds{job="home-assistant", entity=~"sensor\\.tibber_pulse_(ost|west)flugel_power"}
+            ) > 1800
+              and on() up{job="home-assistant"} == 1
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            summary: "Tibber Pulse liefert seit >30m keine neuen Werte"
+            description: "{{ $labels.friendly_name }} steht seit {{ $value | humanizeDuration }}. Meist hat der Pulse die Verbindung zum Bridge-Stecker oder zur Tibber-Cloud verloren und faengt sich von allein wieder. Bleibt es, hilft nur der Pulse aus dem Zaehler und wieder rein: kubectl -n home-assistant logs deploy/home-assistant -c home-assistant | grep -i tibber"
+
+        # Faengt den anderen Fall ab: die Entitaet ist ganz aus dem Export
+        # verschwunden, dann gibt es kein Alter mehr zu messen. Je Fluegel
+        # eine Regel, weil absent() nur anschlaegt, wenn der ganze Selektor
+        # leer ist, eine gemeinsame Regel also den Ausfall eines einzelnen
+        # Pulse verschlucken wuerde.
+        - alert: TibberPulseOstMissing
+          expr: |
+            absent(hass_entity_available{job="home-assistant", entity="sensor.tibber_pulse_ostflugel_power"})
+              and on() up{job="home-assistant"} == 1
+          for: 15m
+          labels:
+            severity: warning
+          annotations:
+            summary: "Tibber Pulse Ostfluegel fehlt seit >15m im Export"
+            description: "Die Entitaet sensor.tibber_pulse_ostflugel_power wird von Home Assistant nicht mehr exportiert. Entweder ist die Tibber-Integration ausgestiegen oder der Sensor wurde umbenannt, dann muss auch diese Regel nachgezogen werden."
+
+        - alert: TibberPulseWestMissing
+          expr: |
+            absent(hass_entity_available{job="home-assistant", entity="sensor.tibber_pulse_westflugel_power"})
+              and on() up{job="home-assistant"} == 1
+          for: 15m
+          labels:
+            severity: warning
+          annotations:
+            summary: "Tibber Pulse Westfluegel fehlt seit >15m im Export"
+            description: "Die Entitaet sensor.tibber_pulse_westflugel_power wird von Home Assistant nicht mehr exportiert. Entweder ist die Tibber-Integration ausgestiegen oder der Sensor wurde umbenannt, dann muss auch diese Regel nachgezogen werden."
+
     # The cluster keeps itself current through Renovate. pve and the macmini
     # hang on nothing and are only noticed when someone thinks of them, which
     # is what these rules replace. pve reports through the apt and needrestart
