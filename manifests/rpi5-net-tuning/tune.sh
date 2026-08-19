@@ -37,11 +37,37 @@ ring_max() {
   '
 }
 feature_on() { ethtool -k "$IFACE" 2>/dev/null | grep -qE "^$1: on"; }
-eee_enabled() { ethtool --show-eee "$IFACE" 2>/dev/null | grep -qE "EEE status:[[:space:]]*enabled"; }
+
+# Sets EEE_STATE to on, off, unsupported or unknown, and keeps the raw output
+# in EEE_RAW. Not a $(...) function on purpose: the caller needs both values,
+# and a subshell would drop EEE_RAW.
+#
+# The distinction matters because "cannot read it" is not "it is off". On this
+# driver "ethtool --show-eee end0" answers "netlink error: Not supported", so a
+# check for "enabled" is false either way and countermeasure 1 from issue 91
+# would be silently skipped while the log still looks like a full pass.
+EEE_STATE=unknown
+EEE_RAW=""
+eee_probe() {
+  EEE_RAW=$(ethtool --show-eee "$IFACE" 2>&1)
+  if echo "$EEE_RAW" | grep -qiE "not supported"; then
+    EEE_STATE=unsupported
+  elif echo "$EEE_RAW" | grep -qE "EEE status:[[:space:]]*(enabled|active)"; then
+    EEE_STATE=on
+  elif echo "$EEE_RAW" | grep -qE "EEE status:"; then
+    EEE_STATE=off
+  else
+    EEE_STATE=unknown
+  fi
+}
 
 dump_state() {
   log "Ist-Zustand $IFACE:"
-  ethtool --show-eee "$IFACE" 2>&1 | sed 's/^/    /'
+  # The state, not ethtool's raw answer: a bare "netlink error: Not supported"
+  # in the middle of the block reads like a hiccup instead of a knob that is
+  # not reachable here.
+  eee_probe
+  echo "    EEE: $EEE_STATE"
   ethtool -k "$IFACE" 2>/dev/null | grep -E "^(tcp-segmentation-offload|generic-segmentation-offload|generic-receive-offload):" | sed 's/^/    /'
   ethtool -g "$IFACE" 2>&1 | sed 's/^/    /'
 }
@@ -53,14 +79,39 @@ first=1
 while :; do
   changed=0
 
-  if eee_enabled; then
-    if ethtool --set-eee "$IFACE" eee off 2>&1 | sed 's/^/    /'; then
-      log "EEE war aktiv, ausgeschaltet"
-    else
-      log "EEE ausschalten fehlgeschlagen (Treiber unterstuetzt es womoeglich nicht)"
-    fi
-    changed=1
-  fi
+  eee_probe
+  case "$EEE_STATE" in
+    on)
+      # The exit code has to come from ethtool. Piping it into sed makes the
+      # if-condition test sed, which succeeds even when ethtool refused.
+      out=$(ethtool --set-eee "$IFACE" eee off 2>&1); rc=$?
+      [ -n "$out" ] && echo "$out" | sed 's/^/    /'
+      if [ "$rc" = 0 ]; then
+        log "EEE war aktiv, ausgeschaltet"
+      else
+        log "EEE ist aktiv, Ausschalten fehlgeschlagen (ethtool rc=$rc)"
+      fi
+      changed=1
+      ;;
+    unsupported)
+      # Once, not every minute. Reading and writing are separate operations,
+      # so the write is attempted rather than assumed to fail: that attempt is
+      # the only proof that this knob really is out of reach here.
+      if [ "$first" = 1 ]; then
+        log "EEE: Status nicht lesbar, der Treiber kennt --show-eee nicht. Setzversuch:"
+        out=$(ethtool --set-eee "$IFACE" eee off 2>&1); rc=$?
+        [ -n "$out" ] && echo "$out" | sed 's/^/    /'
+        if [ "$rc" = 0 ]; then
+          log "EEE: Setzen hat trotzdem funktioniert (rc=0)"
+        else
+          log "EEE: auch nicht setzbar (ethtool rc=$rc). Gegenmassnahme 1 aus Issue 91 laeuft auf dieser Node NICHT, sie muss am Switch-Port erfolgen."
+        fi
+      fi
+      ;;
+    unknown)
+      [ "$first" = 1 ] && log "EEE: Ausgabe unerwartet, weder Status noch Fehlermeldung erkannt: $(echo "$EEE_RAW" | tr '\n' ' ')"
+      ;;
+  esac
 
   for f in tcp-segmentation-offload generic-segmentation-offload; do
     if feature_on "$f"; then
