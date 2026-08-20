@@ -21,7 +21,7 @@ spec:
         node-role.kubernetes.io/worker: "worker"
       containers:
       - name: redis
-        image: redis:8.10.0-alpine
+        image: redis:8.10.1-alpine
         imagePullPolicy: IfNotPresent
         ports:
         - name: redis
