@@ -94,11 +94,35 @@ blocking:
       # per source IP, and the LXC config sync already spends that budget.
       - https://cdn.jsdelivr.net/gh/badmojr/1Hosts@master/Lite/wildcards.txt
       # iCloud Private Relay would otherwise bypass the house resolver and
-      # with it split horizon and filtering.
+      # with it split horizon and filtering. Only ingress names belong here,
+      # all of them inside the mask.apple-dns.net zone. mask-api.icloud.com
+      # does not: it answers from the fe2 infrastructure that carries the rest
+      # of the iCloud API.
       - |
         mask.icloud.com
         mask-h2.icloud.com
         mask-canary.icloud.com
+        apple-native-relay.apple.com
+        *.mask.apple-dns.net
+      # Mintegral's fallback domain and the CDN behind it. Only 1Hosts Xtra
+      # carries them, and Xtra is not an option here, so they go in by hand:
+      # with mtgglobals.com and rayjump.com blocked the SDK moves to these two
+      # and the rewarded video in mobile games plays.
+      - |
+        adsurge.com
+        *.adsurge.com
+        ourcdndata.download
+        *.ourcdndata.download
+  allowlists:
+    # 1Hosts Lite holds the backend of Toon Blast and other Peak Games titles,
+    # no other list here does. Blocked, the team section of the game reports no
+    # internet connection.
+    ads:
+      - |
+        toonblast.net
+        *.toonblast.net
+        peakgames.net
+        *.peakgames.net
   clientGroupsBlock:
     default:
       - ads
