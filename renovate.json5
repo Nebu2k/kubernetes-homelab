@@ -139,6 +139,27 @@
         '# renovate: datasource=(?<datasource>\\S+) depName=(?<depName>\\S+)\\s+\\S+:\\s*(?<currentValue>\\S+)',
       ],
     },
+
+    // The talosctl image that takes the etcd snapshots, deliberately read as
+    // "siderolabs/talos" from github-releases and NOT as the ghcr.io image the
+    // kubernetes manager would find (disabled for it in the packageRules).
+    //
+    // Same dependency name as talosVersion above, so the two cannot drift
+    // apart: one dependency, one version, one PR. As two dependencies they DO
+    // drift, because minimumReleaseAge only bites on the github-releases side.
+    // ghcr.io serves no release timestamp, so 'timestamp-optional' waves the
+    // image through at once while the release itself is still held for three
+    // days. That happened with v1.13.9 on 19.08.2026: a PR bumping the client
+    // alone, three days before the node version it belongs to.
+    {
+      customType: 'regex',
+      managerFilePatterns: ['manifests/etcd-backup/cronjob.yaml'],
+      matchStrings: [
+        'image: ghcr\\.io/siderolabs/talosctl:(?<currentValue>\\S+)',
+      ],
+      datasourceTemplate: 'github-releases',
+      depNameTemplate: 'siderolabs/talos',
+    },
   ],
 
   packageRules: [
@@ -194,6 +215,15 @@
         'ghcr.io/sdr-enthusiasts/docker-piaware',
       ],
       versioning: 'regex:^latest-build-(?<major>\\d+)$',
+    },
+
+    // The customManager above owns this image. Without this the kubernetes
+    // manager extracts it a second time as a docker dependency, and that copy
+    // is the one that escapes the release-age gate.
+    {
+      matchManagers: ['kubernetes'],
+      matchPackageNames: ['ghcr.io/siderolabs/talosctl'],
+      enabled: false,
     },
 
     // Talos: same construction as the ArgoCD anchor. The merge rolls nothing
