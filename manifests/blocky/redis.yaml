@@ -37,7 +37,7 @@ spec:
           type: RuntimeDefault
       containers:
         - name: redis
-          image: redis:8.10.0-alpine
+          image: redis:8.10.1-alpine
           imagePullPolicy: IfNotPresent
           # maxmemory bounds what is otherwise an unbounded DNS cache, so the
           # container cannot grow into its limit and be OOMKilled.
