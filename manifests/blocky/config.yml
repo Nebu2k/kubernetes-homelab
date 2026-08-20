@@ -128,6 +128,9 @@ blocking:
       - ads
   # Answer 0.0.0.0 instead of NXDOMAIN.
   blockType: zeroIp
+  # 5m, not the 6h default. A client caches a block for that long, so with the
+  # default a list fix stays invisible on the device until its cache expires.
+  blockTTL: 5m
   loading:
     refreshPeriod: 24h
     downloads:
