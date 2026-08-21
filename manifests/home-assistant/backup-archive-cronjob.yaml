@@ -48,7 +48,7 @@ spec:
           restartPolicy: OnFailure
           containers:
             - name: archive
-              image: amazon/aws-cli:2.36.24
+              image: amazon/aws-cli:2.36.25
               command:
                 - /bin/sh
                 - -c
