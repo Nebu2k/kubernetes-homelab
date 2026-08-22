@@ -271,6 +271,13 @@ alertmanager:
           receiver: 'alerts'
           mute_time_intervals:
             - proxmox-backup-window
+        # Pending updates are a to-do, not an incident: the collector on the
+        # macmini rescans only every 6h, so the global 4h repeats the same
+        # number without new information.
+        - match:
+            alertname: MacosUpdatesPending
+          receiver: 'alerts'
+          repeat_interval: 24h
         - match:
             severity: critical
           receiver: 'alerts'
