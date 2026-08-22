@@ -348,7 +348,7 @@ or an expired key, the controller logs say which.
 | Longhorn | 1.12.1 |
 | Mealie | v3.23.1 |
 | MetalLB | 0.16.1 |
-| Metrics Server | 3.13.1 |
+| Metrics Server | 3.14.0 |
 | paperless-ngx | 3.0.5 |
 | PiAware | latest-build-666 |
 | Proxmox Exporter | 1.0.8 |
