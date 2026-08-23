@@ -354,7 +354,7 @@ or an expired key, the controller logs say which.
 | Proxmox Exporter | 1.0.8 |
 | readsb | latest-build-954 |
 | Reloader | 2.2.16 |
-| RIPE Atlas | 5120 |
+| RIPE Atlas | 5130 |
 | Sealed Secrets | 2.19.3 |
 | TeslaMate | 4.1.1 |
 | Traefik | 41.2.0 |
