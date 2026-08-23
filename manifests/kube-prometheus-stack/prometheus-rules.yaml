@@ -931,18 +931,20 @@ spec:
         # When this fires the question is not which node broke but where extra
         # Longhorn load appeared. Redistributing replicas only moves the load
         # along the same curve; a separate disk for the Longhorn path would
-        # help. 50ms is about four times the current peak.
+        # help. 50ms is about four times the current peak. `for` is 20m because
+        # filesystem-trim-weekly takes about 15 minutes and pushes p99 into the
+        # hundreds of milliseconds on the two nodes that carry the replicas.
         - alert: EtcdFsyncSlow
           expr: |
             histogram_quantile(0.99, sum by (node, le) (
               rate(etcd_disk_wal_fsync_duration_seconds_bucket{job="etcd"}[5m])
             )) > 0.05
-          for: 15m
+          for: 20m
           labels:
             severity: warning
           annotations:
             summary: "etcd-fsync auf {{ $labels.node }} ist langsam (p99 {{ $value | humanizeDuration }})"
-            description: "Die WAL-fsync-Dauer liegt ueber 50ms. etcd bestaetigt jeden Write erst nach dem fsync, eine langsame Platte bremst damit den gesamten API-Server. Auf jeder Node teilen sich /var/lib/etcd und /var/lib/longhorn dieselbe EPHEMERAL-Partition, der Wert haengt also an der Longhorn-Last dieser Node. Erst pruefen, ob dort Repliken neu aufgebaut werden (kubectl -n longhorn-system get replicas.longhorn.io -o wide): waehrend eines Rebuilds ist ein erhoehter Wert erwartbar und geht von selbst zurueck."
+            description: "Die WAL-fsync-Dauer liegt ueber 50ms. etcd bestaetigt jeden Write erst nach dem fsync, eine langsame Platte bremst damit den gesamten API-Server. Auf jeder Node teilen sich /var/lib/etcd und /var/lib/longhorn dieselbe EPHEMERAL-Partition, der Wert haengt also an der Longhorn-Last dieser Node. Erst pruefen, ob dort Repliken neu aufgebaut werden (kubectl -n longhorn-system get replicas.longhorn.io -o wide): waehrend eines Rebuilds ist ein erhoehter Wert erwartbar und geht von selbst zurueck. Sonntags ab 07:00 UTC ist es der Longhorn-Job filesystem-trim-weekly, der rund 15 Minuten laeuft."
 
         # A member that keeps losing sight of the leader.
         #
