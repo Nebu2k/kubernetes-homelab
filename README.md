@@ -360,7 +360,7 @@ or an expired key, the controller logs say which.
 | Traefik | 41.2.0 |
 | UniFi Poller | v4.0.1 |
 | Talos Linux | v1.13.9 |
-| Kubernetes | v1.36.3 |
+| Kubernetes | v1.36.4 |
 | ArgoCD | v3.5.0 (via Terraform) |
 
 ## 📖 Documentation
