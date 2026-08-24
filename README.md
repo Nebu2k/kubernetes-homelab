@@ -346,7 +346,7 @@ or an expired key, the controller logs say which.
 | Homepage | v2.1.2 |
 | kube-prometheus-stack | 88.5.3 |
 | Longhorn | 1.12.1 |
-| Mealie | v3.23.1 |
+| Mealie | v3.24.0 |
 | MetalLB | 0.16.1 |
 | Metrics Server | 3.14.0 |
 | paperless-ngx | 3.0.5 |
