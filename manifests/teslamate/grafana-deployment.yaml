@@ -26,7 +26,7 @@ spec:
           mountPath: /var/lib/grafana
       containers:
       - name: grafana
-        image: teslamate/grafana:4.1.1
+        image: teslamate/grafana:4.2.0
         env:
         - name: DATABASE_USER
           valueFrom:
