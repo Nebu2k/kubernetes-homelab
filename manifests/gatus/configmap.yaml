@@ -58,6 +58,7 @@ data:
         interval: 60s
         conditions:
           - "[STATUS] == 200"
+          - "[BODY] == pat(*DevOps Engineer*)"
           - "[RESPONSE_TIME] < 2000"
 
       # Der Apex bleibt Traefiks Aufgabe und schickt intern auf www
@@ -331,12 +332,16 @@ data:
         conditions:
           - "[CONNECTED] == true"
 
+      # The websites carry a text anchor next to the status code. Renovate
+      # merges their dependency updates unattended, and a build that renders
+      # but mangles the text still answers 200.
       - name: haushelden-service.de
         group: Internet
         url: "https://haushelden-service.de"
         interval: 5m
         conditions:
           - "[STATUS] == 200"
+          - "[BODY] == pat(*Heldenhaft vollbracht!*)"
           - "[CERTIFICATE_EXPIRATION] > 240h"
 
       - name: peters.club
@@ -345,6 +350,7 @@ data:
         interval: 5m
         conditions:
           - "[STATUS] == 200"
+          - "[BODY] == pat(*Familie Peters*)"
           - "[CERTIFICATE_EXPIRATION] > 240h"
 
       - name: homeworx.solutions
@@ -353,6 +359,7 @@ data:
         interval: 5m
         conditions:
           - "[STATUS] == 200"
+          - "[BODY] == pat(*Ihr Zuhause. Unser Werk.*)"
           - "[CERTIFICATE_EXPIRATION] > 240h"
 
       - name: seb-it.com
@@ -361,6 +368,7 @@ data:
         interval: 5m
         conditions:
           - "[STATUS] == 200"
+          - "[BODY] == pat(*Seb-IT*)"
           - "[CERTIFICATE_EXPIRATION] > 240h"
       # Domain expiry (RDAP/WHOIS) in its own group, so a cranky WHOIS answer
       # does not turn the site above red. Gatus allows no interval below 5m
