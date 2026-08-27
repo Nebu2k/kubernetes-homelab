@@ -80,20 +80,40 @@ def get_token(registry, repo):
         return None
 
 
+def fetch_manifest(url, token=None):
+    req = urllib.request.Request(url)
+    req.add_header("Accept", ACCEPT)
+    if token:
+        req.add_header("Authorization", f"Bearer {token}")
+    with urllib.request.urlopen(req, timeout=25) as resp:
+        return json.load(resp)
+
+
+def why(exc):
+    if isinstance(exc, urllib.error.HTTPError):
+        return f"HTTP {exc.code}"
+    return type(exc).__name__
+
+
 def architectures(image):
     """Menge der Plattformen, oder None wenn die Registry nicht antwortet."""
     registry, repo, tag = split_ref(image)
     host = "registry-1.docker.io" if registry == "docker.io" else registry
-    req = urllib.request.Request(f"https://{host}/v2/{repo}/manifests/{tag}")
-    req.add_header("Accept", ACCEPT)
+    url = f"https://{host}/v2/{repo}/manifests/{tag}"
     token = get_token(registry, repo)
-    if token:
-        req.add_header("Authorization", f"Bearer {token}")
     try:
-        with urllib.request.urlopen(req, timeout=25) as resp:
-            doc = json.load(resp)
+        doc = fetch_manifest(url, token)
+    except urllib.error.HTTPError as exc:
+        # registry.k8s.io redirects to a mirror that rejects the token it just
+        # issued, while the same request without one goes through.
+        if exc.code != 401 or not token:
+            return None, why(exc)
+        try:
+            doc = fetch_manifest(url)
+        except Exception as retry_exc:
+            return None, why(retry_exc)
     except Exception as exc:
-        return None, f"{type(exc).__name__}"
+        return None, why(exc)
 
     if "manifests" not in doc:
         # Single manifest without a list. The architecture is not in there

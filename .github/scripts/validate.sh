@@ -39,6 +39,30 @@ SKIP_KINDS="RecurringJob"
 
 RED=$'\033[31m'; GREEN=$'\033[32m'; YELLOW=$'\033[33m'; RESET=$'\033[0m'
 failures=0
+retry_out=""
+
+# Upstream hiccups are routine: a chart index lists a version while the release
+# asset behind it briefly 404s, or a schema download drops. Only these messages
+# are retried. A version that does not exist fails with "not found in ...
+# repository" instead and stays red on the first try, so the automerge gate
+# keeps its teeth.
+TRANSIENT='failed to fetch|cannot be reached|connection (reset|refused)|dial tcp|i/o timeout|context deadline exceeded|TLS handshake|unexpected EOF|no such host|server misbehaving|network is unreachable|Service Unavailable|Bad Gateway|Gateway Time|temporarily unavailable|too many requests'
+
+# Runs a command up to three times, output in $retry_out either way.
+retry() {
+  local attempt=1 delay=3
+  while :; do
+    retry_out=$("$@" 2>&1) && return 0
+    if [ "$attempt" -ge 3 ] || ! printf '%s' "$retry_out" | grep -qEi "$TRANSIENT"; then
+      return 1
+    fi
+    echo "${YELLOW}  transient error, retry $attempt/2 in ${delay}s${RESET}"
+    sleep "$delay"
+    attempt=$((attempt + 1)); delay=$((delay * 2))
+  done
+}
+
+repo_update() { retry helm repo update >/dev/null; }
 
 # All rendered YAML collects here so the arm64 image test builds on the same
 # pass instead of rendering twice. It needs the rendered CHARTS: half the
@@ -61,7 +85,7 @@ for tool in kubeconform helm; do
 done
 
 conform() {
-  kubeconform \
+  printf '%s' "$1" | kubeconform \
     -strict \
     -summary \
     -ignore-missing-schemas \
@@ -87,11 +111,11 @@ validate_manifests() {
 
     printf '%s\n---\n' "$built" >> "$RENDERED"
 
-    if out=$(printf '%s' "$built" | conform 2>&1); then
-      echo "${GREEN}✓ $name${RESET} ${out##*- }"
+    if retry conform "$built"; then
+      echo "${GREEN}✓ $name${RESET} ${retry_out##*- }"
     else
       echo "${RED}✗ $name${RESET}"
-      echo "$out" | grep -v '^Summary' | head -5 | sed 's/^/    /'
+      echo "$retry_out" | grep -v '^Summary' | head -5 | sed 's/^/    /'
       failures=$((failures + 1))
     fi
   done
@@ -134,7 +158,9 @@ PY
     chart=$(printf '%s' "$line" | python3 -c 'import sys,json;print(json.load(sys.stdin)["chart"])')
     version=$(printf '%s' "$line" | python3 -c 'import sys,json;print(json.load(sys.stdin)["version"])')
 
-    helm repo add "val-$name" "$repo" >/dev/null 2>&1
+    if ! retry helm repo add "val-$name" "$repo" >/dev/null; then
+      echo "${YELLOW}! $name${RESET} (helm repo add failed, trying the cache)"
+    fi
 
     args=(template "$name" "val-$name/$chart" --version "$version"
           --kube-version "$KUBE_VERSION" --api-versions "$API_VERSIONS")
@@ -152,22 +178,23 @@ PY
       args+=(-f "$tmpvals")
     fi
 
-    if ! rendered=$(helm "${args[@]}" 2>&1); then
+    if ! retry helm "${args[@]}"; then
       echo "${RED}✗ $name${RESET} ($chart $version does not render)"
-      printf '%s\n' "$rendered" | grep -m3 -i error | sed 's/^/    /'
+      printf '%s\n' "$retry_out" | grep -m3 -i error | sed 's/^/    /'
       failures=$((failures + 1))
       [ -n "$tmpvals" ] && rm -f "$tmpvals"
       continue
     fi
+    rendered=$retry_out
     [ -n "$tmpvals" ] && rm -f "$tmpvals"
 
     printf '%s\n---\n' "$rendered" >> "$RENDERED"
 
-    if out=$(printf '%s' "$rendered" | conform 2>&1); then
-      echo "${GREEN}✓ $name${RESET} ($version) ${out##*- }"
+    if retry conform "$rendered"; then
+      echo "${GREEN}✓ $name${RESET} ($version) ${retry_out##*- }"
     else
       echo "${RED}✗ $name${RESET} ($version)"
-      echo "$out" | grep -v '^Summary' | head -5 | sed 's/^/    /'
+      echo "$retry_out" | grep -v '^Summary' | head -5 | sed 's/^/    /'
       failures=$((failures + 1))
     fi
   done <<< "$charts"
@@ -196,10 +223,10 @@ validate_arch() {
 
 case "${1:-all}" in
   manifests) validate_manifests ;;
-  helm)      helm repo update >/dev/null 2>&1; validate_helm ;;
-  arch)      validate_manifests >/dev/null; helm repo update >/dev/null 2>&1
+  helm)      repo_update; validate_helm ;;
+  arch)      validate_manifests >/dev/null; repo_update
              validate_helm >/dev/null; validate_arch ;;
-  all)       validate_manifests; echo; echo; helm repo update >/dev/null 2>&1
+  all)       validate_manifests; echo; echo; repo_update
              validate_helm; echo; echo; validate_arch ;;
   *)         echo "usage: $0 [all|manifests|helm|arch]" >&2; exit 2 ;;
 esac
