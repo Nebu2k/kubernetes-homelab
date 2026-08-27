@@ -1191,41 +1191,65 @@ spec:
             summary: "Blocky-LXC holt die Konfiguration nicht mehr aus dem Repo"
             description: "Der Sync scheitert seit >1h. Die LXC laeuft mit einem aelteren Stand als die Cluster-Instanz. Von Hand anstossen und die Ausgabe lesen: pct exec 402 -- /etc/periodic/15min/blocky-config-sync"
 
-    # Tado is the one integration that dies quietly. Its OAuth refresh token
-    # rotates roughly every 10 minutes and only the newest one is usable; after
-    # a hard kill or a longer outage the stored one can come back rejected with
-    # a 400, and then every start ends in a reauth prompt that has to be
-    # clicked in the UI. Measured in August 2026: twice unnoticed for 5h41 and
-    # 3h03, both times after HA was gone for 7 minutes.
+    # Tado runs on tado_ce since August 2026: the zones are read locally over
+    # the HomeKit bridge, the cloud is only left for schedules and calibration.
+    # That splits the old single failure mode in two, and the same
+    # binary_sensor carries both. Gone means the integration died, 0 means the
+    # bridge dropped and every read falls back to the cloud, where the daily
+    # budget is 100 calls without a subscription.
     #
-    # The 400 itself cannot be alerted on. PyTado builds its logger with
-    # Logger(__name__) instead of logging.getLogger(), so it has no parent and
-    # its own handler: the error reaches the container's stderr and never HA's
-    # log, where only the consequence ("Device login flow status is PENDING")
-    # shows up.
+    # The refresh token can still be rejected, but it no longer takes the
+    # heating with it. The reason for a rejection stays invisible in HA's log,
+    # it only reaches the container's stderr.
     - name: home-assistant
       interval: 60s
       rules:
         # absent(), not == 0: the prometheus integration drops the labelset of
         # an entity that turns unavailable instead of reporting zero, so the
-        # series disappears entirely. All nine tado_mode sensors go at once
-        # because they hang off one coordinator, which is why a single rule
-        # covers the whole set and one dead valve stays quiet. The up{} guard
-        # keeps this about Tado, a dead HA is covered by pod-health and Gatus.
+        # series disappears entirely. The up{} guard keeps this about Tado, a
+        # dead HA is covered by pod-health and Gatus.
         #
-        # Tado's own API also has short outages that heal by themselves, 5 and
-        # 30 minutes in the same period, so a firing alert can resolve without
-        # anyone doing anything.
+        # Tado's own API also has short outages that heal by themselves, so a
+        # firing alert can resolve without anyone doing anything.
         - alert: HomeAssistantTadoUnavailable
           expr: |
-            absent(hass_entity_available{job="home-assistant", entity=~"sensor\\..*_tado_mode"})
+            absent(hass_entity_available{job="home-assistant", entity="binary_sensor.tado_ce_hub_homekit"})
               and on() up{job="home-assistant"} == 1
           for: 15m
           labels:
             severity: warning
           annotations:
             summary: "Tado liefert Home Assistant seit >15m keine Daten"
-            description: "Die Heizungssteuerung ist weg, HA laeuft. Meist ist der Refresh-Token abgelehnt worden und HA wartet auf eine Neuanmeldung: Einstellungen, Geraete und Dienste, Tado. Der Grund steht nicht im HA-Log, sondern nur im Container-stderr: kubectl -n home-assistant logs deploy/home-assistant -c home-assistant | grep PyTado"
+            description: "Die Heizungssteuerung ist weg, HA laeuft. Meist wartet die Integration auf eine Neuanmeldung: Einstellungen, Geraete und Dienste, Tado CE. Der Grund steht nicht im HA-Log, sondern nur im Container-stderr: kubectl -n home-assistant logs deploy/home-assistant -c home-assistant | grep -i tado"
+
+        # The bridge is the whole point of tado_ce here. Without it every read
+        # goes to the cloud again and the daily quota is spent in hours, so
+        # this is the early warning for TadoApiQuotaHigh below. 30m rather than
+        # 15m: a bridge reboot or a DHCP lease renewal reconnects by itself.
+        - alert: TadoHomeKitDisconnected
+          expr: |
+            hass_binary_sensor_state{job="home-assistant", entity="binary_sensor.tado_ce_hub_homekit"} == 0
+          for: 30m
+          labels:
+            severity: warning
+          annotations:
+            summary: "Tado liest seit >30m ueber die Cloud statt ueber die Bridge"
+            description: "Die HomeKit-Verbindung zur Internet Bridge (192.168.2.45) ist weg, tado_ce faellt auf Cloud-Polling zurueck und verbraucht das Tageskontingent. Bridge und mDNS pruefen, danach in Tado CE unter Konfigurieren, Erweiterte Einstellungen, HomeKit neu koppeln."
+
+        # Relative, not absolute: the limit is 20000 with a subscription and
+        # 100 without, and the rule has to survive the switch between them.
+        # Both counters carry the unit "calls" and land in the same metric,
+        # the entity label is what separates them.
+        - alert: TadoApiQuotaHigh
+          expr: |
+            hass_sensor_unit_calls{job="home-assistant", entity="sensor.tado_ce_hub_api_verwendung"}
+              / on() hass_sensor_unit_calls{job="home-assistant", entity="sensor.tado_ce_hub_api_grenze"} > 0.8
+          for: 15m
+          labels:
+            severity: warning
+          annotations:
+            summary: "Tado hat >80% des API-Tageskontingents verbraucht"
+            description: "Laeuft das Kontingent leer, antwortet die Tado-Cloud bis Mitternacht nicht mehr und Zeitplanaenderungen greifen nicht. Meist steckt eine abgerissene HomeKit-Verbindung dahinter, siehe TadoHomeKitDisconnected."
 
         # Zwei getrennte Pulse an zwei Zaehlern, jeder mit eigener Verbindung,
         # deshalb je eine Regel statt einer gemeinsamen absent()-Abfrage wie
