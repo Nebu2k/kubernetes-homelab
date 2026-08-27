@@ -40,10 +40,10 @@ jobs:
       - name: Install kubeconform + kustomize
         run: |
           set -euo pipefail
-          curl -sSfL \
+          curl -sSfL --retry 3 --retry-delay 3 --retry-all-errors \
             "https://github.com/yannh/kubeconform/releases/download/${KUBECONFORM_VERSION}/kubeconform-linux-amd64.tar.gz" \
             | sudo tar xz -C /usr/local/bin kubeconform
-          curl -sSfL \
+          curl -sSfL --retry 3 --retry-delay 3 --retry-all-errors \
             "https://github.com/kubernetes-sigs/kustomize/releases/download/kustomize%2F${KUSTOMIZE_VERSION}/kustomize_${KUSTOMIZE_VERSION}_linux_amd64.tar.gz" \
             | sudo tar xz -C /usr/local/bin kustomize
           kubeconform -v
