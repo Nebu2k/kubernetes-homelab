@@ -350,7 +350,7 @@ or an expired key, the controller logs say which.
 | MetalLB | 0.16.1 |
 | Metrics Server | 3.14.0 |
 | paperless-ngx | 3.0.5 |
-| PiAware | latest-build-666 |
+| PiAware | latest-build-667 |
 | Proxmox Exporter | 1.0.8 |
 | readsb | latest-build-956 |
 | Reloader | 2.2.16 |
