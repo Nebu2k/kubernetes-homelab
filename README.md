@@ -349,7 +349,7 @@ or an expired key, the controller logs say which.
 | Mealie | v3.24.0 |
 | MetalLB | 0.16.1 |
 | Metrics Server | 3.14.0 |
-| paperless-ngx | 3.1.1 |
+| paperless-ngx | 3.1.2 |
 | PiAware | latest-build-667 |
 | Proxmox Exporter | 1.0.8 |
 | readsb | latest-build-958 |
