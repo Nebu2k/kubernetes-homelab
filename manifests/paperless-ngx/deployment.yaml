@@ -44,7 +44,7 @@ spec:
           mountPath: /usr/src/paperless/export
       containers:
       - name: paperless-ngx
-        image: ghcr.io/paperless-ngx/paperless-ngx:3.1.1
+        image: ghcr.io/paperless-ngx/paperless-ngx:3.1.2
         imagePullPolicy: IfNotPresent
         ports:
         - name: http
