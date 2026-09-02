@@ -10,8 +10,10 @@
 # in S3 would age at once.
 #
 # Several snapshots although etcd replicates and the content is identical:
-# they prove several independent paths into the bucket, and at roughly 55 MB
-# each with a 30-day lifecycle that costs under 10 GB.
+# they prove several independent paths into the bucket. Daily and kept for
+# 7 days, which is roughly 1.5 GB. Anything older is not restorable in
+# practice: the Longhorn volume metadata inside points at replicas that are
+# gone by then, and everything declarative comes back from Git.
 #
 # THIS LIST MUST FOLLOW THE ETCD MEMBERS. A new control plane belongs here AND
 # in the node loop of the freshness probe; a removed one has to go from both.
@@ -33,7 +35,7 @@ metadata:
   labels:
     app.kubernetes.io/name: etcd-snapshot-offsite
 spec:
-  schedule: "0 0,12 * * *"
+  schedule: "0 0 * * *"
   timeZone: "Etc/UTC"
   concurrencyPolicy: Forbid
   successfulJobsHistoryLimit: 3
@@ -122,7 +124,7 @@ metadata:
   labels:
     app.kubernetes.io/name: etcd-snapshot-offsite
 spec:
-  schedule: "40 0,12 * * *"
+  schedule: "40 0 * * *"
   timeZone: "Etc/UTC"
   concurrencyPolicy: Forbid
   successfulJobsHistoryLimit: 3
@@ -207,7 +209,7 @@ metadata:
   labels:
     app.kubernetes.io/name: etcd-snapshot-offsite
 spec:
-  schedule: "20 0,12 * * *"
+  schedule: "20 0 * * *"
   timeZone: "Etc/UTC"
   concurrencyPolicy: Forbid
   successfulJobsHistoryLimit: 3
