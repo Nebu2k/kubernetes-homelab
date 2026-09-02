@@ -38,6 +38,7 @@ prometheus:
       - binary_sensor.tado_ce_hub_homekit
       - sensor.tado_ce_hub_api_verwendung
       - sensor.tado_ce_hub_api_grenze
+      - sensor.ring_letztes_*
 
 # The deliberate dashboard, in yaml so it lives in git like everything else.
 # The storage-mode dashboards (Home, Bereiche, Map, Roborock) are untouched
@@ -221,6 +222,28 @@ rest_command:
     timeout: 5
 
 template:
+  # The Ring Intercom delivers ding and unlock over Firebase push only. When
+  # that channel dies the integration still looks healthy, because battery and
+  # last activity come from polling. These two mirror the push entities as
+  # timestamps so a silent channel becomes measurable.
+  #
+  # The state, not last_updated: last_updated is reset by every restart and
+  # would report a dead channel as healthy.
+  - sensor:
+      - name: "Ring letztes Klingeln"
+        unique_id: ring_last_ding
+        device_class: timestamp
+        state: "{{ states('event.vordereingang_ding') }}"
+        availability: >-
+          {{ states('event.vordereingang_ding') not in ['unknown', 'unavailable'] }}
+
+      - name: "Ring letztes Entriegeln"
+        unique_id: ring_last_intercom_unlock
+        device_class: timestamp
+        state: "{{ states('event.vordereingang_intercom_unlock') }}"
+        availability: >-
+          {{ states('event.vordereingang_intercom_unlock') not in ['unknown', 'unavailable'] }}
+
   - switch:
       - name: "Werbefilter"
         unique_id: blocky_blocking

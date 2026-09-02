@@ -1303,6 +1303,44 @@ spec:
             summary: "Tibber Pulse Westfluegel fehlt seit >15m im Export"
             description: "Die Entitaet sensor.tibber_pulse_westflugel_power wird von Home Assistant nicht mehr exportiert. Entweder ist die Tibber-Integration ausgestiegen oder der Sensor wurde umbenannt, dann muss auch diese Regel nachgezogen werden."
 
+        # Klingeln und Entriegeln kommen beim Ring Intercom ausschliesslich
+        # per Firebase-Push. Reisst der Kanal ab, bleibt die Integration
+        # aeusserlich gesund: Batterie und letzte Aktivitaet stammen aus dem
+        # Polling und laufen weiter, nur die Automation feuert nie wieder.
+        # Genau so blieb es im August 2026 drei Wochen unbemerkt.
+        #
+        # Gemessen wird der Zustand der beiden Spiegel-Sensoren, nicht ihr
+        # last_updated: der setzt sich bei jedem Neustart zurueck und wuerde
+        # einen toten Kanal als gesund melden. Beide Ereignisarten zusammen
+        # per max(), weil jede fuer sich tagelang legitim still sein kann.
+        # Sieben Tage ist der Kompromiss, der einen Urlaub ueberlebt.
+        - alert: RingPushChannelSilent
+          expr: |
+            (
+              time() - max(hass_sensor_timestamp_seconds{job="home-assistant", entity=~"sensor\\.ring_letztes_(klingeln|entriegeln)"})
+            ) > 604800
+              and on() up{job="home-assistant"} == 1
+          for: 30m
+          labels:
+            severity: warning
+          annotations:
+            summary: "Ring schickt seit >7 Tagen keine Push-Ereignisse mehr"
+            description: "Weder Klingeln noch Entriegeln sind seit {{ $value | humanizeDuration }} angekommen, die Klingel-Automation kann also nicht ausloesen. Zuerst in der Ring-App die Benachrichtigungen des Kontos pruefen, das HA benutzt: Anruf und Entriegelung muessen beide an sein, sie werden pro Konto verwaltet und ein Klingeldruck kommt als Anruf. Danach das Log: kubectl -n home-assistant logs deploy/home-assistant -c home-assistant | grep -i fcmpush. Steht dort 'shutting down FcmPushClient', ist der Push-Client an einer Nachricht abgestuerzt und startet nicht von allein neu."
+
+        # Faengt den anderen Fall ab, analog zu den Pulse-Regeln: sind die
+        # Sensoren ganz aus dem Export verschwunden, gibt es kein Alter mehr
+        # zu messen und die Regel darueber wird still.
+        - alert: RingPushSensorsMissing
+          expr: |
+            absent(hass_sensor_timestamp_seconds{job="home-assistant", entity=~"sensor\\.ring_letztes_(klingeln|entriegeln)"})
+              and on() up{job="home-assistant"} == 1
+          for: 15m
+          labels:
+            severity: warning
+          annotations:
+            summary: "Die Ring-Push-Sensoren fehlen seit >15m im Export"
+            description: "sensor.ring_letztes_klingeln und sensor.ring_letztes_entriegeln werden von Home Assistant nicht mehr exportiert. Entweder ist die Ring-Integration ausgestiegen, oder die Template-Sensoren in configuration.yaml wurden umbenannt, dann muss auch diese Regel nachgezogen werden."
+
     # The cluster keeps itself current through Renovate. pve and the macmini
     # hang on nothing and are only noticed when someone thinks of them, which
     # is what these rules replace. pve reports through the apt and needrestart
