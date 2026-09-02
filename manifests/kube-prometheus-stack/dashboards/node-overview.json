@@ -418,7 +418,7 @@
         {
           "refId": "E",
           "datasource": { "type": "prometheus", "uid": "prometheus" },
-          "expr": "time() - min by (instance) (node_textfile_mtime_seconds{file=~\".+/(apt|needrestart|softwareupdate).prom\"})",
+          "expr": "time() - min by (instance) (node_textfile_mtime_seconds{file=~\".+/(apt|needrestart|softwareupdate|plex).prom\"})",
           "format": "table",
           "instant": true
         }
@@ -545,11 +545,89 @@
       }
     },
     {
+      "id": 15,
+      "type": "table",
+      "title": "Plex auf dem macmini",
+      "description": "Plex aktualisiert sich selbst im Butler-Fenster 02:00-05:00, die Zahlen kommen aus plex-collector.sh auf dem macmini. Gezeigt werden die laufende Version, die neueste fuer macOS veroeffentlichte und ob die Automatik noch eingeschaltet ist. Alarm gibt es erst nach zwei Wartungsfenstern ohne Update (PlexUpdateAvailable) oder wenn die Automatik aus ist (PlexAutoUpdateDisabled).",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 4, "w": 24, "x": 0, "y": 40 },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "plex_version_info",
+          "format": "table",
+          "instant": true
+        },
+        {
+          "refId": "B",
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "plex_update_available",
+          "format": "table",
+          "instant": true
+        },
+        {
+          "refId": "C",
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "plex_auto_update_enabled",
+          "format": "table",
+          "instant": true
+        }
+      ],
+      "transformations": [
+        { "id": "joinByField", "options": { "byField": "instance", "mode": "outer" } },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": { "Time": true, "Time 1": true, "Time 2": true, "Time 3": true, "Value #A": true, "job": true, "__name__": true },
+            "renameByName": { "running": "Laeuft", "latest": "Veroeffentlicht", "Value #B": "Update offen", "Value #C": "Automatik", "instance": "IP" },
+            "indexByName": { "running": 0, "latest": 1, "Value #B": 2, "Value #C": 3, "instance": 4 }
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": { "align": "auto", "cellOptions": { "type": "auto" } },
+          "unit": "none",
+          "decimals": 0
+        },
+        "overrides": [
+          {
+            "matcher": { "id": "byName", "options": "Update offen" },
+            "properties": [
+              {
+                "id": "mappings",
+                "value": [
+                  { "type": "value", "options": { "0": { "text": "nein", "color": "green", "index": 0 } } },
+                  { "type": "value", "options": { "1": { "text": "ja", "color": "red", "index": 1 } } }
+                ]
+              },
+              { "id": "custom.cellOptions", "value": { "type": "color-text" } }
+            ]
+          },
+          {
+            "matcher": { "id": "byName", "options": "Automatik" },
+            "properties": [
+              {
+                "id": "mappings",
+                "value": [
+                  { "type": "value", "options": { "1": { "text": "an", "color": "green", "index": 0 } } },
+                  { "type": "value", "options": { "0": { "text": "aus", "color": "red", "index": 1 } } }
+                ]
+              },
+              { "id": "custom.cellOptions", "value": { "type": "color-text" } }
+            ]
+          }
+        ]
+      },
+      "options": { "showHeader": true, "cellHeight": "sm" }
+    },
+    {
       "id": 8,
       "type": "row",
       "title": "Stromverbrauch",
       "collapsed": false,
-      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 40 },
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 44 },
       "panels": []
     },
     {
@@ -558,7 +636,7 @@
       "title": "Rack jetzt",
       "description": "Ecoflow Delta 3 am Rack, ueber Home Assistant. Das ist der einzige Wert, der den ganzen Verbrauch erfasst: RAPL und PPT sehen nur das CPU-Package, die Raspis und die VMs melden gar nichts.",
       "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "gridPos": { "h": 6, "w": 5, "x": 0, "y": 41 },
+      "gridPos": { "h": 6, "w": 5, "x": 0, "y": 45 },
       "targets": [
         {
           "refId": "A",
@@ -596,7 +674,7 @@
       "title": "Rack: Ein, Aus und Solar",
       "description": "Differenz zwischen AC-In und Total-Out ist Lade- bzw. Entladeleistung der Ecoflow. Im TOU-Modus laeuft das absichtlich auseinander.",
       "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "gridPos": { "h": 6, "w": 10, "x": 5, "y": 41 },
+      "gridPos": { "h": 6, "w": 10, "x": 5, "y": 45 },
       "targets": [
         {
           "refId": "A",
@@ -636,7 +714,7 @@
       "title": "Haus gesamt (Tibber Pulse)",
       "description": "Ost- und Westfluegel getrennt gemessen, dazu die Summe. Zum Einordnen: das Rack steckt hier mit drin.",
       "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "gridPos": { "h": 6, "w": 9, "x": 15, "y": 41 },
+      "gridPos": { "h": 6, "w": 9, "x": 15, "y": 45 },
       "targets": [
         {
           "refId": "A",

@@ -328,6 +328,7 @@ def generate_tree_fallback():
     # generates the machine configs from, and those sit next to it encrypted.
     lines += [
         "├── talos/                     # machine configs (talhelper), see talos/README.md",
+        "├── hosts/                     # copies of what runs on hosts outside the cluster",
         "├── docs-generator/            # renders this README from templates/README.md.j2",
         "└── reseal-all-secrets.sh      # reseals every *-unsealed.yaml under manifests/",
     ]

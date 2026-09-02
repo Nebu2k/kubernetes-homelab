@@ -1369,22 +1369,53 @@ spec:
             summary: "macmini hat seit drei Tagen {{ $value }} offene macOS-Updates"
             description: "Ansehen mit: ssh macmini 'softwareupdate --list'. Einspielen von Hand, weil ein Neustart alle vier Dienste des macmini mitnimmt."
 
+        # Plex fixes security holes in point releases and announces them only
+        # in its forum, so the version is the signal. The server installs
+        # updates itself during the butler window (02:00-05:00); 48h lets two
+        # of those pass before this says anything. Compared against the public
+        # channel, the only one this install is offered.
+        #
+        # plex_update_available deliberately carries no version labels: latest
+        # changes with every Plex release, and a new series would restart the
+        # 48h every time. The versions are in plex_version_info.
+        - alert: PlexUpdateAvailable
+          expr: plex_update_available > 0
+          for: 48h
+          labels:
+            severity: warning
+          annotations:
+            summary: "Plex auf dem macmini laeuft seit zwei Tagen nicht auf der aktuellen Version"
+            description: "Plex hat sich zwei Wartungsfenster lang nicht selbst aktualisiert. Versionen ansehen mit: ssh macmini 'cat /usr/local/var/lib/node_exporter/textfile_collector/plex.prom'. Von Hand nachziehen ueber Einstellungen > Allgemein > Nach Updates suchen, ein Neustart des macmini ist dafuer nicht noetig."
+
+        # The entire automation is this one pref. On "askme" Plex waits for a
+        # click in the web UI that nobody makes, and PlexUpdateAvailable would
+        # be the only sign, two days late.
+        - alert: PlexAutoUpdateDisabled
+          expr: plex_auto_update_enabled == 0
+          for: 6h
+          labels:
+            severity: warning
+          annotations:
+            summary: "Plex auf dem macmini installiert Updates nicht mehr selbst"
+            description: "ButlerTaskUpdateServer steht nicht auf 'always'. Zurueckstellen in Einstellungen > Allgemein > Server-Versions-Updates auf 'Automatisch waehrend der geplanten Wartung'; ein defaults write dafuer ueberschreibt Plex im Betrieb wieder."
+
         # Net below all rules above: if a textfile stops being written they go
         # quiet instead of firing, and nothing else would show it. Every file
         # needs its own absent(), a combined one would only fire once ALL of
         # them are gone.
         - alert: HostUpdateMetricsStale
           expr: |
-            (time() - node_textfile_mtime_seconds{file=~".+/(apt|needrestart|softwareupdate).prom"} > 172800)
+            (time() - node_textfile_mtime_seconds{file=~".+/(apt|needrestart|softwareupdate|plex).prom"} > 172800)
               or absent(node_textfile_mtime_seconds{file=~".+/apt.prom"})
               or absent(node_textfile_mtime_seconds{file=~".+/needrestart.prom"})
               or absent(node_textfile_mtime_seconds{file=~".+/softwareupdate.prom"})
+              or absent(node_textfile_mtime_seconds{file=~".+/plex.prom"})
           for: 1h
           labels:
             severity: warning
           annotations:
             summary: "Ein Update-Textfile-Collector liefert nichts Frisches mehr"
-            description: "apt.prom, needrestart.prom oder softwareupdate.prom ist aelter als zwei Tage oder ganz weg. Solange das so ist, sind die Update-Alerts blind. Nachsehen: ssh pve 'ls -l /var/lib/prometheus/node-exporter/ && systemctl list-timers | grep -E \"apt|needrestart\"' bzw. ssh macmini 'ls -l /usr/local/var/lib/node_exporter/textfile_collector/ && launchctl print gui/501/com.speters.softwareupdate-collector'"
+            description: "apt.prom, needrestart.prom, softwareupdate.prom oder plex.prom ist aelter als zwei Tage oder ganz weg. Solange das so ist, sind die Update-Alerts blind. Nachsehen: ssh pve 'ls -l /var/lib/prometheus/node-exporter/ && systemctl list-timers | grep -E \"apt|needrestart\"' bzw. ssh macmini 'ls -l /usr/local/var/lib/node_exporter/textfile_collector/ && launchctl print gui/501/com.speters.softwareupdate-collector && launchctl print gui/501/com.speters.plex-collector'"
 
     # pve is scraped twice and the split decides which metric an alert may
     # use: node-exporter on 192.168.2.8 delivers the OS view (CPU, RAM, /,
