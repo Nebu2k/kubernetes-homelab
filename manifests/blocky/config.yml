@@ -123,6 +123,27 @@ blocking:
         *.toonblast.net
         peakgames.net
         *.peakgames.net
+      # 1Hosts Lite blocks LG platform infrastructure alongside the webOS
+      # advertising, and only the latter belongs on a blocklist. nextlgsdp.com
+      # is the service delivery platform the TV polls every 10s; blocked, the
+      # Content Store never opens. ngfts is the app and firmware download CDN
+      # (eic = Europe), wiseconfig the server side platform config, ibis the
+      # store billing service.
+      #
+      # Deliberately still blocked: ads, cdpbeacon, nudge, rdl and homeprv
+      # under lgtvcommon.com, plus all of lgsmartad.com, alphonso.tv and
+      # yumenetworks.com.
+      - |
+        nextlgsdp.com
+        *.nextlgsdp.com
+        eic-ngfts.lge.com
+        *.eic-ngfts.lge.com
+        eic-ngfts.lge.com.edgekey.net
+        *.eic-ngfts.lge.com.edgekey.net
+        eic.wiseconfig.lgtvcommon.com
+        *.eic.wiseconfig.lgtvcommon.com
+        ibis.lgappstv.com
+        *.ibis.lgappstv.com
   clientGroupsBlock:
     default:
       - ads
