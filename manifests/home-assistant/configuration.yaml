@@ -244,6 +244,17 @@ template:
         availability: >-
           {{ states('event.vordereingang_intercom_unlock') not in ['unknown', 'unavailable'] }}
 
+      # The third one is the probe, not a push entity: every remote unlock has
+      # to come back as an INTERCOM_UNLOCK_FROM_APP push within seconds, so the
+      # gap between this and the one above measures the return path without
+      # waiting for anyone to ring. Measured round trip is under two seconds.
+      - name: "Ring letztes Aufdrücken"
+        unique_id: ring_last_open_door_press
+        device_class: timestamp
+        state: "{{ states('button.vordereingang_open_door') }}"
+        availability: >-
+          {{ states('button.vordereingang_open_door') not in ['unknown', 'unavailable'] }}
+
   - switch:
       - name: "Werbefilter"
         unique_id: blocky_blocking

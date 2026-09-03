@@ -1341,6 +1341,33 @@ spec:
             summary: "Die Ring-Push-Sensoren fehlen seit >15m im Export"
             description: "sensor.ring_letztes_klingeln und sensor.ring_letztes_entriegeln werden von Home Assistant nicht mehr exportiert. Entweder ist die Ring-Integration ausgestiegen, oder die Template-Sensoren in configuration.yaml wurden umbenannt, dann muss auch diese Regel nachgezogen werden."
 
+        # Der scharfe Bruder von RingPushChannelSilent. Statt darauf zu warten,
+        # dass jemand klingelt, benutzt diese Regel das Aufdruecken als Sonde:
+        # jedes Aufdruecken ueber HA muss als INTERCOM_UNLOCK_FROM_APP-Push
+        # zurueckkommen, gemessen in unter zwei Sekunden. Bleibt der Push aus,
+        # ist der Rueckweg tot, und das faellt hier binnen Minuten auf statt
+        # erst nach sieben Tagen.
+        #
+        # Ring unterdrueckt das Echo an die ausloesende Sitzung nicht, das ist
+        # am 03.09.2026 nachgemessen. Faellt ein einzelner Push aus, bleibt die
+        # Regel bis zum naechsten erfolgreichen Aufdruecken stehen: der Abstand
+        # schrumpft erst, wenn wieder ein Push ankommt. Das ist gewollt, ein
+        # nachweislich verlorenes Ereignis soll nicht von allein verschwinden.
+        - alert: RingUnlockPushMissing
+          expr: |
+            (
+              hass_sensor_timestamp_seconds{job="home-assistant", entity="sensor.ring_letztes_aufdrucken"}
+                - ignoring(entity, friendly_name)
+              hass_sensor_timestamp_seconds{job="home-assistant", entity="sensor.ring_letztes_entriegeln"}
+            ) > 600
+              and on() up{job="home-assistant"} == 1
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            summary: "Ring bestaetigt das Aufdruecken seit >10m nicht mehr per Push"
+            description: "Die Haustuer wurde ueber Home Assistant aufgedrueckt, aber die Entriegelungs-Benachrichtigung von Ring ist nie angekommen. Der Rueckweg ist tot, damit kann auch die Klingel-Automation nicht mehr ausloesen. Gleiche Pruefreihenfolge wie bei RingPushChannelSilent: erst die Benachrichtigungen des Ring-Kontos, dann kubectl -n home-assistant logs deploy/home-assistant -c home-assistant | grep -iE 'fcmpush|fcmregister'. Steht dort 'Unable to complete gcm auth request', hat die Registrierung ihr 3-Sekunden-Timeout gerissen und startet nicht von allein neu, dann hilft ein Reload der Ring-Integration."
+
     # The cluster keeps itself current through Renovate. pve and the macmini
     # hang on nothing and are only noticed when someone thinks of them, which
     # is what these rules replace. pve reports through the apt and needrestart
