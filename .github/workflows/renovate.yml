@@ -41,7 +41,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Renovate
-        uses: renovatebot/github-action@v46.2.4
+        uses: renovatebot/github-action@v46.2.5
         with:
           # Fine-grained PAT scoped to this repo, stored as the repo secret
           # RENOVATE_TOKEN. Required permissions: Contents RW, Pull requests
