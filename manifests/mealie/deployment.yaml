@@ -28,7 +28,7 @@ spec:
       # securityContext forbidding root breaks exactly that.
       containers:
       - name: mealie
-        image: ghcr.io/mealie-recipes/mealie:v3.25.0
+        image: ghcr.io/mealie-recipes/mealie:v3.25.1
         imagePullPolicy: IfNotPresent
         ports:
         - name: http
