@@ -338,7 +338,7 @@ or an expired key, the controller logs say which.
 
 | Component | Version |
 |-----------|---------|
-| Blocky | v0.34.0 |
+| Blocky | v0.35.0 |
 | Cert Manager | v1.21.1 |
 | csi-driver-smb | 1.20.3 |
 | FR24 | latest-build-860 |
