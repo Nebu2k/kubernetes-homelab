@@ -104,7 +104,7 @@ spec:
               readOnly: true
       containers:
         - name: blocky
-          image: ghcr.io/0xerr0r/blocky:v0.34.0
+          image: ghcr.io/0xerr0r/blocky:v0.35.0
           imagePullPolicy: IfNotPresent
           # A directory, not a file: Blocky joins every YAML in it, which keeps
           # the cluster-only redis block out of the config.yml the LXC shares.
