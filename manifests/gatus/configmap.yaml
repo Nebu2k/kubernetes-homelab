@@ -382,18 +382,18 @@ data:
         url: "https://peters.club"
         interval: 12h
         conditions:
-          - "[DOMAIN_EXPIRATION] > 720h"
+          - "[DOMAIN_EXPIRATION] > 504h"
 
       - name: homeworx.solutions
         group: Domains
         url: "https://homeworx.solutions"
         interval: 12h
         conditions:
-          - "[DOMAIN_EXPIRATION] > 720h"
+          - "[DOMAIN_EXPIRATION] > 504h"
 
       - name: seb-it.com
         group: Domains
         url: "https://seb-it.com"
         interval: 12h
         conditions:
-          - "[DOMAIN_EXPIRATION] > 720h"
+          - "[DOMAIN_EXPIRATION] > 504h"

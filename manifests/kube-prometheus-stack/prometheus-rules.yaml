@@ -821,15 +821,16 @@ spec:
             description: "{{ $labels.group }}/{{ $labels.name }}: noch {{ $value | humanizeDuration }}. Bei *.elmstreet79.de zuerst cert-manager pruefen (Certificate wildcard-elmstreet79-de in cert-manager, ClusterIssuer letsencrypt-prod, Cloudflare-Token)."
 
         # Domain expiry comes from RDAP/WHOIS every 12h. An expired domain is
-        # the one outage no redeploy fixes.
+        # the one outage no redeploy fixes. Cloudflare Registrar auto-renews
+        # at 30 days out, so 21 days means the renewal did not happen.
         - alert: GatusDomainExpiringSoon
-          expr: gatus_results_domain_expiration_seconds > 0 < 3888000
+          expr: gatus_results_domain_expiration_seconds > 0 < 1814400
           for: 6h
           labels:
             severity: warning
           annotations:
-            summary: "Domain {{ $labels.name }} laeuft in <45 Tagen ab"
-            description: "{{ $labels.name }}: noch {{ $value | humanizeDuration }}. Verlaengerung beim Registrar pruefen (INWX bzw. Cloudflare)."
+            summary: "Domain {{ $labels.name }} laeuft in <21 Tagen ab"
+            description: "{{ $labels.name }}: noch {{ $value | humanizeDuration }}. Cloudflare haette bei 30 Tagen automatisch verlaengert, also Auto-Renew und Zahlungsmittel im Cloudflare-Registrar pruefen."
 
         # Safety net: without a scrape the gauges above disappear and the
         # alerts go silent. Gatus is the only source of these metrics, so an
