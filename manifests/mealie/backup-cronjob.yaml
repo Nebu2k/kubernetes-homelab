@@ -147,7 +147,7 @@ spec:
 
           containers:
             - name: upload
-              image: amazon/aws-cli:2.36.41
+              image: amazon/aws-cli:2.36.42
               command:
                 - /bin/sh
                 - -c
