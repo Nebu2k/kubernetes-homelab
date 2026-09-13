@@ -356,7 +356,7 @@ or an expired key, the controller logs say which.
 | readsb | latest-build-961 |
 | Reloader | 2.2.17 |
 | RIPE Atlas | 5130 |
-| Sealed Secrets | 2.19.3 |
+| Sealed Secrets | 2.20.0 |
 | TeslaMate | 4.2.0 |
 | Traefik | 41.5.0 |
 | UniFi Poller | v5.2.5 |
