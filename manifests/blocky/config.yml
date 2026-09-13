@@ -50,6 +50,10 @@ connectIPVersion: v4
 # resolves the CNAME target along with it, A and AAAA both.
 # NEVER put an @ entry next to it: a CNAME at the zone apex drags the whole zone
 # with it, and teslamate and home would resolve to Cloudflare too.
+#
+# wpad: clients probe wpad.<search domain> for a proxy autoconfig on every
+# network start, and the mapping would hand them Traefik. Pinned to 0.0.0.0
+# like a blocked name; the denylist cannot do it, customDNS answers first.
 customDNS:
   customTTL: 1h
   filterUnmappedTypes: true
@@ -58,6 +62,7 @@ customDNS:
   zone: |
     $ORIGIN elmstreet79.de.
     www 3600 IN CNAME elmstreet79-de.y8m7g2fj9p.workers.dev.
+    wpad 3600 IN A 0.0.0.0
 
 # Reverse lookups for the three house subnets go to their UniFi gateway.
 # Unbound cannot answer them, private ranges have no delegation in the root.
