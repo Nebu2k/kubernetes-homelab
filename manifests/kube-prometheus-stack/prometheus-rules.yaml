@@ -1259,23 +1259,45 @@ spec:
         # kumulierten Werte aus der Tibber-Cloud kommen und auch dann noch
         # weiterlaufen, wenn der Pulse selbst schon lange schweigt.
         #
-        # Beobachteter Ausfall ist nicht das Verschwinden der Serie, sondern
-        # ein eingefrorener Wert: die Entitaet bleibt verfuegbar und meldet
-        # stundenlang dieselbe Leistung. Deshalb zaehlt hier das Alter des
-        # letzten Updates, nicht absent(). 30 Minuten sind bei einem Sensor,
-        # der alle paar Sekunden liefert, eindeutig kaputt.
+        # Zwei Ausfallbilder, die man auseinanderhalten muss, weil der Griff
+        # ein anderer ist:
+        #
+        # Eingefrorener Wert bei verfuegbarer Entitaet: der Pulse hat das
+        # Keller-WLAN oder die Tibber-Cloud verloren und kommt meist von
+        # allein wieder. Deshalb zaehlt hier das Alter des letzten Updates,
+        # nicht absent(). 30 Minuten sind bei einem Sensor, der alle paar
+        # Sekunden liefert, eindeutig kaputt.
         - alert: TibberPulseStale
           expr: |
             (
               time() - hass_last_updated_time_seconds{job="home-assistant", entity=~"sensor\\.tibber_pulse_(ost|west)flugel_power"}
             ) > 1800
+              and on(entity) hass_entity_available{job="home-assistant"} == 1
               and on() up{job="home-assistant"} == 1
           for: 5m
           labels:
             severity: warning
           annotations:
             summary: "Tibber Pulse liefert seit >30m keine neuen Werte"
-            description: "{{ $labels.friendly_name }} steht seit {{ $value | humanizeDuration }}. Meist hat der Pulse die Verbindung zum Bridge-Stecker oder zur Tibber-Cloud verloren und faengt sich von allein wieder. Bleibt es, hilft nur der Pulse aus dem Zaehler und wieder rein: kubectl -n home-assistant logs deploy/home-assistant -c home-assistant | grep -i tibber"
+            description: "{{ $labels.friendly_name }} steht seit {{ $value | humanizeDuration }}, die Entitaet ist aber verfuegbar. Meist hat der Pulse das WLAN oder die Tibber-Cloud verloren und faengt sich von allein wieder. Zeigt die Tibber-App Daten und bleibt es trotzdem, hilft nur der Pulse aus dem Zaehler und wieder rein: kubectl -n home-assistant logs deploy/home-assistant -c home-assistant | grep -i tibber"
+
+        # Entitaet unavailable: die Realtime-Subscription in Home Assistant
+        # ist nie zustande gekommen oder abgerissen, typisch nach einem
+        # HA-Neustart, bei dem das Tibber-Setup ins 60-Sekunden-Timeout
+        # laeuft. Der Pulse selbst ist dann online (Tibber-App zeigt Daten)
+        # und HA holt sich den Stream von allein nicht zurueck. Ein Reload
+        # der Integration reicht, kein HA-Neustart (12.09.2026: 36 Stunden
+        # unbemerkt, weil Stale den Fall auf das WLAN geschoben hat).
+        - alert: TibberPulseUnavailable
+          expr: |
+            hass_entity_available{job="home-assistant", entity=~"sensor\\.tibber_pulse_(ost|west)flugel_power"} == 0
+              and on() up{job="home-assistant"} == 1
+          for: 15m
+          labels:
+            severity: warning
+          annotations:
+            summary: "Tibber Pulse ist seit >15m unavailable"
+            description: "{{ $labels.friendly_name }} ist in Home Assistant unavailable, die Realtime-Subscription fehlt. Tibber-Integration neu laden, kein HA-Neustart noetig: Einstellungen > Integrationen > Tibber > Neu laden, oder per API POST /api/config/config_entries/entry/<id>/reload mit dem Token aus secret/home-assistant-prometheus-token."
 
         # Faengt den anderen Fall ab: die Entitaet ist ganz aus dem Export
         # verschwunden, dann gibt es kein Alter mehr zu messen. Je Fluegel
