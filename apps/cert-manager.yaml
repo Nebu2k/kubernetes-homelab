@@ -15,7 +15,7 @@ spec:
     - repoURL: https://charts.jetstack.io
       chart: cert-manager
       # TODO: pin to a current stable version (Renovate).
-      targetRevision: v1.21.1
+      targetRevision: v1.21.2
       helm:
         valueFiles:
           - $values/manifests/cert-manager/values.yaml
