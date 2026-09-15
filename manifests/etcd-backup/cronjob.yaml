@@ -56,7 +56,7 @@ spec:
             # snapshot therefore goes into a mounted volume and the upload
             # needs a second image.
             - name: snapshot
-              image: ghcr.io/siderolabs/talosctl:v1.13.9
+              image: ghcr.io/siderolabs/talosctl:v1.14.0
               command:
                 - /talosctl
                 - --talosconfig
@@ -140,7 +140,7 @@ spec:
           restartPolicy: Never
           initContainers:
             - name: snapshot
-              image: ghcr.io/siderolabs/talosctl:v1.13.9
+              image: ghcr.io/siderolabs/talosctl:v1.14.0
               command:
                 - /talosctl
                 - --talosconfig
@@ -225,7 +225,7 @@ spec:
           restartPolicy: Never
           initContainers:
             - name: snapshot
-              image: ghcr.io/siderolabs/talosctl:v1.13.9
+              image: ghcr.io/siderolabs/talosctl:v1.14.0
               command:
                 - /talosctl
                 - --talosconfig
