@@ -50,7 +50,7 @@ spec:
           restartPolicy: Never
           containers:
             - name: check
-              image: amazon/aws-cli:2.36.44
+              image: amazon/aws-cli:2.36.45
               command:
                 - /bin/sh
                 - -c
