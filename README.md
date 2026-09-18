@@ -343,7 +343,7 @@ or an expired key, the controller logs say which.
 | csi-driver-smb | 1.20.3 |
 | FR24 | latest-build-860 |
 | Gatus | v5.36.0 |
-| Home Assistant | 2026.9.2 |
+| Home Assistant | 2026.9.3 |
 | Homepage | v2.4.0 |
 | kube-prometheus-stack | 91.4.0 |
 | Longhorn | 1.12.1 |
