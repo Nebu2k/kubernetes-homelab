@@ -50,7 +50,7 @@ spec:
       initContainers:
         - name: unbound
           restartPolicy: Always
-          image: madnuttah/unbound:1.26.0-0
+          image: madnuttah/unbound:1.26.1-0
           imagePullPolicy: IfNotPresent
           env:
             # Without this the entrypoint starts as root to fix the image
