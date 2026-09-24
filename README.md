@@ -342,7 +342,7 @@ or an expired key, the controller logs say which.
 | Cert Manager | v1.21.2 |
 | csi-driver-smb | 1.20.3 |
 | FR24 | latest-build-861 |
-| Gatus | v5.36.0 |
+| Gatus | v5.37.0 |
 | Home Assistant | 2026.9.3 |
 | Homepage | v2.4.0 |
 | kube-prometheus-stack | 91.4.1 |
