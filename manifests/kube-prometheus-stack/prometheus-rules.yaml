@@ -810,9 +810,10 @@ spec:
         # Without this, a stalled renewal of the wildcard cert only surfaces
         # once a browser complains. The "> 0" branch is mandatory: the metric
         # is 0 for endpoints without TLS (TCP, DNS, http), which would
-        # otherwise all fire immediately.
+        # otherwise all fire immediately. Self-signed device certs (the
+        # insecure: true endpoints in Gatus) are excluded, nothing renews them.
         - alert: GatusCertificateExpiringSoon
-          expr: gatus_results_certificate_expiration_seconds > 0 < 1209600
+          expr: gatus_results_certificate_expiration_seconds{key!~"infrastruktur_(proxmox|unifi-gateway|unifi-nas|dreambox)"} > 0 < 1209600
           for: 1h
           labels:
             severity: warning
