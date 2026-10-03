@@ -346,7 +346,7 @@ or an expired key, the controller logs say which.
 | Home Assistant | 2026.9.4 |
 | Homepage | v2.4.0 |
 | kube-prometheus-stack | 91.8.2 |
-| Longhorn | 1.12.1 |
+| Longhorn | 1.13.0 |
 | Mealie | v3.28.0 |
 | MetalLB | 0.16.1 |
 | Metrics Server | 3.14.0 |
