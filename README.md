@@ -357,7 +357,7 @@ or an expired key, the controller logs say which.
 | Reloader | 2.2.17 |
 | RIPE Atlas | 5130 |
 | Sealed Secrets | 2.20.0 |
-| TeslaMate | 4.2.0 |
+| TeslaMate | 4.3.0 |
 | Traefik | 41.6.0 |
 | UniFi Poller | v5.5.0 |
 | Talos Linux | v1.13.9 |
