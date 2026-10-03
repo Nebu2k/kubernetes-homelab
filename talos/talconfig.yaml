@@ -383,6 +383,17 @@ patches:
           enabled: true
           forwardKubeDNSToHost: false
 
+  # Image GC: with the defaults (85/80) Renovate's churn fills the shared
+  # EPHEMERAL partition with stale images, which Longhorn then counts against
+  # its scheduling headroom. maxAge drops unused images regardless of usage.
+  - |-
+    machine:
+      kubelet:
+        extraConfig:
+          imageGCHighThresholdPercent: 70
+          imageGCLowThresholdPercent: 55
+          imageMaximumGCAge: 336h
+
   # Longhorn needs /var/lib/longhorn in the kubelet mount namespace or the
   # manager does not see the replicas. The required system extensions
   # (iscsi-tools, util-linux-tools) are in the schematic ID above. Note that

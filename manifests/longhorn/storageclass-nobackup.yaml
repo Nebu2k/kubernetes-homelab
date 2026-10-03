@@ -1,15 +1,17 @@
 # Identical to the chart's "longhorn" class except that the recurringJobSelector
-# leaves out the "backup" group. A volume's group labels come from its class at
-# creation time, so this is the only place where "deliberately not backed up"
-# survives a recreation. Labels on a volumeClaimTemplate do NOT do it: the
-# Prometheus volume was recreated by the Talos migration on 2026-08-09 and sat in
-# the nightly backup two hours later, despite the template listing only snapshot
-# and maintenance.
+# leaves out the "backup" and "snapshot" groups: for regenerable, constantly
+# rewritten data (Prometheus TSDB) every retention point pins another full copy.
+# A volume's group labels come from its class at creation time, so this is the
+# only place where that survives a recreation; labels on a volumeClaimTemplate
+# are ignored.
 ---
 apiVersion: storage.k8s.io/v1
 kind: StorageClass
 metadata:
   name: longhorn-nobackup
+  annotations:
+    # StorageClass parameters are immutable; existing PVs are unaffected.
+    argocd.argoproj.io/sync-options: Replace=true
 provisioner: driver.longhorn.io
 allowVolumeExpansion: true
 reclaimPolicy: Delete
@@ -19,7 +21,7 @@ parameters:
   staleReplicaTimeout: "30"
   fromBackup: ""
   fsType: "ext4"
-  recurringJobSelector: '[{"name":"snapshot","isGroup":true},{"name":"maintenance","isGroup":true}]'
+  recurringJobSelector: '[{"name":"maintenance","isGroup":true}]'
   dataLocality: "disabled"
   nodeSelector: "storage"
   unmapMarkSnapChainRemoved: "ignored"

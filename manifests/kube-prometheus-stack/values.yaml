@@ -109,16 +109,17 @@ prometheus:
     
     terminationGracePeriodSeconds: 120
     
-    # Deliberately WITHOUT the backup group: the TSDB rewrites its blocks
-    # constantly, so every retention point pins another copy and this volume
-    # dominates the backup target. Metrics are regenerable and capped at 30d.
+    # Deliberately WITHOUT the backup and snapshot groups: the TSDB rewrites its
+    # blocks constantly, so every retention point pins another copy. Metrics
+    # are regenerable and capped at 30d.
     #
     # These labels alone do not achieve that. Longhorn ignores PVC labels and
-    # takes the groups from the StorageClass recurringJobSelector, which does
-    # set backup. After every re-provisioning of this volume, drop it by hand:
+    # takes the groups from the StorageClass recurringJobSelector. Should the
+    # volume ever get created under the "longhorn" class, drop them by hand:
     #
     #   kubectl -n longhorn-system label volumes.longhorn.io <pvc-...> \
-    #     recurring-job-group.longhorn.io/backup-
+    #     recurring-job-group.longhorn.io/backup- \
+    #     recurring-job-group.longhorn.io/snapshot-
     storageSpec:
       volumeClaimTemplate:
         spec:
