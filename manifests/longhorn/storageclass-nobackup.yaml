@@ -10,8 +10,9 @@ kind: StorageClass
 metadata:
   name: longhorn-nobackup
   annotations:
-    # StorageClass parameters are immutable; existing PVs are unaffected.
-    argocd.argoproj.io/sync-options: Replace=true
+    # Parameters are immutable, a plain replace fails too. Force deletes and
+    # recreates the class; existing PVs are unaffected.
+    argocd.argoproj.io/sync-options: Replace=true,Force=true
 provisioner: driver.longhorn.io
 allowVolumeExpansion: true
 reclaimPolicy: Delete
