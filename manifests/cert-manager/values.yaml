@@ -7,6 +7,12 @@ crds:
 nodeSelector:
   node-role.kubernetes.io/worker: "worker"
 
+# Blocky answers elmstreet79.de itself (split horizon), so the DNS-01
+# propagation check must bypass cluster DNS.
+extraArgs:
+  - --dns01-recursive-nameservers-only
+  - --dns01-recursive-nameservers=1.1.1.1:53,9.9.9.9:53
+
 webhook:
   nodeSelector:
     node-role.kubernetes.io/worker: "worker"
