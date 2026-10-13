@@ -36,7 +36,7 @@ spec:
         - name: fan
           # The official image, kept current by Renovate; the controller
           # itself comes from the ConfigMap next to it.
-          image: python:3.14-slim
+          image: python:3.15-slim
           command:
             - python3
             - -u
