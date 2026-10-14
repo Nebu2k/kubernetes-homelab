@@ -689,14 +689,15 @@ spec:
       interval: 60s
       rules:
         # Fires when TeslaMate stopped recording (e.g. expired API token).
-        # The threshold tolerates a car sleeping while parked.
+        # Positions only come in while the car is awake, so the threshold
+        # tolerates a few days without driving.
         - alert: TeslaMateNoData
-          expr: max by (car_id) (teslamate_last_data_age_seconds) > 86400
+          expr: max by (car_id) (teslamate_last_data_age_seconds) > 259200
           for: 1h
           labels:
             severity: warning
           annotations:
-            summary: "TeslaMate hat seit über 24h keine Daten empfangen"
+            summary: "TeslaMate hat seit über 3 Tagen keine Daten empfangen"
             description: "Auto {{ $labels.car_id }}: letzter Datenpunkt vor {{ $value | humanizeDuration }}. Tesla-API-Token prüfen (Sign-in in der TeslaMate-Web-UI) und teslamate-Logs kontrollieren."
 
         # Safety net: without a scrape the metric disappears and the alert
