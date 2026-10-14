@@ -1267,20 +1267,20 @@ spec:
         # Eingefrorener Wert bei verfuegbarer Entitaet: der Pulse hat das
         # Keller-WLAN oder die Tibber-Cloud verloren und kommt meist von
         # allein wieder. Deshalb zaehlt hier das Alter des letzten Updates,
-        # nicht absent(). 30 Minuten sind bei einem Sensor, der alle paar
-        # Sekunden liefert, eindeutig kaputt.
+        # nicht absent(). Eine Stunde, weil das Keller-WLAN den Westfluegel
+        # regelmaessig fuer eine halbe Stunde verliert.
         - alert: TibberPulseStale
           expr: |
             (
               time() - hass_last_updated_time_seconds{job="home-assistant", entity=~"sensor\\.tibber_pulse_(ost|west)flugel_power"}
-            ) > 1800
+            ) > 3600
               and on(entity) hass_entity_available{job="home-assistant"} == 1
               and on() up{job="home-assistant"} == 1
           for: 5m
           labels:
             severity: warning
           annotations:
-            summary: "Tibber Pulse liefert seit >30m keine neuen Werte"
+            summary: "Tibber Pulse liefert seit >1h keine neuen Werte"
             description: "{{ $labels.friendly_name }} steht seit {{ $value | humanizeDuration }}, die Entitaet ist aber verfuegbar. Meist hat der Pulse das WLAN oder die Tibber-Cloud verloren und faengt sich von allein wieder. Zeigt die Tibber-App Daten und bleibt es trotzdem, hilft nur der Pulse aus dem Zaehler und wieder rein: kubectl -n home-assistant logs deploy/home-assistant -c home-assistant | grep -i tibber"
 
         # Entitaet unavailable: die Realtime-Subscription in Home Assistant
