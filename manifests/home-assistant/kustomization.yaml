@@ -26,3 +26,5 @@ configMapGenerator:
     files:
       - configuration.yaml
       - dashboard-homelab.yaml
+      - firebase_messaging_patch.py=custom_components/firebase_messaging_patch/__init__.py
+      - firebase_messaging_patch.json=custom_components/firebase_messaging_patch/manifest.json

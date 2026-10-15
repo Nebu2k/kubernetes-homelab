@@ -5,6 +5,9 @@
 
 default_config:
 
+# Keeps the Ring push channel alive, see custom_components/firebase_messaging_patch.
+firebase_messaging_patch:
+
 # Metrics to Prometheus (/api/prometheus, bearer token), filtered
 # deliberately narrowly: HA holds well over a thousand entities and would
 # otherwise export all of them into what is already the largest volume in

@@ -39,7 +39,16 @@ spec:
       initContainers:
       - name: copy-config
         image: busybox:1.38.0
-        command: ['sh', '-c', 'cp -f /tmp/config/configuration.yaml /tmp/config/dashboard-homelab.yaml /config/']
+        command:
+        - sh
+        - -c
+        - |
+          set -e
+          cp -f /tmp/config/configuration.yaml /tmp/config/dashboard-homelab.yaml /config/
+          d=/config/custom_components/firebase_messaging_patch
+          mkdir -p "$d"
+          cp -f /tmp/config/firebase_messaging_patch.py "$d/__init__.py"
+          cp -f /tmp/config/firebase_messaging_patch.json "$d/manifest.json"
         volumeMounts:
         - name: config
           mountPath: /config
