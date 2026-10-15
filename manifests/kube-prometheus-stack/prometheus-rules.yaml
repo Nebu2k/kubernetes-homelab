@@ -1328,6 +1328,23 @@ spec:
             summary: "Tibber Pulse Westfluegel fehlt seit >15m im Export"
             description: "Die Entitaet sensor.tibber_pulse_westflugel_power wird von Home Assistant nicht mehr exportiert. Entweder ist die Tibber-Integration ausgestiegen oder der Sensor wurde umbenannt, dann muss auch diese Regel nachgezogen werden."
 
+        # Die Delta 3 am Rack ist die einzige ehrliche Zahl fuer den
+        # Homelab-Verbrauch. Unavailable und ganz verschwunden in einer Regel,
+        # der erste Blick ist in beiden Faellen derselbe.
+        - alert: EcoflowRackUnavailable
+          expr: |
+            (
+              max(hass_entity_available{job="home-assistant", entity="sensor.delta_3_total_out_power"}) == 0
+                or absent(hass_entity_available{job="home-assistant", entity="sensor.delta_3_total_out_power"})
+            )
+              and on() up{job="home-assistant"} == 1
+          for: 30m
+          labels:
+            severity: warning
+          annotations:
+            summary: "Ecoflow am Rack liefert seit >30m keine Werte"
+            description: "sensor.delta_3_total_out_power ist in Home Assistant unavailable oder fehlt im Export. Zuerst pruefen, ob ecoflow_cloud ueberhaupt geladen hat: kubectl -n home-assistant logs deploy/home-assistant -c home-assistant | grep -i ecoflow. 'Setup failed' mit einem Requirements-Konflikt heisst, das HA-Update hat die Integration abgehaengt, dann hilft ein Update ueber HACS."
+
         # Klingeln und Entriegeln kommen beim Ring Intercom ausschliesslich
         # per Firebase-Push. Reisst der Kanal ab, bleibt die Integration
         # aeusserlich gesund: Batterie und letzte Aktivitaet stammen aus dem
