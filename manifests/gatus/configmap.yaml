@@ -397,3 +397,19 @@ data:
         interval: 12h
         conditions:
           - "[DOMAIN_EXPIRATION] > 504h"
+
+      # kingsize-fingerboards.com sits in a cancelled goneo contract (ends
+      # 2027-09-07) and is to be registered fresh at Cloudflare once it drops.
+      # The expiry date is no use: goneo renews on the day itself, which would
+      # trip the 21-day rule every autumn. The signal is the registry pulling
+      # the domain from DNS on deletion; it becomes available about 35 days
+      # later. Alert: KingsizeDomainDeleted.
+      - name: kingsize-fingerboards.com
+        group: Domains
+        url: "1.1.1.1"
+        interval: 1h
+        dns:
+          query-name: "kingsize-fingerboards.com"
+          query-type: "NS"
+        conditions:
+          - "[DNS_RCODE] == NOERROR"

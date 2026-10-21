@@ -800,7 +800,7 @@ spec:
         # gatus_results_endpoint_success is a gauge (0 = check red). 10m also
         # covers the endpoints on a 5m interval, so one missed run stays quiet.
         - alert: GatusEndpointDown
-          expr: gatus_results_endpoint_success == 0
+          expr: gatus_results_endpoint_success{name!="kingsize-fingerboards.com"} == 0
           for: 10m
           labels:
             severity: warning
@@ -833,6 +833,19 @@ spec:
           annotations:
             summary: "Domain {{ $labels.name }} laeuft in <21 Tagen ab"
             description: "{{ $labels.name }}: noch {{ $value | humanizeDuration }}. Cloudflare haette bei 30 Tagen automatisch verlaengert, also Auto-Renew und Zahlungsmittel im Cloudflare-Registrar pruefen."
+
+        # The NS check for kingsize-fingerboards.com turns red once goneo deletes
+        # the domain; see the endpoint comment in the gatus configmap. 3h rides
+        # out a resolver hiccup on the 1h interval. Excluded from
+        # GatusEndpointDown so it fires once, with instructions.
+        - alert: KingsizeDomainDeleted
+          expr: gatus_results_endpoint_success{group="Domains",name="kingsize-fingerboards.com"} == 0
+          for: 3h
+          labels:
+            severity: warning
+          annotations:
+            summary: "kingsize-fingerboards.com ist geloescht und wird bald frei"
+            description: "Die Domain loest nicht mehr auf, goneo hat sie geloescht. Frei wird sie nach 30 Tagen Redemption und 5 Tagen pendingDelete, also in gut 35 Tagen. Ab jetzt per whois auf pendingDelete achten und dann sofort bei Cloudflare Registrar registrieren. Danach diesen Alert und den Gatus-Endpoint entfernen und die Seite auf Worker plus Apex umstellen."
 
         # Safety net: without a scrape the gauges above disappear and the
         # alerts go silent. Gatus is the only source of these metrics, so an
