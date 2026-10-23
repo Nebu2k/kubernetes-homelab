@@ -344,7 +344,7 @@ or an expired key, the controller logs say which.
 | FR24 | latest-build-862 |
 | Gatus | v5.37.0 |
 | Home Assistant | 2026.10.3 |
-| Homepage | v2.6.0 |
+| Homepage | v2.7.0 |
 | kube-prometheus-stack | 92.11.0 |
 | Longhorn | 1.13.0 |
 | Mealie | v3.29.0 |
