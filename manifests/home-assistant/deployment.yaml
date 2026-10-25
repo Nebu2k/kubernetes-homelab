@@ -55,7 +55,7 @@ spec:
         - name: config-cm
           mountPath: /tmp/config
       - name: install-hacs
-        image: ghcr.io/home-assistant/home-assistant:2026.10.3
+        image: ghcr.io/home-assistant/home-assistant:2026.10.4
         env:
         - name: HACS_VERSION
           value: "2.0.5"
@@ -82,7 +82,7 @@ spec:
           mountPath: /config
       containers:
       - name: home-assistant
-        image: ghcr.io/home-assistant/home-assistant:2026.10.3
+        image: ghcr.io/home-assistant/home-assistant:2026.10.4
         imagePullPolicy: IfNotPresent
         securityContext:
           capabilities:
