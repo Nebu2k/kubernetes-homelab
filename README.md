@@ -343,7 +343,7 @@ or an expired key, the controller logs say which.
 |-----------|---------|
 | ArgoCD | 10.3.0 |
 | Blocky | v0.35.0 |
-| Cert Manager | v1.21.2 |
+| Cert Manager | v1.21.3 |
 | csi-driver-smb | 1.20.3 |
 | FR24 | latest-build-863 |
 | Gatus | v5.37.0 |
