@@ -5,6 +5,9 @@ metadata:
   namespace: argocd
   annotations:
     argocd.argoproj.io/sync-wave: "2"
+    # The TalosUpgrade CRD fills in a dozen defaults (policy, prePull,
+    # talosctl image), which a client-side diff reports as OutOfSync forever.
+    argocd.argoproj.io/compare-options: ServerSideDiff=true
   finalizers:
     - resources-finalizer.argocd.argoproj.io
 spec:
