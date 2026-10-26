@@ -1,0 +1,39 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: argocd
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+  # No resources-finalizer: deleting this Application must leave ArgoCD running.
+spec:
+  project: default
+  sources:
+    # homelab-terraform/argocd-talos/ installs the same chart version with the
+    # same values once for the bootstrap and reads both from this repo.
+    - repoURL: https://argoproj.github.io/argo-helm
+      chart: argo-cd
+      targetRevision: 10.3.0
+      helm:
+        releaseName: argocd
+        valueFiles:
+          - $values/manifests/argocd/values.yaml
+    - repoURL: https://github.com/Nebu2k/kubernetes-homelab
+      targetRevision: main
+      ref: values
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: argocd
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      # The ApplicationSet CRD is too large for client-side apply.
+      - ServerSideApply=true
+    retry:
+      limit: 5
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 3m

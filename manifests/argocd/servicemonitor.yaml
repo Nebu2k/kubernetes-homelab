@@ -1,7 +1,6 @@
-# The three metrics Services come from the Helm release in
-# homelab-terraform/argocd-talos/, the ServiceMonitors from here: the
-# ServiceMonitor CRD ships with kube-prometheus-stack, which ArgoCD rolls out
-# itself, so it does not exist yet while the chart is being installed.
+# The three metrics Services come from the argo-cd chart (apps/argocd.yaml),
+# the ServiceMonitors from here: the ServiceMonitor CRD ships with
+# kube-prometheus-stack, so it does not exist yet during the bootstrap install.
 #
 # The selectors carry app.kubernetes.io/component on purpose. The
 # application-controller, applicationset-controller and notifications-controller

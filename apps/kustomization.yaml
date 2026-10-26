@@ -5,6 +5,9 @@ kind: Kustomization
 
 resources:
   # Platform
+  # ArgoCD itself. homelab-terraform/argocd-talos/ only installs it for the
+  # bootstrap.
+  - argocd.yaml
   - sealed-secrets.yaml
   - metallb.yaml
   # Enforces the NetworkPolicies, which Flannel alone does not.

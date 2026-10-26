@@ -289,6 +289,15 @@
       separateMinorPatch: true,
     },
 
+    // ArgoCD updates itself through apps/argocd.yaml. A chart major breaks
+    // values and is read first; ArgoCD minors ride in chart minors and patches
+    // and merge like any other chart.
+    {
+      matchPackageNames: ['argo-cd'],
+      matchUpdateTypes: ['major'],
+      automerge: false,
+    },
+
     // A Postgres update should be one decision, not three PRs. Affects
     // teslamate and paperless (the -alpine variant there).
     {
