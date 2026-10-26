@@ -1,7 +1,7 @@
 # etcd metrics of the three Talos control planes. Static targets, because etcd
 # is not a pod with a service and ArgoCD excludes Endpoints objects globally.
 #
-# Requires the etcd patch in talos/talconfig.yaml
+# Requires talos/patches/controlplane/etcd.yaml
 # (listen-metrics-urls: http://0.0.0.0:2381); otherwise Talos binds the metrics
 # to 127.0.0.1 and a Prometheus in the pod network sees nothing. The parameter
 # only takes effect after a node reboot, there is no

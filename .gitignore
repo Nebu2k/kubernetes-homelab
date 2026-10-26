@@ -62,7 +62,7 @@ coverage/
 
 # Talos: the generated machine configs and the talosconfig contain the etcd and
 # Kubernetes CAs in plaintext. The repo is public, they must never go in. Only
-# talconfig.yaml (the source) and talsecret.sops.yaml (SOPS/age-encrypted) are
+# the patches (the source) and secrets.sops.yaml (SOPS/age-encrypted) are
 # versioned.
 talos/clusterconfig/
 talos/talosconfig

@@ -1,11 +1,11 @@
 # SOPS rules for the talos directory.
 #
-# The repo is public. talsecret.sops.yaml holds the cluster's etcd and
+# The repo is public. secrets.sops.yaml holds the cluster's etcd and
 # Kubernetes CAs and may only live here encrypted. The private age key belongs
 # in ~/.config/sops/age/keys.txt and NOT in the repo: lose it and the bundle
 # is unreadable and the cluster has to be rebuilt. Back the key up.
 creation_rules:
-  - path_regex: talsecret\.sops\.ya?ml$
+  - path_regex: secrets\.sops\.ya?ml$
     key_groups:
       - age:
           - age1mdcun9x3erp7kpq9cn9480trnn9gf3wu42qcrmv05uz4x56h8qzq6gyvtk

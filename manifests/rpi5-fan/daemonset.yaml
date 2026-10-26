@@ -3,7 +3,8 @@
 # of a replica count, and a second Pi 5 would need no change.
 #
 # The nodeSelector uses the hostname rather than a dedicated label, which
-# would have to be set in talos/talconfig.yaml and cost an apply-config.
+# would have to be set in talos/patches/nodes/raspi5.yaml and cost an
+# apply-config.
 apiVersion: apps/v1
 kind: DaemonSet
 metadata:

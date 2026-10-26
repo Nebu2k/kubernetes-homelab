@@ -97,7 +97,7 @@ spec:
 #
 # raspi5 is the largest storage node: its EPHEMERAL partition is not on the
 # boot medium but on the NVMe, while the SD card only carries EFI, BOOT, META
-# and STATE (see talos/talconfig.yaml).
+# and STATE (see talos/patches/nodes/raspi5.yaml).
 apiVersion: longhorn.io/v1beta2
 kind: Node
 metadata:

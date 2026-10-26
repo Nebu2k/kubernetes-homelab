@@ -2,7 +2,7 @@
 #
 # No namespace.yaml, kube-system always exists. The namespace is not free to
 # choose either: machine.features.kubernetesTalosAPIAccess in
-# talos/talconfig.yaml permits exactly this one.
+# talos/patches/controlplane/talos-api-access.yaml permits exactly this one.
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 

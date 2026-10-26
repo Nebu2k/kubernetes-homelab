@@ -1,0 +1,11 @@
+# The VIP and every node IP must appear in the Talos API certificate, or any
+# access through an address other than the endpoint fails. The API server
+# counterpart is in controlplane/api-server.yaml. Both lists are cluster-wide
+# and therefore have to be applied to EVERY node, including ones that changed
+# nothing else (see README.md).
+machine:
+  certSANs:
+    - 192.168.2.29
+    - 192.168.2.20
+    - 192.168.2.22
+    - 192.168.2.23

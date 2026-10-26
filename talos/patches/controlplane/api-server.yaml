@@ -1,0 +1,25 @@
+# The VIP and every node IP in the API server certificate, see
+# all/cert-sans.yaml.
+#
+# Talos enforces PodSecurity "baseline" and Longhorn's CSI pods need more.
+# Only the addition belongs here: the patch is merged into the Talos defaults,
+# and a fully written-out block would list kube-system twice.
+#
+# Other workloads with hostNetwork or hostPath get a label on their
+# namespace (pod-security.kubernetes.io/enforce: privileged) rather than
+# another entry here: that is GitOps and shows up on deploy, while a change
+# here reboots the control plane.
+cluster:
+  apiServer:
+    certSANs:
+      - 192.168.2.29
+      - 192.168.2.20
+      - 192.168.2.22
+      - 192.168.2.23
+      - 127.0.0.1
+    admissionControl:
+      - name: PodSecurity
+        configuration:
+          exemptions:
+            namespaces:
+              - longhorn-system

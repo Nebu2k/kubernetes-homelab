@@ -1,20 +1,30 @@
 # Talos-Cluster
 
 Machine configs des Clusters. Talos hat keine SSH und keinen Paketmanager: was
-auf einer Node laeuft, steht vollstaendig in `talconfig.yaml` und wird von dort
-generiert und appliziert.
+auf einer Node laeuft, steht vollstaendig in den Patches unter `patches/` und
+wird mit `make talos-config` (im Repo-Root) von talosctl selbst generiert, ohne
+Wrapper dazwischen.
 
 ## Was hier liegt
 
-| Datei                 | Inhalt                                              |
-| --------------------- | --------------------------------------------------- |
-| `talconfig.yaml`      | Quelle der Wahrheit fuer alle machine configs       |
-| `talsecret.sops.yaml` | etcd- und Kubernetes-CAs, SOPS/age-verschluesselt   |
-| `.sops.yaml`          | age-Recipient fuer die Verschluesselung             |
-| `clusterconfig/`      | generiert, gitignored, enthaelt die CAs im Klartext |
+| Datei                   | Inhalt                                                        |
+| ----------------------- | ------------------------------------------------------------- |
+| `patches/all/`          | Patches fuer jede Node                                        |
+| `patches/controlplane/` | Patches fuer die Control-Planes                               |
+| `patches/nodes/`        | je Node: Installer-Image samt Talos-Version, Disk, Netz, Zone |
+| `secrets.sops.yaml`     | Secrets-Bundle (Format von `talosctl gen secrets`), SOPS/age  |
+| `.sops.yaml`            | age-Recipient fuer die Verschluesselung                       |
+| `clusterconfig/`        | generiert, gitignored, enthaelt die CAs im Klartext           |
+
+Config-Format und Talos-Version sind getrennt: `TALOS_CONTRACT` im Makefile
+bestimmt das Format, der Tag des Installer-Images in `patches/nodes/` die
+Version, die eine Node faehrt. Der Contract bleibt auf v1.13, solange das
+1.14-Format kein Gegenstueck zu `machine.kubelet.extraMounts` hat
+(siderolabs/talos#14411): ueber genau diesen Mount sieht Longhorn seine
+Repliken. Talos liest das alte Format auf 1.14-Nodes unbefristet weiter.
 
 **Der private age-Key steht in `~/.config/sops/age/keys.txt` und nirgends
-sonst.** Ohne ihn ist `talsecret.sops.yaml` unlesbar und das Cluster muss neu
+sonst.** Ohne ihn ist `secrets.sops.yaml` unlesbar und das Cluster muss neu
 gebaut werden. Gehoert in den Passwortmanager, nicht nur auf den Mac.
 
 ## Aufbau
@@ -147,8 +157,8 @@ Installer-Plattform und Boot-Medium muessen zusammenpassen: die VM bootet vom
 Upgrade umstellen. prodesk und raspi5 sind von einer ISO beziehungsweise einem
 Disk-Image auf Blech installiert und brauchen `metal`.
 
-Die Schematic-ID steht bei der VM an zwei Stellen (hier und in
-`homelab-terraform/proxmox/vm-talos.tf`) und muss zusammenpassen. Laufen sie
+Die Schematic-ID steht bei der VM an zwei Stellen (`patches/nodes/talos-cp-1.yaml`
+und `homelab-terraform/proxmox/vm-talos.tf`) und muss zusammenpassen. Laufen sie
 auseinander, faellt die Node beim naechsten Upgrade auf ein Image ohne
 Extensions zurueck und Longhorn verliert seine Volumes.
 
@@ -158,7 +168,7 @@ wird die EPHEMERAL-Partition samt etcd-Daten geleert und der Member muss neu
 syncen:
 
 ```bash
-talhelper genconfig
+make -C .. talos-config
 talosctl --talosconfig clusterconfig/talosconfig apply-config -n <ip> \
   --file clusterconfig/homelab-<node>.yaml
 talosctl --talosconfig clusterconfig/talosconfig upgrade -n <ip> --preserve \
@@ -184,14 +194,12 @@ Alles Weitere haengt an `apps/kustomization.yaml`, der App-of-Apps.
 ## Bedienung
 
 ```bash
-export SOPS_AGE_KEY_FILE=~/.config/sops/age/keys.txt
-
-talhelper genconfig                       # nach ./clusterconfig/
-talosctl validate --config clusterconfig/homelab-talos-cp-1.yaml --mode metal
+make -C .. talos-config      # nach ./clusterconfig/, validiert jede Datei gleich mit
 ```
 
-Aenderungen immer ueber `talconfig.yaml` und `talhelper genconfig`, nie direkt
-an einer generierten Datei: die wird beim naechsten Lauf ueberschrieben.
+Aenderungen immer ueber die Patches und `make talos-config`, nie direkt an einer
+generierten Datei: die wird beim naechsten Lauf ueberschrieben. Die Befehle hier
+laufen in `talos/`.
 
 ```bash
 talosctl apply-config --nodes 192.168.2.20 --file clusterconfig/homelab-talos-cp-1.yaml
@@ -215,10 +223,10 @@ talosctl bootstrap --nodes 192.168.2.20
 talosctl kubeconfig --nodes 192.168.2.20
 ```
 
-### Nach jeder Aenderung an `talconfig.yaml`: Soll-Ist-Vergleich
+### Nach jeder Aenderung an den Patches: Soll-Ist-Vergleich
 
-`talconfig.yaml` zu aendern aendert keine einzige Node. talhelper erzeugt daraus
-nur Dateien, erst `talosctl apply-config` traegt sie auf ein Geraet. Alles, was
+Einen Patch zu aendern aendert keine einzige Node. `make talos-config` erzeugt
+daraus nur Dateien, erst `talosctl apply-config` traegt sie auf ein Geraet. Alles, was
 cluster-weit gilt (die beiden certSAN-Listen, der Endpoint, die
 apiserver-Argumente), muss deshalb auf **jede** Node einzeln appliziert werden,
 auch auf die, an der sich augenscheinlich nichts geaendert hat. Eine Node mit
@@ -325,10 +333,12 @@ eine gerade Anzahl vertraegt nicht mehr Ausfaelle als drei.
    Cluster gerade faehrt (`talosctl version`), sonst kommt die Node mit einem
    aelteren Talos zurueck als die anderen, und zwar ohne Fehlermeldung.
 
-2. **In `talconfig.yaml` eintragen**, mit `nodeLabels`
-   (`topology.kubernetes.io/zone`, siehe oben), `installDisk` oder
-   `installDiskSelector` und dem passenden `talosImageURL`. Auf Blech den
-   `deviceSelector` ueber `hardwareAddr` statt ueber den Treibernamen: stimmt
+2. **`patches/nodes/<node>.yaml` anlegen**, eine der drei vorhandenen als
+   Vorlage: `nodeLabels` (`topology.kubernetes.io/zone`, siehe oben),
+   `install.disk` oder `install.diskSelector`, das passende Installer-Image
+   samt Renovate-Kommentar. Dazu die Node in `TALOS_NODES` und
+   `TALOS_ENDPOINTS` im Makefile. Auf Blech den `LinkAliasConfig`-Selektor
+   ueber die MAC statt ueber den Treibernamen: stimmt
    die Adresse nicht, faellt das nicht als Fehler auf, die Node kommt schlicht
    ohne Netz hoch. Ablesen im Maintenance-Mode mit
    `talosctl -n <dhcp-ip> get links --insecure`.
@@ -515,10 +525,10 @@ nicht ungeprueft ausgerollt.
   `manifests/metallb/values.yaml`.
 
 - **PodSecurity steht auf `baseline`.** `longhorn-system` ist in
-  `talconfig.yaml` ausgenommen. Alles andere, was daran anstoesst, braucht ein
-  `pod-security.kubernetes.io/enforce: privileged` am Namespace. Das gehoert in
-  die Manifeste, nicht in `talconfig.yaml`: eine Aenderung dort rebootet die
-  Control-Plane.
+  `patches/controlplane/api-server.yaml` ausgenommen. Alles andere, was daran
+  anstoesst, braucht ein `pod-security.kubernetes.io/enforce: privileged` am
+  Namespace. Das gehoert in die Manifeste, nicht in die Talos-Patches: eine
+  Aenderung dort rebootet die Control-Plane.
 
   **Nicht nur `hostNetwork` und `hostPath` stossen an baseline.** ripe-atlas hat
   weder das eine noch das andere und braucht die Ausnahme trotzdem: es setzt
@@ -572,7 +582,7 @@ nicht ungeprueft ausgerollt.
   deployt vanilla CoreDNS mit `forward . /etc/resolv.conf`. Per Default steht
   dort nur der hostDNS-Proxy `169.254.116.108`, also ein einziger Upstream, und
   ein toter erster Resolver kostet dann jeden Lookup im Cluster mehrere
-  Sekunden. Deshalb steht `forwardKubeDNSToHost: false` in `talconfig.yaml`:
+  Sekunden. Deshalb steht `forwardKubeDNSToHost: false` in `patches/all/dns.yaml`:
   die Pods sehen `.254` und `.253`, und das forward-Plugin nimmt einen toten
   Upstream selbst heraus. Der Host behaelt seinen hostDNS auf `127.0.0.53` und
   damit auch dessen traeges Failover, das betrifft aber nur ihn selbst, im

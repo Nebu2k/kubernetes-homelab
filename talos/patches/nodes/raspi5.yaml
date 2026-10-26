@@ -1,0 +1,99 @@
+# raspi5 (192.168.2.22): Raspberry Pi 5 with NVMe, the second bare-metal node.
+# Together with prodesk it keeps the etcd majority off pve.
+#
+# What differs on this node:
+#
+#  - .22 from the node block .20-.29. The UniFi rule grants the two guest
+#    VLANs access to .2-.20, so an address from the lower range would expose
+#    the Talos API and the kubelet to them.
+#  - Its own schematic with the rpi_5 overlay (siderolabs/sbc-raspberrypi),
+#    the Pi ships no UEFI firmware. metal installer, not nocloud.
+#  - The SD card is the system target and the NVMe only carries EPHEMERAL.
+#    Not a preference but the only option, see below.
+#  - Its own failure domain, see nodeLabels below.
+#
+# WHY SD AND NOT NVMe: on the Pi 5 u-boot can boot from the SD card only.
+# Neither USB nor NVMe, because it lacks the PCIe driver for the RP1 chip
+# that carries both the USB ports and the M.2 slot. The firmware's EEPROM
+# bootloader can do both and happily loads u-boot from a stick; after that
+# u-boot finds nothing and stops at its logo, without an error and without
+# network.
+#
+# SD wear stays manageable: only EFI, BOOT, META and STATE live there, a few
+# hundred MB written practically only during upgrades. Everything
+# write-intensive sits in EPHEMERAL, which the VolumeConfig below moves to the
+# NVMe.
+#
+# See talos-cp-1 for the reasoning behind the sysctls, the routes and the VIP.
+machine:
+  install:
+    # /dev/mmcblk0 is the SD slot and stably named on the Pi. A selector on
+    # type: sd would be equivalent.
+    disk: /dev/mmcblk0
+    # Third schematic in the cluster and the only one with an overlay option:
+    # configTxtAppend adds "dtparam=cooling_fan=on" to config.txt.
+    #
+    # Without it the kernel does not know the Active Cooler's fan at all: no
+    # pwm-fan in /sys/class/hwmon, zero cooling_devices, nothing to control,
+    # and the fan runs at full speed permanently. The kernel is not at fault,
+    # only the device tree node is missing.
+    # renovate: datasource=github-releases depName=siderolabs/talos
+    image: factory.talos.dev/metal-installer/5a66af048bde96b95010bf8bba792973932e5bb7359e77f2ef7d8edb9aacc2a6:v1.13.9
+  # Its own zone, NOT joining prodesk in "blech". With two zones and
+  # replicaZoneSoftAntiAffinity: "false" one of two replicas would always end
+  # up on pve; only a third zone lets Longhorn put both on bare metal, which
+  # is what the diversity rule demands.
+  #
+  # That "blech" is a class name and "raspi5" a device name is not a break:
+  # either zone is exactly one device. The counterpart is
+  # manifests/longhorn/values.yaml.
+  nodeLabels:
+    topology.kubernetes.io/zone: raspi5
+  sysctls:
+    net.ipv6.conf.default.accept_ra: "0"
+    net.ipv6.conf.end0.accept_ra: "2"
+    net.ipv6.conf.end0.accept_ra_defrtr: "0"
+    net.ipv6.conf.end0.accept_ra_rt_info_max_plen: "64"
+    net.ipv6.conf.end0.autoconf: "0"
+---
+apiVersion: v1alpha1
+kind: HostnameConfig
+auto: "off"
+hostname: raspi5
+---
+# Selected by MAC as on prodesk: one physical NIC with an immutable address,
+# and no need to guess the Pi 5 ethernet driver's name.
+apiVersion: v1alpha1
+kind: LinkAliasConfig
+name: ethSel0
+selector:
+  match: glob("2c:cf:67:4b:83:14", mac(link.hardware_addr))
+---
+apiVersion: v1alpha1
+kind: Layer2VIPConfig
+name: 192.168.2.29
+link: ethSel0
+---
+apiVersion: v1alpha1
+kind: LinkConfig
+name: ethSel0
+addresses:
+  - address: 192.168.2.22/24
+  - address: fd2e:9a71:c3b5::22/64
+routes:
+  - gateway: 192.168.2.1
+  - gateway: fd2e:9a71:c3b5::1
+---
+# EPHEMERAL onto the NVMe. Node-specific rather than global, because prodesk
+# has an NVMe too and the expression would match there as well.
+#
+# Must be part of the FIRST apply-config: Talos only applies a VolumeConfig
+# while the volume is not yet provisioned. Added later, EPHEMERAL stays on
+# the SD card.
+apiVersion: v1alpha1
+kind: VolumeConfig
+name: EPHEMERAL
+provisioning:
+  diskSelector:
+    match: disk.transport == 'nvme'
+  grow: true

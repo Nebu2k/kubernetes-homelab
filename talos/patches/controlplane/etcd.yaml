@@ -1,0 +1,22 @@
+# etcd stays on v4. Unset, Talos picks "the first routable address", which
+# is v4 today and would be free to move once the nodes carry v6 node
+# addresses. listenSubnets follows advertisedSubnets, so both are pinned.
+#
+# listen-metrics-urls makes the etcd metrics reachable from the LAN. Talos
+# binds them to 127.0.0.1:2381 by default and Prometheus runs in a pod, so
+# without this it sees not a single etcd target.
+#
+# Not optional: the etcd-homelab group in prometheus-rules.yaml contains
+# EtcdMetricsMissing with an absent() branch, which fires immediately and
+# permanently without targets.
+#
+# Port 2381 is plaintext without a client certificate and still acceptable:
+# reachable only from the LAN and carrying no keys. The client port 2379 is
+# untouched. Because the URL is set explicitly, Talos 1.14 keeps the metrics
+# here instead of moving them to its new default listener on 2383.
+cluster:
+  etcd:
+    advertisedSubnets:
+      - 192.168.2.0/24
+    extraArgs:
+      listen-metrics-urls: http://0.0.0.0:2381

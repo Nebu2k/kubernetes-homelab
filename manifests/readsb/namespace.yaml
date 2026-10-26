@@ -8,6 +8,6 @@ metadata:
     # cluster-wide.
     #
     # On the namespace rather than as another exception in
-    # talos/talconfig.yaml: this is GitOps and shows up on deploy, while a
-    # change there reboots the control plane.
+    # talos/patches/controlplane/api-server.yaml: this is GitOps and shows up
+    # on deploy, while a change there reboots the control plane.
     pod-security.kubernetes.io/enforce: privileged

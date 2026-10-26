@@ -1,0 +1,14 @@
+# Around 20 manifests select on node-role.kubernetes.io/worker, among them
+# the nodeSelectors of MetalLB and cert-manager. Without the label half the
+# platform stays Pending without an error, the scheduler only says
+# "0/3 nodes are available".
+#
+# That Talos may set it is not obvious: the node-role.kubernetes.io/ prefix
+# is blocked for the kubelet (NodeRestriction), but Talos creates node labels
+# through a controller of its own rather than through the kubelet.
+#
+# All three nodes get it. "Worker" here labels "carries workloads", it is not
+# a role: every node in this cluster does.
+machine:
+  nodeLabels:
+    node-role.kubernetes.io/worker: worker

@@ -1,0 +1,39 @@
+# Which addresses the kubelet registers as node IPs. Mandatory with
+# dual-stack: every NIC here carries THREE v6 /64s, the rotating ISP prefix,
+# this manual ULA and a second ULA UniFi generates on its own. Without a
+# selection Talos may take the ISP prefix, and then the InternalIP of every
+# node changes with each prefix rotation.
+#
+# v4 first and identical on all three nodes: Longhorn 1.12 supports dual-stack
+# only when every node lists its families in the same order.
+#
+# Image GC: with the defaults (85/80) Renovate's churn fills the shared
+# EPHEMERAL partition with stale images, which Longhorn then counts against
+# its scheduling headroom. maxAge drops unused images regardless of usage.
+#
+# Longhorn needs /var/lib/longhorn in the kubelet mount namespace or the
+# manager does not see the replicas. The required system extensions
+# (iscsi-tools, util-linux-tools) are in the schematic of each node's installer
+# image. Note that "talosctl reset" takes this data with it.
+#
+# extraMounts only exists in the v1alpha1 document; the 1.14 KubeNodeConfig has
+# no equivalent (siderolabs/talos#14411). This is what holds TALOS_CONTRACT in
+# the Makefile at v1.13.
+machine:
+  kubelet:
+    nodeIP:
+      validSubnets:
+        - 192.168.2.0/24
+        - fd2e:9a71:c3b5::/64
+    extraConfig:
+      imageGCHighThresholdPercent: 70
+      imageGCLowThresholdPercent: 55
+      imageMaximumGCAge: 336h
+    extraMounts:
+      - destination: /var/lib/longhorn
+        type: bind
+        source: /var/lib/longhorn
+        options:
+          - bind
+          - rshared
+          - rw

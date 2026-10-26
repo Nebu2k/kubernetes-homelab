@@ -1,0 +1,98 @@
+# talos-cp-1 (192.168.2.20): the VM on pve.
+machine:
+  install:
+    disk: /dev/sda
+    # nocloud-installer, not metal-installer: the VM boots from the nocloud disk
+    # image and a metal installer would switch the platform on the first
+    # upgrade. The schematic ID matches homelab-terraform/proxmox/vm-talos.tf.
+    # renovate: datasource=github-releases depName=siderolabs/talos
+    image: factory.talos.dev/nocloud-installer/88d1f7a5c4f1d3aba7df787c448c1d3d008ed29cfb34af53fa0df4336a56040b:v1.13.9
+  # Failure domain for Longhorn. It is the only node in this zone, but the
+  # label still matters: it says its disk lives in pve. A second pve VM would
+  # be two different nodes to Longhorn's node anti-affinity and thus fine,
+  # although both replicas would sit on the same NVMe and die together. Only
+  # the zone makes that visible.
+  #
+  # The counterpart is replicaZoneSoftAntiAffinity: "false" in
+  # manifests/longhorn/values.yaml. Without a zone label everything falls
+  # into the same empty zone and Longhorn could place only one replica per
+  # volume, so set the label first when adding a node.
+  nodeLabels:
+    topology.kubernetes.io/zone: pve
+  # Router advertisements: routes yes, addresses no.
+  #
+  # Several routers announce into this LAN: UniFi with the ISP prefix and
+  # the manual ULA, plus an Apple and an eero Thread border router, each
+  # with a ULA of its own on a 30 minute lifetime. Flannel takes the FIRST
+  # v6 address of the interface and which one that is comes down to boot
+  # order, so SLAAC must not produce any. With autoconf off the static
+  # address below is the only v6 the interface has, for flannel as well as
+  # for the kubelet.
+  #
+  # The route information options are what the node needs from those RAs.
+  # Each Thread network is reachable only through its border router and
+  # UniFi does not route those prefixes, so without
+  # accept_ra_rt_info_max_plen, whose default of 0 drops every RIO, no pod
+  # reaches a Thread device. The prefixes are assigned dynamically, hence
+  # learned rather than pinned.
+  #
+  # accept_ra has to be 2: this node forwards, and a forwarding host
+  # ignores RAs at 1. accept_ra_defrtr keeps the static default route below
+  # in charge, so there is still no v6 transit, and none is needed: DNS,
+  # image pulls and both resolver upstreams are v4, and Blocky connects
+  # outbound with connectIPVersion v4.
+  #
+  # The interface name is load-bearing: "all" does not reach accept_ra
+  # (measured, all=1 while the interface stood at 2), and "default" only
+  # applies to interfaces created afterwards. A renamed interface silently
+  # gets its RAs back.
+  sysctls:
+    net.ipv6.conf.default.accept_ra: "0"
+    net.ipv6.conf.eth0.accept_ra: "2"
+    net.ipv6.conf.eth0.accept_ra_defrtr: "0"
+    net.ipv6.conf.eth0.accept_ra_rt_info_max_plen: "64"
+    net.ipv6.conf.eth0.autoconf: "0"
+---
+apiVersion: v1alpha1
+kind: HostnameConfig
+auto: "off"
+hostname: talos-cp-1
+---
+# Selected by driver rather than by name: Talos assigns predictable interface
+# names that depend on the Proxmox machine class. The driver is stable, the
+# name is not.
+apiVersion: v1alpha1
+kind: LinkAliasConfig
+name: ethSel0
+selector:
+  match: glob("virtio_net", link.driver)
+---
+# The cluster VIP, built into Talos, no kube-vip needed.
+#
+# .29 rather than an address from the MetalLB range: the VIP is not a service
+# but belongs to the nodes, and .20-.29 is the node block in the address plan.
+# Inside the MetalLB range the pool would need a hole so MetalLB cannot hand
+# the cluster API to a service, and above all the UniFi rule grants the guest
+# VLANs access to .249-.254, which would have exposed the API to them.
+apiVersion: v1alpha1
+kind: Layer2VIPConfig
+name: 192.168.2.29
+link: ethSel0
+---
+apiVersion: v1alpha1
+kind: LinkConfig
+name: ethSel0
+addresses:
+  - address: 192.168.2.20/24
+  # Static, mirroring the v4 host part. See the sysctls above for why this is
+  # not left to SLAAC.
+  - address: fd2e:9a71:c3b5::20/64
+routes:
+  - gateway: 192.168.2.1
+  # NOT optional, and not about reachability: flanneld determines its
+  # interface from the default route of each family and refuses to start
+  # without a v6 one ("failed to get default v6 interface"). With
+  # accept_ra_defrtr off nothing else installs it. The gateway is the UniFi ULA
+  # address; a ULA source address gets nowhere on the v6 internet, which is
+  # intended, the route exists for the interface lookup.
+  - gateway: fd2e:9a71:c3b5::1

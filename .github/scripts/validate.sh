@@ -18,8 +18,8 @@ set -uo pipefail
 cd "$(git rev-parse --show-toplevel)"
 
 # The cluster version validated against. Bump it along with a Talos upgrade:
-# the target version is kubernetesVersion in talos/talconfig.yaml, which also
-# carries the Renovate anchor.
+# the target version is KUBERNETES_VERSION in the Makefile, which also carries
+# the Renovate anchor.
 KUBE_VERSION="1.36.4"
 
 # Charts that query cluster capabilities fail to render otherwise: Traefik's

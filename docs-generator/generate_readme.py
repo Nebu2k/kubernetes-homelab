@@ -4,6 +4,7 @@ README.md Generator for Kubernetes Homelab
 Automatically extracts data from repository and renders README from template.
 """
 
+import re
 import yaml
 from pathlib import Path
 from jinja2 import Environment, FileSystemLoader
@@ -28,7 +29,6 @@ SPECIAL_CASES = {
     'ngx': 'ngx',
     'rpi5': 'RPi5',
     'etcd': 'etcd',
-    'talhelper': 'talhelper',
     # Full names that are spelled lowercase upstream
     'kube-prometheus-stack': 'kube-prometheus-stack',
     'paperless-ngx': 'paperless-ngx',
@@ -264,7 +264,6 @@ def get_documentation_links():
 
     # Add always-present core components
     docs['Talos Linux'] = 'https://www.talos.dev/latest/'
-    docs['talhelper'] = 'https://budimanjojo.github.io/talhelper/'
 
     # Sort by name (case-insensitive)
     return dict(sorted(docs.items(), key=lambda item: item[0].lower()))
@@ -324,10 +323,10 @@ def generate_tree_fallback():
         is_last = i == len(manifest_dirs) - 1
         lines.append(f"│   {'└──' if is_last else '├──'} {manifest_dir.name}/")
 
-    # The Talos layer. Not GitOps: talconfig.yaml is the source talhelper
-    # generates the machine configs from, and those sit next to it encrypted.
+    # The Talos layer. Not GitOps: talosctl renders the machine configs from
+    # the patches in talos/patches/ (make talos-config).
     lines += [
-        "├── talos/                     # machine configs (talhelper), see talos/README.md",
+        "├── talos/                     # machine config patches (talosctl), see talos/README.md",
         "├── hosts/                     # copies of what runs on hosts outside the cluster",
         "├── docs-generator/            # renders this README from templates/README.md.j2",
         "└── reseal-all-secrets.sh      # reseals every *-unsealed.yaml under manifests/",
@@ -337,22 +336,22 @@ def generate_tree_fallback():
 
 
 def get_cluster_versions():
-    """Read Talos and Kubernetes version from talos/talconfig.yaml.
+    """Read the Talos version from the installer tags in talos/patches/nodes/
+    and the Kubernetes version from the Makefile.
 
     Hardcoding them in the template means they survive every Talos upgrade
     untouched and quietly turn into a lie.
     """
-    talconfig = REPO_ROOT / "talos" / "talconfig.yaml"
-
-    if not talconfig.exists():
-        return {}
-
-    with open(talconfig, 'r') as f:
-        config = yaml.safe_load(f)
+    talos = sorted({
+        m.group(1)
+        for f in (REPO_ROOT / "talos" / "patches" / "nodes").glob("*.yaml")
+        for m in re.finditer(r"image: factory\.talos\.dev/\S+:(v\S+)", f.read_text())
+    })
+    kubernetes = re.search(r"^KUBERNETES_VERSION := (\S+)", (REPO_ROOT / "Makefile").read_text(), re.M)
 
     return {
-        'talos': config.get('talosVersion', ''),
-        'kubernetes': config.get('kubernetesVersion', ''),
+        'talos': " / ".join(talos),
+        'kubernetes': kubernetes.group(1) if kubernetes else '',
     }
 
 

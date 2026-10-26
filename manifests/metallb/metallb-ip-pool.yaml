@@ -7,7 +7,7 @@ metadata:
 spec:
   addresses:
     # One contiguous range. The cluster VIP lies outside it on purpose (see
-    # talos/talconfig.yaml), otherwise the pool would need a hole so MetalLB
+    # talos/patches/nodes/talos-cp-1.yaml), otherwise the pool would need a hole so MetalLB
     # cannot hand the Kubernetes API to a service.
     #
     # .250 carries Traefik and .253 Blocky, both requested explicitly in their

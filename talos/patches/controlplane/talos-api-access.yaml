@@ -1,0 +1,24 @@
+# Talos API from inside the cluster, exclusively for etcd snapshots.
+#
+# The precondition for manifests/etcd-backup/: a CronJob in the cluster can
+# have a talosconfig issued and calls "talosctl etcd snapshot" on each
+# control plane through it. Without this there would be no path to the
+# Talos API that does not store the laptop's admin credentials in a secret.
+#
+# Confined in both directions:
+#   allowedRoles: ONLY os:etcd:backup, which permits exactly the
+#     EtcdSnapshot call: no reading the machine config, no reboot, no
+#     access to the node's secrets.
+#   allowedKubernetesNamespaces: ONLY kube-system. A ServiceAccount CR in
+#     another namespace gets no talosconfig, not even with the same roles.
+#
+# Takes effect without a reboot, it only concerns trustd and the
+# ServiceAccount controller.
+machine:
+  features:
+    kubernetesTalosAPIAccess:
+      enabled: true
+      allowedRoles:
+        - os:etcd:backup
+      allowedKubernetesNamespaces:
+        - kube-system

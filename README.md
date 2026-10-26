@@ -9,7 +9,7 @@ Talos Linux cluster managed via GitOps using the ArgoCD App-of-Apps pattern.
 ### Deployment Flow
 
 ```text
-1. Manual: Talos machine configs (talhelper) → HA control plane, VIP built in
+1. Manual: Talos machine configs (talosctl) → HA control plane, VIP built in
 2. Manual: ArgoCD via Terraform (homelab-terraform/argocd-talos) → GitOps engine
 3. GitOps: bootstrap/root-app.yaml → App-of-Apps
 4. GitOps: Everything else deployed automatically with Sync-Waves
@@ -70,7 +70,7 @@ kubernetes-homelab/
 │   ├── teslamate/
 │   ├── traefik/
 │   └── unifi-poller/
-├── talos/                     # machine configs (talhelper), see talos/README.md
+├── talos/                     # machine config patches (talosctl), see talos/README.md
 ├── hosts/                     # copies of what runs on hosts outside the cluster
 ├── docs-generator/            # renders this README from templates/README.md.j2
 └── reseal-all-secrets.sh      # reseals every *-unsealed.yaml under manifests/
@@ -84,20 +84,19 @@ kubernetes-homelab/
 - Domain on Cloudflare (DNS-01 challenge + public records)
 - Cloudflare API token (for cert-manager DNS-01 wildcard TLS certificates)
 - CIFS or S3 target for Longhorn backups
-- `talosctl`, `talhelper`, `kubectl`, `kustomize`, `kubeseal`, `sops`, `age`
+- `talosctl`, `kubectl`, `kustomize`, `kubeseal`, `sops`, `age`
 
 ### Step 1: Build the cluster (**Talos**)
 
-The machine configs are generated from a single `talos/talconfig.yaml` by
-[talhelper](https://github.com/budimanjojo/talhelper); the generated files and
-the secrets bundle are never edited by hand.
+The machine configs are rendered by `talosctl` itself from the patches in
+`talos/patches/` and the SOPS-encrypted secrets bundle; the generated files are
+never edited by hand.
 
 ```bash
-export SOPS_AGE_KEY_FILE=~/.config/sops/age/keys.txt
-cd talos && talhelper genconfig
+make talos-config
 
 talosctl apply-config --insecure --nodes <dhcp-ip> \
-  --file clusterconfig/homelab-talos-cp-1.yaml
+  --file talos/clusterconfig/homelab-talos-cp-1.yaml
 talosctl bootstrap --nodes <node-ip>   # exactly once for the whole cluster
 talosctl kubeconfig --nodes <node-ip>
 ```
@@ -379,7 +378,6 @@ or an expired key, the controller logs say which.
 - [Proxmox Exporter](https://github.com/prometheus-pve/prometheus-pve-exporter)
 - [Reloader](https://stakater.github.io/stakater-charts)
 - [Sealed Secrets](https://bitnami.github.io/sealed-secrets/)
-- [talhelper](https://budimanjojo.github.io/talhelper/)
 - [Talos Linux](https://www.talos.dev/latest/)
 - [TeslaMate](https://docs.teslamate.org/)
 - [Traefik](https://traefik.github.io/charts)

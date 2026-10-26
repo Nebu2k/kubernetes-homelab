@@ -1,0 +1,42 @@
+# The two Blocky instances. Fixed v4 addresses and explicitly no v6
+# resolvers learned by router advertisement, which would otherwise be sorted
+# to the front unnoticed on a prefix change.
+#
+# This list serves TWO consumers, each with its own condition:
+#
+# 1. The node itself, among other things for image pulls. Hence the LXC
+#    (.254) comes FIRST: it runs outside the cluster. With only the cluster
+#    instance here, a cold node would need DNS to start the pod that
+#    provides DNS.
+# 2. CoreDNS, which inherits exactly this list through
+#    "forward . /etc/resolv.conf". CoreDNS picks its upstreams AT RANDOM, not
+#    in order, so ALL entries must know the same split horizon; otherwise
+#    part of the pod queries resolve publicly and run through hairpin NAT.
+#
+# From 2. it follows that the UniFi gateway must NOT appear here: it returns
+# the public CNAME. For the same reason no public resolver can serve as a
+# third fallback.
+#
+# The remaining case is "pve off AND cluster cold AND image cache empty", in
+# which no node reaches DNS. Manual way out:
+# talosctl patch mc -n <ip> -p '[{"op":"replace",
+#   "path":"/machine/network/nameservers","value":["9.9.9.9"]}]'
+#
+# hostDNS, the precondition for 2.: with the Talos default the pod resolv.conf
+# holds only the host DNS proxy (169.254.116.108), so CoreDNS sees a single
+# upstream and cannot fail over. A dead first resolver then costs every lookup
+# in the cluster several seconds. Turned off, the pods get both addresses and
+# the forward plugin drops a dead upstream itself.
+#
+# The host keeps its own hostDNS on 127.0.0.53, this only concerns the pods.
+# Takes effect without a reboot, but CoreDNS has to be restarted: the kubelet
+# writes resolv.conf when the pod is created.
+machine:
+  network:
+    nameservers:
+      - 192.168.2.254
+      - 192.168.2.253
+  features:
+    hostDNS:
+      enabled: true
+      forwardKubeDNSToHost: false

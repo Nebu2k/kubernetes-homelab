@@ -1,0 +1,9 @@
+# talosctl gen config puts node.kubernetes.io/exclude-from-external-load-balancers
+# on every control plane. Every node here carries workloads, so the map is
+# cleared first and the later patches set the labels. A path delete of the one
+# key does not work: Talos splits the path at the dots in the label name.
+#
+# Runs first, hence the prefix: a label set before this patch would be gone.
+machine:
+  nodeLabels:
+    $patch: delete

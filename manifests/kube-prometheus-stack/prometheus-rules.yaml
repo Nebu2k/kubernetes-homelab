@@ -1019,7 +1019,7 @@ spec:
             severity: warning
           annotations:
             summary: "Es liefern nur {{ $value }} von 3 etcd-Membern Metriken"
-            description: "Entweder ist ein Member weg (dann feuert auch etcdMembersDown), oder auf der Node fehlt der etcd-Patch listen-metrics-urls: http://0.0.0.0:2381 aus talos/talconfig.yaml und Port 2381 bindet wieder nur auf 127.0.0.1. Der Parameter greift erst nach einem Node-Reboot."
+            description: "Entweder ist ein Member weg (dann feuert auch etcdMembersDown), oder auf der Node fehlt der etcd-Patch listen-metrics-urls: http://0.0.0.0:2381 aus talos/patches/controlplane/etcd.yaml und Port 2381 bindet wieder nur auf 127.0.0.1. Der Parameter greift erst nach einem Node-Reboot."
 
     # Fan control on raspi5, see manifests/rpi5-fan/.
     - name: rpi5-fan

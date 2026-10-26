@@ -9,6 +9,6 @@ metadata:
     # was built against.
     #
     # As in manifests/readsb/namespace.yaml this sits on the namespace and not
-    # in talos/talconfig.yaml: the condition belongs to the pod, and a change
-    # there reboots the control plane.
+    # in talos/patches/controlplane/api-server.yaml: the condition belongs to
+    # the pod, and a change there reboots the control plane.
     pod-security.kubernetes.io/enforce: privileged

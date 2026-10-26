@@ -1,0 +1,32 @@
+# Not the Talos defaults. Manifests rely on these values:
+# home-assistant/configuration.yaml carries 10.42.0.0/16 as a
+# trusted_proxy and gatus/configmap.yaml checks CoreDNS at 10.43.0.10.
+#
+# Dual-stack, and v4 stays FIRST and therefore primary: every existing ClusterIP
+# keeps its address, kube-dns keeps 10.43.0.10, and services stay SingleStack
+# until raised to PreferDualStack one by one.
+#
+# The v6 ranges are cluster-internal ULAs that are never routed and have nothing
+# to do with the LAN prefixes; the LAN side lives in fd2e:9a71:c3b5::/64.
+# Kubernetes allows nothing larger than /108 for the v6 service range.
+#
+# Flannel is the Talos default and enforces no NetworkPolicy on its own. Talos
+# deploys kube-network-policies as a second container in the flannel DaemonSet,
+# which replaced the hand-written kube-router DaemonSet: same job, maintained
+# upstream, and dual-stack without a flag of its own. kube-router had to be told
+# --enable-ipv6 explicitly or it would have passed every v6 packet.
+#
+# The CNI is a bootstrap manifest, so apply-config alone does not roll it out,
+# see README.md.
+cluster:
+  network:
+    podSubnets:
+      - 10.42.0.0/16
+      - fd00:10:42::/56
+    serviceSubnets:
+      - 10.43.0.0/16
+      - fd00:10:43::/112
+    cni:
+      name: flannel
+      flannel:
+        kubeNetworkPoliciesEnabled: true

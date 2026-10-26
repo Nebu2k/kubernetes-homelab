@@ -27,7 +27,7 @@
 
   // Automerge is the DEFAULT here, and the exceptions are named below. Only
   // Talos and the Kubernetes version stay manual, because those two are the
-  // ones a merge does not roll out: they need talhelper genconfig plus a
+  // ones a merge does not roll out: they need make talos-config plus a
   // node-by-node talosctl upgrade by hand.
   //
   // Everything else lands unattended, so the guard rails are elsewhere:
@@ -121,22 +121,27 @@
   // up through a "# renovate:" comment line above it, the same way the
   // githubActionsVersions preset does for the workflows.
   customManagers: [
-    // Talos and Kubernetes version of the cluster. Both live in
-    // talos/talconfig.yaml, which no manager knows: it is neither a manifest
-    // nor a Helm chart but the source talhelper generates the machine configs
-    // from.
+    // The Talos version of the cluster: the tag of each node's installer image
+    // in talos/patches/nodes/. Three files, one dependency, so one PR.
     //
     // A reminder, not a rollout: the merge changes nothing in the cluster, the
-    // upgrade remains "talhelper genconfig" plus "talosctl upgrade" node by
-    // node.
-    //
-    // kubernetesVersion comes along here and carries the skip-level rule: only
-    // ONE minor at a time. The lock for that is in the packageRules below.
+    // upgrade remains "make talos-config" plus "talosctl upgrade" node by node.
     {
       customType: 'regex',
-      managerFilePatterns: ['talos/talconfig.yaml'],
+      managerFilePatterns: ['talos/patches/nodes/*.yaml'],
       matchStrings: [
-        '# renovate: datasource=(?<datasource>\\S+) depName=(?<depName>\\S+)\\s+\\S+:\\s*(?<currentValue>\\S+)',
+        '# renovate: datasource=(?<datasource>\\S+) depName=(?<depName>\\S+)\\s+image: factory\\.talos\\.dev/[^:\\s]+:(?<currentValue>\\S+)',
+      ],
+    },
+
+    // The Kubernetes version, KUBERNETES_VERSION in the Makefile. It carries
+    // the skip-level rule: only ONE minor at a time. The lock for that is in
+    // the packageRules below.
+    {
+      customType: 'regex',
+      managerFilePatterns: ['Makefile'],
+      matchStrings: [
+        '# renovate: datasource=(?<datasource>\\S+) depName=(?<depName>\\S+)\\s+[A-Z_]+\\s*:=\\s*(?<currentValue>\\S+)',
       ],
     },
 
@@ -144,7 +149,7 @@
     // "siderolabs/talos" from github-releases and NOT as the ghcr.io image the
     // kubernetes manager would find (disabled for it in the packageRules).
     //
-    // Same dependency name as talosVersion above, so the two cannot drift
+    // Same dependency name as the installer images above, so they cannot drift
     // apart: one dependency, one version, one PR. As two dependencies they DO
     // drift, because minimumReleaseAge only bites on the github-releases side.
     // ghcr.io serves no release timestamp, so 'timestamp-optional' waves the
@@ -242,14 +247,15 @@
       semanticCommitType: 'chore',
       semanticCommitScope: 'talos',
       // The one thing that stays manual. A merge rolls nothing out; the
-      // upgrade is talhelper genconfig plus talosctl upgrade node by node.
+      // upgrade is make talos-config plus talosctl upgrade node by node.
       automerge: false,
     },
 
-    // The Kubernetes version from talconfig.yaml: offer patches only. The
+    // The Kubernetes version from the Makefile: offer patches only. The
     // skip-level rule allows only ONE minor at a time and Renovate does not
-    // know it. The jump belongs together with talosVersion, plus KUBE_VERSION
-    // in .github/scripts/validate.sh, and is therefore a deliberate act.
+    // know it. The jump belongs together with a Talos release that supports
+    // it, plus KUBE_VERSION in .github/scripts/validate.sh, and is therefore a
+    // deliberate act.
     {
       matchPackageNames: ['kubernetes/kubernetes'],
       matchUpdateTypes: ['minor', 'major'],
@@ -257,7 +263,7 @@
     },
 
     // The remaining patches stay manual for the same reason as talos: the
-    // merge changes talconfig.yaml, the cluster follows only by hand.
+    // merge changes the Makefile, the cluster follows only by hand.
     {
       matchPackageNames: ['kubernetes/kubernetes'],
       automerge: false,

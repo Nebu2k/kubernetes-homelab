@@ -1,0 +1,5 @@
+# No node carries a taint: with three nodes a reserved control-plane set would
+# be pure waste. The condition is honest requests and limits, or a hungry
+# workload takes the etcd member down with it.
+cluster:
+  allowSchedulingOnControlPlanes: true

@@ -1,0 +1,58 @@
+# prodesk (192.168.2.23): bare metal and the largest share of the cluster's RAM
+# ceiling. Without it the kube-prometheus-stack does not fit.
+#
+# Two differences from talos-cp-1, both because it is bare metal:
+#
+#  - The metal installer and a schematic without siderolabs/qemu-guest-agent.
+#    Bare metal has no virtio port, so the service would hang in "Waiting"
+#    forever and clutter every "talosctl services" and "talosctl health". Both
+#    schematics carry iscsi-tools and util-linux-tools for Longhorn.
+#  - diskSelector rather than disk: /dev/nvme0n1 is stable in the guest, but in
+#    maintenance mode Longhorn iSCSI devices may still be attached and shift
+#    the names. The serial number is unambiguous.
+#
+# See talos-cp-1 for the reasoning behind the sysctls, the routes and the VIP.
+machine:
+  install:
+    diskSelector:
+      serial: 39MPA3T0PZXP
+    # renovate: datasource=github-releases depName=siderolabs/talos
+    image: factory.talos.dev/metal-installer/613e1592b2da41ae5e265e8789429f22e121aab91cb4deb6bc3c0b6262961245:v1.13.9
+  # Its own failure domain: own hardware, own NVMe, own power supply. One of
+  # the two zones that survive a pve outage.
+  nodeLabels:
+    topology.kubernetes.io/zone: blech
+  sysctls:
+    net.ipv6.conf.default.accept_ra: "0"
+    net.ipv6.conf.eno1.accept_ra: "2"
+    net.ipv6.conf.eno1.accept_ra_defrtr: "0"
+    net.ipv6.conf.eno1.accept_ra_rt_info_max_plen: "64"
+    net.ipv6.conf.eno1.autoconf: "0"
+---
+apiVersion: v1alpha1
+kind: HostnameConfig
+auto: "off"
+hostname: prodesk
+---
+# Selected by MAC rather than by driver as on the VM: there is exactly one
+# physical NIC here and its address is immutable.
+apiVersion: v1alpha1
+kind: LinkAliasConfig
+name: ethSel0
+selector:
+  match: glob("c4:65:16:bb:4f:cb", mac(link.hardware_addr))
+---
+apiVersion: v1alpha1
+kind: Layer2VIPConfig
+name: 192.168.2.29
+link: ethSel0
+---
+apiVersion: v1alpha1
+kind: LinkConfig
+name: ethSel0
+addresses:
+  - address: 192.168.2.23/24
+  - address: fd2e:9a71:c3b5::23/64
+routes:
+  - gateway: 192.168.2.1
+  - gateway: fd2e:9a71:c3b5::1

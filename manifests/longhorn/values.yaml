@@ -15,7 +15,7 @@ defaultBackupStore:
     backupTarget: "cifs://192.168.2.6/longhorn_backup"
     backupTargetCredentialSecret: longhorn-nas-cifs-secret
 defaultSettings:
-  # Every node carries a zone label set in talos/talconfig.yaml. "false"
+  # Every node carries a zone label set in talos/patches/nodes/. "false"
   # forces Longhorn to spread the two replicas across two zones. Two different
   # NODES would not be enough here: two pve VMs are two nodes but one NVMe, so
   # both replicas there would be two copies on the same disk rather than
