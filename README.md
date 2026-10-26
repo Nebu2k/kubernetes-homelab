@@ -4,14 +4,15 @@ Talos Linux cluster managed via GitOps using the ArgoCD App-of-Apps pattern.
 
 ## 🎯 Architecture
 
-**Key Principle**: ArgoCD manages everything EXCEPT itself (prevents self-management conflicts).
+**Key Principle**: ArgoCD manages everything, itself included. Terraform only
+installs it once for the bootstrap.
 
 ### Deployment Flow
 
 ```text
 1. Manual: Talos machine configs (talosctl) → HA control plane, VIP built in
 2. Manual: ArgoCD via Terraform (homelab-terraform/argocd-talos) → GitOps engine
-3. GitOps: bootstrap/root-app.yaml → App-of-Apps
+3. GitOps: bootstrap/root-app.yaml → App-of-Apps, apps/argocd.yaml takes over ArgoCD
 4. GitOps: Everything else deployed automatically with Sync-Waves
 ```
 
@@ -19,7 +20,7 @@ Talos Linux cluster managed via GitOps using the ArgoCD App-of-Apps pattern.
 
 | Wave | Component |
 |------|-----------|
-| 0 | sealed-secrets |
+| 0 | argocd, sealed-secrets |
 | 1 | metallb, reloader |
 | 2 | etcd-backup, metrics-server, rpi5-net-tuning, tuppr |
 | 3 | traefik |
@@ -40,7 +41,7 @@ Talos Linux cluster managed via GitOps using the ArgoCD App-of-Apps pattern.
 ```text
 kubernetes-homelab/
 ├── bootstrap/root-app.yaml    # App-of-Apps, the only thing applied by hand
-├── apps/                      # 30 ArgoCD Applications, one per component (waves above)
+├── apps/                      # 31 ArgoCD Applications, one per component (waves above)
 ├── manifests/                 # what those Applications point at
 │   ├── argocd/
 │   ├── backup-monitor/
@@ -111,17 +112,19 @@ restore at a time). It is not repeated here so the two cannot drift apart.
 
 ### Step 2: Install ArgoCD (**on your laptop, via Terraform**)
 
-ArgoCD manages everything except itself, so it is the one component that does
-not come from this repo. It is a `helm_release` in its own Terraform stack with
-its own state key, `homelab-terraform/argocd-talos/`:
+ArgoCD cannot install itself, so the first install is a `helm_release` in its
+own Terraform stack, `homelab-terraform/argocd-talos/`. It reads the chart
+version from `apps/argocd.yaml` and the values from
+`manifests/argocd/values.yaml`, so the bootstrap installs exactly what the
+`argocd` Application then takes over:
 
 ```bash
 cd homelab-terraform/argocd-talos
 terraform init && terraform apply
 ```
 
-Terraform always sends the full value set and knows no `--reuse-values`, which
-is what makes a chart major upgrade predictable.
+After that Terraform ignores the release. Upgrades come through Renovate and
+ArgoCD like every other chart.
 
 ### Step 3: Fork & configure the repository (**on your laptop**)
 
@@ -338,6 +341,7 @@ or an expired key, the controller logs say which.
 
 | Component | Version |
 |-----------|---------|
+| ArgoCD | 10.3.0 |
 | Blocky | v0.35.0 |
 | Cert Manager | v1.21.2 |
 | csi-driver-smb | 1.20.3 |
@@ -366,6 +370,7 @@ or an expired key, the controller logs say which.
 
 ## 📖 Documentation
 
+- [Argo Cd](https://argoproj.github.io/argo-helm)
 - [Blocky](https://0xerr0r.github.io/blocky/latest/)
 - [Cert Manager](https://charts.jetstack.io)
 - [csi-driver-smb](https://raw.githubusercontent.com/kubernetes-csi/csi-driver-smb/master/charts)
