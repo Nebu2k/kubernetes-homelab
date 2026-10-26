@@ -13,7 +13,10 @@ on:
     #
     # Every two hours gives 24 merges a day of headroom. The buffer against
     # freshly broken releases is minimumReleaseAge, not the cron.
-    - cron: '0 */2 * * *'
+    #
+    # Minute 23, not 0: GitHub delays and drops scheduled runs at the top of
+    # the hour first.
+    - cron: '23 */2 * * *'
   workflow_dispatch:
     inputs:
       dryRun:
