@@ -163,15 +163,15 @@ auseinander, faellt die Node beim naechsten Upgrade auf ein Image ohne
 Extensions zurueck und Longhorn verliert seine Volumes.
 
 Eine Schematic-Aenderung ist ein Image-Wechsel, `apply-config` allein reicht
-nicht. Beides nacheinander, und bei Control-Plane-Nodes mit `--preserve`, sonst
-wird die EPHEMERAL-Partition samt etcd-Daten geleert und der Member muss neu
-syncen:
+nicht, es braucht beides nacheinander. EPHEMERAL samt etcd-Daten bleibt dabei
+erhalten: seit Talos 1.8 wischt ein Upgrade die Systemdisk nie, und talosctl 1.14
+kennt `--preserve` gar nicht mehr.
 
 ```bash
 make -C .. talos-config
 talosctl --talosconfig clusterconfig/talosconfig apply-config -n <ip> \
   --file clusterconfig/homelab-<node>.yaml
-talosctl --talosconfig clusterconfig/talosconfig upgrade -n <ip> --preserve \
+talosctl --talosconfig clusterconfig/talosconfig upgrade -n <ip> \
   --image factory.talos.dev/<platform>-installer/<schematic-id>:<talos-version>
 ```
 

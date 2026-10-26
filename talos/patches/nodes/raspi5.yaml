@@ -38,7 +38,7 @@ machine:
     # and the fan runs at full speed permanently. The kernel is not at fault,
     # only the device tree node is missing.
     # renovate: datasource=github-releases depName=siderolabs/talos
-    image: factory.talos.dev/metal-installer/5a66af048bde96b95010bf8bba792973932e5bb7359e77f2ef7d8edb9aacc2a6:v1.13.9
+    image: factory.talos.dev/metal-installer/5a66af048bde96b95010bf8bba792973932e5bb7359e77f2ef7d8edb9aacc2a6:v1.14.4
   # Its own zone, NOT joining prodesk in "blech". With two zones and
   # replicaZoneSoftAntiAffinity: "false" one of two replicas would always end
   # up on pve; only a third zone lets Longhorn put both on bare metal, which
