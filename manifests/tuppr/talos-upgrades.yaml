@@ -47,12 +47,17 @@ spec:
       namespace: longhorn-system
       expr: status.state != "attached" || status.robustness == "healthy"
       timeout: 10m
-  # The node drains itself with a short-lived client certificate, which
-  # KubeClientCertificateExpiration reads as a certificate about to expire.
+  # What a planned reboot sets off, and what would reach Telegram at night:
+  # the node drains itself with a short-lived client certificate, which
+  # KubeClientCertificateExpiration reads as one about to expire, and the
+  # Longhorn rebuild afterwards loads the disks etcd shares. Service alerts
+  # and tuppr's own TalosUpgradeFailed/Stuck stay loud, and the silence ends
+  # with the run, so a volume still degraded afterwards alerts again.
   silences:
     - matchers:
         - name: alertname
-          value: KubeClientCertificateExpiration
+          matchType: "=~"
+          value: KubeClientCertificateExpiration|LonghornVolumeDegraded|etcdHighCommitDurations|etcdHighFsyncDurations|EtcdFsyncSlow|NodeDiskIOSaturation
       maxDuration: 4h
   policy:
     timeout: 30m
@@ -97,7 +102,8 @@ spec:
   silences:
     - matchers:
         - name: alertname
-          value: KubeClientCertificateExpiration
+          matchType: "=~"
+          value: KubeClientCertificateExpiration|LonghornVolumeDegraded|etcdHighCommitDurations|etcdHighFsyncDurations|EtcdFsyncSlow|NodeDiskIOSaturation
       maxDuration: 4h
   policy:
     timeout: 30m
