@@ -1208,6 +1208,30 @@ spec:
             summary: "Blocky-LXC holt die Konfiguration nicht mehr aus dem Repo"
             description: "Der Sync scheitert seit >1h. Die LXC laeuft mit einem aelteren Stand als die Cluster-Instanz. Von Hand anstossen und die Ausgabe lesen: pct exec 402 -- /etc/periodic/15min/blocky-config-sync"
 
+        # The LXC follows the cluster instance's image tag on its own, 24h
+        # behind on purpose (homelab-terraform, proxmox/blocky/
+        # version-sync.sh.tftpl). 36h covers the soak plus the hourly cron.
+        - alert: BlockyVersionDrift
+          expr: count(count by (version) (blocky_build_info{job="blocky-metrics"})) > 1
+          for: 36h
+          labels:
+            severity: warning
+          annotations:
+            summary: "Die Blocky-Instanzen laufen seit >36h mit verschiedenen Versionen"
+            description: "Die LXC uebernimmt eine neue Version 24h nach der Cluster-Instanz. Haengt sie laenger hinterher, meldet meist auch BlockyVersionSyncFailing den Grund. Versionen: blocky_build_info. Von Hand anstossen: pct exec 402 -- /etc/periodic/hourly/blocky-version-sync"
+
+        # Also fires for a release that failed its healthcheck and was rolled
+        # back: the script does not retry it, so this stays until the next
+        # release or a hand-off.
+        - alert: BlockyVersionSyncFailing
+          expr: blocky_version_sync_success == 0
+          for: 2h
+          labels:
+            severity: warning
+          annotations:
+            summary: "Blocky-LXC kann die Cluster-Version nicht uebernehmen"
+            description: "Der stuendliche Versions-Sync scheitert seit >2h (Download, Pruefsumme oder Healthcheck nach dem Neustart). Ausgabe lesen: pct exec 402 -- /etc/periodic/hourly/blocky-version-sync. Nach einem Rollback steht die verworfene Version in /etc/blocky/.version-failed; die Datei loeschen, um es erneut zu versuchen."
+
     # Tado runs on tado_ce since August 2026: the zones are read locally over
     # the HomeKit bridge, the cloud is only left for schedules and calibration.
     # That splits the old single failure mode in two, and the same
