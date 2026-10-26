@@ -25,10 +25,11 @@
   // a check that never comes and pile up under "Pending Status Checks".
   prCreation: 'immediate',
 
-  // Automerge is the DEFAULT here, and the exceptions are named below. Only
-  // Talos and the Kubernetes version stay manual, because those two are the
-  // ones a merge does not roll out: they need make talos-config plus a
-  // node-by-node talosctl upgrade by hand.
+  // Automerge is the DEFAULT here, and the exceptions are named below. Talos
+  // minors and the Kubernetes version stay manual: a Kubernetes merge rolls
+  // nothing out, and a Talos minor can change the config format under the
+  // patches. Talos patches merge and tuppr rolls them out in its maintenance
+  // window (manifests/tuppr/).
   //
   // Everything else lands unattended, so the guard rails are elsewhere:
   // validate.yml has to be green, minimumReleaseAge holds fresh releases for
@@ -122,15 +123,21 @@
   // githubActionsVersions preset does for the workflows.
   customManagers: [
     // The Talos version of the cluster: the tag of each node's installer image
-    // in talos/patches/nodes/. Three files, one dependency, so one PR.
-    //
-    // A reminder, not a rollout: the merge changes nothing in the cluster, the
-    // upgrade remains "make talos-config" plus "talosctl upgrade" node by node.
+    // in talos/patches/nodes/ and the target of the tuppr plans, all under one
+    // dependency, so one PR. The merge is the rollout: tuppr upgrades the nodes
+    // in its next maintenance window.
     {
       customType: 'regex',
       managerFilePatterns: ['talos/patches/nodes/*.yaml'],
       matchStrings: [
         '# renovate: datasource=(?<datasource>\\S+) depName=(?<depName>\\S+)\\s+image: factory\\.talos\\.dev/[^:\\s]+:(?<currentValue>\\S+)',
+      ],
+    },
+    {
+      customType: 'regex',
+      managerFilePatterns: ['manifests/tuppr/*.yaml'],
+      matchStrings: [
+        '# renovate: datasource=(?<datasource>\\S+) depName=(?<depName>\\S+)\\s+version: (?<currentValue>\\S+)',
       ],
     },
 
@@ -231,9 +238,7 @@
       enabled: false,
     },
 
-    // Talos: same construction as the ArgoCD anchor. The merge rolls nothing
-    // out, so "chore" rather than a "fix(deps)" claiming an upgrade that has
-    // not happened.
+    // Talos. A merge is a rollout through tuppr, hence "fix".
     //
     // ghcr.io/siderolabs/talosctl belongs IN this group: the image takes the
     // etcd snapshots in manifests/etcd-backup/ and must match the nodes' Talos
@@ -244,10 +249,19 @@
         'ghcr.io/siderolabs/talosctl',
       ],
       groupName: 'talos',
-      semanticCommitType: 'chore',
+      semanticCommitType: 'fix',
       semanticCommitScope: 'talos',
-      // The one thing that stays manual. A merge rolls nothing out; the
-      // upgrade is make talos-config plus talosctl upgrade node by node.
+      // Only ONE minor at a time, a jump over two would arrive as one PR.
+      separateMultipleMinor: true,
+    },
+
+    // A Talos minor is read before it merges: 1.14 dropped --preserve, made
+    // the empty-schematic installer the default and moved half the config into
+    // new documents. Check the release notes against talos/patches/, then
+    // merge; tuppr takes it from there.
+    {
+      matchPackageNames: ['siderolabs/talos'],
+      matchUpdateTypes: ['minor', 'major'],
       automerge: false,
     },
 

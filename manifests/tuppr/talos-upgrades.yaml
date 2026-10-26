@@ -1,0 +1,103 @@
+# Talos upgrades through tuppr: Renovate raises spec.talos.version, ArgoCD
+# syncs it, and tuppr rolls the nodes in the next maintenance window, one at a
+# time, draining each and gating the next on the health checks. Nodes already on
+# the target version are skipped.
+#
+# Two plans, because tuppr orders the nodes of one plan by name (after the node
+# its controller runs on), which would put raspi5 second. raspi5 goes last and
+# alone: rpi_5 is the least tested target at Sidero, and its plan waits until
+# the amd64 plan has completed the same version.
+#
+# The windows are in UTC on purpose: Longhorn's recurring jobs are, and an
+# upgrade reboot kills a running backup. backup-daily starts at 02:00 UTC,
+# backup-monthly at 04:00 UTC on the 1st.
+#
+# The installer image per node is the node's current one with the tag swapped,
+# so each node keeps its schematic and platform. Bump the tags in
+# talos/patches/nodes/ in the same commit (Renovate does, same dependency).
+apiVersion: tuppr.home-operations.com/v1alpha1
+kind: TalosUpgrade
+metadata:
+  name: amd64
+  annotations:
+    # The CRD comes with the chart in the same sync.
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  talos:
+    # renovate: datasource=github-releases depName=siderolabs/talos
+    version: v1.14.4
+  nodeSelector:
+    matchLabels:
+      kubernetes.io/arch: amd64
+  maintenance:
+    windows:
+      - start: "15 2 * * 2"
+        duration: 3h
+        timezone: UTC
+  healthChecks:
+    - apiVersion: v1
+      kind: Node
+      expr: status.conditions.filter(c, c.type == "Ready").all(c, c.status == "True")
+      timeout: 10m
+    # Every attached volume back at full replica count, i.e. the rebuild after
+    # the previous node's reboot has finished. A degraded volume with one
+    # replica on the next node would otherwise lose its last copy.
+    - apiVersion: longhorn.io/v1beta2
+      kind: Volume
+      namespace: longhorn-system
+      expr: status.state != "attached" || status.robustness == "healthy"
+      timeout: 10m
+  # The node drains itself with a short-lived client certificate, which
+  # KubeClientCertificateExpiration reads as a certificate about to expire.
+  silences:
+    - matchers:
+        - name: alertname
+          value: KubeClientCertificateExpiration
+      maxDuration: 4h
+  policy:
+    timeout: 30m
+---
+apiVersion: tuppr.home-operations.com/v1alpha1
+kind: TalosUpgrade
+metadata:
+  name: raspi5
+  annotations:
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  talos:
+    # renovate: datasource=github-releases depName=siderolabs/talos
+    version: v1.14.4
+  nodeSelector:
+    matchLabels:
+      kubernetes.io/arch: arm64
+  # Daytime and the same day: the Pi is the node most likely to need hands,
+  # and a short gap after the amd64 window keeps a release merged in between
+  # from waiting a week.
+  maintenance:
+    windows:
+      - start: "0 9 * * 2"
+        duration: 3h
+        timezone: UTC
+  healthChecks:
+    - apiVersion: v1
+      kind: Node
+      expr: status.conditions.filter(c, c.type == "Ready").all(c, c.status == "True")
+      timeout: 10m
+    - apiVersion: longhorn.io/v1beta2
+      kind: Volume
+      namespace: longhorn-system
+      expr: status.state != "attached" || status.robustness == "healthy"
+      timeout: 10m
+    # The amd64 plan finished this very version, not an earlier one.
+    - apiVersion: tuppr.home-operations.com/v1alpha1
+      kind: TalosUpgrade
+      name: amd64
+      expr: status.phase == "Completed" && status.observedGeneration == metadata.generation
+      timeout: 10m
+  silences:
+    - matchers:
+        - name: alertname
+          value: KubeClientCertificateExpiration
+      maxDuration: 4h
+  policy:
+    timeout: 30m

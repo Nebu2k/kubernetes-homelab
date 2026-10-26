@@ -35,7 +35,10 @@ CRD_CATALOG='https://raw.githubusercontent.com/datreeio/CRDs-catalog/main/{{.Gro
 # RecurringJob is skipped: the datreeio catalogue trails Longhorn and does not
 # know the "system-backup" task, which the live CRD accepts. A pure false
 # alarm. Check on the next Longhorn update whether the catalogue caught up.
-SKIP_KINDS="RecurringJob"
+# TalosUpgrade for the same reason: the catalogue lacks nodeSelector,
+# maintenance and silences, which the tuppr CRD and its webhook validate on
+# sync.
+SKIP_KINDS="RecurringJob,TalosUpgrade"
 
 RED=$'\033[31m'; GREEN=$'\033[32m'; YELLOW=$'\033[33m'; RESET=$'\033[0m'
 failures=0
@@ -124,8 +127,8 @@ validate_manifests() {
 validate_helm() {
   echo "== Helm charts from apps/ =="
 
-  # Parse the ArgoCD Applications. Only sources with chart: are of interest,
-  # the additional self-references to this repo are ignored.
+  # Parse the ArgoCD Applications. Only sources with chart: or an oci:// chart
+  # are of interest, the additional self-references to this repo are ignored.
   charts=$(python3 - <<'PY'
 import glob, json, yaml
 for f in sorted(glob.glob("apps/*.yaml")):
@@ -134,14 +137,14 @@ for f in sorted(glob.glob("apps/*.yaml")):
         continue
     spec = doc["spec"]
     for src in (spec.get("sources") or [spec.get("source")]):
-        if not src or "chart" not in src:
+        if not src or ("chart" not in src and not src.get("repoURL", "").startswith("oci://")):
             continue
         helm = src.get("helm") or {}
         vf = helm.get("valueFiles") or []
         print(json.dumps({
             "name": doc["metadata"]["name"],
             "repo": src["repoURL"],
-            "chart": src["chart"],
+            "chart": src.get("chart", ""),
             "version": src["targetRevision"],
             # $values/ points at the ref source, i.e. at this repo
             "values": [v.replace("$values/", "") for v in vf],
@@ -158,11 +161,26 @@ PY
     chart=$(printf '%s' "$line" | python3 -c 'import sys,json;print(json.load(sys.stdin)["chart"])')
     version=$(printf '%s' "$line" | python3 -c 'import sys,json;print(json.load(sys.stdin)["version"])')
 
-    if ! retry helm repo add "val-$name" "$repo" >/dev/null; then
-      echo "${YELLOW}! $name${RESET} (helm repo add failed, trying the cache)"
+    # An oci:// source is the chart itself, there is no repository to add.
+    # Pulled first: rendering it straight from the registry puts helm's
+    # "Pulled:/Digest:" lines into the output, which retry() captures.
+    if [[ "$repo" == oci://* ]]; then
+      chart=${repo##*/}
+      ocidir=$(mktemp -d)
+      if ! retry helm pull "$repo" --version "$version" -d "$ocidir"; then
+        echo "${RED}✗ $name${RESET} ($repo $version cannot be pulled)"
+        failures=$((failures + 1))
+        continue
+      fi
+      chartref="$ocidir/$chart-$version.tgz"
+    else
+      if ! retry helm repo add "val-$name" "$repo" >/dev/null; then
+        echo "${YELLOW}! $name${RESET} (helm repo add failed, trying the cache)"
+      fi
+      chartref="val-$name/$chart"
     fi
 
-    args=(template "$name" "val-$name/$chart" --version "$version"
+    args=(template "$name" "$chartref" --version "$version"
           --kube-version "$KUBE_VERSION" --api-versions "$API_VERSIONS")
 
     # pass valueFiles straight through

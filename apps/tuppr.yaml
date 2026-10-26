@@ -1,0 +1,45 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: tuppr
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  sources:
+    # The chart is published only to an OCI registry. ArgoCD reads it natively
+    # through oci:// with path ".", no repository secret for a public registry.
+    - repoURL: oci://ghcr.io/home-operations/charts/tuppr
+      targetRevision: 0.5.10
+      path: .
+      helm:
+        valueFiles:
+          - $values/manifests/tuppr/values.yaml
+    - repoURL: https://github.com/Nebu2k/kubernetes-homelab.git
+      targetRevision: main
+      ref: values
+    - repoURL: https://github.com/Nebu2k/kubernetes-homelab.git
+      targetRevision: main
+      path: manifests/tuppr
+  destination:
+    server: https://kubernetes.default.svc
+    # Must match allowedKubernetesNamespaces in
+    # talos/patches/controlplane/talos-api-access.yaml, or the upgrade jobs get
+    # no Talos credentials and fail at the first node.
+    namespace: system-upgrade
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+    retry:
+      limit: 5
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 3m

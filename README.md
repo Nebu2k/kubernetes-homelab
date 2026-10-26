@@ -21,7 +21,7 @@ Talos Linux cluster managed via GitOps using the ArgoCD App-of-Apps pattern.
 |------|-----------|
 | 0 | sealed-secrets |
 | 1 | metallb, reloader |
-| 2 | etcd-backup, metrics-server, rpi5-net-tuning |
+| 2 | etcd-backup, metrics-server, rpi5-net-tuning, tuppr |
 | 3 | traefik |
 | 4 | cert-manager, longhorn |
 | 5 | csi-driver-smb, teslamate |
@@ -40,7 +40,7 @@ Talos Linux cluster managed via GitOps using the ArgoCD App-of-Apps pattern.
 ```text
 kubernetes-homelab/
 ├── bootstrap/root-app.yaml    # App-of-Apps, the only thing applied by hand
-├── apps/                      # 29 ArgoCD Applications, one per component (waves above)
+├── apps/                      # 30 ArgoCD Applications, one per component (waves above)
 ├── manifests/                 # what those Applications point at
 │   ├── argocd/
 │   ├── backup-monitor/
@@ -69,6 +69,7 @@ kubernetes-homelab/
 │   ├── security-insights/
 │   ├── teslamate/
 │   ├── traefik/
+│   ├── tuppr/
 │   └── unifi-poller/
 ├── talos/                     # machine config patches (talosctl), see talos/README.md
 ├── hosts/                     # copies of what runs on hosts outside the cluster
@@ -359,7 +360,7 @@ or an expired key, the controller logs say which.
 | TeslaMate | 4.3.0 |
 | Traefik | 42.1.3 |
 | UniFi Poller | v5.8.2 |
-| Talos Linux | v1.13.9 |
+| Talos Linux | v1.14.4 |
 | Kubernetes | v1.36.4 |
 | ArgoCD | v3.5.0 (via Terraform) |
 

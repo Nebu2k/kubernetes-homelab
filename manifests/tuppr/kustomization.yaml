@@ -1,0 +1,7 @@
+# The chart comes from the OCI registry (apps/tuppr.yaml), this directory holds
+# its values and the upgrade plans.
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - talos-upgrades.yaml

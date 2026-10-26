@@ -1,16 +1,20 @@
-# Talos API from inside the cluster, exclusively for etcd snapshots.
+# Talos API from inside the cluster, for two consumers:
 #
-# The precondition for manifests/etcd-backup/: a CronJob in the cluster can
-# have a talosconfig issued and calls "talosctl etcd snapshot" on each
-# control plane through it. Without this there would be no path to the
-# Talos API that does not store the laptop's admin credentials in a secret.
+#   kube-system, os:etcd:backup: manifests/etcd-backup/ has a talosconfig
+#     issued and calls "talosctl etcd snapshot" on each control plane. The
+#     role permits exactly that call: no machine config, no reboot, no
+#     secrets.
+#   system-upgrade, os:admin: tuppr (manifests/tuppr/) upgrades and reboots
+#     the nodes, which nothing short of os:admin allows.
 #
-# Confined in both directions:
-#   allowedRoles: ONLY os:etcd:backup, which permits exactly the
-#     EtcdSnapshot call: no reading the machine config, no reboot, no
-#     access to the node's secrets.
-#   allowedKubernetesNamespaces: ONLY kube-system. A ServiceAccount CR in
-#     another namespace gets no talosconfig, not even with the same roles.
+# Without this there would be no path to the Talos API that does not store the
+# laptop's admin credentials in a secret. A ServiceAccount CR in any other
+# namespace gets no talosconfig.
+#
+# The two lists are not paired: each allowed namespace may request each allowed
+# role, so a CR in kube-system could ask for os:admin as well. Accepted, because
+# creating talos.dev ServiceAccounts in kube-system already takes rights that
+# amount to the nodes.
 #
 # Takes effect without a reboot, it only concerns trustd and the
 # ServiceAccount controller.
@@ -20,5 +24,7 @@ machine:
       enabled: true
       allowedRoles:
         - os:etcd:backup
+        - os:admin
       allowedKubernetesNamespaces:
         - kube-system
+        - system-upgrade

@@ -13,6 +13,8 @@ resources:
   # etcd snapshots to S3. Talos only writes them out on request, so the upload
   # is the cluster's job.
   - etcd-backup.yaml
+  # Talos upgrades in a maintenance window, see manifests/tuppr/.
+  - tuppr.yaml
   - reloader.yaml
   - traefik.yaml
   - cert-manager.yaml

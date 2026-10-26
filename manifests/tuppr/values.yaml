@@ -1,0 +1,27 @@
+# tuppr Helm values
+# See: https://tuppr.home-operations.com/
+
+resources:
+  limits:
+    memory: 256Mi
+  requests:
+    cpu: 10m
+    memory: 64Mi
+
+# Lets the TalosUpgrade plans hold Alertmanager silences while they run, see
+# spec.silences in talos-upgrades.yaml.
+silences:
+  enabled: true
+  alertmanager:
+    address: http://kube-prometheus-stack-alertmanager.monitoring.svc:9093
+
+# The chart's own rules are the only place a failed or stuck run surfaces:
+# TalosUpgradeFailed, TalosUpgradeStuck, TupprOperatorAbsent and friends.
+# Prometheus selects rules by the release label.
+monitoring:
+  serviceMonitor:
+    enabled: true
+  prometheusRule:
+    enabled: true
+    labels:
+      release: kube-prometheus-stack
