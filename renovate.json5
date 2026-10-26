@@ -276,11 +276,17 @@
       enabled: false,
     },
 
-    // The remaining patches stay manual for the same reason as talos: the
-    // merge changes the Makefile, the cluster follows only by hand.
+    // The remaining patches stay manual: the merge changes the Makefile, the
+    // cluster follows only by hand.
+    //
+    // separateMinorPatch is what makes them arrive at all. Without it Renovate
+    // offers only the highest non-major version, that is the minor the rule
+    // above disables, and the patch is never proposed: 1.36.5 sat unoffered
+    // from 23.09. to 26.10.2026 behind a blocked 1.37.1.
     {
       matchPackageNames: ['kubernetes/kubernetes'],
       automerge: false,
+      separateMinorPatch: true,
     },
 
     // A Postgres update should be one decision, not three PRs. Affects
