@@ -543,7 +543,7 @@ spec:
             severity: warning
           annotations:
             summary: "Cloudflare Security Center has an unarchived finding"
-            description: "The daily cloudflare-security-insights check failed, or has not succeeded for over 48h. Either an insight is sitting unarchived in the Security Center, or the token lost its permission. Run `kubectl -n monitoring logs job/<last cloudflare-security-insights job>` to see which. Archive findings you accept in the dashboard and they disappear here too."
+            description: "The daily cloudflare-security-insights check failed, or has not succeeded for over 48h. Either an insight is sitting unarchived in the Security Center, the token lost its permission, or the API failed three times in a row. Run `kubectl -n monitoring logs job/<last cloudflare-security-insights job>` to see which. Archive findings you accept in the dashboard and they disappear here too."
 
     - name: pod-health
       interval: 30s
@@ -1139,12 +1139,13 @@ spec:
             description: "Erwartet werden rund 359k (AdAway + oisd big + 1Hosts Lite). Bei deutlich weniger fehlt eine ganze Liste und {{ $labels.instance }} filtert entsprechend weniger. Logs ansehen: kubectl -n blocky logs -l app.kubernetes.io/name=blocky -c blocky --tail=-1"
 
         # The direct signal, and the one that fires first: a source that 404s
-        # burns its five attempts on every refresh. increase() over a window
-        # wider than refreshPeriod so a restart cannot hide a permanent
-        # failure, guarded by the current counter so a fixed one clears with
-        # the next start instead of lingering for 26h.
+        # burns its five attempts on every refresh. The counter counts attempts,
+        # so >= 5 skips a single failure that the next attempt recovers.
+        # increase() over a window wider than refreshPeriod so a restart cannot
+        # hide a permanent failure, guarded by the current counter so a fixed
+        # one clears with the next start instead of lingering for 26h.
         - alert: BlockyDownloadsFailing
-          expr: increase(blocky_failed_downloads_total[26h]) > 0 and blocky_failed_downloads_total > 0
+          expr: increase(blocky_failed_downloads_total[26h]) >= 5 and blocky_failed_downloads_total > 0
           for: 30m
           labels:
             severity: warning

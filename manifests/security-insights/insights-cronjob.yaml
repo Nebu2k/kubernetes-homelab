@@ -32,8 +32,9 @@ spec:
   concurrencyPolicy: Forbid
   jobTemplate:
     spec:
-      # No retry. A finding does not go away on a second attempt, and the
-      # failed job IS the signal for the alert.
+      # No job retry. A finding does not go away on a second attempt, and the
+      # failed job IS the signal for the alert. Transient API errors are
+      # retried inside the script.
       backoffLimit: 0
       template:
         metadata:
@@ -51,7 +52,7 @@ spec:
                 - python3
                 - -c
                 - |
-                  import json, os, sys, urllib.error, urllib.request
+                  import json, os, sys, time, urllib.error, urllib.request
 
                   account = os.environ["CF_ACCOUNT_ID"]
                   url = (
@@ -64,18 +65,24 @@ spec:
                       headers={"Authorization": "Bearer " + os.environ["CF_API_TOKEN"]},
                   )
 
-                  # Two different failures, and HTTPError subclasses URLError,
-                  # so it has to be caught first or a rejected token reads as a
-                  # network outage. A revoked one answers 400 with the reason in
-                  # the body, a token that only lost this permission answers 200
-                  # with success=false further down.
-                  try:
-                      with urllib.request.urlopen(request, timeout=30) as response:
-                          payload = json.load(response)
-                  except urllib.error.HTTPError as error:
-                      sys.exit(f"Cloudflare API rejected the token: {error.code} {error.read().decode(errors='replace')}")
-                  except urllib.error.URLError as error:
-                      sys.exit(f"Cloudflare API unreachable: {error}")
+                  # HTTPError subclasses URLError, so it has to be caught first
+                  # or a rejected token reads as a network outage. A revoked one
+                  # answers 400 with the reason in the body, a token that only
+                  # lost this permission answers 200 with success=false further
+                  # down. 5xx and network errors are Cloudflare's side and get
+                  # three attempts.
+                  for attempt in range(1, 4):
+                      try:
+                          with urllib.request.urlopen(request, timeout=30) as response:
+                              payload = json.load(response)
+                          break
+                      except urllib.error.HTTPError as error:
+                          if error.code < 500 or attempt == 3:
+                              sys.exit(f"Cloudflare API answered {error.code}: {error.read().decode(errors='replace')}")
+                      except urllib.error.URLError as error:
+                          if attempt == 3:
+                              sys.exit(f"Cloudflare API unreachable: {error}")
+                      time.sleep(60)
 
                   if not payload.get("success"):
                       sys.exit(f"Cloudflare API refused the request: {payload.get('errors')}")
