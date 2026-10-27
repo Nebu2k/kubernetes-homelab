@@ -20,7 +20,7 @@ cd "$(git rev-parse --show-toplevel)"
 # The cluster version validated against. Bump it along with a Talos upgrade:
 # the target version is KUBERNETES_VERSION in the Makefile, which also carries
 # the Renovate anchor.
-KUBE_VERSION="1.36.4"
+KUBE_VERSION="1.36.5"
 
 # Charts that query cluster capabilities fail to render otherwise: Traefik's
 # servicemonitor template aborts with "You have to deploy
