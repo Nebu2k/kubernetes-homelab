@@ -6,7 +6,7 @@ machine:
     # image and a metal installer would switch the platform on the first
     # upgrade. The schematic ID matches homelab-terraform/proxmox/vm-talos.tf.
     # renovate: datasource=github-releases depName=siderolabs/talos
-    image: factory.talos.dev/nocloud-installer/88d1f7a5c4f1d3aba7df787c448c1d3d008ed29cfb34af53fa0df4336a56040b:v1.14.4
+    image: factory.talos.dev/nocloud-installer/88d1f7a5c4f1d3aba7df787c448c1d3d008ed29cfb34af53fa0df4336a56040b:v1.14.5
   # Failure domain for Longhorn. It is the only node in this zone, but the
   # label still matters: it says its disk lives in pve. A second pve VM would
   # be two different nodes to Longhorn's node anti-affinity and thus fine,
