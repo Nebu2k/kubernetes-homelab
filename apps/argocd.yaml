@@ -13,7 +13,7 @@ spec:
     # same values once for the bootstrap and reads both from this repo.
     - repoURL: https://argoproj.github.io/argo-helm
       chart: argo-cd
-      targetRevision: 10.11.1
+      targetRevision: 10.11.6
       helm:
         releaseName: argocd
         valueFiles:
