@@ -345,7 +345,7 @@ or an expired key, the controller logs say which.
 | Blocky | v0.35.0 |
 | Cert Manager | v1.21.3 |
 | csi-driver-smb | 1.20.4 |
-| FR24 | latest-build-868 |
+| FR24 | latest-build-870 |
 | Gatus | v5.38.0 |
 | Home Assistant | 2026.10.4 |
 | Homepage | v2.7.0 |
