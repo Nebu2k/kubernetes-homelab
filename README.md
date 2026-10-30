@@ -357,7 +357,7 @@ or an expired key, the controller logs say which.
 | paperless-ngx | 3.4.0 |
 | PiAware | latest-build-674 |
 | Proxmox Exporter | 1.0.8 |
-| readsb | latest-build-981 |
+| readsb | latest-build-983 |
 | Reloader | 2.2.18 |
 | RIPE Atlas | 5130 |
 | Sealed Secrets | 2.22.0 |
