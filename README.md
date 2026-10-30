@@ -360,7 +360,7 @@ or an expired key, the controller logs say which.
 | readsb | latest-build-981 |
 | Reloader | 2.2.18 |
 | RIPE Atlas | 5130 |
-| Sealed Secrets | 2.20.0 |
+| Sealed Secrets | 2.22.0 |
 | TeslaMate | 4.4.0 |
 | Traefik | 42.1.3 |
 | UniFi Poller | v5.8.3 |
