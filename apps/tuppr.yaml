@@ -16,7 +16,7 @@ spec:
     # The chart is published only to an OCI registry. ArgoCD reads it natively
     # through oci:// with path ".", no repository secret for a public registry.
     - repoURL: oci://ghcr.io/home-operations/charts/tuppr
-      targetRevision: 0.5.10
+      targetRevision: 0.5.11
       path: .
       helm:
         valueFiles:
