@@ -21,7 +21,7 @@ PYTHON ?= python3
 # counterpart.
 TALOS_CONTRACT := v1.13
 # renovate: datasource=github-releases depName=kubernetes/kubernetes
-KUBERNETES_VERSION := v1.36.5
+KUBERNETES_VERSION := v1.36.6
 TALOS_NODES := talos-cp-1 prodesk raspi5
 TALOS_ENDPOINTS := 192.168.2.20 192.168.2.22 192.168.2.23
 TALOS_OUT := talos/clusterconfig
