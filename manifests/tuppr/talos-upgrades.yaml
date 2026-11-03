@@ -93,11 +93,11 @@ spec:
       namespace: longhorn-system
       expr: status.state != "attached" || status.robustness == "healthy"
       timeout: 10m
-    # The amd64 plan finished this very version, not an earlier one.
+    # Only after the amd64 plan has finished. tuppr's CEL knows no metadata.
     - apiVersion: tuppr.home-operations.com/v1alpha1
       kind: TalosUpgrade
       name: amd64
-      expr: status.phase == "Completed" && status.observedGeneration == metadata.generation
+      expr: status.phase == "Completed"
       timeout: 10m
   silences:
     - matchers:
