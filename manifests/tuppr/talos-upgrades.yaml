@@ -75,12 +75,11 @@ spec:
   nodeSelector:
     matchLabels:
       kubernetes.io/arch: arm64
-  # Daytime and the same day: the Pi is the node most likely to need hands,
-  # and a short gap after the amd64 window keeps a release merged in between
-  # from waiting a week.
+  # Right after the amd64 window: its drains push their pods onto the Pi, and
+  # only the Pi's own drain spreads them back.
   maintenance:
     windows:
-      - start: "0 9 * * 2"
+      - start: "0 3 * * 2"
         duration: 3h
         timezone: UTC
   healthChecks:

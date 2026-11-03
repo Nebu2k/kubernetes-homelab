@@ -96,9 +96,10 @@ spec:
         # of them is 1. The obvious "== 2" and "== 3" match nothing at all,
         # max() over the whole metric is 1. Both alerts were silent from the
         # day they were written, found 2026-08-10.
+        # The rebuild after a planned node reboot takes 10-15 min.
         - alert: LonghornVolumeDegraded
           expr: longhorn_volume_robustness{state="degraded"} == 1
-          for: 5m
+          for: 20m
           labels:
             severity: warning
           annotations:
