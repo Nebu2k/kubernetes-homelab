@@ -362,7 +362,7 @@ or an expired key, the controller logs say which.
 | RIPE Atlas | 5130 |
 | Sealed Secrets | 2.22.0 |
 | TeslaMate | 4.4.0 |
-| Traefik | 42.1.3 |
+| Traefik | 42.2.0 |
 | UniFi Poller | v5.9.3 |
 | Talos Linux | v1.14.5 |
 | Kubernetes | v1.36.5 |
