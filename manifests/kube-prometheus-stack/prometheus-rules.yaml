@@ -1763,3 +1763,35 @@ spec:
           annotations:
             summary: "ArgoCD liefert keine Metriken mehr"
             description: "argocd_app_info fehlt seit >15m, die ArgoCD-Alerts und die HA-Kacheln sind damit blind. Der StatefulSet argocd/argocd-application-controller, der Service argocd-application-controller-metrics und der gleichnamige ServiceMonitor gehoeren geprueft. Der Service kommt aus homelab-terraform/argocd-talos/, nicht aus diesem Repo."
+
+    - name: renovate
+      interval: 60s
+      rules:
+        # The CronJob renovate-monitor (manifests/renovate-monitor/) checks daily
+        # at 08:00 UTC and exits 1 on any finding. Same shape as
+        # CloudflareSecurityInsightsFinding: the age condition because failed
+        # jobs are kept, the absent() branch guarded by the CronJob's age.
+        - alert: RenovateUnhealthy
+          expr: |
+            (
+              max(
+                kube_job_status_failed{namespace="monitoring", job_name=~"renovate-monitor.*"} > 0
+                and on(job_name)
+                (time() - kube_job_created{namespace="monitoring", job_name=~"renovate-monitor.*"} < 90000)
+              ) > 0
+            )
+            or
+            (
+              time() - max(kube_job_status_completion_time{namespace="monitoring", job_name=~"renovate-monitor.*"}) > 172800
+            )
+            or
+            (
+              absent(kube_job_status_completion_time{namespace="monitoring", job_name=~"renovate-monitor.*"})
+              unless on()
+              (time() - max(kube_cronjob_created{namespace="monitoring", cronjob="renovate-monitor"}) < 172800)
+            )
+          labels:
+            severity: warning
+          annotations:
+            summary: "Renovate laeuft nicht rund"
+            description: "Der taegliche renovate-monitor-Check ist fehlgeschlagen oder seit ueber 48h nicht erfolgreich gelaufen. Entweder gab es seit 24h keinen erfolgreichen renovate.yml-Lauf, ein Automerge-PR steht seit ueber 48h offen (meist rote CI), oder das Dependency Dashboard meldet Fehler. Welcher Fall: kubectl -n monitoring logs job/<letzter renovate-monitor-Job>."

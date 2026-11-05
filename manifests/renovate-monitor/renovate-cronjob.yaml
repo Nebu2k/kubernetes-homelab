@@ -1,0 +1,127 @@
+# Renovate health, checked once a day over the public GitHub API.
+#
+# Renovate fails quietly: a red CI on an automerge PR, a broken config or a
+# dead schedule only show up as updates that never arrive. Three checks:
+#
+#   - a successful renovate.yml run within 24h. GitHub drops scheduled runs,
+#     gaps of 10h without a failure are normal.
+#   - no automerge PR open for more than 48h in either repo. They merge within
+#     a day, PRs that wait for a human (automerge disabled) are left out.
+#   - nothing in the Dependency Dashboard's "Errored" or "Repository Problems"
+#     besides the releaseTimestamp warnings that timestamp-optional causes, and
+#     no "Fix Renovate Configuration" issue.
+#
+# The job exits 1 on any finding; the reporting is done by RenovateUnhealthy in
+# prometheus-rules.yaml.
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: renovate-monitor
+  namespace: monitoring
+  labels:
+    app.kubernetes.io/name: renovate-monitor
+spec:
+  # 08:00 UTC, an hour after cloudflare-security-insights. timeZone is
+  # mandatory, see offsite-backup-freshness.
+  schedule: "0 8 * * *"
+  timeZone: "Etc/UTC"
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  concurrencyPolicy: Forbid
+  jobTemplate:
+    spec:
+      # No job retry, the failed job IS the signal. Transient API errors are
+      # retried inside the script.
+      backoffLimit: 0
+      template:
+        metadata:
+          labels:
+            app.kubernetes.io/name: renovate-monitor
+        spec:
+          restartPolicy: Never
+          securityContext:
+            seccompProfile:
+              type: RuntimeDefault
+          containers:
+            - name: check
+              image: python:3.15-alpine
+              command:
+                - python3
+                - -c
+                - |
+                  import datetime, json, sys, time, urllib.error, urllib.request
+
+                  OWNER = "Nebu2k"
+                  REPOS = ["kubernetes-homelab", "homelab-terraform"]
+                  now = datetime.datetime.now(datetime.timezone.utc)
+                  problems = []
+
+                  # Both repos are public, so no token: 3 calls a day are far
+                  # below the anonymous limit of 60 an hour.
+                  def get(path):
+                      request = urllib.request.Request(
+                          "https://api.github.com" + path,
+                          headers={"Accept": "application/vnd.github+json", "User-Agent": "renovate-monitor"},
+                      )
+                      for attempt in range(1, 4):
+                          try:
+                              with urllib.request.urlopen(request, timeout=30) as response:
+                                  return json.load(response)
+                          except urllib.error.HTTPError as error:
+                              if error.code < 500 or attempt == 3:
+                                  sys.exit(f"GitHub API answered {error.code} for {path}")
+                          except urllib.error.URLError as error:
+                              if attempt == 3:
+                                  sys.exit(f"GitHub API unreachable: {error}")
+                          time.sleep(60)
+
+                  def hours_since(stamp):
+                      return (now - datetime.datetime.fromisoformat(stamp.replace("Z", "+00:00"))).total_seconds() / 3600
+
+                  # One workflow runs Renovate for both repos.
+                  runs = get(f"/repos/{OWNER}/kubernetes-homelab/actions/workflows/renovate.yml/runs?status=success&per_page=1")
+                  if not runs["workflow_runs"]:
+                      problems.append("no successful renovate.yml run at all")
+                  else:
+                      age = hours_since(runs["workflow_runs"][0]["updated_at"])
+                      print(f"last successful renovate.yml run {age:.1f}h ago")
+                      if age > 24:
+                          problems.append(f"no successful renovate.yml run for {age:.0f}h")
+
+                  # Renovate runs with the owner's token, so creator= keeps
+                  # strangers' issues in the public repos out. The issues
+                  # endpoint returns the PRs as well.
+                  for repo in REPOS:
+                      for item in get(f"/repos/{OWNER}/{repo}/issues?state=open&creator={OWNER}&per_page=100"):
+                          title, body = item["title"], item.get("body") or ""
+                          if "pull_request" in item:
+                              age = hours_since(item["created_at"])
+                              if "**Automerge**: Enabled." in body and age > 48:
+                                  problems.append(f"{repo}#{item['number']} open for {age:.0f}h with automerge: {title}")
+                          elif title == "Dependency Dashboard":
+                              if "\n## Errored" in body:
+                                  problems.append(f"{repo}#{item['number']}: the dashboard lists errored updates")
+                              section = body.partition("## Repository Problems")[2].partition("\n## ")[0]
+                              for line in section.splitlines():
+                                  if line.startswith(" - ") and "releaseTimestamp" not in line:
+                                      problems.append(f"{repo}#{item['number']}: {line.strip()}")
+                          elif "Fix Renovate Configuration" in title:
+                              problems.append(f"{repo}#{item['number']}: {title}")
+
+                  if not problems:
+                      print("Renovate is healthy.")
+                      sys.exit(0)
+                  for problem in problems:
+                      print(problem)
+                  sys.exit(f"{len(problems)} problem(s)")
+              resources:
+                requests:
+                  cpu: 10m
+                  memory: 32Mi
+              securityContext:
+                allowPrivilegeEscalation: false
+                readOnlyRootFilesystem: true
+                runAsNonRoot: true
+                runAsUser: 65534
+                capabilities:
+                  drop: ["ALL"]
