@@ -20,8 +20,8 @@ PYTHON ?= python3
 # while the kubelet extraMounts in talos/patches/all/kubelet.yaml have no 1.14
 # counterpart.
 TALOS_CONTRACT := v1.13
-# renovate: datasource=github-releases depName=kubernetes/kubernetes
-KUBERNETES_VERSION := v1.36.5
+# From the tuppr plan, so a later apply-config cannot roll the kubelet back.
+KUBERNETES_VERSION := $(shell sed -n 's/^ *version: //p' manifests/tuppr/kubernetes-upgrade.yaml)
 TALOS_NODES := talos-cp-1 prodesk raspi5
 TALOS_ENDPOINTS := 192.168.2.20 192.168.2.22 192.168.2.23
 TALOS_OUT := talos/clusterconfig
@@ -42,6 +42,7 @@ docs:
 # The install disk is set per node, so the base gets none instead of the
 # /dev/sda default, which would sit next to prodesk's diskSelector.
 talos-config:
+	@test -n "$(KUBERNETES_VERSION)" || { echo "no version in manifests/tuppr/kubernetes-upgrade.yaml" >&2; exit 1; }
 	@mkdir -p $(TALOS_OUT)
 	@talosctl gen config homelab https://192.168.2.29:6443 \
 		--with-secrets <(sops -d talos/secrets.sops.yaml) \

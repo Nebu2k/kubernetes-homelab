@@ -17,10 +17,12 @@ set -uo pipefail
 
 cd "$(git rev-parse --show-toplevel)"
 
-# The cluster version validated against. Bump it along with a Talos upgrade:
-# the target version is KUBERNETES_VERSION in the Makefile, which also carries
-# the Renovate anchor.
-KUBE_VERSION="1.36.5"
+# The cluster version validated against, from the tuppr plan that rolls it out.
+KUBE_VERSION=$(sed -n 's/^ *version: v//p' manifests/tuppr/kubernetes-upgrade.yaml)
+if [ -z "$KUBE_VERSION" ]; then
+  echo "no version in manifests/tuppr/kubernetes-upgrade.yaml" >&2
+  exit 1
+fi
 
 # Charts that query cluster capabilities fail to render otherwise: Traefik's
 # servicemonitor template aborts with "You have to deploy
@@ -35,10 +37,10 @@ CRD_CATALOG='https://raw.githubusercontent.com/datreeio/CRDs-catalog/main/{{.Gro
 # RecurringJob is skipped: the datreeio catalogue trails Longhorn and does not
 # know the "system-backup" task, which the live CRD accepts. A pure false
 # alarm. Check on the next Longhorn update whether the catalogue caught up.
-# TalosUpgrade for the same reason: the catalogue lacks nodeSelector,
-# maintenance and silences, which the tuppr CRD and its webhook validate on
-# sync.
-SKIP_KINDS="RecurringJob,TalosUpgrade"
+# TalosUpgrade and KubernetesUpgrade for the same reason: the catalogue lacks
+# nodeSelector, maintenance and silences, which the tuppr CRDs and their
+# webhooks validate on sync.
+SKIP_KINDS="RecurringJob,TalosUpgrade,KubernetesUpgrade"
 
 RED=$'\033[31m'; GREEN=$'\033[32m'; YELLOW=$'\033[33m'; RESET=$'\033[0m'
 failures=0

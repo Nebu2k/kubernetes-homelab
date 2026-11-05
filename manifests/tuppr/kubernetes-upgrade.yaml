@@ -1,0 +1,35 @@
+# Kubernetes patches through tuppr: Renovate raises spec.kubernetes.version,
+# ArgoCD syncs it, and tuppr runs talosctl upgrade-k8s in the window. No reboot,
+# it swaps the static pods, the kubelets and the bootstrap manifests node by node.
+#
+# The only place the version lives: the Makefile, .github/scripts/validate.sh
+# and the README generator read it from here. Minors are raised by hand
+# (skip-level rule, see renovate.json5).
+apiVersion: tuppr.home-operations.com/v1alpha1
+kind: KubernetesUpgrade
+metadata:
+  name: kubernetes
+  annotations:
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  kubernetes:
+    # renovate: datasource=github-releases depName=kubernetes/kubernetes
+    version: v1.36.5
+  # Thursday, two nights after the Talos plans: a bad night has one cause, and
+  # the two never queue behind each other. The CRD has no silences, and
+  # upgrade-k8s sets off nothing beyond a few pending alerts.
+  maintenance:
+    windows:
+      - start: "15 2 * * 4"
+        duration: 3h
+        timezone: UTC
+  healthChecks:
+    - apiVersion: v1
+      kind: Node
+      expr: status.conditions.filter(c, c.type == "Ready").all(c, c.status == "True")
+      timeout: 10m
+    - apiVersion: longhorn.io/v1beta2
+      kind: Volume
+      namespace: longhorn-system
+      expr: status.state != "attached" || status.robustness == "healthy"
+      timeout: 10m

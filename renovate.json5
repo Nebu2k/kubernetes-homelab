@@ -26,9 +26,9 @@
   prCreation: 'immediate',
 
   // Automerge is the DEFAULT here, and the exceptions are named below. Talos
-  // minors and the Kubernetes version stay manual: a Kubernetes merge rolls
-  // nothing out, and a Talos minor can change the config format under the
-  // patches. Talos patches merge and tuppr rolls them out in its maintenance
+  // and Kubernetes minors stay manual: a Talos minor can change the config
+  // format under the patches, a Kubernetes minor is bound to the skip-level
+  // rule. Patches of both merge and tuppr rolls them out in its maintenance
   // window (manifests/tuppr/).
   //
   // Everything else lands unattended, so the guard rails are elsewhere:
@@ -133,22 +133,13 @@
         '# renovate: datasource=(?<datasource>\\S+) depName=(?<depName>\\S+)\\s+image: factory\\.talos\\.dev/[^:\\s]+:(?<currentValue>\\S+)',
       ],
     },
+    // Also the Kubernetes version, spec.kubernetes.version of the
+    // KubernetesUpgrade. The skip-level lock for it is in the packageRules.
     {
       customType: 'regex',
       managerFilePatterns: ['manifests/tuppr/*.yaml'],
       matchStrings: [
         '# renovate: datasource=(?<datasource>\\S+) depName=(?<depName>\\S+)\\s+version: (?<currentValue>\\S+)',
-      ],
-    },
-
-    // The Kubernetes version, KUBERNETES_VERSION in the Makefile. It carries
-    // the skip-level rule: only ONE minor at a time. The lock for that is in
-    // the packageRules below.
-    {
-      customType: 'regex',
-      managerFilePatterns: ['Makefile'],
-      matchStrings: [
-        '# renovate: datasource=(?<datasource>\\S+) depName=(?<depName>\\S+)\\s+[A-Z_]+\\s*:=\\s*(?<currentValue>\\S+)',
       ],
     },
 
@@ -265,19 +256,18 @@
       automerge: false,
     },
 
-    // The Kubernetes version from the Makefile: offer patches only. The
-    // skip-level rule allows only ONE minor at a time and Renovate does not
-    // know it. The jump belongs together with a Talos release that supports
-    // it, plus KUBE_VERSION in .github/scripts/validate.sh, and is therefore a
-    // deliberate act.
+    // The Kubernetes version in manifests/tuppr/kubernetes-upgrade.yaml: offer
+    // patches only. The skip-level rule allows only ONE minor at a time and
+    // Renovate does not know it. The jump belongs together with a Talos release
+    // that supports it and is therefore a deliberate act.
     {
       matchPackageNames: ['kubernetes/kubernetes'],
       matchUpdateTypes: ['minor', 'major'],
       enabled: false,
     },
 
-    // The remaining patches stay manual: the merge changes the Makefile, the
-    // cluster follows only by hand.
+    // Patches merge, and the merge is the rollout: tuppr runs upgrade-k8s in
+    // its next maintenance window, hence "fix".
     //
     // separateMinorPatch is what makes them arrive at all. Without it Renovate
     // offers only the highest non-major version, that is the minor the rule
@@ -285,7 +275,8 @@
     // from 23.09. to 26.10.2026 behind a blocked 1.37.1.
     {
       matchPackageNames: ['kubernetes/kubernetes'],
-      automerge: false,
+      semanticCommitType: 'fix',
+      semanticCommitScope: 'kubernetes',
       separateMinorPatch: true,
     },
 

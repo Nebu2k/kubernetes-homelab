@@ -337,7 +337,7 @@ def generate_tree_fallback():
 
 def get_cluster_versions():
     """Read the Talos version from the installer tags in talos/patches/nodes/
-    and the Kubernetes version from the Makefile.
+    and the Kubernetes version from its tuppr plan.
 
     Hardcoding them in the template means they survive every Talos upgrade
     untouched and quietly turn into a lie.
@@ -347,7 +347,11 @@ def get_cluster_versions():
         for f in (REPO_ROOT / "talos" / "patches" / "nodes").glob("*.yaml")
         for m in re.finditer(r"image: factory\.talos\.dev/\S+:(v\S+)", f.read_text())
     })
-    kubernetes = re.search(r"^KUBERNETES_VERSION := (\S+)", (REPO_ROOT / "Makefile").read_text(), re.M)
+    kubernetes = re.search(
+        r"^\s*version: (\S+)",
+        (REPO_ROOT / "manifests" / "tuppr" / "kubernetes-upgrade.yaml").read_text(),
+        re.M,
+    )
 
     return {
         'talos': " / ".join(talos),
