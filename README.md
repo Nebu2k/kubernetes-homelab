@@ -30,7 +30,7 @@ installs it once for the bootstrap.
 | 7 | blocky, home-assistant, unifi-poller |
 | 8 | gatus, ripe-atlas |
 | 9 | homepage, mealie, paperless-ngx |
-| 11 | backup-monitor, proxmox-exporter, rpi5-fan, security-insights |
+| 11 | backup-monitor, proxmox-exporter, renovate-monitor, rpi5-fan, security-insights |
 | 12 | argocd-config |
 | 14 | readsb |
 | 15 | fr24, piaware |
@@ -41,7 +41,7 @@ installs it once for the bootstrap.
 ```text
 kubernetes-homelab/
 ├── bootstrap/root-app.yaml    # App-of-Apps, the only thing applied by hand
-├── apps/                      # 31 ArgoCD Applications, one per component (waves above)
+├── apps/                      # 32 ArgoCD Applications, one per component (waves above)
 ├── manifests/                 # what those Applications point at
 │   ├── argocd/
 │   ├── backup-monitor/
@@ -64,6 +64,7 @@ kubernetes-homelab/
 │   ├── proxmox-exporter/
 │   ├── readsb/
 │   ├── reloader/
+│   ├── renovate-monitor/
 │   ├── ripe-atlas/
 │   ├── rpi5-fan/
 │   ├── rpi5-net-tuning/
