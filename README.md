@@ -366,7 +366,7 @@ or an expired key, the controller logs say which.
 | Traefik | 42.2.0 |
 | UniFi Poller | v5.9.4 |
 | Talos Linux | v1.14.5 |
-| Kubernetes | v1.36.5 |
+| Kubernetes | v1.36.6 |
 | ArgoCD | v3.5.0 (via Terraform) |
 
 ## 📖 Documentation
