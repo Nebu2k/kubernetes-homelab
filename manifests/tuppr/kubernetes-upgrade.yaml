@@ -14,7 +14,7 @@ metadata:
 spec:
   kubernetes:
     # renovate: datasource=github-releases depName=kubernetes/kubernetes
-    version: v1.36.5
+    version: v1.36.6
   # Thursday, two nights after the Talos plans: a bad night has one cause, and
   # the two never queue behind each other. The CRD has no silences, and
   # upgrade-k8s sets off nothing beyond a few pending alerts.
