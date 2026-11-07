@@ -353,7 +353,7 @@ or an expired key, the controller logs say which.
 | kube-prometheus-stack | 92.17.1 |
 | Longhorn | 1.13.0 |
 | Mealie | v3.30.0 |
-| MetalLB | 0.16.1 |
+| MetalLB | 0.16.2 |
 | Metrics Server | 3.14.0 |
 | paperless-ngx | 3.4.2 |
 | PiAware | latest-build-678 |
