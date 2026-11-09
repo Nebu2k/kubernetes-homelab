@@ -350,7 +350,7 @@ or an expired key, the controller logs say which.
 | Gatus | v5.38.0 |
 | Home Assistant | 2026.11.0 |
 | Homepage | v2.7.0 |
-| kube-prometheus-stack | 92.18.0 |
+| kube-prometheus-stack | 92.21.1 |
 | Longhorn | 1.13.0 |
 | Mealie | v3.30.0 |
 | MetalLB | 0.16.2 |
