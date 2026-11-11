@@ -364,7 +364,7 @@ or an expired key, the controller logs say which.
 | Sealed Secrets | 2.22.0 |
 | TeslaMate | 4.4.0 |
 | Traefik | 42.3.1 |
-| UniFi Poller | v5.9.4 |
+| UniFi Poller | v5.9.5 |
 | Talos Linux | v1.14.5 |
 | Kubernetes | v1.36.6 |
 | ArgoCD | v3.5.0 (via Terraform) |
