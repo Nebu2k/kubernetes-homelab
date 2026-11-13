@@ -24,6 +24,9 @@ metadata:
   namespace: monitoring
   labels:
     app.kubernetes.io/name: offsite-backup-freshness
+  annotations:
+    # A failed run is a finding with its own alert, not an unhealthy app.
+    argocd.argoproj.io/ignore-healthcheck: "true"
 spec:
   # 06:00 UTC, after everything that backs up at night: teslamate 01:30, the
   # paperless export 02:00 (its sidecar syncs within the following hour), HA's

@@ -52,6 +52,8 @@ defaultRules:
   # build. Switching the alert off per host is not possible any other way.
   disabled:
     NodeSystemSaturation: true
+    # Rebuilt in prometheus-rules.yaml without the daily check jobs.
+    KubeJobFailed: true
 
 # No metrics endpoint reachable from inside the cluster.
 kubeScheduler:

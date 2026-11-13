@@ -563,7 +563,7 @@ spec:
 
         # Job-owned pods are excluded, same as PodCrashLooping above: a
         # retrying Job leaves its failed attempt around until the controller
-        # cleans up. Real Job failures are covered by upstream KubeJobFailed.
+        # cleans up. Real Job failures are covered by KubeJobFailed below.
         - alert: PodNotReady
           expr: |
             kube_pod_status_phase{phase!~"Succeeded|Running"} > 0
@@ -575,6 +575,21 @@ spec:
           annotations:
             summary: "Pod is not ready"
             description: "Pod {{ $labels.namespace }}/{{ $labels.pod }} has been in {{ $labels.phase }} state for more than 10 minutes."
+
+        # Upstream rule minus the daily check jobs: they exit 1 on a finding and
+        # have their own alerts (RenovateUnhealthy, OffsiteBackupNotArriving,
+        # CloudflareSecurityInsightsFinding). failedJobsHistoryLimit keeps a
+        # failed job, so upstream would keep firing after the next green run.
+        - alert: KubeJobFailed
+          expr: |
+            kube_job_failed{job="kube-state-metrics", job_name!~"(renovate-monitor|cloudflare-security-insights|offsite-backup-freshness)-[0-9]+"} > 0
+          for: 15m
+          labels:
+            severity: warning
+          annotations:
+            summary: "Job failed to complete."
+            description: "Job {{ $labels.namespace }}/{{ $labels.job_name }} failed to complete. Removing failed job after investigation should clear this alert."
+            runbook_url: "https://runbooks.prometheus-operator.dev/runbooks/kubernetes/kubejobfailed"
 
     - name: node-health
       interval: 30s

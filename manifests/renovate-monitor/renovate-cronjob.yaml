@@ -20,6 +20,9 @@ metadata:
   namespace: monitoring
   labels:
     app.kubernetes.io/name: renovate-monitor
+  annotations:
+    # A failed run is a finding with its own alert, not an unhealthy app.
+    argocd.argoproj.io/ignore-healthcheck: "true"
 spec:
   # 08:00 UTC, an hour after cloudflare-security-insights. timeZone is
   # mandatory, see offsite-backup-freshness.

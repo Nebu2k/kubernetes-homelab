@@ -18,6 +18,9 @@ metadata:
   namespace: monitoring
   labels:
     app.kubernetes.io/name: cloudflare-security-insights
+  annotations:
+    # A failed run is a finding with its own alert, not an unhealthy app.
+    argocd.argoproj.io/ignore-healthcheck: "true"
 spec:
   # 07:00 UTC, an hour after offsite-backup-freshness so a bad morning does not
   # arrive as one block of alerts.
