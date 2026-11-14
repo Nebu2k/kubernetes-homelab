@@ -6,7 +6,9 @@
 #   - a successful renovate.yml run within 24h. GitHub drops scheduled runs,
 #     gaps of 10h without a failure are normal.
 #   - no automerge PR open for more than 48h in either repo. They merge within
-#     a day, PRs that wait for a human (automerge disabled) are left out.
+#     a day, PRs that wait for a human (automerge disabled) are left out. The
+#     finding names the CI state: red checks mean a guard held the update
+#     back, green checks mean Renovate itself is stuck.
 #   - nothing in the Dependency Dashboard's "Errored" or "Repository Problems"
 #     besides the releaseTimestamp warnings that timestamp-optional causes, and
 #     no "Fix Renovate Configuration" issue.
@@ -59,8 +61,8 @@ spec:
                   now = datetime.datetime.now(datetime.timezone.utc)
                   problems = []
 
-                  # Both repos are public, so no token: 3 calls a day are far
-                  # below the anonymous limit of 60 an hour.
+                  # Both repos are public, so no token: a handful of calls a
+                  # day are far below the anonymous limit of 60 an hour.
                   def get(path):
                       request = urllib.request.Request(
                           "https://api.github.com" + path,
@@ -81,6 +83,20 @@ spec:
                   def hours_since(stamp):
                       return (now - datetime.datetime.fromisoformat(stamp.replace("Z", "+00:00"))).total_seconds() / 3600
 
+                  def ci_state(repo, number):
+                      sha = get(f"/repos/{OWNER}/{repo}/pulls/{number}")["head"]["sha"]
+                      runs = get(f"/repos/{OWNER}/{repo}/commits/{sha}/check-runs?per_page=100")["check_runs"]
+                      statuses = get(f"/repos/{OWNER}/{repo}/commits/{sha}/status")["statuses"]
+                      red = [r["name"] for r in runs if r["conclusion"] in ("failure", "timed_out", "cancelled", "action_required")]
+                      red += [s["context"] for s in statuses if s["state"] in ("failure", "error")]
+                      pending = [r["name"] for r in runs if r["status"] != "completed"]
+                      pending += [s["context"] for s in statuses if s["state"] == "pending"]
+                      if red:
+                          return "CI red (" + ", ".join(red) + "), a check holds it back"
+                      if pending:
+                          return "CI pending (" + ", ".join(pending) + ")"
+                      return "CI green, Renovate does not merge it"
+
                   # One workflow runs Renovate for both repos.
                   runs = get(f"/repos/{OWNER}/kubernetes-homelab/actions/workflows/renovate.yml/runs?status=success&per_page=1")
                   if not runs["workflow_runs"]:
@@ -100,7 +116,8 @@ spec:
                           if "pull_request" in item:
                               age = hours_since(item["created_at"])
                               if "**Automerge**: Enabled." in body and age > 48:
-                                  problems.append(f"{repo}#{item['number']} open for {age:.0f}h with automerge: {title}")
+                                  state = ci_state(repo, item["number"])
+                                  problems.append(f"{repo}#{item['number']} open for {age:.0f}h with automerge, {state}: {title}")
                           elif title == "Dependency Dashboard":
                               if "\n## Errored" in body:
                                   problems.append(f"{repo}#{item['number']}: the dashboard lists errored updates")

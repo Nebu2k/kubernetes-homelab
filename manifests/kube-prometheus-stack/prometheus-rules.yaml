@@ -476,9 +476,9 @@ spec:
         # offsite-backup-freshness (manifests/backup-monitor/) checks daily at
         # 06:00 UTC and exits 1 as soon as a bucket is too old.
         #
-        # The first branch needs the age condition: failedJobsHistoryLimit
+        # The first branch looks at the newest job only: failedJobsHistoryLimit
         # keeps failed jobs around, so a bare "max(...) > 0" would keep firing
-        # long after the next run went green. 90000s covers one daily gap.
+        # after the next run, manual or scheduled, went green.
         #
         # No "for": a failed job stays failed, nothing recovers on its own.
         - alert: OffsiteBackupNotArriving
@@ -487,7 +487,7 @@ spec:
               max(
                 kube_job_status_failed{namespace="monitoring", job_name=~"offsite-backup-freshness.*"} > 0
                 and on(job_name)
-                (time() - kube_job_created{namespace="monitoring", job_name=~"offsite-backup-freshness.*"} < 90000)
+                (kube_job_created{namespace="monitoring", job_name=~"offsite-backup-freshness.*"} == on() group_left() max(kube_job_created{namespace="monitoring", job_name=~"offsite-backup-freshness.*"}))
               ) > 0
             )
             or
@@ -514,9 +514,8 @@ spec:
         # (manifests/security-insights/) asks daily at 07:00 UTC for everything
         # not archived and exits 1 if anything is left.
         #
-        # Same shape as OffsiteBackupNotArriving: the age condition is needed
-        # because failedJobsHistoryLimit keeps failed jobs around, and a bare
-        # "> 0" would keep firing after the next run went green.
+        # Same shape as OffsiteBackupNotArriving: only the newest job counts,
+        # because failedJobsHistoryLimit keeps failed jobs around.
         #
         # The absent() branch is guarded by the age of the CronJob, same as in
         # offsite-backup-jobs above: right after a rollout no job has run yet,
@@ -527,7 +526,7 @@ spec:
               max(
                 kube_job_status_failed{namespace="monitoring", job_name=~"cloudflare-security-insights.*"} > 0
                 and on(job_name)
-                (time() - kube_job_created{namespace="monitoring", job_name=~"cloudflare-security-insights.*"} < 90000)
+                (kube_job_created{namespace="monitoring", job_name=~"cloudflare-security-insights.*"} == on() group_left() max(kube_job_created{namespace="monitoring", job_name=~"cloudflare-security-insights.*"}))
               ) > 0
             )
             or
@@ -1784,15 +1783,15 @@ spec:
       rules:
         # The CronJob renovate-monitor (manifests/renovate-monitor/) checks daily
         # at 08:00 UTC and exits 1 on any finding. Same shape as
-        # CloudflareSecurityInsightsFinding: the age condition because failed
-        # jobs are kept, the absent() branch guarded by the CronJob's age.
+        # CloudflareSecurityInsightsFinding: only the newest job counts, the
+        # absent() branch guarded by the CronJob's age.
         - alert: RenovateUnhealthy
           expr: |
             (
               max(
                 kube_job_status_failed{namespace="monitoring", job_name=~"renovate-monitor.*"} > 0
                 and on(job_name)
-                (time() - kube_job_created{namespace="monitoring", job_name=~"renovate-monitor.*"} < 90000)
+                (kube_job_created{namespace="monitoring", job_name=~"renovate-monitor.*"} == on() group_left() max(kube_job_created{namespace="monitoring", job_name=~"renovate-monitor.*"}))
               ) > 0
             )
             or
@@ -1809,4 +1808,4 @@ spec:
             severity: warning
           annotations:
             summary: "Renovate laeuft nicht rund"
-            description: "Der taegliche renovate-monitor-Check ist fehlgeschlagen oder seit ueber 48h nicht erfolgreich gelaufen. Entweder gab es seit 24h keinen erfolgreichen renovate.yml-Lauf, ein Automerge-PR steht seit ueber 48h offen (meist rote CI), oder das Dependency Dashboard meldet Fehler. Welcher Fall: kubectl -n monitoring logs job/<letzter renovate-monitor-Job>."
+            description: "Der taegliche renovate-monitor-Check ist fehlgeschlagen oder seit ueber 48h nicht erfolgreich gelaufen. Entweder gab es seit 24h keinen erfolgreichen renovate.yml-Lauf, ein Automerge-PR steht seit ueber 48h offen (das Log nennt den CI-Stand), oder das Dependency Dashboard meldet Fehler. Welcher Fall: kubectl -n monitoring logs job/<letzter renovate-monitor-Job>."
