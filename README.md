@@ -365,7 +365,7 @@ or an expired key, the controller logs say which.
 | TeslaMate | 4.4.0 |
 | Traefik | 42.3.2 |
 | UniFi Poller | v5.9.5 |
-| Talos Linux | v1.14.5 |
+| Talos Linux | v1.14.6 |
 | Kubernetes | v1.36.6 |
 | ArgoCD | v3.5.0 (via Terraform) |
 
