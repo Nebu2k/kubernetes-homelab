@@ -133,6 +133,13 @@ data:
         conditions:
           - "[STATUS] == 200"
 
+      - name: App-Store-Zahlen
+        group: Cluster
+        url: "https://zahlen.elmstreet79.de/healthz"
+        interval: 60s
+        conditions:
+          - "[STATUS] == 200"
+
       - name: TeslaMate
         group: Cluster
         url: "https://teslamate.elmstreet79.de/api/health"

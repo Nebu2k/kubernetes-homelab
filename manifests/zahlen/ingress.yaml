@@ -1,0 +1,28 @@
+# Internal only: there is no Cloudflare record for this host and there must
+# never be one. The page shows revenue figures.
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: zahlen-web
+  namespace: zahlen
+  annotations:
+    gethomepage.dev/enabled: "true"
+    gethomepage.dev/name: "App-Store-Zahlen"
+    gethomepage.dev/description: "Seb-IT Downloads & Erlöse"
+    gethomepage.dev/group: "Applications"
+    gethomepage.dev/icon: "mdi-chart-bar"
+    gethomepage.dev/weight: "80"
+    gethomepage.dev/pod-selector: "app=zahlen-web"
+spec:
+  ingressClassName: traefik
+  rules:
+    - host: zahlen.elmstreet79.de
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: zahlen-web
+                port:
+                  number: 80

@@ -1,0 +1,32 @@
+# App Store Connect API key with the role "Sales" (Vertrieb). It reads sales
+# reports, finance reports and analytics reports, and nothing else; the
+# release key used for TestFlight uploads is refused on all three.
+#
+# Creating an analytics report request needs an Admin key, once per app; that
+# is done by hand with a throwaway key. This key only reads what exists.
+#
+# The vendor number is not available through the API: App Store Connect,
+# "Payments and Financial Reports", top left.
+#
+# Then seal it:
+#   kubeseal --format=yaml --controller-namespace=kube-system \
+#     < manifests/zahlen/asc-sales-key-unsealed.yaml \
+#     > manifests/zahlen/asc-sales-key-sealed.yaml
+#
+# The *-unsealed.yaml is gitignored and stays on disk: SealedSecrets cannot be
+# decrypted again, so without it there is no source left to reseal from.
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: asc-sales-key
+  namespace: zahlen
+type: Opaque
+stringData:
+  ASC_KEY_ID: "XXXXXXXXXX"
+  ASC_ISSUER_ID: "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+  ASC_VENDOR_NUMBER: "8xxxxxxx"
+  AuthKey.p8: |
+    -----BEGIN PRIVATE KEY-----
+    ...
+    -----END PRIVATE KEY-----

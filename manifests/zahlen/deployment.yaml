@@ -1,0 +1,87 @@
+# Serves the static dashboard (ConfigMap) and the data.json the fetch job
+# writes onto the volume.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: zahlen-web
+  namespace: zahlen
+  labels:
+    app.kubernetes.io/name: zahlen-web
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: zahlen-web
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: zahlen-web
+        app: zahlen-web
+    spec:
+      nodeSelector:
+        node-role.kubernetes.io/worker: "worker"
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 101
+        runAsGroup: 101
+        fsGroup: 1000
+        fsGroupChangePolicy: OnRootMismatch
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: nginx
+          image: nginxinc/nginx-unprivileged:1.30.6-alpine
+          ports:
+            - name: http
+              containerPort: 8080
+              protocol: TCP
+          volumeMounts:
+            - name: web
+              mountPath: /usr/share/nginx/html
+              readOnly: true
+            - name: nginx-conf
+              mountPath: /etc/nginx/conf.d
+              readOnly: true
+            - name: data
+              mountPath: /data
+              readOnly: true
+            # The unprivileged image keeps its pid file and temp paths in /tmp.
+            - name: tmp
+              mountPath: /tmp
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+          resources:
+            requests:
+              cpu: 5m
+              memory: 16Mi
+            limits:
+              memory: 64Mi
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 30
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+            periodSeconds: 10
+      volumes:
+        - name: web
+          configMap:
+            name: zahlen-web
+        - name: nginx-conf
+          configMap:
+            name: zahlen-nginx
+        - name: data
+          persistentVolumeClaim:
+            claimName: zahlen-data
+        - name: tmp
+          emptyDir:
+            sizeLimit: 64Mi

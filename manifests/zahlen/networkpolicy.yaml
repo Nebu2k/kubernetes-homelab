@@ -1,0 +1,33 @@
+---
+# Ingress-only default-deny. Egress stays open: the fetch job talks to
+# api.appstoreconnect.apple.com, Apple's pre-signed analytics URLs and the ECB.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny-ingress
+  namespace: zahlen
+spec:
+  podSelector: {}
+  policyTypes:
+    - Ingress
+---
+# Traefik may reach nginx on 8080; nothing else needs to reach anything here.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-traefik-ingress
+  namespace: zahlen
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: zahlen-web
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: traefik
+      ports:
+        - protocol: TCP
+          port: 8080

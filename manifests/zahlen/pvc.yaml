@@ -1,0 +1,19 @@
+# Holds the raw App Store reports and the rendered data.json. The archive is
+# the point of the whole thing: Apple drops daily reports after 365 days and
+# analytics instances after about 35, so this volume is the only long-term
+# copy. It comes from the provisioner and therefore joins the Longhorn backup
+# group through the StorageClass.
+#
+# A few MB per year; 1Gi is plenty.
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: zahlen-data
+  namespace: zahlen
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: longhorn
+  resources:
+    requests:
+      storage: 1Gi

@@ -54,6 +54,8 @@ resources:
   - home-assistant.yaml
   - teslamate.yaml
   - mealie.yaml
+  # Seb-IT App Store reports, internal only. See manifests/zahlen/fetch.rb.
+  - zahlen.yaml
   - paperless-ngx.yaml
   - ripe-atlas.yaml
   - readsb.yaml

@@ -1,0 +1,32 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: zahlen
+
+resources:
+  - namespace.yaml
+  - pvc.yaml
+  - asc-sales-key-sealed.yaml
+  - deployment.yaml
+  - service.yaml
+  - ingress.yaml
+  - networkpolicy.yaml
+  - cronjob.yaml
+
+# Script, page and nginx config enter as ConfigMaps rather than an image of
+# their own, as with rpi5-fan: no build chain, no registry, and everything
+# here needs nothing beyond the Ruby standard library and a browser.
+#
+# Generators for the hash suffix: a changed page or config rolls nginx, and the
+# next job picks up a changed script, without anyone restarting anything.
+configMapGenerator:
+  - name: zahlen-fetch
+    files:
+      - fetch.rb
+  - name: zahlen-web
+    files:
+      - web/index.html
+      - web/app.js
+      - web/style.css
+  - name: zahlen-nginx
+    files:
+      - default.conf=nginx.conf

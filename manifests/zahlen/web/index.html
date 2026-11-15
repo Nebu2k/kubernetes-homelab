@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>App-Store-Zahlen</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <a class="skip" href="#inhalt">Zum Inhalt springen</a>
+  <header class="page-head">
+    <div>
+      <h1>App-Store-Zahlen</h1>
+      <p class="sub" id="stand">Lade Daten …</p>
+    </div>
+  </header>
+
+  <main id="inhalt">
+    <form class="filters" id="filter" aria-label="Filter">
+      <fieldset class="seg">
+        <legend>Zeitraum</legend>
+        <label><input type="radio" name="range" value="7"><span>7 Tage</span></label>
+        <label><input type="radio" name="range" value="30" checked><span>30 Tage</span></label>
+        <label><input type="radio" name="range" value="90"><span>90 Tage</span></label>
+        <label><input type="radio" name="range" value="365"><span>12 Monate</span></label>
+        <label><input type="radio" name="range" value="all"><span>Gesamt</span></label>
+      </fieldset>
+      <label class="select">
+        <span>App</span>
+        <select name="app" id="app-select"><option value="all">Alle Apps</option></select>
+      </label>
+    </form>
+
+    <p class="range-note" id="range-note" aria-live="polite"></p>
+
+    <section class="tiles" id="tiles" aria-label="Kennzahlen im Zeitraum"></section>
+
+    <section class="card" aria-labelledby="h-downloads">
+      <h2 id="h-downloads">Erst-Downloads</h2>
+      <p class="card-sub">Neue Käufe und kostenlose Erst-Downloads, ohne erneute Downloads und Updates.</p>
+      <div class="chart" id="chart-downloads"></div>
+    </section>
+
+    <section class="card" aria-labelledby="h-proceeds">
+      <h2 id="h-proceeds">Erlös</h2>
+      <p class="card-sub">Dein Anteil nach Apples Provision, aus den Tagesberichten, mit EZB-Kursen in Euro umgerechnet.</p>
+      <div class="chart" id="chart-proceeds"></div>
+    </section>
+
+    <section class="card" aria-labelledby="h-apps">
+      <h2 id="h-apps">Pro App</h2>
+      <div class="table-wrap" id="table-apps"></div>
+    </section>
+
+    <section class="card" aria-labelledby="h-countries">
+      <h2 id="h-countries">Länder</h2>
+      <div class="table-wrap" id="table-countries"></div>
+    </section>
+
+    <section class="card" aria-labelledby="h-finance">
+      <h2 id="h-finance">Abrechnungen und Ergebnis</h2>
+      <p class="card-sub">Aus Apples Finanzberichten, je Abrechnungsmonat. Apple rechnet mit eigenen Kursen um, hier gilt der EZB-Kurs am letzten Tag des Monats; einzelne Cent bis Euro Abweichung sind normal.</p>
+      <div id="finance"></div>
+    </section>
+
+    <section class="card" aria-labelledby="h-analytics">
+      <h2 id="h-analytics">Herkunft und Kampagnen</h2>
+      <div id="analytics"></div>
+    </section>
+
+    <section class="card notes" aria-labelledby="h-notes">
+      <h2 id="h-notes">Datenstand und Hinweise</h2>
+      <div id="notes"></div>
+    </section>
+  </main>
+
+  <div class="tooltip" id="tooltip" role="presentation" hidden></div>
+</body>
+</html>

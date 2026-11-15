@@ -1809,3 +1809,36 @@ spec:
           annotations:
             summary: "Renovate laeuft nicht rund"
             description: "Der taegliche renovate-monitor-Check ist fehlgeschlagen oder seit ueber 48h nicht erfolgreich gelaufen. Entweder gab es seit 24h keinen erfolgreichen renovate.yml-Lauf, ein Automerge-PR steht seit ueber 48h offen (das Log nennt den CI-Stand), oder das Dependency Dashboard meldet Fehler. Welcher Fall: kubectl -n monitoring logs job/<letzter renovate-monitor-Job>."
+
+    - name: zahlen
+      interval: 60s
+      rules:
+        # The CronJob zahlen-fetch (manifests/zahlen/) runs daily at 15:30 UTC
+        # and exits 1 on any unexpected API error, after writing data.json
+        # with what it has. Same shape as RenovateUnhealthy. A missed run is
+        # more than a stale page: Apple drops analytics instances after about
+        # 35 days, so a long gap loses data for good.
+        - alert: ZahlenAbrufFehlgeschlagen
+          expr: |
+            (
+              max(
+                kube_job_status_failed{namespace="zahlen", job_name=~"zahlen-fetch.*"} > 0
+                and on(job_name)
+                (kube_job_created{namespace="zahlen", job_name=~"zahlen-fetch.*"} == on() group_left() max(kube_job_created{namespace="zahlen", job_name=~"zahlen-fetch.*"}))
+              ) > 0
+            )
+            or
+            (
+              time() - max(kube_job_status_completion_time{namespace="zahlen", job_name=~"zahlen-fetch.*"}) > 129600
+            )
+            or
+            (
+              absent(kube_job_status_completion_time{namespace="zahlen", job_name=~"zahlen-fetch.*"})
+              unless on()
+              (time() - max(kube_cronjob_created{namespace="zahlen", cronjob="zahlen-fetch"}) < 129600)
+            )
+          labels:
+            severity: warning
+          annotations:
+            summary: "App-Store-Zahlen werden nicht mehr abgerufen"
+            description: "Der letzte zahlen-fetch-Job ist fehlgeschlagen oder seit ueber 36h nicht erfolgreich gelaufen. Die Seite zeigt dann alte Zahlen, und Analytics-Berichte gehen nach rund 35 Tagen bei Apple verloren. Ursache im Log: kubectl -n zahlen logs job/<letzter zahlen-fetch-Job>; die Fehlerzeilen stehen auch unten auf zahlen.elmstreet79.de."
