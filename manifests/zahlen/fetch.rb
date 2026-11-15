@@ -46,6 +46,11 @@ TODAY = Time.now.utc.to_date
 $errors = []
 $stats = Hash.new(0)
 
+# stdout is a pipe in the pod, which Ruby block-buffers: without this,
+# kubectl logs shows nothing until the run ends, and nothing at all when the
+# job is killed at its deadline.
+$stdout.sync = true
+
 def log(msg) = puts("[#{Time.now.utc.strftime('%H:%M:%S')}] #{msg}")
 
 def error(msg)
