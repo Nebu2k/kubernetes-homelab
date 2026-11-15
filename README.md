@@ -30,7 +30,7 @@ installs it once for the bootstrap.
 | 7 | blocky, home-assistant, unifi-poller |
 | 8 | gatus, ripe-atlas |
 | 9 | homepage, mealie, paperless-ngx |
-| 11 | backup-monitor, proxmox-exporter, renovate-monitor, rpi5-fan, security-insights |
+| 11 | backup-monitor, proxmox-exporter, renovate-monitor, rpi5-fan, security-insights, zahlen |
 | 12 | argocd-config |
 | 14 | readsb |
 | 15 | fr24, piaware |
@@ -41,7 +41,7 @@ installs it once for the bootstrap.
 ```text
 kubernetes-homelab/
 ├── bootstrap/root-app.yaml    # App-of-Apps, the only thing applied by hand
-├── apps/                      # 32 ArgoCD Applications, one per component (waves above)
+├── apps/                      # 33 ArgoCD Applications, one per component (waves above)
 ├── manifests/                 # what those Applications point at
 │   ├── argocd/
 │   ├── backup-monitor/
@@ -72,7 +72,8 @@ kubernetes-homelab/
 │   ├── teslamate/
 │   ├── traefik/
 │   ├── tuppr/
-│   └── unifi-poller/
+│   ├── unifi-poller/
+│   └── zahlen/
 ├── talos/                     # machine config patches (talosctl), see talos/README.md
 ├── hosts/                     # copies of what runs on hosts outside the cluster
 ├── docs-generator/            # renders this README from templates/README.md.j2
@@ -163,6 +164,7 @@ for f in manifests/*/*-unsealed.yaml.example; do cp -n "$f" "${f%.example}"; don
 - **security-insights**: cloudflare-insights-token
 - **teslamate**: s3-backup-credentials, teslamate-secret
 - **unifi-poller**: unifi-config
+- **zahlen**: asc-sales-key
 
 Sealing happens after the cluster runs (Step 5), so leave them unsealed for now.
 
@@ -365,6 +367,7 @@ or an expired key, the controller logs say which.
 | TeslaMate | 4.4.0 |
 | Traefik | 42.3.2 |
 | UniFi Poller | v5.9.5 |
+| Zahlen | 1.30.6-alpine |
 | Talos Linux | v1.14.6 |
 | Kubernetes | v1.36.6 |
 | ArgoCD | v3.5.0 (via Terraform) |
