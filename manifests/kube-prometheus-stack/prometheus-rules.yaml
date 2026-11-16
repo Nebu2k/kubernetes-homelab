@@ -1307,6 +1307,28 @@ spec:
             summary: "Tado hat >80% des API-Tageskontingents verbraucht"
             description: "Laeuft das Kontingent leer, antwortet die Tado-Cloud bis Mitternacht nicht mehr und Zeitplanaenderungen greifen nicht. Meist steckt eine abgerissene HomeKit-Verbindung dahinter, siehe TadoHomeKitDisconnected."
 
+        # A valve that sticks open is invisible to Tado, which keeps reporting
+        # 0 % heating; only the room temperature shows it. Fires when a room
+        # stays above its highest setpoint of the day for 6h. The 18 °C floor
+        # covers zones that report 5 °C (away, window open, off). Above 12 °C
+        # outside the rooms are warmer than the schedule anyway.
+        # keep_firing_for bridges the nights, when a stuck room cools below
+        # the threshold until the boiler runs again in the morning.
+        - alert: TadoValveStuckOpen
+          expr: |
+            (
+              min_over_time(hass_climate_current_temperature_celsius{job="home-assistant"}[6h])
+                - clamp_min(max_over_time(hass_climate_target_temperature_celsius{job="home-assistant"}[24h]), 18)
+            ) > 1.5
+              unless on() avg_over_time(hass_sensor_temperature_celsius{job="home-assistant", entity="sensor.zuhause_outdoor_temperature"}[24h]) >= 12
+          for: 3h
+          keep_firing_for: 12h
+          labels:
+            severity: warning
+          annotations:
+            summary: "Heizkoerper {{ $labels.friendly_name }} heizt, obwohl Tado ihn zu hat"
+            description: "{{ $labels.friendly_name }} liegt seit ueber 6h mindestens {{ printf `%.1f` $value }} Grad ueber dem hoechsten Sollwert der letzten 24h, Tado meldet dort keine Heizleistung. Der Ventilstift ist ganz ausgefahren, das Ventil steht offen. Bisher drei Ursachen: Stift klemmt (gaengig machen), Batterie leer, Thermostat sitzt nach einem Stoss nicht mehr fest (wieder aufsetzen, es kalibriert dann neu). Im Wohn- und Schlafzimmer kann es auch die Klimaanlage im Heizbetrieb sein."
+
         # Zwei getrennte Pulse an zwei Zaehlern, jeder mit eigener Verbindung,
         # deshalb je eine Regel statt einer gemeinsamen absent()-Abfrage wie
         # bei Tado. Die Leistungssensoren sind die Kanarienvoegel: sie haengen

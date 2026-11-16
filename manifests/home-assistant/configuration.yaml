@@ -30,9 +30,22 @@ firebase_messaging_patch:
 # for two alerts: gone means the integration died, 0 means the bridge dropped
 # and every read falls back to the cloud. The api counters watch the daily
 # quota, which is 100 calls without a tado subscription.
+#
+# The eight tado zones and the outdoor temperature feed TadoValveStuckOpen.
+# Listed one by one, climate.* would also pull in the ACs and the car.
 prometheus:
   namespace: hass
   filter:
+    include_entities:
+      - climate.wohnzimmer
+      - climate.esszimmer
+      - climate.kinderzimmer
+      - climate.arbeitszimmer
+      - climate.wannenbad
+      - climate.schlafzimmer
+      - climate.duschbad
+      - climate.gastezimmer
+      - sensor.zuhause_outdoor_temperature
     include_entity_globs:
       - sensor.delta_3_*
       - sensor.tibber_pulse_*
