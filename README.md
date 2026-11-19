@@ -360,7 +360,7 @@ or an expired key, the controller logs say which.
 | paperless-ngx | 3.5.1 |
 | PiAware | latest-build-678 |
 | Proxmox Exporter | 1.0.8 |
-| readsb | latest-build-991 |
+| readsb | latest-build-992 |
 | Reloader | 2.2.20 |
 | RIPE Atlas | 5130 |
 | Sealed Secrets | 2.22.0 |
