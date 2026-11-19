@@ -153,6 +153,7 @@ for f in manifests/*/*-unsealed.yaml.example; do cp -n "$f" "${f%.example}"; don
 - **cert-manager**: cloudflare-api-token
 - **etcd-backup**: s3-credentials
 - **fr24**: fr24-secret
+- **gatus**: gatus-heartbeat
 - **home-assistant**: s3-archive-credentials, wol-ssh-key
 - **kube-prometheus-stack**: alertmanager-notifications, aws-credentials, grafana-admin, home-assistant-token
 - **longhorn**: nas-cifs-secret
