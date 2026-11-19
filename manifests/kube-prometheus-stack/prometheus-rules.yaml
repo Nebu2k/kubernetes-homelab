@@ -815,7 +815,7 @@ spec:
         # gatus_results_endpoint_success is a gauge (0 = check red). 10m also
         # covers the endpoints on a 5m interval, so one missed run stays quiet.
         - alert: GatusEndpointDown
-          expr: gatus_results_endpoint_success{name!="kingsize-fingerboards.com"} == 0
+          expr: gatus_results_endpoint_success{name!="kingsize-fingerboards.com",key!="infrastruktur_sat-receiver-mama"} == 0
           for: 10m
           labels:
             severity: warning
@@ -861,6 +861,21 @@ spec:
           annotations:
             summary: "kingsize-fingerboards.com ist geloescht und wird bald frei"
             description: "Die Domain loest nicht mehr auf, goneo hat sie geloescht. Frei wird sie nach 30 Tagen Redemption und 5 Tagen pendingDelete, also in gut 35 Tagen. Ab jetzt per whois auf pendingDelete achten und dann sofort bei Cloudflare Registrar registrieren. Danach diesen Alert und den Gatus-Endpoint entfernen und die Seite auf Worker plus Apex umstellen."
+
+        # The receiver pushes once a minute (external endpoint in the gatus
+        # configmap). Excluded from GatusEndpointDown so it fires once, with
+        # instructions. The absent branch covers a Gatus restart while the box
+        # is frozen, when the series does not exist until the next push.
+        - alert: SatReceiverMamaSilent
+          expr: |
+            gatus_results_endpoint_success{key="infrastruktur_sat-receiver-mama"} == 0
+            or (absent(gatus_results_endpoint_success{key="infrastruktur_sat-receiver-mama"}) unless on() absent(gatus_results_endpoint_success))
+          for: 10m
+          labels:
+            severity: warning
+          annotations:
+            summary: "Sat-Receiver der Mutter meldet sich nicht mehr"
+            description: "Der Vu+ Zero (192.168.5.138, Moni-VLAN) schickt seit ueber 15 Minuten kein Lebenszeichen an Gatus. Meist ist er eingefroren: Netzstecker ziehen, zehn Sekunden warten, wieder einstecken. Harmlos nur, wenn er bewusst ganz ausgeschaltet wurde. Steht dazu das Internet im Moni-VLAN, ist es wieder eine Pause-Flut: am Gateway per SSH swconfig dev switch0 port 3 get mib, Zaehler RxPause."
 
         # Safety net: without a scrape the gauges above disappear and the
         # alerts go silent. Gatus is the only source of these metrics, so an

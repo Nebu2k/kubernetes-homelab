@@ -420,3 +420,16 @@ data:
           query-type: "NS"
         conditions:
           - "[DNS_RCODE] == NOERROR"
+
+    # Pushed, not polled: these hosts sit in isolated VLANs Gatus cannot reach.
+    # Each one POSTs once a minute and turns red when the push stops.
+    external-endpoints:
+      # Vu+ Zero in the Moni VLAN (192.168.5.138), cron job
+      # /home/root/gatus-heartbeat.sh on the box. A frozen box stops pushing;
+      # its NIC also floods pause frames that stall the whole VLAN, which is why
+      # the box advertises no flow control. Alert: SatReceiverMamaSilent.
+      - name: Sat-Receiver Mama
+        group: Infrastruktur
+        token: "${SAT_RECEIVER_MAMA_TOKEN}"
+        heartbeat:
+          interval: 5m

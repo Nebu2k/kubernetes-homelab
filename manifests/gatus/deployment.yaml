@@ -43,6 +43,12 @@ spec:
               value: "Europe/Berlin"
             - name: GATUS_CONFIG_PATH
               value: "/config/config.yaml"
+            # Gatus expands ${...} in its config, the external endpoint reads it.
+            - name: SAT_RECEIVER_MAMA_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: gatus-heartbeat
+                  key: SAT_RECEIVER_MAMA_TOKEN
 
           volumeMounts:
             - name: config

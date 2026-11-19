@@ -7,6 +7,7 @@ resources:
   - namespace.yaml
   - pvc.yaml
   - configmap.yaml
+  - gatus-heartbeat-sealed.yaml
   - deployment.yaml
   - service.yaml
   - ingress.yaml

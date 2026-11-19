@@ -1,0 +1,12 @@
+# kubeseal --format=yaml --controller-namespace=kube-system < manifests/gatus/gatus-heartbeat-unsealed.yaml > manifests/gatus/gatus-heartbeat-sealed.yaml
+# One bearer token per external endpoint in the Gatus config; the same value
+# goes into the token file on the pushing host.
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: gatus-heartbeat
+  namespace: gatus
+type: Opaque
+stringData:
+  SAT_RECEIVER_MAMA_TOKEN: "<openssl rand -hex 32>"

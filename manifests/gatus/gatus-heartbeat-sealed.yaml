@@ -1,0 +1,14 @@
+---
+apiVersion: bitnami.com/v1alpha1
+kind: SealedSecret
+metadata:
+  name: gatus-heartbeat
+  namespace: gatus
+spec:
+  encryptedData:
+    SAT_RECEIVER_MAMA_TOKEN: AgCdLtY/IlJBIFNljnrsR6tJkMRDVEQpU3WvuFcIwcFM7N0VPu6DRqG9gelbLz1hiWRcpwvRP11KbucXoDLNDRWIH3eWb9K9KvRRSZdjBkT0JpeYRzLBRyzdnJhwr7Hpik9fDPw91quz5ewikQl2kDHoxtaO5rcnsYknF/p9RwXzc5lfePmhBFBYal7XNoyz0i02I9HyZ3eicrfB+3tVQAM4/8Rd1eBA7sXwKQIVkJoZIVSem6p/uSyqA+gCmWdpN8kDJcfabvc84PHzq+d7HXGOJhnFcxUOiDlShZUy4USdGKIahCfrfQEMikGxo4JgEjC+VAgLO2e6GHFGhSWNFjUz3BSasdWeVMeVVX0KrUanJzZYBgZoOJff8ZKT3UG7D6kJj8WogFvwCsR6ThddyfaSM8Y4r5G5LIlYopURANB8n3QpknjXIIbuaUbSQfK2ZDg4WAhEiovQHtaGaXLN8PKsmdmHPlnTD44+l+TEtOM4GL1drYTjC3qawk3cLs2QhY2o9AnnKZXtHps1lpw5j2lYg76/LtnO8uPxERCLUsQQy78zxWMVr5xpMdp4wXiiPt4X43AyGG2LuSWaChqBCZM6OFWtqvSfW5WTf/gU8spuji9mytJ8Y/H8EtBvBZkhdCUFVPKeroA5A44vgjKj4ftMItmaQ0gD2/bVTJgYmKJERVmlJRG0PkM+7CkH8drp09lp7q+BQw32QAlMvUy35ZBC/uepH89l+1Xy7YphneKeafyHfLU/OXWZbTz8I04U2QdldO+sOJeBBLzobxc/nIQw
+  template:
+    metadata:
+      name: gatus-heartbeat
+      namespace: gatus
+    type: Opaque
