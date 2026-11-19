@@ -57,7 +57,7 @@ spec:
               type: RuntimeDefault
           containers:
             - name: fetch
-              image: ruby:4.0.9-slim-trixie
+              image: ruby:4.0.10-slim-trixie
               command: ["ruby", "/app/fetch.rb"]
               env:
                 - name: DATA_DIR
