@@ -281,6 +281,12 @@ alertmanager:
             alertname: MacosUpdatesPending
           receiver: 'alerts'
           repeat_interval: 24h
+        # Every run of their jobs is a new alert instance and notifies on its
+        # own. The long repeat only drops the 4h reminders in between.
+        - match_re:
+            alertname: 'RenovateManualUpdate|VersionEndOfLife'
+          receiver: 'alerts'
+          repeat_interval: 192h
         - match:
             severity: critical
           receiver: 'alerts'

@@ -8,3 +8,5 @@ namespace: monitoring
 
 resources:
   - renovate-cronjob.yaml
+  - manual-update-cronjob.yaml
+  - eol-cronjob.yaml

@@ -576,12 +576,13 @@ spec:
             description: "Pod {{ $labels.namespace }}/{{ $labels.pod }} has been in {{ $labels.phase }} state for more than 10 minutes."
 
         # Upstream rule minus the daily check jobs: they exit 1 on a finding and
-        # have their own alerts (RenovateUnhealthy, OffsiteBackupNotArriving,
+        # have their own alerts (RenovateUnhealthy, RenovateManualUpdate,
+        # VersionEndOfLife, OffsiteBackupNotArriving,
         # CloudflareSecurityInsightsFinding). failedJobsHistoryLimit keeps a
         # failed job, so upstream would keep firing after the next green run.
         - alert: KubeJobFailed
           expr: |
-            kube_job_failed{job="kube-state-metrics", job_name!~"(renovate-monitor|cloudflare-security-insights|offsite-backup-freshness)-[0-9]+"} > 0
+            kube_job_failed{job="kube-state-metrics", job_name!~"(renovate-monitor|renovate-manual-update|version-eol|cloudflare-security-insights|offsite-backup-freshness)-[0-9]+"} > 0
           for: 15m
           labels:
             severity: warning
@@ -1846,6 +1847,45 @@ spec:
           annotations:
             summary: "Renovate laeuft nicht rund"
             description: "Der taegliche renovate-monitor-Check ist fehlgeschlagen oder seit ueber 48h nicht erfolgreich gelaufen. Entweder gab es seit 24h keinen erfolgreichen renovate.yml-Lauf, ein Automerge-PR steht seit ueber 48h offen (das Log nennt den CI-Stand), oder das Dependency Dashboard meldet Fehler. Welcher Fall: kubectl -n monitoring logs job/<letzter renovate-monitor-Job>."
+
+        # To-dos rather than incidents, from renovate-manual-update (daily) and
+        # version-eol (weekly). Unlike above, job_name stays a label: every
+        # failed run is its own alert, so the next finding notifies even while
+        # the previous one is still firing. The summary is all Telegram shows,
+        # hence the log command in it.
+        - alert: RenovateManualUpdate
+          expr: |
+            max by (job_name) (
+              kube_job_status_failed{namespace="monitoring", job_name=~"renovate-manual-update.*"} > 0
+              and on(job_name)
+              (kube_job_created{namespace="monitoring", job_name=~"renovate-manual-update.*"} == on() group_left() max(kube_job_created{namespace="monitoring", job_name=~"renovate-manual-update.*"}))
+            )
+            or
+            (
+              time() - max(kube_cronjob_status_last_schedule_time{namespace="monitoring", cronjob="renovate-manual-update"}) > 172800
+            )
+          labels:
+            severity: warning
+          annotations:
+            summary: '{{ with $labels.job_name }}Renovate-Update wartet auf manuellen Merge: kubectl -n monitoring logs job/{{ . }}{{ else }}CronJob renovate-manual-update laeuft seit ueber 48h nicht{{ end }}'
+            description: "Renovate hat in den letzten 24h einen PR geoeffnet, der per packageRule nicht automerged (Postgres-Major, Talos-Minor, argo-cd-Major, Terraform-Major). Das Log listet ihn mit Link. Der Alert loest sich mit dem naechsten gruenen Lauf von selbst."
+
+        - alert: VersionEndOfLife
+          expr: |
+            max by (job_name) (
+              kube_job_status_failed{namespace="monitoring", job_name=~"version-eol.*"} > 0
+              and on(job_name)
+              (kube_job_created{namespace="monitoring", job_name=~"version-eol.*"} == on() group_left() max(kube_job_created{namespace="monitoring", job_name=~"version-eol.*"}))
+            )
+            or
+            (
+              time() - max(kube_cronjob_status_last_schedule_time{namespace="monitoring", cronjob="version-eol"}) > 691200
+            )
+          labels:
+            severity: warning
+          annotations:
+            summary: '{{ with $labels.job_name }}Eingesetzte Version ist in <90 Tagen EOL: kubectl -n monitoring logs job/{{ . }}{{ else }}CronJob version-eol laeuft seit ueber 8 Tagen nicht{{ end }}'
+            description: "Laut endoflife.date erreicht eine Version aus den Dependency Dashboards in hoechstens 90 Tagen ihr EOL, oder die Pruefung selbst ist gescheitert (Produkt fehlt im Dashboard, API nicht erreichbar). Das Log nennt Version, Datum und Fundstellen. Meldet sich jeden Montag erneut, bis das Update durch ist."
 
     - name: zahlen
       interval: 60s
