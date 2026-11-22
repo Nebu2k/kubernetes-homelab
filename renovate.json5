@@ -296,6 +296,14 @@
       matchPackageNames: ['postgres'],
       groupName: 'postgres',
     },
+    // A new major refuses the old data directory and needs a dump/restore or
+    // pg_upgrade per instance, which CI cannot see.
+    {
+      matchDatasources: ['docker'],
+      matchPackageNames: ['postgres'],
+      matchUpdateTypes: ['major'],
+      automerge: false,
+    },
 
     // teslamate and its preconfigured Grafana are released together.
     {
