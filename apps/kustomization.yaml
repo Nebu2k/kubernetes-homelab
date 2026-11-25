@@ -56,6 +56,9 @@ resources:
   - mealie.yaml
   # Seb-IT App Store reports, internal only. See manifests/zahlen/fetch.rb.
   - zahlen.yaml
+  # Remote syslog on 192.168.2.251 for hosts that lose their own log in a
+  # hard hang, see manifests/syslog/deployment.yaml.
+  - syslog.yaml
   - paperless-ngx.yaml
   - ripe-atlas.yaml
   - readsb.yaml

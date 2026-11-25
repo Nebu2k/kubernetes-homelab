@@ -1,0 +1,13 @@
+# syslog-ng rotates at 10 MB and keeps 30 files per sender.
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: syslog-data
+  namespace: syslog
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: longhorn-nobackup
+  resources:
+    requests:
+      storage: 1Gi

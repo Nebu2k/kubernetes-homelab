@@ -1,0 +1,21 @@
+# .251 is requested explicitly because the senders have it configured.
+apiVersion: v1
+kind: Service
+metadata:
+  name: syslog
+  namespace: syslog
+  labels:
+    app.kubernetes.io/name: syslog-ng
+  annotations:
+    metallb.io/loadBalancerIPs: "192.168.2.251"
+spec:
+  type: LoadBalancer
+  # Files are named after the sender's address, which only survives with Local.
+  externalTrafficPolicy: Local
+  ports:
+    - name: syslog
+      port: 514
+      targetPort: syslog
+      protocol: UDP
+  selector:
+    app.kubernetes.io/name: syslog-ng
