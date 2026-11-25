@@ -30,7 +30,7 @@ installs it once for the bootstrap.
 | 7 | blocky, home-assistant, unifi-poller |
 | 8 | gatus, ripe-atlas |
 | 9 | homepage, mealie, paperless-ngx |
-| 11 | backup-monitor, proxmox-exporter, renovate-monitor, rpi5-fan, security-insights, zahlen |
+| 11 | backup-monitor, proxmox-exporter, renovate-monitor, rpi5-fan, security-insights, syslog, zahlen |
 | 12 | argocd-config |
 | 14 | readsb |
 | 15 | fr24, piaware |
@@ -41,7 +41,7 @@ installs it once for the bootstrap.
 ```text
 kubernetes-homelab/
 ├── bootstrap/root-app.yaml    # App-of-Apps, the only thing applied by hand
-├── apps/                      # 33 ArgoCD Applications, one per component (waves above)
+├── apps/                      # 34 ArgoCD Applications, one per component (waves above)
 ├── manifests/                 # what those Applications point at
 │   ├── argocd/
 │   ├── backup-monitor/
@@ -69,6 +69,7 @@ kubernetes-homelab/
 │   ├── rpi5-fan/
 │   ├── rpi5-net-tuning/
 │   ├── security-insights/
+│   ├── syslog/
 │   ├── teslamate/
 │   ├── traefik/
 │   ├── tuppr/
@@ -365,6 +366,7 @@ or an expired key, the controller logs say which.
 | Reloader | 2.2.20 |
 | RIPE Atlas | 5130 |
 | Sealed Secrets | 2.22.0 |
+| Syslog | 4.13.0 |
 | TeslaMate | 4.5.0 |
 | Traefik | 42.4.1 |
 | UniFi Poller | v5.10.1 |
