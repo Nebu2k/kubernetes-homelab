@@ -369,7 +369,7 @@ or an expired key, the controller logs say which.
 | Syslog | 4.13.0 |
 | TeslaMate | 4.5.0 |
 | Traefik | 42.4.1 |
-| UniFi Poller | v5.10.1 |
+| UniFi Poller | v5.10.2 |
 | Zahlen | 1.31.7-alpine |
 | Talos Linux | v1.14.6 |
 | Kubernetes | v1.36.6 |
