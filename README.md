@@ -350,7 +350,7 @@ or an expired key, the controller logs say which.
 | Blocky | v0.37.0 |
 | Cert Manager | v1.21.3 |
 | csi-driver-smb | 1.20.4 |
-| FR24 | latest-build-874 |
+| FR24 | latest-build-875 |
 | Gatus | v5.38.0 |
 | Home Assistant | 2026.11.3 |
 | Homepage | v2.8.0 |
