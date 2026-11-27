@@ -346,7 +346,7 @@ or an expired key, the controller logs say which.
 
 | Component | Version |
 |-----------|---------|
-| ArgoCD | 10.18.2 |
+| ArgoCD | 10.18.3 |
 | Blocky | v0.37.0 |
 | Cert Manager | v1.21.3 |
 | csi-driver-smb | 1.20.4 |
